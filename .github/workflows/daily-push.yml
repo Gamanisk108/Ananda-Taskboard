@@ -1,0 +1,26 @@
+name: Daily push
+
+# Wakes the (free-tier, sleep-when-idle) backend each morning and triggers the
+# per-user daily push. The backend computes correct local-time/DST gating and
+# only sends to users who actually have tasks today (silent otherwise).
+#
+# Cron is in UTC. 15:00 UTC ≈ 08:00 America/Los_Angeles during PDT (UTC-7).
+# The endpoint itself re-checks the admin-set local push time and the per-user
+# "already sent today" guard, so an approximate trigger time is fine — set this
+# a little before the earliest possible local push time and let the server gate.
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch: {}   # allow manual trigger for testing
+
+jobs:
+  fire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger daily-push endpoint
+        run: |
+          curl -fsS -X POST "${{ secrets.BACKEND_URL }}/api/jobs/daily-push" \
+            -H "X-Daily-Push-Secret: ${{ secrets.DAILY_PUSH_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 120 \
+            -d '{}'

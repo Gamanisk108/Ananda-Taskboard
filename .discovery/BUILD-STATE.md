@@ -1,0 +1,59 @@
+---
+project: ananda-taskboard
+status: in-progress
+phase: execute
+current-step: 1
+last-updated: 2026-06-02
+---
+
+# BUILD-STATE — read this FIRST if resuming
+
+**If you are a fresh session picking this up:** the brainstorm and approval are
+DONE. Do not re-brainstorm. Read, in order:
+1. `taskboard-goal-brief.md` (the spec) — root of this folder.
+2. `.discovery/build-plan.md` (approved design + 12-step build order + data model).
+3. This file — find the first unchecked step below and continue from there.
+4. `docs/decision-log.md` (if it exists) — choices already made during the build.
+
+**Resume rule:** trust completed (`[x]`) steps; verify the last in-progress
+(`[~]`) step's files actually exist before continuing (a token-out may have
+interrupted mid-write). Then proceed down the list. Update this file after each
+step: flip `[ ]`→`[~]` when starting, `[~]`→`[x]` when done + verified, and bump
+`current-step`/`last-updated` in the frontmatter.
+
+**Stack:** Django + DRF backend, React 18 + Vite 5 PWA frontend, SQLite
+(DB-agnostic), Web Push (VAPID), Render + GitHub Actions cron. New project; reuse
+the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their data.
+
+---
+
+## Build steps (source of truth for progress)
+
+- [ ] **1. Scaffold** — backend (Django+DRF) + frontend (Vite PWA) skeletons,
+      docs/ skeleton, `.github/workflows/daily-push.yml`, root README, .gitignore.
+- [ ] **2. Accounts & auth** — User, Group, JWT login/refresh, `/api/me`.
+- [ ] **3. Projects & sub-projects** — models, admin CRUD, default-subproject
+      auto-create, members_post_without_approval toggle field.
+- [ ] **4. Permission engine (TDD FIRST)** — AccessGrant, `visible_subprojects()`
+      union + most-permissive, whole-project grants, `/api/me` tree + tab flags.
+- [ ] **5. Tasks core** — Task model, create/edit, approval workflow + trusted
+      toggle, status rules (assignee/admin direct).
+- [ ] **6. Recurrence engine (TDD FIRST)** — RecurrenceRule, occurrence
+      generation, Feb-29/31st/boundary/DST, optional end (date|count), future-only edits.
+- [ ] **7. Views API + frontend** — list/weekly/monthly, filters/sort, overview
+      tabs (appear only when >1), overdue red flag.
+- [ ] **8. Comments** — model + endpoints, visibility-gated.
+- [ ] **9. Export** — CSV+XLSX, permission filtering, CSV formula-injection sanitize.
+- [ ] **10. Notifications** — Web Push subscribe, daily-push builder (silent if
+      empty, DST-safe, once/day), GH Actions cron wiring, approval batching,
+      group-chat summary endpoint + button.
+- [ ] **11. Hardening** — full §12 edge-case suite (real assertions), security-review on API.
+- [ ] **12. Verify** — end-to-end run, verification-before-completion, docs final pass.
+
+## Living docs to keep updated each step
+README · docs/architecture.md (+ERD) · docs/api-reference.md ·
+docs/deploy-runbook.md · docs/permissions-matrix.md · docs/CHANGELOG.md ·
+docs/decision-log.md
+
+## Notes / deviations from plan (append-only)
+- (none yet)
