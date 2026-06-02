@@ -1,11 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import { Modal, Spinner } from "./common";
+import { useAuth } from "../state/auth";
+import { buildSubLookup } from "../lookup";
+import { useUsers, userName } from "../users";
+import { Modal, Spinner, ColorDot } from "./common";
 import type { Task } from "../types";
 
-export function Approvals({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
+export function Approvals({
+  onClose, onChanged, onOpen,
+}: {
+  onClose: () => void;
+  onChanged: () => void;
+  onOpen: (t: Task) => void;
+}) {
+  const { me } = useAuth();
   const [pending, setPending] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
+  const subs = useMemo(() => (me ? buildSubLookup(me.tree) : new Map()), [me]);
+  const users = useUsers();
 
   function load() {
     setPending(null);
@@ -28,8 +40,18 @@ export function Approvals({ onClose, onChanged }: { onClose: () => void; onChang
     load();
   }
 
+  async function act(id: number, action: "approve" | "reject") {
+    await api.post(`/api/tasks/${id}/${action}`, {});
+    onChanged();
+    load();
+  }
+
   return (
     <Modal title="Approvals" onClose={onClose} wide>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+        Tasks members created that need your OK before they appear on the board. Tick rows to
+        bulk-approve, click <strong>Open</strong> to see full details, or approve/reject each.
+      </p>
       {!pending ? (
         <Spinner />
       ) : pending.length === 0 ? (
@@ -47,16 +69,35 @@ export function Approvals({ onClose, onChanged }: { onClose: () => void; onChang
           </div>
           <table className="tbl">
             <thead>
-              <tr><th></th><th>Task</th><th>Details</th></tr>
+              <tr><th></th><th>Task</th><th>Where</th><th>Created by</th><th>Deadline</th><th></th></tr>
             </thead>
             <tbody>
-              {pending.map((t) => (
-                <tr key={t.id} onClick={() => toggle(t.id)}>
-                  <td><input type="checkbox" style={{ width: "auto" }} checked={sel.has(t.id)} readOnly /></td>
-                  <td><strong>{t.title}</strong></td>
-                  <td className="muted">{t.details?.slice(0, 80) || "—"}</td>
-                </tr>
-              ))}
+              {pending.map((t) => {
+                const info = subs.get(t.subproject);
+                return (
+                  <tr key={t.id}>
+                    <td onClick={() => toggle(t.id)}>
+                      <input type="checkbox" style={{ width: "auto" }} checked={sel.has(t.id)} readOnly />
+                    </td>
+                    <td>
+                      <strong>{t.title}</strong>
+                      {t.details && <div className="muted" style={{ fontSize: 12 }}>{t.details.slice(0, 90)}</div>}
+                    </td>
+                    <td>
+                      {info && <span style={{ display: "inline-flex", gap: 5, alignItems: "center", fontSize: 12 }}>
+                        <ColorDot color={info.color} /> {info.projectName} / {info.name}
+                      </span>}
+                    </td>
+                    <td className="muted" style={{ fontSize: 12 }}>{t.created_by ? userName(users, t.created_by) : "—"}</td>
+                    <td className="mono" style={{ fontSize: 12 }}>{t.deadline ?? "—"}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <button className="btn-ghost" onClick={() => onOpen(t)}>Open</button>
+                      <button className="btn-ghost" style={{ color: "var(--success)" }} onClick={() => act(t.id, "approve")}>✓</button>
+                      <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => act(t.id, "reject")}>✕</button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </>

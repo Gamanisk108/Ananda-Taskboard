@@ -4,6 +4,7 @@ import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { Modal, StatusPill } from "./common";
 import { CommentSection } from "./CommentSection";
+import { AssigneePicker, type GroupLite } from "./AssigneePicker";
 import { STATUS_LABEL, type Me, type Recurrence, type Status, type Task } from "../types";
 
 interface Props {
@@ -13,11 +14,12 @@ interface Props {
   defaultProject?: number;
   onClose: () => void;
   onSaved: () => void;
+  onChanged?: () => void; // refresh the list WITHOUT closing the modal (e.g. status change)
 }
 
 type EndMode = "none" | "date" | "count";
 
-export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved }: Props) {
+export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
@@ -37,7 +39,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
   const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
-  const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
+  const [groups, setGroups] = useState<GroupLite[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -55,6 +57,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [endDate, setEndDate] = useState(task?.recurrence?.end_date ?? "");
   const [count, setCount] = useState(task?.recurrence?.count ?? 10);
 
+  const [curStatus, setCurStatus] = useState<Status>(task?.status ?? "todo");
   const canChangeStatus = editing && (me.is_admin || (task!.assignees ?? []).includes(me.id));
 
   function pickProject(id: number) {
@@ -62,17 +65,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     const subs = projects.find((p) => p.id === id)?.subprojects ?? [];
     setSubproject(subs[0]?.id ?? 0);
   }
-  function toggleAssignee(id: number) {
-    setAssignees((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
-  }
-  function hasAccess(u: { is_admin: boolean; subproject_ids: number[] }) {
-    return u.is_admin || u.subproject_ids.includes(subproject);
-  }
-
   async function changeStatus(s: Status) {
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
-      onSaved();
+      setCurStatus(s);          // update in place — do NOT close the modal
+      onChanged?.();            // refresh the list behind the modal
     } catch {
       setErr("You can't change this task's status.");
     }
@@ -135,53 +132,28 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         <div className="row2">
           <div className="field">
             <label>Project</label>
-            <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))} disabled={editing}>
+            <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))}>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div className="field">
             <label>Sub-project</label>
-            <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))} disabled={editing}>
+            <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))}>
               {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
         </div>
 
-        <div className="field">
-          <label>Assignees</label>
-          <div className="assignee-list">
-            {users.length === 0 && <span className="muted">No users.</span>}
-            {users.map((u) => {
-              const access = hasAccess(u);
-              return (
-                <label
-                  key={u.id}
-                  className={`assignee-row ${access ? "" : "no-access"}`}
-                  title={access ? "" : "This person has no access to the selected sub-project"}
-                >
-                  <input type="checkbox" style={{ width: "auto" }} checked={assignees.includes(u.id)} onChange={() => toggleAssignee(u.id)} />
-                  <span>{u.name || u.email}</span>
-                  {!access && <span className="noaccess-tag">no access</span>}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-
-        {me.is_admin && groups.length > 0 && (
-          <div className="field">
-            <label>Assign to groups (whole team)</label>
-            <div className="assignee-list">
-              {groups.map((g) => (
-                <label key={g.id} className="assignee-row">
-                  <input type="checkbox" style={{ width: "auto" }} checked={assigneeGroups.includes(g.id)}
-                    onChange={() => setAssigneeGroups((a) => a.includes(g.id) ? a.filter((x) => x !== g.id) : [...a, g.id])} />
-                  <span>{g.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
+        <AssigneePicker
+          users={users}
+          groups={groups}
+          assignees={assignees}
+          setAssignees={setAssignees}
+          assigneeGroups={assigneeGroups}
+          setAssigneeGroups={setAssigneeGroups}
+          subproject={subproject}
+          isAdmin={me.is_admin}
+        />
 
         <div className="row2">
           <div className="field">
@@ -254,7 +226,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <div className="field">
             <label>Status (applied immediately)</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <StatusPill status={task!.status} />
+              <StatusPill status={curStatus} />
               <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value as Status)} style={{ width: "auto" }}>
                 <option value="">Change to…</option>
                 {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
@@ -266,8 +238,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 
         <div className="modal-foot">
-          {editing && <button type="button" className="btn-danger" onClick={del} style={{ marginRight: "auto" }}>Delete</button>}
           <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+          {editing && <button type="button" className="btn-danger" onClick={del}>Delete</button>}
           <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
         </div>
       </form>

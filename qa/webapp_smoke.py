@@ -55,7 +55,11 @@ with sync_playwright() as p:
     check("modal has 'Project' label", any(l.strip() == "Project" for l in labels))
     check("modal has 'Sub-project' label", any("Sub-project" in l for l in labels))
     check("modal has 'Assignees' label", any("Assignees" in l for l in labels))
-    check("modal has assignee checkboxes", page.locator(".assignee-list .assignee-row").count() > 0)
+    # assignees are collapsed by default → click Edit, then the searchable list appears
+    page.locator(".modal").get_by_role("button", name="Edit").first.click()
+    page.wait_for_timeout(300)
+    check("assignee search box appears", page.locator('.modal input[placeholder="Search by name…"]').count() > 0)
+    check("assignee list appears after Edit", page.locator(".assignee-list .assignee-row").count() > 0)
     selects = page.locator(".modal select").count()
     check("modal has >=2 dropdowns (project+subproject)", selects >= 2)
 

@@ -143,9 +143,16 @@ export default function App() {
           defaultSubproject={subprojectId}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); bump(); }}
+          onChanged={bump}
         />
       )}
-      {showApprovals && <Approvals onClose={() => setShowApprovals(false)} onChanged={bump} />}
+      {showApprovals && (
+        <Approvals
+          onClose={() => setShowApprovals(false)}
+          onChanged={bump}
+          onOpen={(t) => { setShowApprovals(false); setEditing(t); }}
+        />
+      )}
       {showManage && (
         <ManageProjects
           onClose={() => setShowManage(false)}
