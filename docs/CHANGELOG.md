@@ -4,6 +4,15 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 7 — Views API + frontend.** Backend `GET /api/calendar` (recurring-task
+  expansion, overdue flag, visibility, 7 tests → 92 total) + `seed_demo` command.
+  React 18 PWA frontend: JWT client w/ auto-refresh, auth context, login, app
+  shell (project tabs + Global/Project overview tabs gated by the >1 rule),
+  view switcher, **List** (filter/search, overdue red flag), **Weekly** &
+  **Monthly** (color-coded count badges, click-day) timeline views, task
+  create/edit modal (recurrence UI, status changer, links, delete), admin
+  approvals inbox (bulk). Design-system tokens (warm palette, rounded, Bricolage/
+  IBM Plex). Verified end-to-end against live API (permissions enforced).
 - **Step 6 — Recurrence engine (test-first).** `tasks/recurrence.py`:
   `occurrence_dates` (daily/weekly/monthly/yearly + interval, fast-forward for
   long gaps) and `materialize_occurrences` (per-occurrence status, future-only

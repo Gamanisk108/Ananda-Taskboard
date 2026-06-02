@@ -47,4 +47,10 @@
 - `GET /api/approvals` — admin inbox of pending tasks.
 - `POST /api/approvals` `{ids:[], action:'approve'|'reject'}` — bulk, idempotent.
 
+## Calendar (step 7) — weekly/monthly timeline source
+- `GET /api/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&project=&subproject=` —
+  dated instances within the window: non-recurring tasks on their deadline,
+  recurring tasks expanded per occurrence. Approved + visible only. Each instance
+  carries project/sub-project name+color, status, `overdue`, `assignee_ids`.
+
 _(more added per step: comments, export, summary, push, jobs)_

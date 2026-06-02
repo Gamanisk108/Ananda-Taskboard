@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 7
+current-step: 8
 last-updated: 2026-06-02
-last-commit: "Step 6 (committing now). 85 tests pass."
+last-commit: "Step 7 (committing now). 92 backend tests; frontend builds."
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -53,8 +53,11 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
 - [x] **6. Recurrence engine (TDD FIRST)** — RecurrenceRule, occurrence
       generation, Feb-29/31st/boundary/DST, optional end (date|count), future-only edits.
       DONE + 20 tests (85 total). engine in tasks/recurrence.py.
-- [ ] **7. Views API + frontend** — list/weekly/monthly, filters/sort, overview
-      tabs (appear only when >1), overdue red flag.
+- [x] **7. Views API + frontend** — list/weekly/monthly, filters/sort, overview
+      tabs (appear only when >1), overdue red flag. DONE. Calendar API + 7 tests
+      (92 total). Full React PWA (auth, shell, 3 views, task modal, approvals).
+      Verified live. seed_demo command available (pw 'taskboard123').
+      NOTE: comments UI deferred to step 8; export/summary buttons to steps 9/10.
 - [ ] **8. Comments** — model + endpoints, visibility-gated.
 - [ ] **9. Export** — CSV+XLSX, permission filtering, CSV formula-injection sanitize.
 - [ ] **10. Notifications** — Web Push subscribe, daily-push builder (silent if
