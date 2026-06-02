@@ -83,7 +83,7 @@ with sync_playwright() as p:
     # Weekly + Monthly views render
     page.click('button:has-text("Weekly")'); page.wait_for_timeout(500)
     page.screenshot(path=str(SHOTS / "04_weekly.png"), full_page=True)
-    check("weekly view renders", page.locator(".week").count() > 0)
+    check("weekly view renders", page.locator(".wk").count() > 0)
     page.click('button:has-text("Monthly")'); page.wait_for_timeout(500)
     page.screenshot(path=str(SHOTS / "05_monthly.png"), full_page=True)
     check("monthly view renders", page.locator(".month").count() > 0)

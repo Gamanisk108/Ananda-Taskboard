@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
 import { useUsers, userInitials } from "../users";
@@ -13,16 +13,31 @@ interface Props {
   me: Me;
 }
 
+interface Bar {
+  task_id: number;
+  title: string;
+  color: string;
+  startCol: number; // 1..7
+  endCol: number;   // 1..7
+  endsThisWeek: boolean; // deadline within the week → show ⏰
+  overdue: boolean;
+  assignee_ids: number[];
+  lane: number;
+}
+
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
   const users = useUsers();
-  const colorByProject = !projectId; // global → by project; inside a project → by sub-project
+  const colorByProject = !projectId;
+
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const dayIso = useMemo(() => days.map((d) => format(d, "yyyy-MM-dd")), [days]);
 
   useEffect(() => {
-    const from = format(weekStart, "yyyy-MM-dd");
-    const to = format(addDays(weekStart, 6), "yyyy-MM-dd");
+    const from = dayIso[0];
+    const to = dayIso[6];
     const p = new URLSearchParams({ from, to });
     if (subprojectId) p.set("subproject", String(subprojectId));
     else if (projectId) p.set("project", String(projectId));
@@ -36,7 +51,39 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
     onEdit(t);
   }
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // Lane-packed spanning bars from per-day instances grouped by task.
+  const { bars, laneCount } = useMemo(() => {
+    const map = new Map<number, CalendarInstance[]>();
+    for (const i of items ?? []) {
+      if (!map.has(i.task_id)) map.set(i.task_id, []);
+      map.get(i.task_id)!.push(i);
+    }
+    const raw: Omit<Bar, "lane">[] = [];
+    for (const [task_id, insts] of map) {
+      const cols = insts.map((i) => dayIso.indexOf(i.date) + 1).filter((c) => c >= 1);
+      if (!cols.length) continue;
+      const first = insts[0];
+      raw.push({
+        task_id,
+        title: first.title,
+        color: colorByProject ? first.project_color : first.subproject_color,
+        startCol: Math.min(...cols),
+        endCol: Math.max(...cols),
+        endsThisWeek: insts.some((i) => i.is_deadline),
+        overdue: insts.some((i) => i.overdue),
+        assignee_ids: first.assignee_ids,
+      });
+    }
+    raw.sort((a, b) => a.startCol - b.startCol || a.endCol - b.endCol);
+    const laneEnds: number[] = [];
+    const packed: Bar[] = raw.map((b) => {
+      let lane = laneEnds.findIndex((end) => end < b.startCol);
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(b.endCol); }
+      else laneEnds[lane] = b.endCol;
+      return { ...b, lane };
+    });
+    return { bars: packed, laneCount: Math.max(1, laneEnds.length) };
+  }, [items, dayIso, colorByProject]);
 
   return (
     <div className="rise">
@@ -49,37 +96,34 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
       {!items ? (
         <Spinner />
       ) : (
-        <div className="week">
-          {days.map((d) => {
-            const iso = format(d, "yyyy-MM-dd");
-            const dayItems = items.filter((i) => i.date === iso);
-            return (
-              <div className="week-col" key={iso}>
-                <h4>{format(d, "EEE")} <span className="day-num">{format(d, "d")}</span></h4>
-                {events.filter((e) => e.date === iso).map((e, k) => (
-                  <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
-                ))}
-                {dayItems.map((i, idx) => (
-                  <button
-                    key={`${i.task_id}-${idx}`}
-                    className={`chip ${i.overdue ? "overdue" : ""}`}
-                    style={{ background: colorByProject ? i.project_color : i.subproject_color }}
-                    onClick={() => open(i.task_id)}
-                    title={`${i.title}${i.is_deadline ? " (due)" : ""}`}
-                  >
-                    <span style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {i.is_deadline ? "⏰ " : ""}{i.title}
-                      </span>
-                      {i.assignee_ids.length > 0 && (
-                        <span className="chip-initials">{i.assignee_ids.map((id) => userInitials(users, id)).join(" ")}</span>
-                      )}
-                    </span>
-                  </button>
+        <div className="wk">
+          <div className="wk-head">
+            {days.map((d, idx) => (
+              <div className="wk-hcell" key={idx}>
+                <div>{format(d, "EEE")} <span className="day-num">{format(d, "d")}</span></div>
+                {events.filter((e) => e.date === dayIso[idx]).map((e, k) => (
+                  <div key={k} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
                 ))}
               </div>
-            );
-          })}
+            ))}
+          </div>
+          <div className="wk-body" style={{ gridTemplateRows: `repeat(${laneCount}, 30px)` }}>
+            {bars.length === 0 && <div className="wk-empty muted">No tasks this week.</div>}
+            {bars.map((b) => (
+              <button
+                key={b.task_id}
+                className={`wk-bar ${b.overdue ? "overdue" : ""}`}
+                style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1, background: b.color }}
+                onClick={() => open(b.task_id)}
+                title={b.title}
+              >
+                <span className="wk-bar-title">{b.endsThisWeek ? "⏰ " : ""}{b.title}</span>
+                {b.assignee_ids.length > 0 && (
+                  <span className="chip-initials">{b.assignee_ids.map((id) => userInitials(users, id)).join(" ")}</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

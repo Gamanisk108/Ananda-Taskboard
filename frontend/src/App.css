@@ -66,6 +66,21 @@
 .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
 .week-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); min-height: 120px; }
 .week-col h4 { font-family: var(--font-ui); font-size: 12px; padding: 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+
+/* Google-Calendar-style spanning week */
+.wk { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
+.wk-head { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--border); }
+.wk-hcell { padding: 6px 8px; font-size: 12px; color: var(--text-muted); border-left: 1px solid var(--border); min-height: 30px; }
+.wk-hcell:first-child { border-left: none; }
+.wk-body { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 6px; position: relative;
+  background: repeating-linear-gradient(to right, transparent, transparent calc(100%/7 - 1px),
+    var(--border) calc(100%/7 - 1px), var(--border) calc(100%/7)); min-height: 90px; }
+.wk-bar { display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  color: #fff; border: none; border-radius: var(--r-pill); padding: 3px 10px; font-size: 12px;
+  overflow: hidden; white-space: nowrap; margin: 1px 0; cursor: pointer; }
+.wk-bar-title { overflow: hidden; text-overflow: ellipsis; }
+.wk-bar.overdue { outline: 2px solid var(--danger); }
+.wk-empty { grid-column: 1 / 8; text-align: center; padding: 24px; }
 .day-num { font-family: var(--font-mono); }
 .chip { margin: 5px; padding: 5px 7px; border-radius: var(--r-ctl); font-size: 12px;
   color: #fff; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: none; width: calc(100% - 10px); text-align: left; }
