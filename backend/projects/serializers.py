@@ -1,0 +1,21 @@
+from rest_framework import serializers
+
+from .models import Project, SubProject
+
+
+class SubProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubProject
+        fields = [
+            "id", "project", "name", "color", "description",
+            "members_post_without_approval", "is_default",
+        ]
+        read_only_fields = ["is_default"]
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    subprojects = SubProjectSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Project
+        fields = ["id", "name", "color", "description", "subprojects"]

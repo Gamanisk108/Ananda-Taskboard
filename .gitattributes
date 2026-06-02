@@ -1,0 +1,5 @@
+# Normalize line endings; silence LF/CRLF churn warnings on Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.svg text eol=lf

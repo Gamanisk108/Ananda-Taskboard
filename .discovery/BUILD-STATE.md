@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 2
+current-step: 4
 last-updated: 2026-06-02
-last-commit: "e8d70c6 Step 1: scaffold"
+last-commit: "Step 3 (committing now)"
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -33,9 +33,14 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
 - [x] **1. Scaffold** — backend (Django+DRF) + frontend (Vite PWA) skeletons,
       docs/ skeleton, `.github/workflows/daily-push.yml`, root README, .gitignore.
       DONE + verified (health ok, frontend builds, migrates). Commit e8d70c6.
-- [ ] **2. Accounts & auth** — User, Group, JWT login/refresh, `/api/me`.
-- [ ] **3. Projects & sub-projects** — models, admin CRUD, default-subproject
+- [x] **2. Accounts & auth** — User, Group, JWT login/refresh, `/api/me`.
+      DONE + 12 tests pass. Commit 5d870ae. NOTE: `/api/me` tree is a stable
+      placeholder; permissions.tree fills it in step 4.
+- [x] **3. Projects & sub-projects** — models, admin CRUD, default-subproject
       auto-create, members_post_without_approval toggle field.
+      DONE + 11 tests (23 total). NOTE: viewset get_queryset already calls
+      permissions.engine.visible_*_ids (wrapped in try/except) — step 4 just
+      needs to CREATE that module and those functions.
 - [ ] **4. Permission engine (TDD FIRST)** — AccessGrant, `visible_subprojects()`
       union + most-permissive, whole-project grants, `/api/me` tree + tab flags.
 - [ ] **5. Tasks core** — Task model, create/edit, approval workflow + trusted
