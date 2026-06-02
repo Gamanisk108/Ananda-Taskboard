@@ -1,11 +1,16 @@
 ---
 project: ananda-taskboard
-status: in-progress
-phase: execute
+status: COMPLETE
+phase: done
 current-step: 12
 last-updated: 2026-06-02
-last-commit: "Step 11 (committing now). 137 backend tests; security review done."
+last-commit: "Step 12: verify. v1.0.0 feature-complete. 137 tests pass."
 ---
+
+> ✅ BUILD COMPLETE — all 12 steps done, v1.0.0. 137 backend tests pass, frontend
+> builds, verified live end-to-end. To run: see README.md (backend venv + migrate
+> + seed_demo + runserver; frontend npm run dev). Demo logins password
+> 'taskboard123'. Deferred Phase-2 work is listed in build-plan.md §12.
 
 # BUILD-STATE — read this FIRST if resuming
 
@@ -69,7 +74,8 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
       receive handled by public/push-sw.js via workbox importScripts.
 - [x] **11. Hardening** — full §12 edge-case suite (real assertions), security-review on API.
       DONE. test_hardening.py (14 tests, 137 total). docs/security-review.md written.
-- [ ] **12. Verify** — end-to-end run, verification-before-completion, docs final pass.
+- [x] **12. Verify** — end-to-end run, verification-before-completion, docs final pass.
+      DONE. check clean, 137 tests, frontend builds, live smoke test passed. v1.0.0.
 
 ## Living docs to keep updated each step
 README · docs/architecture.md (+ERD) · docs/api-reference.md ·

@@ -2,6 +2,16 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [1.0.0] — 2026-06-02
+### Verified
+- **Step 12 — Verify.** End-to-end verification passed: `manage.py check` clean,
+  **137 backend tests pass**, frontend production build clean (335 modules), and a
+  live smoke test confirmed admin project listing, approvals inbox, CSV export
+  (sanitized header), group-chat summary (grouped + OVERDUE flag), and the
+  secret-gated daily-push job (200 with secret, 403 without). v1 feature-complete
+  per the brief (Phase-2 items deferred: subtasks, native apps, webhooks, group
+  task-assignment).
+
 ## [Unreleased]
 ### Added
 - **Step 11 — Hardening.** Consolidated §12 edge-case suite (`test_hardening.py`,

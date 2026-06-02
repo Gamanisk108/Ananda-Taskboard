@@ -1,6 +1,6 @@
 ---
 project: ananda-taskboard
-status: awaiting-approval
+status: built-v1.0.0
 created: 2026-06-02
 source-spec: taskboard-goal-brief.md
 brainstorm: .discovery/brainstorm-progress.md
