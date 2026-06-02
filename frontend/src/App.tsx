@@ -9,6 +9,7 @@ import { MonthlyView } from "./components/MonthlyView";
 import { TaskModal } from "./components/TaskModal";
 import { Approvals } from "./components/Approvals";
 import { ManageProjects } from "./components/ManageProjects";
+import { TeamAdmin } from "./components/TeamAdmin";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "weekly" | "monthly";
@@ -21,6 +22,7 @@ export default function App() {
   const [editing, setEditing] = useState<Task | "new" | null>(null);
   const [showApprovals, setShowApprovals] = useState(false);
   const [showManage, setShowManage] = useState(false);
+  const [showTeam, setShowTeam] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -63,6 +65,9 @@ export default function App() {
           <strong>Ananda Taskboard</strong>
         </div>
         <div className="topbar-actions">
+          {me.is_admin && (
+            <button className="btn-secondary" onClick={() => setShowTeam(true)}>Team</button>
+          )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowManage(true)}>Manage projects</button>
           )}
@@ -139,6 +144,12 @@ export default function App() {
       {showManage && (
         <ManageProjects
           onClose={() => setShowManage(false)}
+          onChanged={() => { refreshMe(); bump(); }}
+        />
+      )}
+      {showTeam && (
+        <TeamAdmin
+          onClose={() => setShowTeam(false)}
           onChanged={() => { refreshMe(); bump(); }}
         />
       )}

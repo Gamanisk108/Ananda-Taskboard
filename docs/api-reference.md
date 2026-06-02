@@ -12,6 +12,13 @@
 - `POST /api/auth/refresh` — `{refresh}` → `{access}`
 - `GET  /api/me` — current user + visible project/sub-project tree + tab flags
 
+## Users & Groups
+- `GET /api/users` — active users + accessible sub-project ids (any auth user;
+  powers assignee picker). `POST` (admin) creates a member `{name,email,password,
+  role}`. `PATCH /api/users/{id}` (admin) — name/role/is_active/password reset;
+  can't demote/deactivate self.
+- `GET/POST/PATCH/DELETE /api/groups` (admin) — Groups; body `{name, member_ids}`.
+
 ## Projects & Sub-projects (step 3) — admin write, others read (visibility-filtered)
 - `GET    /api/projects` — list visible projects (admin: all; member: granted;
   each includes nested `subprojects`). `POST` (admin) creates a project +

@@ -11,6 +11,43 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "name", "role", "is_admin", "is_active"]
 
 
+class UserWriteSerializer(serializers.ModelSerializer):
+    """Admin create/update of team members. Password is write-only; on create it
+    is required, on update it is optional (reset)."""
+
+    password = serializers.CharField(write_only=True, required=False, allow_blank=False, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "name", "role", "is_active", "password"]
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        if not password:
+            raise serializers.ValidationError({"password": "Password is required for a new member."})
+        role = validated_data.get("role", User.Role.MEMBER)
+        is_admin = role == User.Role.ADMIN
+        return User.objects.create_user(
+            email=validated_data["email"],
+            name=validated_data.get("name", ""),
+            password=password,
+            role=role,
+            is_staff=is_admin,
+            is_superuser=is_admin,
+        )
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for k, v in validated_data.items():
+            setattr(instance, k, v)
+        if "role" in validated_data:
+            instance.is_staff = instance.is_superuser = (instance.role == User.Role.ADMIN)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+
 class GroupSerializer(serializers.ModelSerializer):
     member_ids = serializers.PrimaryKeyRelatedField(
         source="members", many=True, queryset=User.objects.all(), required=False

@@ -126,3 +126,57 @@ def test_users_endpoint_lists_active_users_with_access(api, admin, member):
 
 def test_users_requires_auth(api):
     assert api.get("/api/users").status_code == 401
+
+
+# --- member management (admin) ---------------------------------------------
+
+def test_admin_creates_member_who_can_login(api, admin):
+    auth(api, admin)
+    res = api.post("/api/users", {"email": "new@example.com", "name": "New", "password": "starterpass1"}, format="json")
+    assert res.status_code == 201
+    # the new member can now log in
+    fresh = APIClient()
+    login = fresh.post("/api/auth/login", {"email": "new@example.com", "password": "starterpass1"}, format="json")
+    assert login.status_code == 200
+
+
+def test_create_member_requires_password(api, admin):
+    auth(api, admin)
+    res = api.post("/api/users", {"email": "x@example.com", "name": "X"}, format="json")
+    assert res.status_code == 400
+
+
+def test_member_cannot_create_member(api, member):
+    auth(api, member)
+    res = api.post("/api/users", {"email": "x@example.com", "name": "X", "password": "starterpass1"}, format="json")
+    assert res.status_code == 403
+
+
+def test_admin_can_promote_member(api, admin, member):
+    auth(api, admin)
+    res = api.patch(f"/api/users/{member.id}", {"role": "admin"}, format="json")
+    assert res.status_code == 200
+    member.refresh_from_db()
+    assert member.is_admin and member.is_staff
+
+
+def test_admin_cannot_demote_self(api, admin):
+    auth(api, admin)
+    res = api.patch(f"/api/users/{admin.id}", {"role": "member"}, format="json")
+    assert res.status_code == 403
+
+
+# --- groups (admin) --------------------------------------------------------
+
+def test_admin_creates_group_with_members(api, admin, member):
+    auth(api, admin)
+    res = api.post("/api/groups", {"name": "Alliance", "member_ids": [member.id]}, format="json")
+    assert res.status_code == 201
+    g = Group.objects.get(name="Alliance")
+    assert member in g.members.all()
+
+
+def test_member_cannot_manage_groups(api, member):
+    auth(api, member)
+    assert api.get("/api/groups").status_code == 403
+    assert api.post("/api/groups", {"name": "X"}, format="json").status_code == 403

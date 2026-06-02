@@ -1,11 +1,15 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import User
-from .serializers import UserSerializer
+from permissions.drf import IsAdmin
+
+from .models import Group, User
+from .serializers import GroupSerializer, UserSerializer, UserWriteSerializer
 
 
 class EmailTokenObtainSerializer(TokenObtainPairSerializer):
@@ -33,11 +37,11 @@ class MeView(APIView):
 
 
 class UsersView(APIView):
-    """Active users plus the sub-project ids each can access — lets the task
-    assignee picker show everyone while graying out who lacks access to the
-    chosen sub-project."""
+    """GET: active users + their accessible sub-project ids (any authenticated
+    user — powers the assignee picker). POST: admin creates a team member."""
 
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAdmin()] if self.request.method == "POST" else [IsAuthenticated()]
 
     def get(self, request):
         from permissions.engine import visible_subproject_ids
@@ -45,10 +49,41 @@ class UsersView(APIView):
         out = []
         for u in User.objects.filter(is_active=True):
             out.append({
-                "id": u.id,
-                "name": u.name,
-                "email": u.email,
-                "is_admin": u.is_admin,
-                "subproject_ids": visible_subproject_ids(u),  # admin → all
+                "id": u.id, "name": u.name, "email": u.email, "is_admin": u.is_admin,
+                "role": u.role, "is_active": u.is_active,
+                "subproject_ids": visible_subproject_ids(u),
             })
         return Response(out)
+
+    def post(self, request):
+        ser = UserWriteSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        user = ser.save()
+        return Response(UserSerializer(user).data, status=201)
+
+
+class UserDetailView(APIView):
+    """Admin edit a member: name, role, active, or reset password."""
+
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, pk):
+        user = User.objects.filter(pk=pk).first()
+        if not user:
+            return Response(status=404)
+        # Guard against an admin locking themselves out.
+        if user.id == request.user.id:
+            if request.data.get("role") == User.Role.MEMBER or request.data.get("is_active") is False:
+                raise PermissionDenied("You can't demote or deactivate your own admin account.")
+        ser = UserWriteSerializer(user, data=request.data, partial=True)
+        ser.is_valid(raise_exception=True)
+        ser.save()
+        return Response(UserSerializer(user).data)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """Admin management of Groups (named user collections for bulk grants)."""
+
+    queryset = Group.objects.prefetch_related("members").all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsAdmin]

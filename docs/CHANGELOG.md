@@ -14,6 +14,14 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **UX pass 2 — Team & Permissions admin.** Admin can add team members
+  (name/email/starting password; free, no email service — Phase-2 email invites
+  left as a clean future add), promote/disable members, reset passwords; create
+  Groups and manage membership; and grant/revoke access (person *or* group →
+  sub-project *or* whole project, Member/Viewer) — all in a new tabbed **Team**
+  panel. Backend: `POST /api/users` + `PATCH /api/users/{id}` (admin, self-lockout
+  guarded), `GroupViewSet` CRUD (`/api/groups`). 8 new tests. Verified live
+  (create member → group → grant → member sees it via group).
 - **UX pass 1.** Task modal now has separate **Project** and **Sub-project**
   dropdowns (cascading), an **assignee picker** (everyone listed; no-access users
   grayed with a hover note), and the title field is labeled **Task name**.
