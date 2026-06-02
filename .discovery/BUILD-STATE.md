@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 11
+current-step: 12
 last-updated: 2026-06-02
-last-commit: "Step 10 (committing now). 123 backend tests; frontend builds."
+last-commit: "Step 11 (committing now). 137 backend tests; security review done."
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -67,7 +67,8 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
       endpoint + button. DONE + 13 tests (123 total). NOTE: approval *batching*
       kept simple (events logged via seam; admins use the approvals inbox). Push
       receive handled by public/push-sw.js via workbox importScripts.
-- [ ] **11. Hardening** — full §12 edge-case suite (real assertions), security-review on API.
+- [x] **11. Hardening** — full §12 edge-case suite (real assertions), security-review on API.
+      DONE. test_hardening.py (14 tests, 137 total). docs/security-review.md written.
 - [ ] **12. Verify** — end-to-end run, verification-before-completion, docs final pass.
 
 ## Living docs to keep updated each step

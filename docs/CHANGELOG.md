@@ -4,6 +4,12 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 11 — Hardening.** Consolidated §12 edge-case suite (`test_hardening.py`,
+  14 tests): server-side authz (viewer can't status/approve/edit-hidden),
+  revocation safety, rejected-task invisibility, emoji/RTL/special-char roundtrip,
+  graceful over-limit 400, duplicate-name rules, color-exhaustion cycling, empty
+  states, push graceful-failure. **137 tests total.** Manual API security review
+  → `docs/security-review.md` (no high-severity issues; prod hardening notes).
 - **Step 10 — Notifications.** `PushSubscription` model + Web Push send wrapper
   (no-op without VAPID, prunes dead endpoints). Daily-push builder (per-user
   assigned/approved/visible tasks due today + overdue, deduped, **silent if

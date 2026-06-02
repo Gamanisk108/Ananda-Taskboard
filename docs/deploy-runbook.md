@@ -26,6 +26,14 @@
 Generate once and set `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` /
 `VAPID_CLAIM_EMAIL`. (Generation steps added in step 10.)
 
+## Production security checklist (see docs/security-review.md)
+- Set `DJANGO_DEBUG=false`, a strong `DJANGO_SECRET_KEY`, real
+  `DJANGO_ALLOWED_HOSTS` + `DJANGO_CSRF_TRUSTED_ORIGINS`, long random
+  `DAILY_PUSH_SECRET`, and `CORS_ALLOWED_ORIGINS` = your frontend origin.
+- Consider enabling DRF login throttling (recommended; omitted from defaults so
+  tests aren't rate-limited).
+- Enable `SECURE_SSL_REDIRECT` / HSTS once the domain is fixed.
+
 ## Switching to Postgres
 Set `DATABASE_URL=postgres://...` and redeploy. No code change (settings parse it).
 
