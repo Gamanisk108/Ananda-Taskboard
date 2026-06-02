@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import models
 
 from projects.models import SubProject
+from softdelete import SoftDeleteModel
 
 
 class RecurrenceRule(models.Model):
@@ -31,7 +32,7 @@ class RecurrenceRule(models.Model):
         return f"{every}{self.freq} from {self.anchor}"
 
 
-class Task(models.Model):
+class Task(SoftDeleteModel):
     class Status(models.TextChoices):
         TODO = "todo", "To Do"
         IN_PROGRESS = "in_progress", "In Progress"

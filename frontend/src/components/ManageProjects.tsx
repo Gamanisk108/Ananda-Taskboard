@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
+import { DeleteWithMove } from "./DeleteWithMove";
 
 interface Sub {
   id: number;
@@ -21,6 +22,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   const [projects, setProjects] = useState<Proj[] | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState<{ kind: "project" | "subproject"; id: number; name: string } | null>(null);
 
   function load() {
     api.get("/api/projects").then(setProjects).catch(() => setProjects([]));
@@ -61,22 +63,29 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
     onChanged();
   }
 
-  async function deleteProject(p: Proj) {
-    if (!confirm(`Delete project "${p.name}" and ALL its sub-projects and tasks? This cannot be undone.`)) return;
-    await api.del(`/api/projects/${p.id}`);
-    load();
-    onChanged();
+  function deleteProject(p: Proj) {
+    setDeleting({ kind: "project", id: p.id, name: p.name });
   }
 
-  async function deleteSub(s: Sub) {
+  function deleteSub(s: Sub) {
     if (s.is_default) { alert("The default 'General' sub-project can't be deleted."); return; }
-    if (!confirm(`Delete sub-project "${s.name}" and its tasks? This cannot be undone.`)) return;
-    await api.del(`/api/subprojects/${s.id}`);
-    load();
-    onChanged();
+    setDeleting({ kind: "subproject", id: s.id, name: s.name });
   }
 
   if (!projects) return <Modal title="Manage projects" onClose={onClose}><Spinner /></Modal>;
+
+  if (deleting) {
+    return (
+      <DeleteWithMove
+        kind={deleting.kind}
+        id={deleting.id}
+        name={deleting.name}
+        projects={projects}
+        onClose={() => setDeleting(null)}
+        onDone={() => { setDeleting(null); load(); onChanged(); }}
+      />
+    );
+  }
 
   return (
     <Modal title="Manage projects" onClose={onClose} wide>

@@ -12,6 +12,8 @@ from django.contrib import admin
 from django.http import FileResponse, JsonResponse
 from django.urls import include, path, re_path
 
+from trashbin import TrashActionView, TrashView
+
 FRONTEND_DIST = settings.BASE_DIR.parent / "frontend" / "dist"
 
 
@@ -44,6 +46,8 @@ urlpatterns = [
     path("api/", include("tasks.urls")),
     path("api/", include("exporting.urls")),
     path("api/", include("notifications.urls")),
+    path("api/trash", TrashView.as_view(), name="trash"),
+    path("api/trash/action", TrashActionView.as_view(), name="trash-action"),
     # SPA catch-all (must be last; excludes api/ and admin/).
     re_path(r"^(?!api/|admin/)(?P<path>.*)$", spa, name="spa"),
 ]

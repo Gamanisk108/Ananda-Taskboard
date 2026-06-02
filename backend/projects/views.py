@@ -26,6 +26,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except (ImportError, ModuleNotFoundError):
             return Project.objects.none()
 
+    def perform_destroy(self, instance):
+        from trashbin import soft_delete_project
+
+        soft_delete_project(instance)  # cascade soft-delete (restorable for 7 days)
+
 
 class SubProjectViewSet(viewsets.ModelViewSet):
     serializer_class = SubProjectSerializer
@@ -41,3 +46,8 @@ class SubProjectViewSet(viewsets.ModelViewSet):
             return SubProject.objects.filter(id__in=visible_subproject_ids(user))
         except (ImportError, ModuleNotFoundError):
             return SubProject.objects.none()
+
+    def perform_destroy(self, instance):
+        from trashbin import soft_delete_subproject
+
+        soft_delete_subproject(instance)  # cascade soft-delete its tasks too

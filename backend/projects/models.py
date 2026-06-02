@@ -8,6 +8,8 @@ frontend hides the sub-project layer when only the default exists.
 
 from django.db import models
 
+from softdelete import SoftDeleteModel
+
 # Curated coding palette (mirrors docs/design-system.md). New projects/sub-projects
 # auto-pick the next unused color; on exhaustion we cycle (frontend disambiguates
 # collisions with a numeric suffix badge — see §12 color-exhaustion).
@@ -27,7 +29,7 @@ def _next_color(used):
     return PALETTE[len(used) % len(PALETTE)]
 
 
-class Project(models.Model):
+class Project(SoftDeleteModel):
     name = models.CharField(max_length=160)
     color = models.CharField(max_length=9, blank=True)
     description = models.TextField(blank=True)
@@ -46,7 +48,7 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
 
-class SubProject(models.Model):
+class SubProject(SoftDeleteModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="subprojects")
     name = models.CharField(max_length=160)
     color = models.CharField(max_length=9, blank=True)

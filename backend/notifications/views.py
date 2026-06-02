@@ -79,4 +79,8 @@ class DailyPushJobView(APIView):
         if not secret or secret != settings.DAILY_PUSH_SECRET:
             return Response(status=http.HTTP_403_FORBIDDEN)
         result = run_daily_push(send=True)
+        # piggyback the daily cron to purge expired Trash items (>7 days)
+        from trashbin import purge_expired
+
+        result["purged"] = purge_expired()
         return Response(result)

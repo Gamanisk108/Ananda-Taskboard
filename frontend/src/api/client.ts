@@ -73,7 +73,7 @@ export const api = {
   get: (p: string) => raw("GET", p).then(handle),
   post: (p: string, b?: unknown) => raw("POST", p, b ?? {}).then(handle),
   patch: (p: string, b: unknown) => raw("PATCH", p, b).then(handle),
-  del: (p: string) => raw("DELETE", p).then(handle),
+  del: (p: string, b?: unknown) => raw("DELETE", p, b).then(handle),
   async login(email: string, password: string) {
     const res = await fetch("/api/auth/login", {
       method: "POST",

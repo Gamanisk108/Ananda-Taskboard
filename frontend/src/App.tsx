@@ -11,6 +11,7 @@ import { Approvals } from "./components/Approvals";
 import { ManageProjects } from "./components/ManageProjects";
 import { TeamAdmin } from "./components/TeamAdmin";
 import { Settings } from "./components/Settings";
+import { Trash } from "./components/Trash";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "weekly" | "monthly";
@@ -25,6 +26,7 @@ export default function App() {
   const [showManage, setShowManage] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -72,6 +74,9 @@ export default function App() {
           )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowTeam(true)} title="Team & permissions">👥 Team</button>
+          )}
+          {me.is_admin && (
+            <button className="btn-ghost" onClick={() => setShowTrash(true)} title="Trash (restore deleted)">🗑</button>
           )}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowSettings(true)} title="Settings">⚙</button>
@@ -167,6 +172,7 @@ export default function App() {
         />
       )}
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showTrash && <Trash onClose={() => setShowTrash(false)} onChanged={() => { refreshMe(); bump(); }} />}
     </div>
   );
 }
