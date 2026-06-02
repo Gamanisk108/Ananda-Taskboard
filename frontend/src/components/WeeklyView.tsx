@@ -16,6 +16,7 @@ interface Props {
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
+  const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
   const users = useUsers();
   const colorByProject = !projectId; // global → by project; inside a project → by sub-project
 
@@ -27,6 +28,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
     else if (projectId) p.set("project", String(projectId));
     setItems(null);
     api.get(`/api/calendar?${p}`).then(setItems).catch(() => setItems([]));
+    api.get(`/api/events/range?from=${from}&to=${to}`).then(setEvents).catch(() => setEvents([]));
   }, [weekStart, projectId, subprojectId, refreshKey]);
 
   async function open(id: number) {
@@ -54,6 +56,9 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
             return (
               <div className="week-col" key={iso}>
                 <h4>{format(d, "EEE")} <span className="day-num">{format(d, "d")}</span></h4>
+                {events.filter((e) => e.date === iso).map((e, k) => (
+                  <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
+                ))}
                 {dayItems.map((i, idx) => (
                   <button
                     key={`${i.task_id}-${idx}`}

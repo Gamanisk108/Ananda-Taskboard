@@ -19,6 +19,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
+  const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
   const users = useUsers();
   const colorByProject = !projectId;
 
@@ -31,7 +32,17 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
     else if (projectId) p.set("project", String(projectId));
     setItems(null);
     api.get(`/api/calendar?${p}`).then(setItems).catch(() => setItems([]));
+    api.get(`/api/events/range?from=${from}&to=${to}`).then(setEvents).catch(() => setEvents([]));
   }, [month, projectId, subprojectId, refreshKey]);
+
+  const eventsByDate = useMemo(() => {
+    const m = new Map<string, { title: string; yearly: boolean }[]>();
+    for (const e of events) {
+      if (!m.has(e.date)) m.set(e.date, []);
+      m.get(e.date)!.push(e);
+    }
+    return m;
+  }, [events]);
 
   const byDate = useMemo(() => {
     const m = new Map<string, CalendarInstance[]>();
@@ -79,14 +90,18 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
             {cells.map((d) => {
               const iso = format(d, "yyyy-MM-dd");
               const dayItems = byDate.get(iso) ?? [];
+              const dayEvents = eventsByDate.get(iso) ?? [];
               const inMonth = isSameMonth(d, month);
               return (
                 <button
                   key={iso}
                   className={`mcell ${inMonth ? "" : "dim"}`}
-                  onClick={() => dayItems.length && setDayOpen(iso)}
+                  onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
                 >
                   <span className="day-num">{format(d, "d")}</span>
+                  {dayEvents.map((e, k) => (
+                    <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
+                  ))}
                   <div className="badges">
                     {countsByColor(dayItems).map(([c, n]) => (
                       <span key={c} className="badge" style={{ background: c }}>{n}</span>
@@ -99,6 +114,9 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
 
           {dayOpen && (
             <Modal title={format(new Date(dayOpen), "EEEE, MMM d, yyyy")} onClose={() => setDayOpen(null)}>
+              {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
+                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
+              ))}
               {(byDate.get(dayOpen) ?? []).map((i, idx) => (
                 <div
                   key={`${i.task_id}-${idx}`}

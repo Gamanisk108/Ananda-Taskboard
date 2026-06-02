@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Comment, RecurrenceRule, Task
+from .models import CalendarEvent, Comment, RecurrenceRule, Task
 
 
 class RecurrenceRuleSerializer(serializers.ModelSerializer):
@@ -77,6 +77,12 @@ class TaskSerializer(serializers.ModelSerializer):
         if assignee_groups is not None:
             instance.assignee_groups.set(assignee_groups)
         return instance
+
+
+class CalendarEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CalendarEvent
+        fields = ["id", "date", "title", "yearly"]
 
 
 class CommentSerializer(serializers.ModelSerializer):

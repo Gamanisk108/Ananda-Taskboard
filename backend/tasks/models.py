@@ -101,6 +101,22 @@ class TaskOccurrence(models.Model):
         return f"{self.task.title} @ {self.date}"
 
 
+class CalendarEvent(models.Model):
+    """A dated text note shown in the Weekly/Monthly calendars (birthdays, major
+    events). Not a task. `yearly` repeats it every year (e.g. birthdays)."""
+
+    date = models.DateField()
+    title = models.CharField(max_length=200)
+    yearly = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["date"]
+
+    def __str__(self):
+        return f"{self.title} ({self.date})"
+
+
 class Comment(models.Model):
     """A comment on a Task. Media is referenced by URL (no file storage)."""
 
