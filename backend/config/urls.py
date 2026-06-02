@@ -16,5 +16,6 @@ urlpatterns = [
     path("api/", include("accounts.urls")),  # step 2: auth + me
     path("api/", include("projects.urls")),  # step 3: projects + subprojects
     path("api/", include("permissions.urls")),  # step 4: access grants
+    path("api/", include("tasks.urls")),  # step 5: tasks + approvals
     # /api/<feature> includes are appended by later build steps.
 ]

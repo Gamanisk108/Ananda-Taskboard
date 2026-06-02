@@ -31,4 +31,20 @@
   show_project_overview, subprojects: [{ id, name, color, is_default, level }] }],
   show_global_overview }`. Overview flags follow the >1-to-consolidate rule.
 
-_(more added per step: tasks, approvals, comments, export, summary, push, jobs)_
+## Tasks (step 5) — server-side authz on every op
+- `GET /api/tasks` — visible + approved tasks. Filters: `?subproject= &project=
+  &status= &member= &approval=`. Hidden sub-projects never appear.
+- `POST /api/tasks` — create. Member needs Member-level on the sub-project
+  (Viewers → 403; no access → 403, existence not revealed). Approval: admin or
+  trusted sub-project → live; else `pending`. Body supports nested `recurrence`
+  `{freq, interval, anchor, end_date?, count?}` (end_date XOR count) and `links`
+  (list of URL strings).
+- `GET/PUT/PATCH/DELETE /api/tasks/{id}` — task in a hidden sub-project → 404
+  (IDOR-safe). Member content edit re-enters `pending` unless sub-project trusted.
+- `POST /api/tasks/{id}/status` `{status}` — assignees or admins only; direct.
+- `POST /api/tasks/{id}/approve` · `POST /api/tasks/{id}/reject` — admin only,
+  idempotent + race-safe.
+- `GET /api/approvals` — admin inbox of pending tasks.
+- `POST /api/approvals` `{ids:[], action:'approve'|'reject'}` — bulk, idempotent.
+
+_(more added per step: comments, export, summary, push, jobs)_

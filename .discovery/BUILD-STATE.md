@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 5
+current-step: 6
 last-updated: 2026-06-02
-last-commit: "Step 4 (committing now). 41 tests pass."
+last-commit: "Step 5 (committing now). 65 tests pass."
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -45,8 +45,11 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
       union + most-permissive, whole-project grants, `/api/me` tree + tab flags.
       DONE + 18 engine tests (41 total). engine.py is THE authz source of truth —
       route all task/export/push/summary visibility through it in later steps.
-- [ ] **5. Tasks core** — Task model, create/edit, approval workflow + trusted
-      toggle, status rules (assignee/admin direct).
+- [x] **5. Tasks core** — Task model, create/edit, approval workflow + trusted
+      toggle, status rules (assignee/admin direct). DONE + 24 tests (65 total).
+      NOTE: Task/RecurrenceRule/TaskOccurrence/Comment models ALL created in this
+      migration; step 6 only adds the recurrence ENGINE, step 8 only adds Comment
+      endpoints (models already exist).
 - [ ] **6. Recurrence engine (TDD FIRST)** — RecurrenceRule, occurrence
       generation, Feb-29/31st/boundary/DST, optional end (date|count), future-only edits.
 - [ ] **7. Views API + frontend** — list/weekly/monthly, filters/sort, overview

@@ -4,6 +4,14 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 5 — Tasks core.** `Task`, `RecurrenceRule`, `TaskOccurrence`, `Comment`
+  models. Task viewset with server-side authz: visibility via the engine,
+  create/edit approval (admin/trusted → live, else pending; Member edits
+  re-enter pending), status endpoint (assignees/admin only), idempotent race-safe
+  approve/reject, admin approvals inbox + bulk action. Events emitted via the
+  seam. **24 tests** (approval paths, viewer/no-access 403, pending-hidden,
+  IDOR 404, cross-leak, status auth, double-approve idempotency, recurrence/links
+  validation). 65 total — all passing.
 - **Step 4 — Permission engine (highest-risk, test-first).** `AccessGrant` model
   (user XOR group → sub-project XOR whole-project, level member|viewer, DB check
   constraints), `permissions/engine.py` (`visible_subprojects` union +
