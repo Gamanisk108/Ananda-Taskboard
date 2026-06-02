@@ -4,6 +4,12 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 9 — Export.** `GET /api/export?fmt=csv|xlsx` (+ project/subproject/status
+  filters), permission-filtered, approved-only. CSV formula-injection sanitized
+  (leading = + - @ / control chars → prefixed `'`); commas/quotes/newlines/emoji
+  preserved; empty export still valid (header row). XLSX via openpyxl. Export
+  CSV/XLSX buttons in the view toolbar (blob download with auth). 13 tests (110
+  total).
 - **Step 8 — Comments.** `GET/POST /api/tasks/{id}/comments` (visibility-gated:
   any user who can see the task, incl. Viewers, may comment; hidden task → 404).
   Comment section in the task modal. 5 tests (97 total).

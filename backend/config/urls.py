@@ -17,5 +17,6 @@ urlpatterns = [
     path("api/", include("projects.urls")),  # step 3: projects + subprojects
     path("api/", include("permissions.urls")),  # step 4: access grants
     path("api/", include("tasks.urls")),  # step 5: tasks + approvals
+    path("api/", include("exporting.urls")),  # step 9: CSV/XLSX export
     # /api/<feature> includes are appended by later build steps.
 ]

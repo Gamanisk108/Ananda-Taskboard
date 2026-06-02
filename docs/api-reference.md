@@ -57,4 +57,9 @@
 - `GET /api/tasks/{id}/comments` · `POST {text}` — any user with visibility to
   the task (incl. Viewers). Hidden task → 404. Empty text → 400.
 
-_(more added per step: export, summary, push, jobs)_
+## Export (step 9)
+- `GET /api/export?fmt=csv|xlsx&project=&subproject=&status=` — permission-
+  filtered, approved-only. CSV is formula-injection sanitized; empty → header-only
+  valid file. Returns a file download.
+
+_(more added per step: summary, push, jobs)_

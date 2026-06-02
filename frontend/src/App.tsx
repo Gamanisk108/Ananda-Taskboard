@@ -107,6 +107,9 @@ export default function App() {
             </button>
           ))}
         </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <ExportButtons projectId={projectId} subprojectId={subprojectId} />
+        </div>
       </div>
 
       <main className="content">
@@ -131,4 +134,21 @@ export default function App() {
 
 function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
+}
+
+function ExportButtons({ projectId, subprojectId }: { projectId?: number; subprojectId?: number }) {
+  function qs(fmt: string) {
+    const p = new URLSearchParams({ fmt });
+    if (subprojectId) p.set("subproject", String(subprojectId));
+    else if (projectId) p.set("project", String(projectId));
+    return p.toString();
+  }
+  const dl = (fmt: string, ext: string) =>
+    import("./api/client").then(({ api }) => api.download(`/api/export?${qs(fmt)}`, `tasks.${ext}`));
+  return (
+    <>
+      <button className="btn-secondary" onClick={() => dl("csv", "csv")}>Export CSV</button>
+      <button className="btn-secondary" onClick={() => dl("xlsx", "xlsx")}>Export XLSX</button>
+    </>
+  );
 }
