@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 8
+current-step: 9
 last-updated: 2026-06-02
-last-commit: "Step 7 (committing now). 92 backend tests; frontend builds."
+last-commit: "Step 8 (committing now). 97 backend tests; frontend builds."
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -58,7 +58,8 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
       (92 total). Full React PWA (auth, shell, 3 views, task modal, approvals).
       Verified live. seed_demo command available (pw 'taskboard123').
       NOTE: comments UI deferred to step 8; export/summary buttons to steps 9/10.
-- [ ] **8. Comments** — model + endpoints, visibility-gated.
+- [x] **8. Comments** — model + endpoints, visibility-gated. DONE + 5 tests (97
+      total). CommentSection in task modal.
 - [ ] **9. Export** — CSV+XLSX, permission filtering, CSV formula-injection sanitize.
 - [ ] **10. Notifications** — Web Push subscribe, daily-push builder (silent if
       empty, DST-safe, once/day), GH Actions cron wiring, approval batching,

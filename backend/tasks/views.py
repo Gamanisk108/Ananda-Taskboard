@@ -12,8 +12,8 @@ from permissions.drf import IsAdmin
 from permissions.engine import can_act_as_member, visible_subproject_ids
 from projects.models import SubProject
 
-from .models import Task
-from .serializers import TaskSerializer
+from .models import Comment, Task
+from .serializers import CommentSerializer, TaskSerializer
 
 
 def _approval_for(user, subproject):
@@ -112,6 +112,19 @@ class TaskViewSet(ModelViewSet):
         if changed:
             emit.emit(emit.TASK_STATUS_CHANGED, {"task": task.id, "status": new_status})
         return Response({"id": task.id, "status": new_status})
+
+    @action(detail=True, methods=["get", "post"])
+    def comments(self, request, pk=None):
+        """Any user with visibility to the task may read and add comments."""
+        task = self.get_object()  # 404 if not visible
+        if request.method == "GET":
+            return Response(CommentSerializer(task.comments.all(), many=True).data)
+        text = (request.data.get("text") or "").strip()
+        if not text:
+            raise ValidationError({"text": "Comment cannot be empty."})
+        comment = Comment.objects.create(task=task, author=request.user, text=text)
+        emit.emit(emit.COMMENT_ADDED, {"task": task.id, "comment": comment.id})
+        return Response(CommentSerializer(comment).data, status=http.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
     def approve(self, request, pk=None):

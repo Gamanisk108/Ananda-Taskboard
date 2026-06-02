@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, ApiError } from "../api/client";
 import { writableSubprojects, todayISO } from "../lookup";
 import { Modal, StatusPill } from "./common";
+import { CommentSection } from "./CommentSection";
 import { STATUS_LABEL, type Me, type Recurrence, type Status, type Task } from "../types";
 
 interface Props {
@@ -200,6 +201,7 @@ export function TaskModal({ task, me, defaultSubproject, onClose, onSaved }: Pro
           <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
         </div>
       </form>
+      {editing && <CommentSection taskId={task!.id} meId={me.id} />}
     </Modal>
   );
 }

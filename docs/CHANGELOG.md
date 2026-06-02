@@ -4,6 +4,9 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 8 — Comments.** `GET/POST /api/tasks/{id}/comments` (visibility-gated:
+  any user who can see the task, incl. Viewers, may comment; hidden task → 404).
+  Comment section in the task modal. 5 tests (97 total).
 - **Step 7 — Views API + frontend.** Backend `GET /api/calendar` (recurring-task
   expansion, overdue flag, visibility, 7 tests → 92 total) + `seed_demo` command.
   React 18 PWA frontend: JWT client w/ auto-refresh, auth context, login, app

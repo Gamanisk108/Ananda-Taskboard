@@ -53,4 +53,8 @@
   recurring tasks expanded per occurrence. Approved + visible only. Each instance
   carries project/sub-project name+color, status, `overdue`, `assignee_ids`.
 
-_(more added per step: comments, export, summary, push, jobs)_
+## Comments (step 8)
+- `GET /api/tasks/{id}/comments` · `POST {text}` — any user with visibility to
+  the task (incl. Viewers). Hidden task → 404. Empty text → 400.
+
+_(more added per step: export, summary, push, jobs)_
