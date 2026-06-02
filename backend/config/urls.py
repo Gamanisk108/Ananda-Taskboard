@@ -3,7 +3,7 @@ as each build step lands them. A health endpoint is always available."""
 
 from django.contrib import admin
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 
 
 def health(_request):
@@ -13,6 +13,6 @@ def health(_request):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health", health, name="health"),
-    # /api/<feature> includes are appended by later build steps:
-    # path("api/", include("accounts.urls")),  # step 2
+    path("api/", include("accounts.urls")),  # step 2: auth + me
+    # /api/<feature> includes are appended by later build steps.
 ]

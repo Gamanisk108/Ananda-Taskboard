@@ -2,8 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 1
+current-step: 2
 last-updated: 2026-06-02
+last-commit: "e8d70c6 Step 1: scaffold"
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -29,8 +30,9 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
 
 ## Build steps (source of truth for progress)
 
-- [ ] **1. Scaffold** — backend (Django+DRF) + frontend (Vite PWA) skeletons,
+- [x] **1. Scaffold** — backend (Django+DRF) + frontend (Vite PWA) skeletons,
       docs/ skeleton, `.github/workflows/daily-push.yml`, root README, .gitignore.
+      DONE + verified (health ok, frontend builds, migrates). Commit e8d70c6.
 - [ ] **2. Accounts & auth** — User, Group, JWT login/refresh, `/api/me`.
 - [ ] **3. Projects & sub-projects** — models, admin CRUD, default-subproject
       auto-create, members_post_without_approval toggle field.
