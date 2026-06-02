@@ -2,18 +2,32 @@
 
 > Living doc. Target: free-tier hosting, fully free to operate.
 
-## Hosting (Render free tier)
-1. Push repo to GitHub.
-2. Render → New Web Service → point at `backend/`.
-   - Build: `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput`
-   - Start: `gunicorn config.wsgi` (add `gunicorn` to requirements before deploy)
-3. Set environment variables from `backend/.env.example`.
-4. Frontend: build `npm run build` → deploy `frontend/dist/` as a static site
-   (Render static site / Netlify / Cloudflare Pages). Point its `/api` at the
-   backend URL (set `CORS_ALLOWED_ORIGINS` on the backend accordingly).
+## Hosting — easiest: one Render service (serves app + API together)
+The repo includes `render.yaml` (a Blueprint). Because Django now serves the built
+React app, the whole thing runs as **one free web service** — no separate frontend
+host, no CORS.
 
-> Free tiers sleep when idle (cold start). Acceptable for in-house use; the daily
-> push cron wakes the service.
+Beginner steps (≈15 min, needs a free GitHub + Render account):
+1. Push this repo to GitHub (ask Claude to do this, or use GitHub Desktop).
+2. Render.com → **New → Blueprint** → pick the repo. It reads `render.yaml`.
+3. When prompted, fill the `sync:false` env vars:
+   - `DJANGO_ALLOWED_HOSTS` = `your-app.onrender.com`
+   - `DJANGO_CSRF_TRUSTED_ORIGINS` = `https://your-app.onrender.com`
+   - VAPID keys (optional, for push — see below).
+   (`DJANGO_SECRET_KEY` and `DAILY_PUSH_SECRET` are auto-generated.)
+4. Click deploy. When it's live, open `https://your-app.onrender.com` in any
+   browser, on any device — log in. **This is the "open from anywhere" goal.**
+5. First admin: Render Shell → `python backend/manage.py seed_demo` (demo data) or
+   `python backend/manage.py createsuperuser` (just an admin), then use the in-app
+   **Team** panel for everyone else.
+
+> The Blueprint's build step runs `npm install && npm run build` (Render images
+> include Node), so the frontend is compiled on deploy — nothing to commit.
+> Free tier sleeps when idle (cold start); the daily-push cron wakes it.
+
+### Alternative: two services
+If you prefer, deploy `frontend/dist` as a Render Static Site and `backend/` as a
+Web Service, and set `CORS_ALLOWED_ORIGINS` to the static site's URL.
 
 ## Daily push (GitHub Actions cron)
 - Workflow: `.github/workflows/daily-push.yml` (runs ~15:00 UTC, manual dispatch available).

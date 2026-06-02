@@ -35,7 +35,12 @@ def login(user):
 
 # --- builder selection ------------------------------------------------------
 
+def grant_access(member, sp, level="member"):
+    AccessGrant.objects.create(user=member, subproject=sp, level=level)
+
+
 def test_due_today_and_overdue_selected(member, sp):
+    grant_access(member, sp)
     today = local_today()
     due = Task.objects.create(subproject=sp, title="Due today", deadline=today)
     over = Task.objects.create(subproject=sp, title="Overdue", deadline=today - timedelta(days=2), status="todo")
@@ -49,6 +54,7 @@ def test_due_today_and_overdue_selected(member, sp):
 
 
 def test_done_overdue_not_included(member, sp):
+    grant_access(member, sp)
     today = local_today()
     t = Task.objects.create(subproject=sp, title="Done old", deadline=today - timedelta(days=3), status="done")
     t.assignees.add(member)
@@ -57,6 +63,7 @@ def test_done_overdue_not_included(member, sp):
 
 
 def test_recurring_due_today(member, sp):
+    grant_access(member, sp)
     today = local_today()
     rr = RecurrenceRule.objects.create(freq="daily", interval=1, anchor=today)
     t = Task.objects.create(subproject=sp, title="Standup", recurrence_rule=rr)
@@ -86,6 +93,7 @@ def test_payload_summarizes_counts():
 # --- run_daily_push idempotency --------------------------------------------
 
 def test_daily_push_once_per_day(member, sp):
+    grant_access(member, sp)
     today = local_today()
     t = Task.objects.create(subproject=sp, title="X", deadline=today)
     t.assignees.add(member)
@@ -154,6 +162,7 @@ def test_summary_empty_message(member):
 
 def test_group_assigned_task_in_member_daily(member, sp):
     from accounts.models import Group
+    grant_access(member, sp)
     today = local_today()
     g = Group.objects.create(name="Crew")
     g.members.add(member)
@@ -161,6 +170,15 @@ def test_group_assigned_task_in_member_daily(member, sp):
     t.assignee_groups.add(g)
     due_today, _ = tasks_for_user(member, today)
     assert "Crew task" in due_today
+
+
+def test_assigned_but_no_access_excluded_from_push(member, sp):
+    """Security: assignment alone must not leak a task the user can't see."""
+    today = local_today()
+    t = Task.objects.create(subproject=sp, title="Hidden assigned", deadline=today)
+    t.assignees.add(member)  # assigned, but member has NO grant to sp
+    due_today, overdue = tasks_for_user(member, today)
+    assert "Hidden assigned" not in due_today and "Hidden assigned" not in overdue
 
 
 # --- app settings (admin, in-app) ------------------------------------------

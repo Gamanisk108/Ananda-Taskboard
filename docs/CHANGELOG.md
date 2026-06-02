@@ -13,7 +13,20 @@ All notable changes to Ananda Taskboard. Newest first.
   task-assignment).
 
 ## [Unreleased]
+### Security
+- **Daily-push visibility leak fixed.** `tasks_for_user` now filters by the
+  permission engine, not just assignment — an assignee without access to a task's
+  sub-project no longer sees its title in their push. Regression test added.
+  (Found in security review pass 2; see `docs/security-review.md`.)
+
 ### Added
+- **Deploy-ready (open from anywhere).** `render.yaml` Blueprint = one free Render
+  service serving app + API (no CORS), `Procfile`, gunicorn + whitenoise (prod
+  static), production-only manifest storage. Beginner deploy walkthrough in the
+  runbook. Local one-click `.bat` remains the no-account option.
+- **webapp QA:** `qa/webapp_smoke.py` Playwright suite — 25/25 checks (admin flow,
+  task create with Project/Sub-project/assignees, sortable columns, weekly/monthly,
+  Team/Manage/Settings panels, and permission gating for a member-via-group user).
 - **One-click launch (no PowerShell).** Django now serves the built React SPA from
   `frontend/dist`, so the whole app runs from a single server at
   `http://localhost:8000`. Root `Start Ananda Taskboard.bat` (double-click →

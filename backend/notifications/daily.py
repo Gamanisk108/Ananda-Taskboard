@@ -34,9 +34,12 @@ def tasks_for_user(user, today):
     occurrence lands today."""
     from django.db.models import Q
 
+    from permissions.engine import visible_subproject_ids
+
     group_ids = list(user.member_groups.values_list("id", flat=True))
+    visible = visible_subproject_ids(user)  # admin → all
     assigned = (
-        Task.objects.filter(approval_state=Task.Approval.APPROVED)
+        Task.objects.filter(approval_state=Task.Approval.APPROVED, subproject_id__in=visible)
         .filter(Q(assignees=user) | Q(assignee_groups__in=group_ids))
         .select_related("recurrence_rule")
         .distinct()

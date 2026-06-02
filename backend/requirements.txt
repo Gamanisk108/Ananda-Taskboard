@@ -5,6 +5,9 @@ django-cors-headers>=4.3
 pywebpush>=2.0
 openpyxl>=3.1
 python-dateutil>=2.9
+# production server / static
+gunicorn>=22.0
+whitenoise>=6.6
 # dev / test
 pytest>=8.0
 pytest-django>=4.8
