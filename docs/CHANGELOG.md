@@ -4,6 +4,14 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 6 — Recurrence engine (test-first).** `tasks/recurrence.py`:
+  `occurrence_dates` (daily/weekly/monthly/yearly + interval, fast-forward for
+  long gaps) and `materialize_occurrences` (per-occurrence status, future-only
+  rule edits). Explicit edge policy: monthly-31st skips short months (no
+  roll-over), yearly Feb-29 only in leap years, `count` stops exactly (counted
+  from anchor), `end_date` inclusive (no off-by-one), date-based so DST never
+  shifts the day. **20 tests** incl. the ludicrous cases + materialization
+  idempotency/status-preservation. 85 total — all passing.
 - **Step 5 — Tasks core.** `Task`, `RecurrenceRule`, `TaskOccurrence`, `Comment`
   models. Task viewset with server-side authz: visibility via the engine,
   create/edit approval (admin/trusted → live, else pending; Member edits

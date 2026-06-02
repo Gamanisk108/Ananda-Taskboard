@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 6
+current-step: 7
 last-updated: 2026-06-02
-last-commit: "Step 5 (committing now). 65 tests pass."
+last-commit: "Step 6 (committing now). 85 tests pass."
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -50,8 +50,9 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
       NOTE: Task/RecurrenceRule/TaskOccurrence/Comment models ALL created in this
       migration; step 6 only adds the recurrence ENGINE, step 8 only adds Comment
       endpoints (models already exist).
-- [ ] **6. Recurrence engine (TDD FIRST)** — RecurrenceRule, occurrence
+- [x] **6. Recurrence engine (TDD FIRST)** — RecurrenceRule, occurrence
       generation, Feb-29/31st/boundary/DST, optional end (date|count), future-only edits.
+      DONE + 20 tests (85 total). engine in tasks/recurrence.py.
 - [ ] **7. Views API + frontend** — list/weekly/monthly, filters/sort, overview
       tabs (appear only when >1), overdue red flag.
 - [ ] **8. Comments** — model + endpoints, visibility-gated.
