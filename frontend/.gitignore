@@ -8,9 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 *.local
+# NOTE: dist/ is intentionally committed so the Python-only Render build serves it
+# without Node. Rebuild + commit dist after frontend changes.
 
 # Editor directories and files
 .vscode/*
