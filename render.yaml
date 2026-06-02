@@ -26,15 +26,8 @@ services:
         generateValue: true
       - key: APP_TIMEZONE
         value: America/Los_Angeles
-      # Persistent Postgres (free). Auto-injected from the database below, so data
-      # survives redeploys. Remove this to fall back to (ephemeral) SQLite.
+      # DATABASE_URL: set this in the Render dashboard to a Neon (free, persistent)
+      # Postgres connection string for data that survives redeploys forever.
+      # If unset, the app uses SQLite (ephemeral on Render free → resets on deploy).
       - key: DATABASE_URL
-        fromDatabase:
-          name: ananda-db
-          property: connectionString
-
-databases:
-  - name: ananda-db
-    plan: free
-    databaseName: ananda
-    user: ananda
+        sync: false

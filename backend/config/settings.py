@@ -88,10 +88,19 @@ ASGI_APPLICATION = "config.asgi.application"
 # Default SQLite. Set DATABASE_URL=postgres://... later to switch with no code change.
 DATABASE_URL = env("DATABASE_URL")
 if DATABASE_URL:
-    # Minimal parser to avoid an extra dependency; supports postgres URLs.
-    from urllib.parse import urlparse
+    # Minimal parser to avoid an extra dependency; supports postgres URLs incl.
+    # an ?sslmode= query (required by hosted Postgres like Neon/Supabase).
+    from urllib.parse import parse_qs, urlparse
 
     u = urlparse(DATABASE_URL)
+    q = parse_qs(u.query)
+    options = {}
+    sslmode = (q.get("sslmode") or [None])[0]
+    # Default to requiring SSL for non-local hosts (Neon/Supabase/etc.).
+    if not sslmode and u.hostname not in ("localhost", "127.0.0.1", "", None):
+        sslmode = "require"
+    if sslmode:
+        options["sslmode"] = sslmode
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -100,6 +109,8 @@ if DATABASE_URL:
             "PASSWORD": u.password or "",
             "HOST": u.hostname or "",
             "PORT": str(u.port or ""),
+            "OPTIONS": options,
+            "CONN_MAX_AGE": 600,
         }
     }
 else:
