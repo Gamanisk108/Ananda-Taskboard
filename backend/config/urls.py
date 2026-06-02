@@ -18,5 +18,6 @@ urlpatterns = [
     path("api/", include("permissions.urls")),  # step 4: access grants
     path("api/", include("tasks.urls")),  # step 5: tasks + approvals
     path("api/", include("exporting.urls")),  # step 9: CSV/XLSX export
+    path("api/", include("notifications.urls")),  # step 10: push, summary, daily job
     # /api/<feature> includes are appended by later build steps.
 ]

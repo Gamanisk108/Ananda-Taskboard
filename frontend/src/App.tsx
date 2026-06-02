@@ -67,6 +67,7 @@ export default function App() {
           {canCreate && (
             <button className="btn-primary" onClick={() => setEditing("new")}>+ New task</button>
           )}
+          <NotifyButton />
           <span className="muted" style={{ fontSize: 13 }}>{me.name || me.email}</span>
           <button className="btn-ghost" onClick={logout}>Sign out</button>
         </div>
@@ -108,6 +109,7 @@ export default function App() {
           ))}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
+          <CopySummaryButton />
           <ExportButtons projectId={projectId} subprojectId={subprojectId} />
         </div>
       </div>
@@ -134,6 +136,32 @@ export default function App() {
 
 function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
+}
+
+function NotifyButton() {
+  const [msg, setMsg] = useState("");
+  async function enable() {
+    const { enablePush } = await import("./push");
+    setMsg(await enablePush());
+    setTimeout(() => setMsg(""), 3000);
+  }
+  return (
+    <button className="btn-ghost" onClick={enable} title={msg || "Enable daily push notifications"}>
+      {msg ? msg : "🔔"}
+    </button>
+  );
+}
+
+function CopySummaryButton() {
+  const [label, setLabel] = useState("Copy summary");
+  async function copy() {
+    const { api } = await import("./api/client");
+    const { text } = (await api.get("/api/summary/groupchat")) as { text: string };
+    await navigator.clipboard.writeText(text);
+    setLabel("Copied!");
+    setTimeout(() => setLabel("Copy summary"), 2000);
+  }
+  return <button className="btn-secondary" onClick={copy}>{label}</button>;
 }
 
 function ExportButtons({ projectId, subprojectId }: { projectId?: number; subprojectId?: number }) {

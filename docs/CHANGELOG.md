@@ -4,6 +4,15 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 10 — Notifications.** `PushSubscription` model + Web Push send wrapper
+  (no-op without VAPID, prunes dead endpoints). Daily-push builder (per-user
+  assigned/approved/visible tasks due today + overdue, deduped, **silent if
+  empty**, local-time/DST-safe, once-per-day guard via `last_daily_push`).
+  Secret-gated `POST /api/jobs/daily-push` (GitHub Actions cron). `push/config`,
+  `push/subscribe` (+DELETE). Group-chat summary `GET /api/summary/groupchat`
+  (plain text, Project→Sub-project grouping, visibility-respecting). Frontend:
+  🔔 enable-push, Copy-summary button, custom SW push/notificationclick handler.
+  13 tests (123 total).
 - **Step 9 — Export.** `GET /api/export?fmt=csv|xlsx` (+ project/subproject/status
   filters), permission-filtered, approved-only. CSV formula-injection sanitized
   (leading = + - @ / control chars → prefixed `'`); commas/quotes/newlines/emoji

@@ -1,3 +1,150 @@
-from django.test import TestCase
+from datetime import timedelta
 
-# Create your tests here.
+import pytest
+from rest_framework.test import APIClient
+
+from accounts.models import User
+from notifications.daily import build_payload, local_today, run_daily_push, tasks_for_user
+from notifications.models import PushSubscription
+from permissions.models import AccessGrant
+from projects.models import Project, SubProject
+from tasks.models import RecurrenceRule, Task
+
+
+@pytest.fixture
+def admin(db):
+    return User.objects.create_superuser(email="a@example.com", name="Ada", password="pw-strong-123")
+
+
+@pytest.fixture
+def member(db):
+    return User.objects.create_user(email="m@example.com", name="Mara", password="pw-strong-123")
+
+
+@pytest.fixture
+def sp(db):
+    return SubProject.objects.create(project=Project.objects.create(name="Karuna"), name="Marketing")
+
+
+def login(user):
+    api = APIClient()
+    res = api.post("/api/auth/login", {"email": user.email, "password": "pw-strong-123"}, format="json")
+    api.credentials(HTTP_AUTHORIZATION=f"Bearer {res.data['access']}")
+    return api
+
+
+# --- builder selection ------------------------------------------------------
+
+def test_due_today_and_overdue_selected(member, sp):
+    today = local_today()
+    due = Task.objects.create(subproject=sp, title="Due today", deadline=today)
+    over = Task.objects.create(subproject=sp, title="Overdue", deadline=today - timedelta(days=2), status="todo")
+    fut = Task.objects.create(subproject=sp, title="Future", deadline=today + timedelta(days=5))
+    fut.assignees.add(member)
+    due.assignees.add(member)
+    over.assignees.add(member)
+    due_today, overdue = tasks_for_user(member, today)
+    assert due_today == ["Due today"]
+    assert overdue == ["Overdue"]
+
+
+def test_done_overdue_not_included(member, sp):
+    today = local_today()
+    t = Task.objects.create(subproject=sp, title="Done old", deadline=today - timedelta(days=3), status="done")
+    t.assignees.add(member)
+    _, overdue = tasks_for_user(member, today)
+    assert overdue == []
+
+
+def test_recurring_due_today(member, sp):
+    today = local_today()
+    rr = RecurrenceRule.objects.create(freq="daily", interval=1, anchor=today)
+    t = Task.objects.create(subproject=sp, title="Standup", recurrence_rule=rr)
+    t.assignees.add(member)
+    due_today, _ = tasks_for_user(member, today)
+    assert due_today == ["Standup"]
+
+
+def test_unassigned_user_gets_nothing(member, sp):
+    today = local_today()
+    Task.objects.create(subproject=sp, title="Not mine", deadline=today)  # no assignee
+    due_today, overdue = tasks_for_user(member, today)
+    assert due_today == [] and overdue == []
+
+
+# --- payload ----------------------------------------------------------------
+
+def test_payload_silent_when_empty():
+    assert build_payload([], []) is None
+
+
+def test_payload_summarizes_counts():
+    p = build_payload(["a", "b"], ["c"])
+    assert "2 due today" in p["body"] and "1 overdue" in p["body"]
+
+
+# --- run_daily_push idempotency --------------------------------------------
+
+def test_daily_push_once_per_day(member, sp):
+    today = local_today()
+    t = Task.objects.create(subproject=sp, title="X", deadline=today)
+    t.assignees.add(member)
+    r1 = run_daily_push(send=False)
+    assert r1["recipients"] == 1
+    r2 = run_daily_push(send=False)
+    assert r2["recipients"] == 0  # guard prevents a second push the same day
+    member.refresh_from_db()
+    assert member.last_daily_push == today
+
+
+def test_user_with_nothing_is_not_a_recipient(member, sp):
+    run_daily_push(send=False)  # member has no tasks
+    member.refresh_from_db()
+    assert member.last_daily_push == local_today()  # guard set, but silent
+
+
+# --- job endpoint -----------------------------------------------------------
+
+def test_daily_job_requires_secret(db, settings):
+    settings.DAILY_PUSH_SECRET = "right"
+    api = APIClient()
+    assert api.post("/api/jobs/daily-push", {}, format="json").status_code == 403
+    assert api.post("/api/jobs/daily-push", {}, format="json", HTTP_X_DAILY_PUSH_SECRET="wrong").status_code == 403
+    ok = api.post("/api/jobs/daily-push", {}, format="json", HTTP_X_DAILY_PUSH_SECRET="right")
+    assert ok.status_code == 200 and "recipients" in ok.data
+
+
+# --- subscribe --------------------------------------------------------------
+
+def test_subscribe_and_unsubscribe(member):
+    api = login(member)
+    sub = {"endpoint": "https://push.example/abc", "keys": {"p256dh": "k", "auth": "a"}}
+    assert api.post("/api/push/subscribe", sub, format="json").status_code == 201
+    assert PushSubscription.objects.filter(user=member).count() == 1
+    assert api.delete("/api/push/subscribe", {"endpoint": sub["endpoint"]}, format="json").status_code == 204
+    assert PushSubscription.objects.filter(user=member).count() == 0
+
+
+def test_subscribe_invalid_rejected(member):
+    res = login(member).post("/api/push/subscribe", {"endpoint": "x"}, format="json")
+    assert res.status_code == 400
+
+
+# --- group-chat summary -----------------------------------------------------
+
+def test_summary_groups_and_respects_visibility(member, sp):
+    today = local_today()
+    hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Warehouse")
+    AccessGrant.objects.create(user=member, subproject=sp, level="viewer")
+    Task.objects.create(subproject=sp, title="Visible task", deadline=today)
+    Task.objects.create(subproject=hidden, title="Hidden task", deadline=today)
+    res = login(member).get(f"/api/summary/groupchat?date={today.isoformat()}")
+    text = res.data["text"]
+    assert "Visible task" in text
+    assert "Hidden task" not in text
+    assert "Karuna" in text and "Marketing" in text
+
+
+def test_summary_empty_message(member):
+    res = login(member).get("/api/summary/groupchat")
+    assert "Nothing scheduled" in res.data["text"]

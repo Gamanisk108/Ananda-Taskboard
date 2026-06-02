@@ -62,4 +62,9 @@
   filtered, approved-only. CSV is formula-injection sanitized; empty → header-only
   valid file. Returns a file download.
 
-_(more added per step: summary, push, jobs)_
+## Notifications (step 10)
+- `GET /api/push/config` → `{vapid_public_key}`.
+- `POST /api/push/subscribe` (PushSubscription JSON) · `DELETE` `{endpoint}`.
+- `GET /api/summary/groupchat?date=` → `{text}` plain-text paste-ready summary.
+- `POST /api/jobs/daily-push` — header `X-Daily-Push-Secret`; runs the daily push
+  (silent for users with nothing; once per local day). Returns counts.

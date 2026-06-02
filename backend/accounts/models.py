@@ -44,6 +44,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Django admin access
     created_at = models.DateTimeField(auto_now_add=True)
+    # Guard so the daily push fires at most once per local day per user even if
+    # the cron triggers more than once.
+    last_daily_push = models.DateField(null=True, blank=True)
 
     objects = UserManager()
 

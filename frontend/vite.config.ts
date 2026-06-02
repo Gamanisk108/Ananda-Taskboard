@@ -28,6 +28,7 @@ export default defineConfig({
       workbox: {
         // App shell offline; API calls are network-first (never cache task data stale).
         navigateFallback: '/index.html',
+        importScripts: ['push-sw.js'], // custom push + notificationclick handlers
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api'),

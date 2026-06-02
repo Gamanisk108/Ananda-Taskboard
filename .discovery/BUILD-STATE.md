@@ -2,9 +2,9 @@
 project: ananda-taskboard
 status: in-progress
 phase: execute
-current-step: 10
+current-step: 11
 last-updated: 2026-06-02
-last-commit: "Step 9 (committing now). 110 backend tests; frontend builds."
+last-commit: "Step 10 (committing now). 123 backend tests; frontend builds."
 ---
 
 # BUILD-STATE — read this FIRST if resuming
@@ -62,9 +62,11 @@ the stack pattern from `C:\AI\backend` + `C:\AI\frontend`, do NOT copy their dat
       total). CommentSection in task modal.
 - [x] **9. Export** — CSV+XLSX, permission filtering, CSV formula-injection sanitize.
       DONE + 13 tests (110 total). Buttons in viewbar.
-- [ ] **10. Notifications** — Web Push subscribe, daily-push builder (silent if
-      empty, DST-safe, once/day), GH Actions cron wiring, approval batching,
-      group-chat summary endpoint + button.
+- [x] **10. Notifications** — Web Push subscribe, daily-push builder (silent if
+      empty, DST-safe, once/day), GH Actions cron wiring, group-chat summary
+      endpoint + button. DONE + 13 tests (123 total). NOTE: approval *batching*
+      kept simple (events logged via seam; admins use the approvals inbox). Push
+      receive handled by public/push-sw.js via workbox importScripts.
 - [ ] **11. Hardening** — full §12 edge-case suite (real assertions), security-review on API.
 - [ ] **12. Verify** — end-to-end run, verification-before-completion, docs final pass.
 
