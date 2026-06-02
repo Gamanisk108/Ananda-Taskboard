@@ -12,8 +12,18 @@ from permissions.drf import IsAdmin
 from permissions.engine import can_act_as_member, visible_subproject_ids
 from projects.models import SubProject
 
-from .models import Comment, Task
-from .serializers import CommentSerializer, TaskSerializer
+from .models import Comment, Subtask, Task
+from .serializers import CommentSerializer, SubtaskSerializer, TaskSerializer
+
+
+def _can_edit_task(user, task):
+    """Admin, a Member on the task's sub-project, or an assignee may manage a
+    task's checklist (subtasks)."""
+    return (
+        user.is_admin
+        or can_act_as_member(user, task.subproject_id)
+        or task.assignees.filter(pk=user.pk).exists()
+    )
 
 
 def _approval_for(user, subproject):
@@ -114,6 +124,19 @@ class TaskViewSet(ModelViewSet):
         return Response({"id": task.id, "status": new_status})
 
     @action(detail=True, methods=["get", "post"])
+    def subtasks(self, request, pk=None):
+        """List or add checklist items under a task (visibility-gated)."""
+        task = self.get_object()  # 404 if not visible
+        if request.method == "GET":
+            return Response(SubtaskSerializer(task.subtasks.all(), many=True).data)
+        if not _can_edit_task(request.user, task):
+            raise PermissionDenied("You can't add subtasks to this task.")
+        ser = SubtaskSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        ser.save(task=task)
+        return Response(ser.data, status=http.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get", "post"])
     def comments(self, request, pk=None):
         """Any user with visibility to the task may read and add comments."""
         task = self.get_object()  # 404 if not visible
@@ -147,6 +170,34 @@ class TaskViewSet(ModelViewSet):
         if changed:
             emit.emit(event, {"task": int(pk)})
         return Response({"id": int(pk), "approval_state": target})
+
+
+class SubtaskViewSet(ModelViewSet):
+    """Update/delete individual subtasks. Visibility + edit rights enforced via
+    the parent task. (Creation is via /api/tasks/{id}/subtasks.)"""
+
+    serializer_class = SubtaskSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "patch", "put", "delete"]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Subtask.objects.select_related("task__subproject")
+        if not user.is_admin:
+            qs = qs.filter(task__subproject_id__in=visible_subproject_ids(user))
+        return qs
+
+    def _guard(self, subtask):
+        if not _can_edit_task(self.request.user, subtask.task):
+            raise PermissionDenied("You can't edit this checklist.")
+
+    def perform_update(self, serializer):
+        self._guard(serializer.instance)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._guard(instance)
+        instance.delete()
 
 
 class ApprovalsView(APIView):

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Comment, RecurrenceRule, Task
+from .models import Comment, RecurrenceRule, Subtask, Task
 
 
 class RecurrenceRuleSerializer(serializers.ModelSerializer):
@@ -77,6 +77,13 @@ class TaskSerializer(serializers.ModelSerializer):
         if assignee_groups is not None:
             instance.assignee_groups.set(assignee_groups)
         return instance
+
+
+class SubtaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subtask
+        fields = ["id", "task", "title", "is_done", "position"]
+        read_only_fields = ["task"]
 
 
 class CommentSerializer(serializers.ModelSerializer):

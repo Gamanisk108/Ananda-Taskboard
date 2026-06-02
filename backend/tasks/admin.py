@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Comment, RecurrenceRule, Task, TaskOccurrence
+from .models import Comment, RecurrenceRule, Subtask, Task, TaskOccurrence
+
+
+@admin.register(Subtask)
+class SubtaskAdmin(admin.ModelAdmin):
+    list_display = ("title", "task", "is_done", "position")
+    list_filter = ("is_done",)
 
 
 @admin.register(Task)

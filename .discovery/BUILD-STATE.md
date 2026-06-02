@@ -83,4 +83,11 @@ docs/deploy-runbook.md · docs/permissions-matrix.md · docs/CHANGELOG.md ·
 docs/decision-log.md
 
 ## Notes / deviations from plan (append-only)
-- (none yet)
+- v1.0.0 shipped; deployed to Render from `main` (single-server, serves SPA+API).
+- **Local branch `phase2-extras`** holds extra Phase-2 work NOT yet deployed
+  (kept off `main` so the live Render demo is undisturbed; do not push without
+  Gordon's OK): assign-to-group (already on main), **subtasks** (checklist) and
+  **outbound webhooks** (Zapier). To deploy later: merge to main, rebuild
+  `frontend/dist`, commit, push (Render auto-deploys).
+- Still deferred: native apps (Capacitor — needs Apple/Play accounts), email
+  invites, Web Push VAPID keys.

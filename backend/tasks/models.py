@@ -100,6 +100,23 @@ class TaskOccurrence(models.Model):
         return f"{self.task.title} @ {self.date}"
 
 
+class Subtask(models.Model):
+    """A checklist item under a Task (Phase 2). Nesting is capped here — subtasks
+    have no children."""
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="subtasks")
+    title = models.CharField(max_length=300)
+    is_done = models.BooleanField(default=False)
+    position = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+
+    def __str__(self):
+        return self.title
+
+
 class Comment(models.Model):
     """A comment on a Task. Media is referenced by URL (no file storage)."""
 

@@ -50,12 +50,63 @@ export function Settings({ onClose }: { onClose: () => void }) {
             daily scheduler (see deploy runbook); set the scheduler to match this hour.
           </div>
           {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 10 }}>{msg}</div>}
+          <div className="modal-foot" style={{ marginBottom: 8 }}>
+            <button className="btn-primary" onClick={save}>Save time settings</button>
+          </div>
+
+          <Webhooks />
+
           <div className="modal-foot">
             <button className="btn-secondary" onClick={onClose}>Close</button>
-            <button className="btn-primary" onClick={save}>Save</button>
           </div>
         </>
       )}
     </Modal>
+  );
+}
+
+interface Hook { id: number; url: string; events: string; active: boolean; }
+
+function Webhooks() {
+  const [hooks, setHooks] = useState<Hook[]>([]);
+  const [url, setUrl] = useState("");
+  const [events, setEvents] = useState("");
+
+  function load() { api.get("/api/webhooks").then(setHooks).catch(() => setHooks([])); }
+  useEffect(load, []);
+
+  async function add() {
+    if (!url.trim()) return;
+    await api.post("/api/webhooks", { url: url.trim(), events: events.trim() });
+    setUrl(""); setEvents(""); load();
+  }
+  async function toggle(h: Hook) { await api.patch(`/api/webhooks/${h.id}`, { active: !h.active }); load(); }
+  async function remove(h: Hook) { await api.del(`/api/webhooks/${h.id}`); load(); }
+
+  return (
+    <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
+      <h3 className="section-title">Integrations — outbound webhooks (Zapier, etc.)</h3>
+      <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        Paste a Zapier "Catch Hook" URL to get task events (created / approved / status changed…).
+        Leave "events" blank for all.
+      </div>
+      {hooks.map((h) => (
+        <div key={h.id} className="assignee-row" style={{ justifyContent: "space-between" }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+            <span className="mono" style={{ fontSize: 12 }}>{h.url}</span>
+            <span className="muted"> · {h.events || "all events"}</span>
+          </span>
+          <span style={{ display: "flex", gap: 6 }}>
+            <button type="button" className="btn-ghost" onClick={() => toggle(h)}>{h.active ? "On" : "Off"}</button>
+            <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(h)}>✕</button>
+          </span>
+        </div>
+      ))}
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <input placeholder="https://hooks.zapier.com/…" value={url} onChange={(e) => setUrl(e.target.value)} />
+        <input placeholder="events (optional)" value={events} onChange={(e) => setEvents(e.target.value)} style={{ maxWidth: 160 }} />
+        <button className="btn-secondary" type="button" onClick={add}>Add</button>
+      </div>
+    </div>
   );
 }

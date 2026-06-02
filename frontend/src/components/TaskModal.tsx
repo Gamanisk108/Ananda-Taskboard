@@ -4,6 +4,7 @@ import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { Modal, StatusPill } from "./common";
 import { CommentSection } from "./CommentSection";
+import { SubtaskSection } from "./SubtaskSection";
 import { STATUS_LABEL, type Me, type Recurrence, type Status, type Task } from "../types";
 
 interface Props {
@@ -271,6 +272,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
         </div>
       </form>
+      {editing && <SubtaskSection taskId={task!.id} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} />}
     </Modal>
   );

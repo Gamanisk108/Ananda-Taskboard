@@ -44,6 +44,7 @@ urlpatterns = [
     path("api/", include("tasks.urls")),
     path("api/", include("exporting.urls")),
     path("api/", include("notifications.urls")),
+    path("api/", include("events.urls")),  # outbound webhooks (admin)
     # SPA catch-all (must be last; excludes api/ and admin/).
     re_path(r"^(?!api/|admin/)(?P<path>.*)$", spa, name="spa"),
 ]

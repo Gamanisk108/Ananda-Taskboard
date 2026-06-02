@@ -2,6 +2,19 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [Unreleased — branch `phase2-extras`, not yet deployed]
+### Added
+- **Subtasks (checklist).** `Subtask` model + API (`GET/POST /api/tasks/{id}/subtasks`,
+  `PATCH/DELETE /api/subtasks/{id}`); checklist section in the task modal with
+  done/total progress. Visibility-gated; admins/members/assignees can edit,
+  viewers read-only. 7 tests.
+- **Outbound webhooks (Zapier-ready).** `Webhook` model; the event seam now POSTs
+  task events to active matching webhooks (best-effort, short timeout, never breaks
+  the request). Admin API (`/api/webhooks`) + an Integrations section in Settings
+  to paste a Zapier Catch-Hook URL. 8 tests.
+> These live on the local `phase2-extras` branch only — `main`/the Render demo is
+> untouched. Merge + rebuild `dist` + push to deploy them.
+
 ## [1.0.0] — 2026-06-02
 ### Verified
 - **Step 12 — Verify.** End-to-end verification passed: `manage.py check` clean,

@@ -64,6 +64,16 @@
 - `GET /api/tasks/{id}/comments` · `POST {text}` — any user with visibility to
   the task (incl. Viewers). Hidden task → 404. Empty text → 400.
 
+## Subtasks / checklist (Phase 2)
+- `GET /api/tasks/{id}/subtasks` · `POST {title}` — view by anyone with task
+  visibility; add by admin/member/assignee (viewers 403; hidden task 404).
+- `PATCH/DELETE /api/subtasks/{id}` — `{title, is_done, position}`; same edit rights.
+
+## Webhooks (Phase 2, admin)
+- `GET/POST/PATCH/DELETE /api/webhooks` — `{url, events, active}`. `events` is a
+  comma-separated list of event names (blank/`*` = all). On a matching task event
+  the seam POSTs `{event, data}` to the URL.
+
 ## Export (step 9)
 - `GET /api/export?fmt=csv|xlsx&project=&subproject=&status=` — permission-
   filtered, approved-only. CSV is formula-injection sanitized; empty → header-only
