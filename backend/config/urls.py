@@ -18,7 +18,10 @@ FRONTEND_DIST = settings.BASE_DIR.parent / "frontend" / "dist"
 
 
 def health(_request):
-    return JsonResponse({"status": "ok", "service": "ananda-taskboard"})
+    from django.db import connection
+
+    # 'postgresql' once DATABASE_URL points at Neon/Postgres; 'sqlite' otherwise.
+    return JsonResponse({"status": "ok", "service": "ananda-taskboard", "database": connection.vendor})
 
 
 def spa(request, path=""):
