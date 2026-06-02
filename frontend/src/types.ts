@@ -59,6 +59,14 @@ export interface Task {
   comment_count: number;
 }
 
+export interface UserLite {
+  id: number;
+  name: string;
+  email: string;
+  is_admin: boolean;
+  subproject_ids: number[];
+}
+
 export interface CalendarInstance {
   task_id: number;
   title: string;

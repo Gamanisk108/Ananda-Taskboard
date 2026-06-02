@@ -105,3 +105,24 @@ def test_group_membership_is_many_to_many(db, member, admin):
     g.members.add(member, admin)
     assert g.members.count() == 2
     assert member.member_groups.filter(name="Seva Volunteers").exists()
+
+
+# --- users endpoint --------------------------------------------------------
+
+def test_users_endpoint_lists_active_users_with_access(api, admin, member):
+    from permissions.models import AccessGrant
+    from projects.models import Project, SubProject
+
+    sp = SubProject.objects.create(project=Project.objects.create(name="P"), name="SP")
+    AccessGrant.objects.create(user=member, subproject=sp, level="member")
+    auth(api, admin)
+    res = api.get("/api/users")
+    assert res.status_code == 200
+    by_email = {u["email"]: u for u in res.data}
+    # member sees the granted sub-project; admin sees all
+    assert sp.id in by_email["m@example.com"]["subproject_ids"]
+    assert sp.id in by_email["a@example.com"]["subproject_ids"]
+
+
+def test_users_requires_auth(api):
+    assert api.get("/api/users").status_code == 401

@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .models import User
 from .serializers import UserSerializer
 
 
@@ -22,10 +23,6 @@ class MeView(APIView):
 
     def get(self, request):
         data = UserSerializer(request.user).data
-        # The visible project/sub-project tree + overview-tab flags are computed
-        # by the permission engine (build step 4) and merged in here. The key is
-        # present now with a stable shape so the frontend can rely on it; it stays
-        # empty until projects + grants exist.
         try:
             from permissions.tree import visible_tree
 
@@ -33,3 +30,25 @@ class MeView(APIView):
         except (ImportError, ModuleNotFoundError):
             data["tree"] = {"projects": [], "show_global_overview": False}
         return Response(data)
+
+
+class UsersView(APIView):
+    """Active users plus the sub-project ids each can access — lets the task
+    assignee picker show everyone while graying out who lacks access to the
+    chosen sub-project."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from permissions.engine import visible_subproject_ids
+
+        out = []
+        for u in User.objects.filter(is_active=True):
+            out.append({
+                "id": u.id,
+                "name": u.name,
+                "email": u.email,
+                "is_admin": u.is_admin,
+                "subproject_ids": visible_subproject_ids(u),  # admin → all
+            })
+        return Response(out)

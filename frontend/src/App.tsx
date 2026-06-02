@@ -8,17 +8,19 @@ import { WeeklyView } from "./components/WeeklyView";
 import { MonthlyView } from "./components/MonthlyView";
 import { TaskModal } from "./components/TaskModal";
 import { Approvals } from "./components/Approvals";
+import { ManageProjects } from "./components/ManageProjects";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "weekly" | "monthly";
 
 export default function App() {
-  const { me, loading, logout } = useAuth();
+  const { me, loading, logout, refreshMe } = useAuth();
   const [topTab, setTopTab] = useState<"global" | number | null>(null);
   const [subTab, setSubTab] = useState<"overview" | number | null>(null);
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Task | "new" | null>(null);
   const [showApprovals, setShowApprovals] = useState(false);
+  const [showManage, setShowManage] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -61,6 +63,9 @@ export default function App() {
           <strong>Ananda Taskboard</strong>
         </div>
         <div className="topbar-actions">
+          {me.is_admin && (
+            <button className="btn-secondary" onClick={() => setShowManage(true)}>Manage projects</button>
+          )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowApprovals(true)}>Approvals</button>
           )}
@@ -124,12 +129,19 @@ export default function App() {
         <TaskModal
           task={editing === "new" ? null : editing}
           me={me}
+          defaultProject={projectId}
           defaultSubproject={subprojectId}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); bump(); }}
         />
       )}
       {showApprovals && <Approvals onClose={() => setShowApprovals(false)} onChanged={bump} />}
+      {showManage && (
+        <ManageProjects
+          onClose={() => setShowManage(false)}
+          onChanged={() => { refreshMe(); bump(); }}
+        />
+      )}
     </div>
   );
 }

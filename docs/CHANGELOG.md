@@ -14,6 +14,14 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **UX pass 1.** Task modal now has separate **Project** and **Sub-project**
+  dropdowns (cascading), an **assignee picker** (everyone listed; no-access users
+  grayed with a hover note), and the title field is labeled **Task name**.
+  List view: separate **Project** & **Sub-project** columns, an **Assignees**
+  column, and click-to-sort headers + a "Most recent" toggle. New admin
+  **Manage projects** panel (create/edit projects & sub-projects, names, colors,
+  trusted toggle) — edits refresh the tab tree live. Backend `GET /api/users`
+  (users + their accessible sub-project ids) with 2 tests.
 - **Step 11 — Hardening.** Consolidated §12 edge-case suite (`test_hardening.py`,
   14 tests): server-side authz (viewer can't status/approve/edit-hidden),
   revocation safety, rejected-task invisibility, emoji/RTL/special-char roundtrip,

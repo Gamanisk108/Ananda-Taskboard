@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { api, ApiError } from "../api/client";
-import { writableSubprojects, todayISO } from "../lookup";
+import { writableProjects, todayISO } from "../lookup";
+import { useUsers } from "../users";
 import { Modal, StatusPill } from "./common";
 import { CommentSection } from "./CommentSection";
 import { STATUS_LABEL, type Me, type Recurrence, type Status, type Task } from "../types";
@@ -9,23 +10,32 @@ interface Props {
   task: Task | null;
   me: Me;
   defaultSubproject?: number;
+  defaultProject?: number;
   onClose: () => void;
   onSaved: () => void;
 }
 
 type EndMode = "none" | "date" | "count";
 
-export function TaskModal({ task, me, defaultSubproject, onClose, onSaved }: Props) {
+export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved }: Props) {
   const editing = !!task;
-  const options = writableSubprojects(me);
+  const projects = useMemo(() => writableProjects(me), [me]);
+  const users = useUsers();
+
+  // Project + Sub-project (cascading). When editing, fixed to the task's own.
+  const initialProject = task?.project ?? defaultProject ?? projects[0]?.id ?? 0;
+  const [projectId, setProjectId] = useState<number>(initialProject);
+  const subOptions = projects.find((p) => p.id === projectId)?.subprojects ?? [];
   const [subproject, setSubproject] = useState<number>(
-    task?.subproject ?? defaultSubproject ?? options[0]?.id ?? 0
+    task?.subproject ?? defaultSubproject ?? subOptions[0]?.id ?? 0
   );
+
   const [title, setTitle] = useState(task?.title ?? "");
   const [details, setDetails] = useState(task?.details ?? "");
   const [requirements, setRequirements] = useState(task?.requirements ?? "");
   const [deadline, setDeadline] = useState(task?.deadline ?? "");
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
+  const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -41,6 +51,18 @@ export function TaskModal({ task, me, defaultSubproject, onClose, onSaved }: Pro
 
   const canChangeStatus = editing && (me.is_admin || (task!.assignees ?? []).includes(me.id));
 
+  function pickProject(id: number) {
+    setProjectId(id);
+    const subs = projects.find((p) => p.id === id)?.subprojects ?? [];
+    setSubproject(subs[0]?.id ?? 0);
+  }
+  function toggleAssignee(id: number) {
+    setAssignees((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
+  }
+  function hasAccess(u: { is_admin: boolean; subproject_ids: number[] }) {
+    return u.is_admin || u.subproject_ids.includes(subproject);
+  }
+
   async function changeStatus(s: Status) {
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
@@ -53,17 +75,14 @@ export function TaskModal({ task, me, defaultSubproject, onClose, onSaved }: Pro
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
-    if (!subproject) { setErr("Pick a sub-project."); return; }
+    if (!subproject) { setErr("Pick a project and sub-project."); return; }
     const recurrence: Recurrence | null = repeats
-      ? {
-          freq, interval, anchor,
-          end_date: endMode === "date" ? endDate : null,
-          count: endMode === "count" ? count : null,
-        }
+      ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null, count: endMode === "count" ? count : null }
       : null;
     const payload = {
       subproject, title, details, requirements,
       deadline: deadline || null,
+      assignees,
       links: links.split("\n").map((l) => l.trim()).filter(Boolean),
       recurrence,
     };
@@ -102,15 +121,44 @@ export function TaskModal({ task, me, defaultSubproject, onClose, onSaved }: Pro
         )}
 
         <div className="field">
-          <label>Sub-project</label>
-          <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))} disabled={editing}>
-            {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-          </select>
+          <label>Task name</label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="e.g. Design spring flyer" />
+        </div>
+
+        <div className="row2">
+          <div className="field">
+            <label>Project</label>
+            <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))} disabled={editing}>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Sub-project</label>
+            <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))} disabled={editing}>
+              {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
         </div>
 
         <div className="field">
-          <label>Title</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+          <label>Assignees</label>
+          <div className="assignee-list">
+            {users.length === 0 && <span className="muted">No users.</span>}
+            {users.map((u) => {
+              const access = hasAccess(u);
+              return (
+                <label
+                  key={u.id}
+                  className={`assignee-row ${access ? "" : "no-access"}`}
+                  title={access ? "" : "This person has no access to the selected sub-project"}
+                >
+                  <input type="checkbox" style={{ width: "auto" }} checked={assignees.includes(u.id)} onChange={() => toggleAssignee(u.id)} />
+                  <span>{u.name || u.email}</span>
+                  {!access && <span className="noaccess-tag">no access</span>}
+                </label>
+              );
+            })}
+          </div>
         </div>
 
         <div className="row2">

@@ -26,15 +26,20 @@ export function buildSubLookup(tree: Tree): Map<number, SubInfo> {
   return m;
 }
 
-/** Sub-projects the user can create/edit tasks in (Member level or admin). */
-export function writableSubprojects(me: Me) {
-  const out: { id: number; label: string }[] = [];
+/** Projects (grouped) the user can create/edit tasks in, each with its writable
+ *  sub-projects. Powers the cascading Project → Sub-project pickers. */
+export interface WritableProject {
+  id: number;
+  name: string;
+  subprojects: { id: number; name: string }[];
+}
+export function writableProjects(me: Me): WritableProject[] {
+  const out: WritableProject[] = [];
   for (const p of me.tree.projects) {
-    for (const s of p.subprojects) {
-      if (me.is_admin || s.level === "member") {
-        out.push({ id: s.id, label: p.show_project_overview || p.subprojects.length > 1 ? `${p.name} / ${s.name}` : p.name });
-      }
-    }
+    const subs = p.subprojects
+      .filter((s) => me.is_admin || s.level === "member")
+      .map((s) => ({ id: s.id, name: s.name }));
+    if (subs.length) out.push({ id: p.id, name: p.name, subprojects: subs });
   }
   return out;
 }

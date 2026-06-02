@@ -82,4 +82,23 @@
   padding: 1px 7px; font-weight: 600; }
 
 .section-title { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; }
-.bulkbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.bulkbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+
+/* assignee picker */
+.assignee-list { max-height: 160px; overflow-y: auto; border: 1px solid var(--border);
+  border-radius: var(--r-ctl); padding: 6px; background: var(--surface); }
+.assignee-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px;
+  border-radius: var(--r-ctl); cursor: pointer; margin: 0; font-size: 13px; color: var(--text); }
+.assignee-row:hover { background: var(--surface-sunk); }
+.assignee-row.no-access { color: var(--text-muted); opacity: 0.6; }
+.noaccess-tag { margin-left: auto; font-size: 11px; color: var(--danger);
+  background: #b4452f14; border-radius: var(--r-pill); padding: 1px 7px; }
+
+/* assignee chips in table */
+.who { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.who .pill { background: var(--surface-sunk); color: var(--text); }
+
+/* sortable headers */
+.tbl thead th.sortable { cursor: pointer; user-select: none; }
+.tbl thead th.sortable:hover { color: var(--text); }
+.sort-arrow { font-size: 9px; margin-left: 3px; }
