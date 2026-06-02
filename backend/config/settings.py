@@ -29,8 +29,8 @@ SECRET_KEY = env(
     "django-insecure-dev-only-0riek0a2z+9y3c!#6*95fkw_j7r@71y1aofui+7yv",
 )
 DEBUG = env_bool("DJANGO_DEBUG", True)
-ALLOWED_HOSTS = [h for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
-CSRF_TRUSTED_ORIGINS = [o for o in env("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+ALLOWED_HOSTS = [h for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,.onrender.com").split(",") if h]
+CSRF_TRUSTED_ORIGINS = [o for o in env("DJANGO_CSRF_TRUSTED_ORIGINS", "https://*.onrender.com").split(",") if o]
 
 INSTALLED_APPS = [
     "django.contrib.admin",

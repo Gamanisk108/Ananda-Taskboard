@@ -10,10 +10,11 @@ db.sqlite3
 
 # Node / Vite
 node_modules/
-dist/
 dist-ssr/
 *.local
 .vite/
+# NOTE: frontend/dist IS tracked on purpose so the cloud deploy (Python-only
+# Render image) doesn't need Node to build. Re-commit it after frontend changes.
 
 # Editors / OS
 .vscode/

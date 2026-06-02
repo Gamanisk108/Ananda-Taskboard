@@ -21,6 +21,12 @@ class Command(BaseCommand):
     help = "Seed demo data"
 
     def handle(self, *args, **opts):
+        # Idempotent guard: if any project exists, assume already seeded and skip
+        # (so re-running on every deploy doesn't duplicate or crash on unique names).
+        if Project.objects.exists():
+            self.stdout.write("Already seeded; skipping.")
+            return
+
         admin, _ = User.objects.get_or_create(
             email="admin@ananda.test", defaults={"name": "Admin Ada", "role": User.Role.ADMIN, "is_staff": True, "is_superuser": True}
         )

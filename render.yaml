@@ -1,9 +1,10 @@
 # Render.com blueprint — one free web service that serves BOTH the API and the
-# built React app (single origin, no CORS needed). Frontend is built in the build
-# step (Render images include Node), then Django serves frontend/dist.
+# built React app (single origin, no CORS needed). The frontend is pre-built and
+# committed to frontend/dist, so this Python-only build needs no Node.
 #
-# To deploy: push this repo to GitHub → Render → New → Blueprint → pick the repo.
-# Then set the env vars marked sync:false in the Render dashboard.
+# Deploy: push to GitHub → Render → New → Blueprint → pick the repo → Apply.
+# No manual env vars needed (host/CSRF default to *.onrender.com). Web Push (VAPID)
+# is optional and can be added later in the dashboard.
 services:
   - type: web
     name: ananda-taskboard
@@ -11,28 +12,17 @@ services:
     plan: free
     rootDir: .
     buildCommand: >
-      npm --prefix frontend install &&
-      npm --prefix frontend run build &&
       pip install -r backend/requirements.txt &&
       python backend/manage.py collectstatic --noinput &&
-      python backend/manage.py migrate --noinput
+      python backend/manage.py migrate --noinput &&
+      python backend/manage.py seed_demo
     startCommand: gunicorn config.wsgi --chdir backend --bind 0.0.0.0:$PORT
     envVars:
       - key: DJANGO_DEBUG
         value: "false"
       - key: DJANGO_SECRET_KEY
         generateValue: true
-      - key: DJANGO_ALLOWED_HOSTS
-        sync: false   # set to your-app.onrender.com
-      - key: DJANGO_CSRF_TRUSTED_ORIGINS
-        sync: false   # set to https://your-app.onrender.com
       - key: DAILY_PUSH_SECRET
         generateValue: true
       - key: APP_TIMEZONE
         value: America/Los_Angeles
-      - key: VAPID_PUBLIC_KEY
-        sync: false
-      - key: VAPID_PRIVATE_KEY
-        sync: false
-      - key: VAPID_CLAIM_EMAIL
-        sync: false
