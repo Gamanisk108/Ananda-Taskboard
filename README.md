@@ -14,6 +14,14 @@ grantable to individuals or Groups.
 Full design + decisions: `.discovery/build-plan.md` and `taskboard-goal-brief.md`.
 Build progress / resume point: `.discovery/BUILD-STATE.md`.
 
+## Easiest way to run it (no command line)
+1. First time only: double-click **`Setup (run once first).bat`** (installs everything, builds the app, creates demo logins). Takes a few minutes.
+2. Every time after: double-click **`Start Ananda Taskboard.bat`** — it opens the app in your browser at http://localhost:8000. Keep the black window open while using it; close it to stop.
+
+Demo logins (password `taskboard123`): `admin@ananda.test`, `mara@ananda.test`, `omar@ananda.test`.
+
+> After changing frontend code, re-run `Setup (run once first).bat` (or `npm run build` in `frontend/`) so the built app updates.
+
 ## Quick start (development)
 
 ### Backend

@@ -46,6 +46,7 @@ export interface Task {
   details: string;
   requirements: string;
   assignees: number[];
+  assignee_groups: number[];
   deadline: string | null;
   timeline_start: string | null;
   timeline_end: string | null;

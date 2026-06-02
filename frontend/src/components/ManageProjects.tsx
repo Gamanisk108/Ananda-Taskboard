@@ -61,6 +61,21 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
     onChanged();
   }
 
+  async function deleteProject(p: Proj) {
+    if (!confirm(`Delete project "${p.name}" and ALL its sub-projects and tasks? This cannot be undone.`)) return;
+    await api.del(`/api/projects/${p.id}`);
+    load();
+    onChanged();
+  }
+
+  async function deleteSub(s: Sub) {
+    if (s.is_default) { alert("The default 'General' sub-project can't be deleted."); return; }
+    if (!confirm(`Delete sub-project "${s.name}" and its tasks? This cannot be undone.`)) return;
+    await api.del(`/api/subprojects/${s.id}`);
+    load();
+    onChanged();
+  }
+
   if (!projects) return <Modal title="Manage projects" onClose={onClose}><Spinner /></Modal>;
 
   return (
@@ -71,7 +86,8 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
       </div>
 
       {projects.map((p) => (
-        <ProjectEditor key={p.id} project={p} onSaveProject={saveProject} onAddSub={addSub} onSaveSub={saveSub} />
+        <ProjectEditor key={p.id} project={p} onSaveProject={saveProject} onAddSub={addSub}
+          onSaveSub={saveSub} onDeleteProject={deleteProject} onDeleteSub={deleteSub} />
       ))}
       {projects.length === 0 && <div className="empty">No projects yet. Add one above.</div>}
     </Modal>
@@ -79,12 +95,14 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
 }
 
 function ProjectEditor({
-  project, onSaveProject, onAddSub, onSaveSub,
+  project, onSaveProject, onAddSub, onSaveSub, onDeleteProject, onDeleteSub,
 }: {
   project: Proj;
   onSaveProject: (p: Proj) => void;
   onAddSub: (projectId: number, name: string) => void;
   onSaveSub: (s: Sub) => void;
+  onDeleteProject: (p: Proj) => void;
+  onDeleteSub: (s: Sub) => void;
 }) {
   const [p, setP] = useState(project);
   const [newSub, setNewSub] = useState("");
@@ -96,11 +114,12 @@ function ProjectEditor({
         <input type="color" value={p.color} onChange={(e) => setP({ ...p, color: e.target.value })} style={{ width: 44, padding: 2 }} />
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>Save</button>
+        <button className="btn-danger" onClick={() => onDeleteProject(project)}>Delete</button>
       </div>
 
       <div style={{ paddingLeft: 8 }}>
         {p.subprojects.map((s) => (
-          <SubEditor key={s.id} sub={s} onSave={onSaveSub} />
+          <SubEditor key={s.id} sub={s} onSave={onSaveSub} onDelete={onDeleteSub} />
         ))}
         <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
           <input placeholder="New sub-project…" value={newSub} onChange={(e) => setNewSub(e.target.value)} />
@@ -111,7 +130,7 @@ function ProjectEditor({
   );
 }
 
-function SubEditor({ sub, onSave }: { sub: Sub; onSave: (s: Sub) => void }) {
+function SubEditor({ sub, onSave, onDelete }: { sub: Sub; onSave: (s: Sub) => void; onDelete: (s: Sub) => void }) {
   const [s, setS] = useState(sub);
   useEffect(() => setS(sub), [sub]);
   return (
@@ -125,6 +144,7 @@ function SubEditor({ sub, onSave }: { sub: Sub; onSave: (s: Sub) => void }) {
         trusted
       </label>
       <button className="btn-ghost" onClick={() => onSave(s)}>Save</button>
+      {!s.is_default && <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => onDelete(sub)}>✕</button>}
     </div>
   );
 }

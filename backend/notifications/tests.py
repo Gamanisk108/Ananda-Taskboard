@@ -148,3 +148,40 @@ def test_summary_groups_and_respects_visibility(member, sp):
 def test_summary_empty_message(member):
     res = login(member).get("/api/summary/groupchat")
     assert "Nothing scheduled" in res.data["text"]
+
+
+# --- group-assigned tasks reach group members (Phase 2) --------------------
+
+def test_group_assigned_task_in_member_daily(member, sp):
+    from accounts.models import Group
+    today = local_today()
+    g = Group.objects.create(name="Crew")
+    g.members.add(member)
+    t = Task.objects.create(subproject=sp, title="Crew task", deadline=today)
+    t.assignee_groups.add(g)
+    due_today, _ = tasks_for_user(member, today)
+    assert "Crew task" in due_today
+
+
+# --- app settings (admin, in-app) ------------------------------------------
+
+def test_admin_reads_and_updates_settings(admin):
+    api = login(admin)
+    assert api.get("/api/settings").data["daily_push_hour"] == 8
+    res = api.patch("/api/settings", {"daily_push_hour": 6, "timezone": "America/New_York"}, format="json")
+    assert res.status_code == 200 and res.data["daily_push_hour"] == 6
+    assert api.get("/api/settings").data["timezone"] == "America/New_York"
+
+
+def test_settings_rejects_bad_time(admin):
+    res = login(admin).patch("/api/settings", {"daily_push_hour": 99}, format="json")
+    assert res.status_code == 400
+
+
+def test_settings_rejects_bad_timezone(admin):
+    res = login(admin).patch("/api/settings", {"timezone": "Mars/Phobos"}, format="json")
+    assert res.status_code == 400
+
+
+def test_member_cannot_change_settings(member):
+    assert login(member).patch("/api/settings", {"daily_push_hour": 5}, format="json").status_code == 403

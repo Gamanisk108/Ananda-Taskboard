@@ -25,7 +25,7 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             "id", "subproject", "project", "title", "details", "requirements",
-            "assignees", "deadline", "timeline_start", "timeline_end",
+            "assignees", "assignee_groups", "deadline", "timeline_start", "timeline_end",
             "status", "approval_state", "recurrence", "links",
             "created_by", "created_at", "updated_at", "comment_count",
         ]
@@ -52,18 +52,21 @@ class TaskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         recurrence_data = validated_data.pop("recurrence_rule", None)
         assignees = validated_data.pop("assignees", [])
+        assignee_groups = validated_data.pop("assignee_groups", [])
         task = Task(**validated_data)
         if recurrence_data is not None:
             rule = RecurrenceRule.objects.create(**recurrence_data)
             task.recurrence_rule = rule
         task.save()
         task.assignees.set(assignees)
+        task.assignee_groups.set(assignee_groups)
         return task
 
     def update(self, instance, validated_data):
         has_recurrence = "recurrence_rule" in validated_data
         recurrence_data = validated_data.pop("recurrence_rule", None)
         assignees = validated_data.pop("assignees", None)
+        assignee_groups = validated_data.pop("assignee_groups", None)
         for k, v in validated_data.items():
             setattr(instance, k, v)
         if has_recurrence:
@@ -71,6 +74,8 @@ class TaskSerializer(serializers.ModelSerializer):
         instance.save()
         if assignees is not None:
             instance.assignees.set(assignees)
+        if assignee_groups is not None:
+            instance.assignee_groups.set(assignee_groups)
         return instance
 
 

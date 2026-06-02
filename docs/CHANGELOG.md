@@ -14,6 +14,17 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **One-click launch (no PowerShell).** Django now serves the built React SPA from
+  `frontend/dist`, so the whole app runs from a single server at
+  `http://localhost:8000`. Root `Start Ananda Taskboard.bat` (double-click →
+  migrate, open browser, run) and `Setup (run once first).bat` (install + build +
+  seed). SPA fallback routing; `/api/*` still 404s correctly. Verified live.
+- **Admin in-app (no Django dashboard needed).** Delete projects & sub-projects
+  from Manage Projects; in-app **Settings** (⚙) for daily-push hour/minute +
+  timezone (`AppSettings` singleton, `GET/PATCH /api/settings`, admin-only).
+- **Phase 2 — assign tasks to whole Groups.** `Task.assignee_groups`; group
+  members count as assigned for the daily push. Group picker in the task modal
+  (admin). Tests for group-assignment + settings (validation, admin-only).
 - **UX pass 2 — Team & Permissions admin.** Admin can add team members
   (name/email/starting password; free, no email service — Phase-2 email invites
   left as a clean future add), promote/disable members, reset passwords; create

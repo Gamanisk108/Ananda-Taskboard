@@ -18,15 +18,26 @@ from tasks.recurrence import occurrence_dates
 
 
 def local_today():
-    return datetime.now(ZoneInfo(settings.APP_TIMEZONE)).date()
+    from .models import AppSettings
+
+    tz = AppSettings.load().timezone or settings.APP_TIMEZONE
+    try:
+        return datetime.now(ZoneInfo(tz)).date()
+    except Exception:
+        return datetime.now(ZoneInfo(settings.APP_TIMEZONE)).date()
 
 
 def tasks_for_user(user, today):
     """Return (due_today, overdue) title lists for a user's assigned, approved,
-    visible tasks. De-duplicated. Recurring tasks contribute a 'due today' entry
-    when an occurrence lands today."""
+    visible tasks. De-duplicated. Assignment counts direct assignees AND any group
+    the user belongs to. Recurring tasks contribute a 'due today' entry when an
+    occurrence lands today."""
+    from django.db.models import Q
+
+    group_ids = list(user.member_groups.values_list("id", flat=True))
     assigned = (
-        Task.objects.filter(approval_state=Task.Approval.APPROVED, assignees=user)
+        Task.objects.filter(approval_state=Task.Approval.APPROVED)
+        .filter(Q(assignees=user) | Q(assignee_groups__in=group_ids))
         .select_related("recurrence_rule")
         .distinct()
     )

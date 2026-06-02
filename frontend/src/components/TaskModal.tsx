@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
@@ -36,8 +36,14 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [deadline, setDeadline] = useState(task?.deadline ?? "");
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
+  const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
+  const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
+  }, [me.is_admin]);
 
   const [repeats, setRepeats] = useState(!!task?.recurrence);
   const [freq, setFreq] = useState<Recurrence["freq"]>(task?.recurrence?.freq ?? "weekly");
@@ -83,6 +89,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       subproject, title, details, requirements,
       deadline: deadline || null,
       assignees,
+      assignee_groups: assigneeGroups,
       links: links.split("\n").map((l) => l.trim()).filter(Boolean),
       recurrence,
     };
@@ -160,6 +167,21 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             })}
           </div>
         </div>
+
+        {me.is_admin && groups.length > 0 && (
+          <div className="field">
+            <label>Assign to groups (whole team)</label>
+            <div className="assignee-list">
+              {groups.map((g) => (
+                <label key={g.id} className="assignee-row">
+                  <input type="checkbox" style={{ width: "auto" }} checked={assigneeGroups.includes(g.id)}
+                    onChange={() => setAssigneeGroups((a) => a.includes(g.id) ? a.filter((x) => x !== g.id) : [...a, g.id])} />
+                  <span>{g.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="row2">
           <div className="field">

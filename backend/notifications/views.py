@@ -4,8 +4,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from permissions.drf import IsAdmin
+
 from .daily import run_daily_push
-from .models import PushSubscription
+from .models import AppSettings, PushSubscription
 
 
 class PushConfigView(APIView):
@@ -35,6 +37,36 @@ class SubscribeView(APIView):
         endpoint = request.data.get("endpoint")
         PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
         return Response(status=http.HTTP_204_NO_CONTENT)
+
+
+class AppSettingsView(APIView):
+    """Admin-editable app settings (daily push time + timezone). In-app so the
+    Django admin is never needed."""
+
+    permission_classes = [IsAdmin]
+
+    def _data(self):
+        s = AppSettings.load()
+        return {"daily_push_hour": s.daily_push_hour, "daily_push_minute": s.daily_push_minute, "timezone": s.timezone}
+
+    def get(self, request):
+        return Response(self._data())
+
+    def patch(self, request):
+        s = AppSettings.load()
+        for field in ("daily_push_hour", "daily_push_minute", "timezone"):
+            if field in request.data:
+                setattr(s, field, request.data[field])
+        # basic validation
+        if not (0 <= s.daily_push_hour <= 23 and 0 <= s.daily_push_minute <= 59):
+            return Response({"detail": "Invalid time."}, status=http.HTTP_400_BAD_REQUEST)
+        try:
+            from zoneinfo import ZoneInfo
+            ZoneInfo(s.timezone)
+        except Exception:
+            return Response({"detail": "Invalid timezone."}, status=http.HTTP_400_BAD_REQUEST)
+        s.save()
+        return Response(self._data())
 
 
 class DailyPushJobView(APIView):

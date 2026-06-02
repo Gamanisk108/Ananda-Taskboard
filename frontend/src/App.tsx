@@ -10,6 +10,7 @@ import { TaskModal } from "./components/TaskModal";
 import { Approvals } from "./components/Approvals";
 import { ManageProjects } from "./components/ManageProjects";
 import { TeamAdmin } from "./components/TeamAdmin";
+import { Settings } from "./components/Settings";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "weekly" | "monthly";
@@ -23,6 +24,7 @@ export default function App() {
   const [showApprovals, setShowApprovals] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -70,6 +72,9 @@ export default function App() {
           )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowManage(true)}>Manage projects</button>
+          )}
+          {me.is_admin && (
+            <button className="btn-ghost" onClick={() => setShowSettings(true)} title="Settings">⚙</button>
           )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowApprovals(true)}>Approvals</button>
@@ -153,6 +158,7 @@ export default function App() {
           onChanged={() => { refreshMe(); bump(); }}
         />
       )}
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

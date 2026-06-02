@@ -48,6 +48,9 @@ class Task(models.Model):
     details = models.TextField(blank=True)
     requirements = models.TextField(blank=True)
     assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="assigned_tasks")
+    # Phase-2: a task can also be assigned to whole Groups (every member counts as
+    # assigned for the daily push and "their tasks" filtering).
+    assignee_groups = models.ManyToManyField("accounts.Group", blank=True, related_name="assigned_tasks")
     deadline = models.DateField(null=True, blank=True)
     timeline_start = models.DateField(null=True, blank=True)
     timeline_end = models.DateField(null=True, blank=True)
