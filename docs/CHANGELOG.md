@@ -4,6 +4,15 @@ All notable changes to Ananda Taskboard. Newest first.
 
 ## [Unreleased]
 ### Added
+- **Step 4 — Permission engine (highest-risk, test-first).** `AccessGrant` model
+  (user XOR group → sub-project XOR whole-project, level member|viewer, DB check
+  constraints), `permissions/engine.py` (`visible_subprojects` union +
+  most-permissive, whole-project live expansion incl. future sub-projects,
+  helpers), `permissions/tree.py` (visible tree + overview-tab flags), admin-only
+  grant API, `/api/me` now returns the real tree. **18 engine tests** covering
+  no-grant=nothing, no cross-leak, overview-tab gating, direct+group union,
+  two-group conflict, stale-membership revocation, whole-project future coverage,
+  level helpers, admin-only + validation. 41 tests total — all passing.
 - **Step 3 — Projects & sub-projects.** `Project` + `SubProject` models
   (palette-based color auto-assignment, `members_post_without_approval` toggle),
   auto-created default 'General' sub-project via signal, DB constraint enforcing

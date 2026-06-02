@@ -22,5 +22,13 @@
 - `GET/PUT/PATCH/DELETE /api/subprojects/{id}` — admin write. PATCH the
   `members_post_without_approval` toggle to let a trusted team post live.
 
-_(more added per step: grants, tasks, approvals, comments, export, summary,
-push, jobs)_
+## Access grants (step 4) — admin only
+- `GET/POST /api/grants`, `GET/PUT/PATCH/DELETE /api/grants/{id}`. Body: exactly
+  one of `user`/`group` (target) + exactly one of `subproject`/`project` (scope,
+  `project` = whole-project grant covering current + future sub-projects) +
+  `level` (`member`|`viewer`). Invalid target/scope combos → 400.
+- `GET /api/me` now returns `tree`: `{ projects: [{ id, name, color,
+  show_project_overview, subprojects: [{ id, name, color, is_default, level }] }],
+  show_global_overview }`. Overview flags follow the >1-to-consolidate rule.
+
+_(more added per step: tasks, approvals, comments, export, summary, push, jobs)_
