@@ -70,6 +70,8 @@
 .chip { margin: 5px; padding: 5px 7px; border-radius: var(--r-ctl); font-size: 12px;
   color: #fff; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: none; width: calc(100% - 10px); text-align: left; }
 .chip.overdue { outline: 2px solid var(--danger); }
+.chip-initials { font-family: var(--font-mono); font-size: 10px; background: rgba(255,255,255,.28);
+  border-radius: var(--r-pill); padding: 0 5px; flex: none; }
 
 .month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .dow { font-size: 11px; text-transform: uppercase; color: var(--text-muted); text-align: center; padding: 4px; font-weight: 600; }

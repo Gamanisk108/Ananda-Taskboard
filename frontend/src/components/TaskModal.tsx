@@ -35,6 +35,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [title, setTitle] = useState(task?.title ?? "");
   const [details, setDetails] = useState(task?.details ?? "");
   const [requirements, setRequirements] = useState(task?.requirements ?? "");
+  const [startDate, setStartDate] = useState(task?.timeline_start ?? "");
   const [deadline, setDeadline] = useState(task?.deadline ?? "");
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
@@ -84,6 +85,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       : null;
     const payload = {
       subproject, title, details, requirements,
+      timeline_start: startDate || null,
       deadline: deadline || null,
       assignees,
       assignee_groups: assigneeGroups,
@@ -168,13 +170,18 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="row2">
           <div className="field">
+            <label>Start date (optional — shows on the calendar from here to the deadline)</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div className="field">
             <label>Deadline</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
           </div>
-          <div className="field">
-            <label>Links (one URL per line)</label>
-            <textarea rows={2} value={links} onChange={(e) => setLinks(e.target.value)} placeholder="https://drive.google.com/…" />
-          </div>
+        </div>
+
+        <div className="field">
+          <label>Links (one URL per line)</label>
+          <textarea rows={2} value={links} onChange={(e) => setLinks(e.target.value)} placeholder="https://drive.google.com/…" />
         </div>
 
         <div className="field">

@@ -68,23 +68,24 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowTeam(true)}>Team</button>
+            <button className="btn-secondary" onClick={() => setShowApprovals(true)} title="Approvals">✅ Approvals</button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowManage(true)}>Manage projects</button>
+            <button className="btn-secondary" onClick={() => setShowTeam(true)} title="Team & permissions">👥 Team</button>
           )}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowSettings(true)} title="Settings">⚙</button>
           )}
+          {/* New task + Manage projects grouped together */}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowApprovals(true)}>Approvals</button>
+            <button className="btn-secondary" onClick={() => setShowManage(true)} title="Manage projects">🗂️ Projects</button>
           )}
           {canCreate && (
-            <button className="btn-primary" onClick={() => setEditing("new")}>+ New task</button>
+            <button className="btn-primary" onClick={() => setEditing("new")} title="Create a task">＋ New task</button>
           )}
           <NotifyButton />
           <span className="muted" style={{ fontSize: 13 }}>{me.name || me.email}</span>
-          <button className="btn-ghost" onClick={logout}>Sign out</button>
+          <button className="btn-ghost" onClick={logout} title="Sign out">⎋</button>
         </div>
       </header>
 

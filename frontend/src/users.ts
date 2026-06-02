@@ -34,3 +34,11 @@ export function userName(users: UserLite[], id: number): string {
   const u = users.find((x) => x.id === id);
   return u ? u.name || u.email : `#${id}`;
 }
+
+/** Up-to-2-char initials from a user's name (or email). */
+export function userInitials(users: UserLite[], id: number): string {
+  const n = userName(users, id).trim();
+  const parts = n.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return n.slice(0, 2).toUpperCase();
+}

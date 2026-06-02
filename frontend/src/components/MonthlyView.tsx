@@ -3,6 +3,7 @@ import {
   addDays, addMonths, format, isSameMonth, startOfMonth, startOfWeek,
 } from "date-fns";
 import { api } from "../api/client";
+import { useUsers, userName } from "../users";
 import { Modal, Spinner, StatusPill } from "./common";
 import type { CalendarInstance, Me, Task } from "../types";
 
@@ -18,6 +19,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
+  const users = useUsers();
   const colorByProject = !projectId;
 
   useEffect(() => {
@@ -104,9 +106,14 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                   style={{ padding: 10, marginBottom: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                   onClick={() => open(i.task_id)}
                 >
-                  <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <span className="dot" style={{ background: colorByProject ? i.project_color : i.subproject_color }} />
-                    {i.title}
+                    {i.is_deadline ? "⏰ " : ""}{i.title}
+                    {i.assignee_ids.length > 0 && (
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        · {i.assignee_ids.map((id) => userName(users, id)).join(", ")}
+                      </span>
+                    )}
                     {i.overdue && <span className="pill" style={{ background: "#b4452f1a", color: "var(--danger)" }}>Overdue</span>}
                   </span>
                   <StatusPill status={i.status} />

@@ -44,7 +44,7 @@ with sync_playwright() as p:
     page.screenshot(path=str(SHOTS / "01_admin_board.png"), full_page=True)
     check("admin: board loads (New task button)", page.locator('button:has-text("New task")').count() > 0)
     check("admin: Team button visible", page.locator('button:has-text("Team")').count() > 0)
-    check("admin: Manage projects visible", page.locator('button:has-text("Manage projects")').count() > 0)
+    check("admin: Manage projects visible", page.locator('button:has-text("Projects")').count() > 0)
 
     # New task modal: Project + Sub-project dropdowns + assignee list
     page.click('button:has-text("New task")')
@@ -99,7 +99,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(300)
 
     # Manage projects
-    page.click('button:has-text("Manage projects")'); page.wait_for_timeout(600)
+    page.click('button:has-text("Projects")'); page.wait_for_timeout(600)
     page.screenshot(path=str(SHOTS / "07_manage_projects.png"), full_page=True)
     check("manage projects: add-project field", page.locator('input[placeholder="New project name…"]').count() > 0)
     check("manage projects: color pickers", page.locator('.modal input[type="color"]').count() > 0)
@@ -122,7 +122,7 @@ with sync_playwright() as p:
     login(page2, "omar@ananda.test", "taskboard123")
     page2.screenshot(path=str(SHOTS / "09_viewer_board.png"), full_page=True)
     check("non-admin: NO Team button", page2.locator('button:has-text("Team")').count() == 0)
-    check("non-admin: NO Manage projects", page2.locator('button:has-text("Manage projects")').count() == 0)
+    check("non-admin: NO Manage projects", page2.locator('button:has-text("Projects")').count() == 0)
     check("non-admin: NO Settings gear", page2.locator('button[title="Settings"]').count() == 0)
     # member-via-group can create — open modal and inspect writable project options
     check("omar can create (member via group)", page2.locator('button:has-text("New task")').count() > 0)

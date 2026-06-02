@@ -38,6 +38,23 @@ def test_non_recurring_task_on_deadline(admin, sp):
     assert len(res.data) == 1 and res.data[0]["date"] == "2026-06-10"
 
 
+def test_task_spans_start_to_deadline(admin, sp):
+    # start June 1, due June 5 → appears on all 5 days, with is_deadline only on the 5th
+    Task.objects.create(subproject=sp, title="Flyer", timeline_start=date(2026, 6, 1), deadline=date(2026, 6, 5))
+    res = login(admin).get("/api/calendar?from=2026-06-01&to=2026-06-30")
+    dates = sorted(i["date"] for i in res.data)
+    assert dates == ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05"]
+    deadline_days = [i["date"] for i in res.data if i["is_deadline"]]
+    assert deadline_days == ["2026-06-05"]
+
+
+def test_span_clipped_to_window(admin, sp):
+    Task.objects.create(subproject=sp, title="Long", timeline_start=date(2026, 5, 28), deadline=date(2026, 6, 3))
+    res = login(admin).get("/api/calendar?from=2026-06-01&to=2026-06-30")
+    dates = sorted(i["date"] for i in res.data)
+    assert dates == ["2026-06-01", "2026-06-02", "2026-06-03"]  # clipped at window start
+
+
 def test_recurring_task_expanded(admin, sp):
     rr = RecurrenceRule.objects.create(freq="weekly", interval=1, anchor=date(2026, 6, 1))
     Task.objects.create(subproject=sp, title="Standup", recurrence_rule=rr)

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
+import { useUsers, userInitials } from "../users";
 import { Spinner } from "./common";
 import type { CalendarInstance, Me, Task } from "../types";
 
@@ -15,6 +16,7 @@ interface Props {
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
+  const users = useUsers();
   const colorByProject = !projectId; // global → by project; inside a project → by sub-project
 
   useEffect(() => {
@@ -58,9 +60,16 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
                     className={`chip ${i.overdue ? "overdue" : ""}`}
                     style={{ background: colorByProject ? i.project_color : i.subproject_color }}
                     onClick={() => open(i.task_id)}
-                    title={i.title}
+                    title={`${i.title}${i.is_deadline ? " (due)" : ""}`}
                   >
-                    {i.title}
+                    <span style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {i.is_deadline ? "⏰ " : ""}{i.title}
+                      </span>
+                      {i.assignee_ids.length > 0 && (
+                        <span className="chip-initials">{i.assignee_ids.map((id) => userInitials(users, id)).join(" ")}</span>
+                      )}
+                    </span>
                   </button>
                 ))}
               </div>

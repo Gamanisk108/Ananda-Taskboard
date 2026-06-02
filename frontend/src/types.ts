@@ -74,6 +74,7 @@ export interface CalendarInstance {
   date: string;
   status: Status;
   is_recurring: boolean;
+  is_deadline: boolean;
   subproject_id: number;
   subproject_name: string;
   subproject_color: string;
