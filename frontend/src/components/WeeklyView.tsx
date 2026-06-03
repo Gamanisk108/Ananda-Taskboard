@@ -100,7 +100,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
           <div className="wk-head">
             {days.map((d, idx) => (
               <div className="wk-hcell" key={idx}>
-                <div>{format(d, "EEE")} <span className="day-num">{format(d, "d")}</span></div>
+                <div>{format(d, "EEE")} <span className="day-num">{format(d, "MMM d")}</span></div>
                 {events.filter((e) => e.date === dayIso[idx]).map((e, k) => (
                   <div key={k} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
                 ))}

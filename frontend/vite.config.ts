@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Ananda Taskboard',
         short_name: 'Taskboard',
         description: 'Team task board — projects, sub-projects, tasks.',
-        theme_color: '#C8762F',
-        background_color: '#FAF7F2',
+        theme_color: '#1E3A6E',
+        background_color: '#FBF6EA',
         display: 'standalone',
         start_url: '/',
         icons: [

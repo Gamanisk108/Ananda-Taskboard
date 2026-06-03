@@ -140,7 +140,7 @@ def test_subscribe_invalid_rejected(member):
 
 # --- group-chat summary -----------------------------------------------------
 
-def test_summary_groups_and_respects_visibility(member, sp):
+def test_summary_respects_visibility(member, sp):
     today = local_today()
     hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Warehouse")
     AccessGrant.objects.create(user=member, subproject=sp, level="viewer")
@@ -150,7 +150,34 @@ def test_summary_groups_and_respects_visibility(member, sp):
     text = res.data["text"]
     assert "Visible task" in text
     assert "Hidden task" not in text
-    assert "Karuna" in text and "Marketing" in text
+
+
+def test_summary_groups_by_person_with_emoji(admin, sp):
+    today = local_today()
+    t = Task.objects.create(subproject=sp, title="Flyer", deadline=today)
+    t.assignees.add(admin)  # admin name "Ada"
+    res = login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}")
+    text = res.data["text"]
+    assert "*Ada*" in text            # grouped under the person's name
+    assert "Flyer" in text
+    assert f"due {today.isoformat()}" in text  # deadline shown
+    assert sp.project.display_emoji in text     # project emoji present
+
+
+def test_summary_filter_by_assignee(admin, member, sp):
+    today = local_today()
+    a = Task.objects.create(subproject=sp, title="AdaTask", deadline=today); a.assignees.add(admin)
+    m = Task.objects.create(subproject=sp, title="MaraTask", deadline=today); m.assignees.add(member)
+    res = login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}&assignees={member.id}")
+    text = res.data["text"]
+    assert "MaraTask" in text and "AdaTask" not in text
+
+
+def test_summary_unassigned_section(admin, sp):
+    today = local_today()
+    Task.objects.create(subproject=sp, title="Nobody", deadline=today)
+    res = login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}")
+    assert "Unassigned" in res.data["text"] and "Nobody" in res.data["text"]
 
 
 def test_summary_empty_message(member):

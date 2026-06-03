@@ -32,14 +32,22 @@ def _next_color(used):
 class Project(SoftDeleteModel):
     name = models.CharField(max_length=160)
     color = models.CharField(max_length=9, blank=True)
+    emoji = models.CharField(max_length=8, blank=True)  # shown in chat summaries
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Default emoji palette (used when a project has no explicit emoji set).
+    EMOJI_PALETTE = ["🎨", "🏭", "📣", "🛠️", "📚", "🌱", "🎯", "🍃", "🔔", "🗂️", "🧾", "🎵"]
 
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_emoji(self):
+        return self.emoji or self.EMOJI_PALETTE[self.id % len(self.EMOJI_PALETTE)] if self.id else (self.emoji or "📌")
 
     def save(self, *args, **kwargs):
         if not self.color:

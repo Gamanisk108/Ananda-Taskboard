@@ -12,6 +12,7 @@ import { ManageProjects } from "./components/ManageProjects";
 import { TeamAdmin } from "./components/TeamAdmin";
 import { Settings } from "./components/Settings";
 import { Trash } from "./components/Trash";
+import { CopySummary } from "./components/CopySummary";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "weekly" | "monthly";
@@ -27,6 +28,7 @@ export default function App() {
   const [showTeam, setShowTeam] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showTrash, setShowTrash] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -129,7 +131,7 @@ export default function App() {
           ))}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <CopySummaryButton />
+          <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
           <ExportButtons projectId={projectId} subprojectId={subprojectId} />
         </div>
       </div>
@@ -172,6 +174,7 @@ export default function App() {
       )}
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
       {showTrash && <Trash onClose={() => setShowTrash(false)} onChanged={() => { refreshMe(); bump(); }} />}
+      {showSummary && <CopySummary me={me} onClose={() => setShowSummary(false)} />}
     </div>
   );
 }
@@ -202,7 +205,7 @@ function UserMenu({ name, isAdmin, onSettings, onLogout }: {
   return (
     <div className="usermenu" onClick={(e) => e.stopPropagation()}>
       <button className="btn-secondary usermenu-btn" onClick={() => setOpen((o) => !o)} title="Account menu">
-        <span style={{ fontSize: 14 }}>🧑</span> {name} <span style={{ fontSize: 10 }}>▾</span>
+        {name} <span style={{ fontSize: 10 }}>▾</span>
       </button>
       {open && (
         <div className="usermenu-pop">
@@ -222,18 +225,6 @@ function UserMenu({ name, isAdmin, onSettings, onLogout }: {
       )}
     </div>
   );
-}
-
-function CopySummaryButton() {
-  const [label, setLabel] = useState("Copy summary");
-  async function copy() {
-    const { api } = await import("./api/client");
-    const { text } = (await api.get("/api/summary/groupchat")) as { text: string };
-    await navigator.clipboard.writeText(text);
-    setLabel("Copied!");
-    setTimeout(() => setLabel("Copy summary"), 2000);
-  }
-  return <button className="btn-secondary" onClick={copy}>{label}</button>;
 }
 
 function ExportButtons({ projectId, subprojectId }: { projectId?: number; subprojectId?: number }) {

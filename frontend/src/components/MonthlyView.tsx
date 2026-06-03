@@ -98,7 +98,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                   className={`mcell ${inMonth ? "" : "dim"}`}
                   onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
                 >
-                  <span className="day-num">{format(d, "d")}</span>
+                  <span className="day-num">{format(d, "MMM d")}</span>
                   {dayEvents.map((e, k) => (
                     <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
                   ))}

@@ -15,6 +15,7 @@ interface Proj {
   id: number;
   name: string;
   color: string;
+  emoji: string;
   subprojects: Sub[];
 }
 
@@ -43,7 +44,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   async function saveProject(p: Proj) {
-    await api.patch(`/api/projects/${p.id}`, { name: p.name, color: p.color });
+    await api.patch(`/api/projects/${p.id}`, { name: p.name, color: p.color, emoji: p.emoji });
     load();
     onChanged();
   }
@@ -121,6 +122,7 @@ function ProjectEditor({
     <div className="card" style={{ padding: 12, marginBottom: 12 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
         <input type="color" value={p.color} onChange={(e) => setP({ ...p, color: e.target.value })} style={{ width: 44, padding: 2 }} />
+        <input value={p.emoji} onChange={(e) => setP({ ...p, emoji: e.target.value })} placeholder="🎨" title="Emoji for chat summaries" style={{ width: 52, textAlign: "center" }} maxLength={4} />
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>Save</button>
         <button className="btn-danger" onClick={() => onDeleteProject(project)}>Delete</button>

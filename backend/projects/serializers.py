@@ -15,7 +15,8 @@ class SubProjectSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     subprojects = SubProjectSerializer(many=True, read_only=True)
+    display_emoji = serializers.CharField(read_only=True)
 
     class Meta:
         model = Project
-        fields = ["id", "name", "color", "description", "subprojects"]
+        fields = ["id", "name", "color", "emoji", "display_emoji", "description", "subprojects"]
