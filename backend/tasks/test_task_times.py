@@ -62,3 +62,13 @@ def test_calendar_instance_includes_times(admin, sp):
     res = login(admin).get("/api/calendar?from=2026-06-01&to=2026-06-30")
     inst = res.data[0]
     assert inst["start_time"] == "13:00" and inst["end_time"] == "16:00"
+
+
+def test_priority_defaults_to_medium(admin, sp):
+    res = _create(login(admin), sp)
+    assert res.data["priority"] == 3  # Medium
+
+
+def test_priority_can_be_set(admin, sp):
+    res = _create(login(admin), sp, priority=5)
+    assert res.status_code == 201 and res.data["priority"] == 5

@@ -1,8 +1,30 @@
 import type { ReactNode } from "react";
 import { statusColor, statusLabel } from "../statuses";
+import { PRIORITY_META } from "../types";
 
 export function ColorDot({ color }: { color: string }) {
   return <span className="dot" style={{ background: color }} />;
+}
+
+/** Chevron-based priority badge (own SVG paths — not Jira's icons). Double
+ *  chevron = extreme (Highest/Lowest), single = High/Low, equals = Medium. */
+export function PriorityIcon({ level, size = 14, color }: { level: number; size?: number; color?: string }) {
+  const m = PRIORITY_META[level] ?? PRIORITY_META[3];
+  const stroke = color ?? m.color;
+  const lines =
+    m.dir === "up" ? (m.double ? ["2,11 7,6 12,11", "2,7 7,2 12,7"] : ["2,9 7,4 12,9"])
+    : m.dir === "down" ? (m.double ? ["2,3 7,8 12,3", "2,7 7,12 12,7"] : ["2,5 7,10 12,5"])
+    : ["3,5 11,5", "3,9 11,9"]; // medium = equals
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" role="img" aria-label={`Priority: ${m.label}`}
+      style={{ flex: "none", display: "block" }}>
+      <title>{`Priority: ${m.label}`}</title>
+      {lines.map((points, i) => (
+        <polyline key={i} points={points} stroke={stroke} strokeWidth={2} fill="none"
+          strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
 }
 
 export function StatusPill({ status }: { status: string }) {

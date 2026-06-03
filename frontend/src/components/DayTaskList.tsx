@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStatuses } from "../statuses";
 import { useUsers, userName } from "../users";
 import { timeRange } from "../lookup";
-import { StatusPill } from "./common";
+import { StatusPill, PriorityIcon } from "./common";
 import type { CalendarInstance } from "../types";
 
 type DaySort = "time" | "title" | "status";
@@ -41,6 +41,7 @@ export function DayTaskList({
         onClick={() => onOpen(i.task_id)}
       >
         <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <PriorityIcon level={i.priority} />
           <span className="dot" style={{ background: colorByProject ? i.project_color : i.subproject_color }} />
           {tr ? <span className="mono" style={{ fontSize: 12, color: "var(--accent)" }}>{tr}</span>
               : <span className="muted" style={{ fontSize: 12 }}>All day</span>}

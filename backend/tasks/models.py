@@ -75,6 +75,13 @@ class Task(SoftDeleteModel):
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
 
+    class Priority(models.IntegerChoices):
+        LOWEST = 1, "Lowest"
+        LOW = 2, "Low"
+        MEDIUM = 3, "Medium"
+        HIGH = 4, "High"
+        HIGHEST = 5, "Highest"
+
     subproject = models.ForeignKey(SubProject, on_delete=models.CASCADE, related_name="tasks")
     title = models.CharField(max_length=300)
     details = models.TextField(blank=True)
@@ -86,6 +93,7 @@ class Task(SoftDeleteModel):
     deadline = models.DateField(null=True, blank=True)
     timeline_start = models.DateField(null=True, blank=True)
     timeline_end = models.DateField(null=True, blank=True)
+    priority = models.PositiveSmallIntegerField(choices=Priority.choices, default=Priority.MEDIUM)
     # Optional time-of-day (e.g. a class 1pm-4pm). "Timed" when both are set;
     # both-or-neither is enforced by the serializer. Applies to every occurrence
     # of a recurring task.

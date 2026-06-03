@@ -3,8 +3,8 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { ColorDot, StatusPill, Spinner } from "./common";
-import type { Me, Task } from "../types";
+import { ColorDot, StatusPill, Spinner, PriorityIcon } from "./common";
+import { PRIORITY_META, type Me, type Task } from "../types";
 
 interface Props {
   projectId?: number;
@@ -15,7 +15,7 @@ interface Props {
   showArchived?: boolean;
 }
 
-type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "assignee" | "created";
+type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "priority" | "assignee" | "created";
 
 export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, showArchived = false }: Props) {
   const [tasks, setTasks] = useState<Task[] | null>(null);
@@ -27,6 +27,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
   const [fStatus, setFStatus] = useState<string>("");
   const [fRecur, setFRecur] = useState<"" | "yes" | "no">("");
   const [fDeadline, setFDeadline] = useState<"" | "pending" | "overdue">("");
+  const [fPriority, setFPriority] = useState(0); // 0 = any, 1..5
   const [sortKey, setSortKey] = useState<SortKey>("created");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
 
@@ -62,6 +63,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
       case "status": return statusOrder[t.status] ?? 99;
       case "deadline": return t.deadline ?? "9999-99-99";
       case "time": return t.start_time ?? "99:99"; // untimed sort last
+      case "priority": return t.priority;
       case "assignee": return (assigneeNames(t)[0] ?? "~").toLowerCase();
       case "created": return t.created_at;
     }
@@ -71,9 +73,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
     else { setSortKey(key); setSortDir(1); }
   }
   function clearFilters() {
-    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFStatus(""); setFRecur(""); setFDeadline("");
+    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFStatus(""); setFRecur(""); setFDeadline(""); setFPriority(0);
   }
-  const activeFilters = [q, fProject, fSub, fAssignee, fStatus, fRecur, fDeadline].filter(Boolean).length;
+  const activeFilters = [q, fProject, fSub, fAssignee, fStatus, fRecur, fDeadline, fPriority].filter(Boolean).length;
 
   if (!tasks) return <Spinner />;
 
@@ -83,8 +85,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
       if (q && !t.title.toLowerCase().includes(q.toLowerCase())) return false;
       if (fProject && info?.projectId !== fProject) return false;
       if (fSub && t.subproject !== fSub) return false;
-      if (fAssignee && !t.assignees.includes(fAssignee)) return false;
+      if (fAssignee === -1 ? t.assignees.length !== 0 : fAssignee && !t.assignees.includes(fAssignee)) return false;
       if (fStatus && t.status !== fStatus) return false;
+      if (fPriority && t.priority !== fPriority) return false;
       if (fRecur === "yes" && !t.recurrence) return false;
       if (fRecur === "no" && t.recurrence) return false;
       if (fDeadline) {
@@ -121,7 +124,12 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
         </select>
         <select value={fAssignee} onChange={(e) => setFAssignee(Number(e.target.value))}>
           <option value={0}>Any assignee</option>
+          <option value={-1}>Unassigned</option>
           {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
+        </select>
+        <select value={fPriority} onChange={(e) => setFPriority(Number(e.target.value))}>
+          <option value={0}>Any priority</option>
+          {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
         </select>
         <select value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
           <option value="">Any status</option>
@@ -147,6 +155,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
         <table className="tbl">
           <thead>
             <tr>
+              <Th k="priority">Priority</Th>
               <Th k="title">Task</Th>
               <Th k="project">Project</Th>
               <Th k="subproject">Sub-project</Th>
@@ -164,6 +173,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
               const names = assigneeNames(t);
               return (
                 <tr key={t.id} className={ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : ""} onClick={() => onEdit(t)}>
+                  <td title={PRIORITY_META[t.priority].label}><PriorityIcon level={t.priority} /></td>
                   <td>
                     <strong>{t.title}</strong>
                     {ds === "overdue" && <span className="od" title="Missed Deadline"> ❗</span>}

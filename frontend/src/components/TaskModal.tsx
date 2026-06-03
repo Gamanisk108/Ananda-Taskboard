@@ -3,10 +3,10 @@ import { api, ApiError } from "../api/client";
 import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useStatuses } from "../statuses";
-import { Modal, StatusPill } from "./common";
+import { Modal, StatusPill, PriorityIcon } from "./common";
 import { CommentSection } from "./CommentSection";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
-import { type Me, type Recurrence, type Task } from "../types";
+import { PRIORITY_META, type Me, type Recurrence, type Task } from "../types";
 
 interface Props {
   task: Task | null;
@@ -46,6 +46,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [deadline, setDeadline] = useState(task?.deadline ?? "");
   const [startTime, setStartTime] = useState(task?.start_time ?? "");
   const [endTime, setEndTime] = useState(task?.end_time ?? "");
+  const [priority, setPriority] = useState<number>(task?.priority ?? 3);
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
   const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
@@ -106,6 +107,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       deadline: deadline || null,
       start_time: startTime || null,
       end_time: endTime || null,
+      priority,
       assignees,
       assignee_groups: assigneeGroups,
       monitor,
@@ -172,6 +174,16 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             <label>Sub-project</label>
             <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))}>
               {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="field" style={{ maxWidth: 220 }}>
+          <label>Priority</label>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <PriorityIcon level={priority} size={16} />
+            <select value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
+              {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
             </select>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
 import { useUsers, userInitials, userName } from "../users";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, PriorityIcon } from "./common";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type EventSpan, type Me, type Task } from "../types";
 
@@ -22,6 +22,7 @@ interface Bar {
   endCol: number;   // 1..7
   overdue: boolean;
   dueSoon: boolean;
+  priority: number;
   assignee_ids: number[];
   lane: number;
 }
@@ -79,6 +80,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
         endCol: Math.max(...cols),
         overdue: insts.some((i) => i.overdue),
         dueSoon: !!deadlineInst && (deadlineInst.date === today || deadlineInst.date === tomorrow) && !insts.some((i) => i.overdue),
+        priority: first.priority,
         assignee_ids: first.assignee_ids,
       });
     }
@@ -162,7 +164,8 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
                 onClick={() => open(b.task_id)}
                 title={b.title}
               >
-                <span className="wk-bar-title">
+                <span className="wk-bar-title" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <PriorityIcon level={b.priority} size={12} color="rgba(255,255,255,.92)" />
                   {b.title}
                   {b.overdue && <span title="Missed Deadline"> ❗</span>}
                   {b.dueSoon && <span title="Due today or tomorrow"> ❗</span>}

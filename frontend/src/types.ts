@@ -39,6 +39,17 @@ export interface Recurrence {
   weekdays?: number[]; // weekly only: Mon=0..Sun=6; [] = anchor's weekday
 }
 
+export type Priority = 1 | 2 | 3 | 4 | 5;
+
+/** label, color, and chevron shape for each priority level. */
+export const PRIORITY_META: Record<number, { label: string; color: string; dir: "up" | "down" | "mid"; double: boolean }> = {
+  5: { label: "Highest", color: "#b4452f", dir: "up", double: true },
+  4: { label: "High", color: "#c2762a", dir: "up", double: false },
+  3: { label: "Medium", color: "#b7791f", dir: "mid", double: false },
+  2: { label: "Low", color: "#3b82a8", dir: "down", double: false },
+  1: { label: "Lowest", color: "#64748b", dir: "down", double: true },
+};
+
 export interface Task {
   id: number;
   subproject: number;
@@ -53,6 +64,7 @@ export interface Task {
   timeline_end: string | null;
   start_time: string | null; // "HH:MM" when timed
   end_time: string | null;
+  priority: Priority;
   status: string;            // dynamic status key (see /api/statuses)
   approval_state: Approval;
   recurrence: Recurrence | null;
@@ -91,6 +103,7 @@ export interface CalendarInstance {
   assignee_ids: number[];
   start_time: string | null; // "HH:MM" when timed
   end_time: string | null;
+  priority: Priority;
 }
 
 export type EventKind = "single" | "yearly" | "range" | "repeating";

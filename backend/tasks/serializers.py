@@ -42,7 +42,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             "id", "subproject", "project", "title", "details", "requirements",
             "assignees", "assignee_groups", "deadline", "timeline_start", "timeline_end",
-            "start_time", "end_time",
+            "start_time", "end_time", "priority",
             "status", "approval_state", "recurrence", "links", "monitor", "auto_complete",
             "created_by", "created_at", "updated_at", "archived_at", "comment_count",
         ]

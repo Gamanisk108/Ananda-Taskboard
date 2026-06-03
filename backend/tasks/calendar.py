@@ -45,6 +45,7 @@ def _instance(task, on_date, today, is_deadline):
         # time-of-day (HH:MM) when the task is timed, else null
         "start_time": task.start_time.strftime("%H:%M") if task.start_time else None,
         "end_time": task.end_time.strftime("%H:%M") if task.end_time else None,
+        "priority": task.priority,
     }
 
 

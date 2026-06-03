@@ -3,7 +3,7 @@ import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
 import { useUsers, userInitials } from "../users";
-import { ColorDot, Spinner } from "./common";
+import { ColorDot, PriorityIcon, Spinner } from "./common";
 import type { Me, Task } from "../types";
 
 interface Props {
@@ -65,11 +65,13 @@ export function KanbanView({ projectId, subprojectId, refreshKey, onEdit, me }: 
                   <div
                     key={t.id}
                     className="kan-card"
+                    style={{ position: "relative" }}
                     draggable
                     onDragStart={() => setDragId(t.id)}
                     onClick={() => onEdit(t)}
                   >
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{t.title}</div>
+                    <span style={{ position: "absolute", top: 8, right: 8 }}><PriorityIcon level={t.priority} /></span>
+                    <div style={{ fontWeight: 600, marginBottom: 4, paddingRight: 18 }}>{t.title}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
                       <span style={{ display: "inline-flex", gap: 5, alignItems: "center", fontSize: 11 }} className="muted">
                         {info && <><ColorDot color={info.color} /> {info.name}</>}
