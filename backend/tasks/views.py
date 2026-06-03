@@ -181,9 +181,15 @@ class TaskViewSet(ModelViewSet):
         comment = Comment.objects.create(task=task, author=request.user, text=text)
         # @-mentions: client sends the picked user ids; we store + push-notify them.
         from accounts.models import User
+        from permissions.engine import level_for_subproject
 
         raw = request.data.get("mentions") or []
-        mention_ids = list(User.objects.filter(id__in=raw).values_list("id", flat=True))
+        # Only mention users who can actually see this task (don't leak its title
+        # via a push to someone without access).
+        mention_ids = [
+            u.id for u in User.objects.filter(id__in=raw)
+            if u.is_admin or level_for_subproject(u, task.subproject_id) is not None
+        ]
         if mention_ids:
             comment.mentions.set(mention_ids)
             _notify_mentioned(task, request.user, mention_ids)
@@ -272,6 +278,9 @@ class SubtaskViewSet(ModelViewSet):
         sub = serializer.instance
         if sub.assignee_id != self.request.user.id:
             self._check(sub.task)
+        new_task = serializer.validated_data.get("task")
+        if new_task and new_task.id != sub.task_id:
+            raise ValidationError({"task": "A subtask cannot be moved to a different task."})
         serializer.save()
 
     def perform_destroy(self, instance):
@@ -288,6 +297,7 @@ class ApprovalsView(APIView):
         pending = (
             Task.objects.filter(approval_state=Task.Approval.PENDING)
             .select_related("subproject", "created_by")
+            .prefetch_related("assignees", "subtasks")
             .order_by("created_at")
         )
         return Response(TaskSerializer(pending, many=True).data)

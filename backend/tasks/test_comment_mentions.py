@@ -25,7 +25,9 @@ def task(db):
 
 
 def test_comment_stores_mentions(admin, task):
+    from permissions.models import AccessGrant
     bob = User.objects.create_user(email="b@example.com", name="Bob", password="pw-strong-123")
+    AccessGrant.objects.create(user=bob, subproject=task.subproject, level="viewer")  # can see the task
     res = login(admin).post(
         f"/api/tasks/{task.id}/comments",
         {"text": "hey @Bob look", "mentions": [bob.id]},
@@ -34,6 +36,18 @@ def test_comment_stores_mentions(admin, task):
     assert res.status_code == 201
     comment = Comment.objects.get(id=res.data["id"])
     assert list(comment.mentions.values_list("id", flat=True)) == [bob.id]
+
+
+def test_mention_without_task_access_is_dropped(admin, task):
+    # A user with no visibility to the task must not be mentioned/notified.
+    stranger = User.objects.create_user(email="s@example.com", name="Stranger", password="pw-strong-123")
+    res = login(admin).post(
+        f"/api/tasks/{task.id}/comments",
+        {"text": "@Stranger", "mentions": [stranger.id]},
+        format="json",
+    )
+    assert res.status_code == 201
+    assert Comment.objects.get(id=res.data["id"]).mentions.count() == 0
 
 
 def test_comment_without_mentions_ok(admin, task):

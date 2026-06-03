@@ -75,3 +75,11 @@ def test_non_assignee_viewer_cannot_edit(admin, sp, task):
     sub = login(admin).post("/api/subtasks", {"task": task.id, "title": "S"}, format="json").data
     res = login(viewer).patch(f"/api/subtasks/{sub['id']}", {"status": "done"}, format="json")
     assert res.status_code == 403
+
+
+def test_cannot_move_subtask_to_another_task(admin, sp, task):
+    other = Task.objects.create(subproject=sp, title="Other")
+    api = login(admin)
+    sid = api.post("/api/subtasks", {"task": task.id, "title": "S"}, format="json").data["id"]
+    res = api.patch(f"/api/subtasks/{sid}", {"task": other.id}, format="json")
+    assert res.status_code == 400
