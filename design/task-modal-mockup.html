@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Task popup (modal)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<!--
+  ANANDA TASKBOARD — Task popup (the TaskModal component), faithful standalone mockup.
+  Self-contained: open in any browser. Same "Temple of Light" theme tokens as the app
+  and the other design/*.html mockups. Shows the EDIT-task state with every field the
+  live component renders. Conditional banners (approval pill, archived bar) are marked
+  with comments where they appear. The dimmed backdrop is shown like the real popup.
+-->
+<style>
+  :root{
+    --bg:#fbf6ea; --surface:#fffdf8; --surface-sunk:#efe5cc; --border:#e3d6b8;
+    --text:#23262b; --text-muted:#4a5568; --primary:#1e3a6e; --primary-weak:#eaf0f8;
+    --accent:#2c5499; --gold:#c9a24b; --success:#3f7d54; --warn:#7a5c22; --danger:#b4452f;
+    --r-card:10px; --r-ctl:7px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(30,58,110,.07); --sh-2:0 4px 14px rgba(30,58,110,.10);
+    --font-display:"Fraunces",Georgia,serif; --font-ui:"Instrument Sans",system-ui,sans-serif; --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font-family:var(--font-ui);font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:-.012em;line-height:1.15}
+  h2{font-size:1.2rem} h3{font-size:1rem}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  .muted{color:var(--text-muted)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .pill{display:inline-flex;align-items:center;gap:5px;border-radius:var(--r-pill);padding:2px 9px;font-size:12px;font-weight:500}
+  .info{color:var(--text-muted);cursor:help}
+
+  /* controls (mirrors index.css) */
+  button{font-family:var(--font-ui);font-weight:500;border:1px solid transparent;border-radius:var(--r-ctl);padding:7px 12px;cursor:pointer;font-size:13px;transition:background 120ms,border-color 120ms,transform 80ms}
+  button:active{transform:translateY(1px)}
+  .btn-primary{background:var(--primary);color:var(--surface)}
+  .btn-primary:hover{background:#16294f}
+  .btn-secondary{background:var(--surface);border-color:var(--border);color:var(--text)}
+  .btn-secondary:hover{background:var(--surface-sunk)}
+  .btn-danger{background:var(--surface);border-color:var(--danger);color:var(--danger)}
+  .btn-ghost{background:transparent;color:var(--text-muted)}
+  .btn-ghost:hover{background:var(--surface-sunk);color:var(--text)}
+  input,select,textarea{font-family:var(--font-ui);font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 10px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
+  label{font-size:12px;color:var(--text-muted);font-weight:500;display:block;margin-bottom:4px}
+  textarea{resize:vertical}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-1)}
+
+  /* modal (mirrors App.css) */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(43,39,34,.4);display:grid;place-items:start center;padding:40px 16px;overflow-y:auto;z-index:50}
+  .modal{width:100%;max-width:720px;box-shadow:var(--sh-2)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+  .modal-body{padding:20px}
+  .field{margin-bottom:14px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  .section-title{font-size:13px;color:var(--text-muted);margin-bottom:8px}
+
+  /* assignee chips (simplified AssigneePicker) */
+  .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .who-pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface-sunk);border-radius:var(--r-pill);padding:2px 4px 2px 9px;font-size:12px}
+  .who-pill button{background:transparent;border:none;color:var(--text-muted);padding:0 4px;font-size:13px;line-height:1}
+  .initials{font-family:var(--font-mono);font-size:10px;background:var(--primary-weak);color:var(--accent);border-radius:var(--r-pill);padding:0 6px}
+</style>
+</head>
+<body>
+
+<div class="modal-backdrop">
+  <div class="card modal">
+    <div class="modal-head">
+      <h2 style="font-size:18px">Edit task</h2>
+      <button class="btn-ghost" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form onsubmit="return false">
+
+        <!-- CONDITIONAL: shows only when approval_state !== 'approved' -->
+        <div class="field">
+          <span class="pill" style="background:#b7791f1a;color:var(--warn)">Pending approval</span>
+        </div>
+
+        <!-- CONDITIONAL: shows only when the task is archived
+        <div class="field" style="display:flex;gap:10px;align-items:center">
+          <span class="pill" style="background:var(--surface-sunk)">🗄 Archived</span>
+          <button type="button" class="btn-secondary">Unarchive (put back on board)</button>
+        </div>
+        -->
+
+        <div class="field">
+          <label>Task name</label>
+          <input value="Design spring retreat flyer" placeholder="e.g. Design spring flyer" />
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Project</label>
+            <select><option>Karuna Devi</option><option>Sangha Outreach</option></select>
+          </div>
+          <div class="field">
+            <label>Sub-project</label>
+            <select><option>Marketing</option><option>Design</option></select>
+          </div>
+        </div>
+
+        <!-- AssigneePicker (simplified to its rendered shape) -->
+        <div class="field">
+          <label>Assignees</label>
+          <div class="chips">
+            <span class="who-pill"><span class="initials">LD</span> Lila Devi <button title="Remove">✕</button></span>
+            <span class="who-pill"><span class="initials">AR</span> Arjuna <button title="Remove">✕</button></span>
+            <select style="width:auto"><option>+ Add person or group…</option></select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Details</label>
+            <textarea rows="3">Single-page flyer for the June meditation retreat. Include date, venue, and the registration QR code.</textarea>
+          </div>
+          <div class="field">
+            <label>Requirements</label>
+            <textarea rows="3">Print-ready PDF at A4, 300dpi. Use temple-gold accent sparingly. Two rounds of review before sending to print.</textarea>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Start date
+              <span class="info" title="If left blank and a deadline is set, the task shows on the calendar from its creation date up to the deadline.">ⓘ</span>
+            </label>
+            <input type="date" value="2026-06-07" />
+          </div>
+          <div class="field">
+            <label>Deadline</label>
+            <input type="date" value="2026-06-12" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Links (one URL per line)</label>
+          <textarea rows="2" placeholder="https://drive.google.com/…">https://drive.google.com/folder/retreat-assets
+https://canva.com/design/spring-flyer</textarea>
+        </div>
+
+        <div class="field">
+          <label style="display:flex;gap:8px;align-items:center">
+            <input type="checkbox" style="width:auto" checked /> Repeats
+          </label>
+        </div>
+
+        <!-- recurrence panel: shows only when "Repeats" is checked -->
+        <div class="card" style="padding:12px;margin-bottom:14px;background:var(--surface-sunk)">
+          <div class="row2">
+            <div class="field" style="margin-bottom:0">
+              <label>Frequency</label>
+              <select><option>weekly</option><option>daily</option><option>monthly</option><option>yearly</option></select>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label>Every (interval)</label>
+              <input type="number" min="1" value="1" />
+            </div>
+          </div>
+          <div class="row2" style="margin-top:12px">
+            <div class="field" style="margin-bottom:0">
+              <label>Starts (anchor)</label>
+              <input type="date" value="2026-06-12" />
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label>Ends</label>
+              <select><option>Never</option><option>On date</option><option>After N times</option></select>
+            </div>
+          </div>
+          <!-- when Ends = "On date" → End date field; when "After N times" → Occurrences field -->
+        </div>
+
+        <!-- status changer: shows only for admins or assignees of an existing task -->
+        <div class="field">
+          <label>Status (applied immediately)</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill" style="background:#2f7d741a;color:#2f7d74"><span class="dot" style="background:#2f7d74"></span> In Progress</span>
+            <select style="width:auto"><option>Change to…</option><option>To Do</option><option>Delayed</option><option>Done</option></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label style="display:flex;gap:8px;align-items:center">
+            <input type="checkbox" style="width:auto" checked /> Monitor — notify admins when this task is moved
+          </label>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            <input type="checkbox" style="width:auto" /> Auto-complete — mark Done automatically after the deadline (mundane one-off tasks)
+          </label>
+        </div>
+
+        <!-- error line: <div style="color:var(--danger);font-size:13px;margin-bottom:10px">…</div> -->
+
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" style="margin-right:auto">🔗 Share</button>
+          <button type="button" class="btn-secondary">Cancel</button>
+          <button type="button" class="btn-danger">Delete</button>
+          <button class="btn-primary">Save</button>
+        </div>
+      </form>
+
+      <!-- CommentSection: shows only when editing an existing task -->
+      <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:14px">
+        <h3 class="section-title">Comments (2)</h3>
+        <div class="card" style="padding:9px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <strong>You</strong><span class="muted mono">2026-06-02</span>
+          </div>
+          <div style="white-space:pre-wrap;margin-top:3px">First draft is in the Drive folder — feedback welcome.</div>
+        </div>
+        <div class="card" style="padding:9px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <strong>Team member</strong><span class="muted mono">2026-06-03</span>
+          </div>
+          <div style="white-space:pre-wrap;margin-top:3px">Looks great. Can we make the date line bigger?</div>
+        </div>
+        <form onsubmit="return false" style="display:flex;gap:8px;margin-top:8px">
+          <input placeholder="Add a comment…" />
+          <button class="btn-secondary">Post</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
