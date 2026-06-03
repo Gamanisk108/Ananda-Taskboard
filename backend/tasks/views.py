@@ -34,6 +34,25 @@ def _notify_admins_moved(task, new_status, mover):
         pass
 
 
+def _notify_mentioned(task, author, user_ids):
+    """Push to users @-mentioned in a comment (best-effort, never raises)."""
+    try:
+        from notifications.models import PushSubscription
+        from notifications.push import send_web_push
+
+        targets = [uid for uid in user_ids if uid != author.id]
+        if not targets:
+            return
+        payload = {
+            "title": "You were mentioned",
+            "body": f"{author.name or author.email} mentioned you on “{task.title}”",
+        }
+        for sub in PushSubscription.objects.filter(user_id__in=targets):
+            send_web_push(sub, payload)
+    except Exception:
+        pass
+
+
 def _approval_for(user, subproject):
     """Decide a Member's task approval state. Admin or a trusted sub-project →
     live (approved); otherwise pending."""
@@ -160,6 +179,14 @@ class TaskViewSet(ModelViewSet):
         if not text:
             raise ValidationError({"text": "Comment cannot be empty."})
         comment = Comment.objects.create(task=task, author=request.user, text=text)
+        # @-mentions: client sends the picked user ids; we store + push-notify them.
+        from accounts.models import User
+
+        raw = request.data.get("mentions") or []
+        mention_ids = list(User.objects.filter(id__in=raw).values_list("id", flat=True))
+        if mention_ids:
+            comment.mentions.set(mention_ids)
+            _notify_mentioned(task, request.user, mention_ids)
         emit.emit(emit.COMMENT_ADDED, {"task": task.id, "comment": comment.id})
         return Response(CommentSerializer(comment).data, status=http.HTTP_201_CREATED)
 
@@ -184,6 +211,34 @@ class TaskViewSet(ModelViewSet):
         if changed:
             emit.emit(event, {"task": int(pk)})
         return Response({"id": int(pk), "approval_state": target})
+
+
+class CommentViewSet(ModelViewSet):
+    """Edit/delete a comment. Author or admin only. (Listing & creation happen
+    through the task's `comments` action.)"""
+
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["patch", "delete", "options"]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Comment.objects.select_related("task__subproject", "author")
+        if not user.is_admin:
+            qs = qs.filter(task__subproject_id__in=visible_subproject_ids(user))
+        return qs
+
+    def _check(self, comment):
+        if not (self.request.user.is_admin or comment.author_id == self.request.user.id):
+            raise PermissionDenied("Only the comment's author or an admin can do that.")
+
+    def perform_update(self, serializer):
+        self._check(serializer.instance)
+        serializer.save()  # task is set on create; PATCH only carries text
+
+    def perform_destroy(self, instance):
+        self._check(instance)
+        instance.delete()
 
 
 class SubtaskViewSet(ModelViewSet):
@@ -212,7 +267,11 @@ class SubtaskViewSet(ModelViewSet):
         serializer.save()
 
     def perform_update(self, serializer):
-        self._check(serializer.instance.task)
+        # The subtask's own assignee may edit it (it's already visible to them via
+        # the queryset); otherwise the parent-task member/admin rule applies.
+        sub = serializer.instance
+        if sub.assignee_id != self.request.user.id:
+            self._check(sub.task)
         serializer.save()
 
     def perform_destroy(self, instance):

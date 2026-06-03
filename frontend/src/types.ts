@@ -85,6 +85,7 @@ export interface Subtask {
   title: string;
   status: string;
   order: number;
+  assignee: number | null;
 }
 
 export interface UserLite {

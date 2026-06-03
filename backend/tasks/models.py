@@ -142,6 +142,12 @@ class Subtask(models.Model):
     title = models.CharField(max_length=300)
     status = models.CharField(max_length=12, default="todo")  # a Status.key
     order = models.PositiveIntegerField(default=0)
+    # Optional owner of this subtask. The assignee may edit THIS subtask even if
+    # they can't otherwise edit the parent task (as long as they can see it).
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="assigned_subtasks",
+    )
 
     class Meta:
         ordering = ["order", "id"]
@@ -245,6 +251,7 @@ class Comment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="comments")
     text = models.TextField()
+    mentions = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="comment_mentions")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

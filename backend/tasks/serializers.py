@@ -35,7 +35,7 @@ class RecurrenceRuleSerializer(serializers.ModelSerializer):
 class SubtaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtask
-        fields = ["id", "task", "title", "status", "order"]
+        fields = ["id", "task", "title", "status", "order", "assignee"]
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -170,5 +170,5 @@ class CalendarEventSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ["id", "task", "author", "text", "created_at"]
-        read_only_fields = ["author"]
+        fields = ["id", "task", "author", "text", "mentions", "created_at"]
+        read_only_fields = ["author", "mentions", "task"]

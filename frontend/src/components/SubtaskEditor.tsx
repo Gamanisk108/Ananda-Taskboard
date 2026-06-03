@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
+import { useUsers } from "../users";
 import type { Subtask } from "../types";
 
 /** Subtasks of a task: a simple list, each with a changeable status dropdown,
@@ -10,6 +11,7 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const statuses = useStatuses();
+  const users = useUsers();
 
   function load() {
     api.get(`/api/subtasks?task=${taskId}`).then(setSubs).catch(() => setSubs([]));
@@ -35,6 +37,11 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
     onChanged?.();
   }
 
+  async function setAssignee(id: number, assignee: number | null) {
+    setSubs((cur) => cur.map((s) => (s.id === id ? { ...s, assignee } : s)));
+    await api.patch(`/api/subtasks/${id}`, { assignee });
+  }
+
   async function remove(id: number) {
     await api.del(`/api/subtasks/${id}`);
     load();
@@ -47,6 +54,11 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
       {subs.map((s) => (
         <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
           <span style={{ flex: 1 }}>{s.title}</span>
+          <select value={s.assignee ?? ""} onChange={(e) => setAssignee(s.id, e.target.value ? Number(e.target.value) : null)}
+            style={{ width: "auto", maxWidth: 130 }} title="Assignee">
+            <option value="">Unassigned</option>
+            {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
+          </select>
           <select value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto" }}>
             {statuses.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
           </select>

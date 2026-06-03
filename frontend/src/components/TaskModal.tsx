@@ -342,7 +342,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         </div>
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}
-      {editing && <CommentSection taskId={task!.id} meId={me.id} />}
+      {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}
     </Modal>
   );
 }

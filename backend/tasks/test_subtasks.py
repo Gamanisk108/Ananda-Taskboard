@@ -56,3 +56,22 @@ def test_task_serializer_reports_subtask_counts(admin, task):
     Subtask.objects.create(task=task, title="c", status="in_progress")
     res = login(admin).get(f"/api/tasks/{task.id}")
     assert res.data["subtask_counts"] == {"todo": 2, "in_progress": 1}
+
+
+def test_assignee_viewer_can_edit_own_subtask(admin, sp, task):
+    from permissions.models import AccessGrant
+    viewer = User.objects.create_user(email="v@example.com", name="Vee", password="pw-strong-123")
+    AccessGrant.objects.create(user=viewer, subproject=sp, level="viewer")  # visibility, not member
+    sub = login(admin).post("/api/subtasks", {"task": task.id, "title": "S", "assignee": viewer.id}, format="json").data
+    # the assignee (a viewer) may edit their own subtask
+    res = login(viewer).patch(f"/api/subtasks/{sub['id']}", {"status": "done"}, format="json")
+    assert res.status_code == 200 and res.data["status"] == "done"
+
+
+def test_non_assignee_viewer_cannot_edit(admin, sp, task):
+    from permissions.models import AccessGrant
+    viewer = User.objects.create_user(email="v2@example.com", name="Vee2", password="pw-strong-123")
+    AccessGrant.objects.create(user=viewer, subproject=sp, level="viewer")
+    sub = login(admin).post("/api/subtasks", {"task": task.id, "title": "S"}, format="json").data
+    res = login(viewer).patch(f"/api/subtasks/{sub['id']}", {"status": "done"}, format="json")
+    assert res.status_code == 403

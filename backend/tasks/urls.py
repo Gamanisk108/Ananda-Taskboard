@@ -4,11 +4,12 @@ from rest_framework.routers import DefaultRouter
 from .calendar import CalendarView
 from .events_views import CalendarEventViewSet, EventsRangeView, StatusViewSet
 from .history_service import HistoryDatesView, HistoryView
-from .views import ApprovalsView, SubtaskViewSet, TaskViewSet
+from .views import ApprovalsView, CommentViewSet, SubtaskViewSet, TaskViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register("tasks", TaskViewSet, basename="task")
 router.register("subtasks", SubtaskViewSet, basename="subtask")
+router.register("comments", CommentViewSet, basename="comment")
 router.register("events", CalendarEventViewSet, basename="event")
 router.register("statuses", StatusViewSet, basename="status")
 
