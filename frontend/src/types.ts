@@ -76,6 +76,15 @@ export interface Task {
   updated_at: string;
   archived_at: string | null;
   comment_count: number;
+  subtask_counts: Record<string, number>; // status key -> count
+}
+
+export interface Subtask {
+  id: number;
+  task: number;
+  title: string;
+  status: string;
+  order: number;
 }
 
 export interface UserLite {

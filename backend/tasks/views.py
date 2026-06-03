@@ -12,8 +12,8 @@ from permissions.drf import IsAdmin
 from permissions.engine import can_act_as_member, visible_subproject_ids
 from projects.models import SubProject
 
-from .models import Comment, Task
-from .serializers import CommentSerializer, TaskSerializer
+from .models import Comment, Subtask, Task
+from .serializers import CommentSerializer, SubtaskSerializer, TaskSerializer
 
 
 def _notify_admins_moved(task, new_status, mover):
@@ -54,7 +54,7 @@ class TaskViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Task.objects.select_related("subproject", "recurrence_rule").prefetch_related("assignees")
+        qs = Task.objects.select_related("subproject", "recurrence_rule").prefetch_related("assignees", "subtasks")
         if not user.is_admin:
             qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
         # The live board shows only approved tasks; pending/rejected live in the
@@ -184,6 +184,40 @@ class TaskViewSet(ModelViewSet):
         if changed:
             emit.emit(event, {"task": int(pk)})
         return Response({"id": int(pk), "approval_state": target})
+
+
+class SubtaskViewSet(ModelViewSet):
+    """Checklist items under a task. Anyone who can act as a member on the
+    parent task's sub-project may add/edit/remove them (admins always)."""
+
+    serializer_class = SubtaskSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Subtask.objects.select_related("task__subproject")
+        if not user.is_admin:
+            qs = qs.filter(task__subproject_id__in=visible_subproject_ids(user))
+        task = self.request.query_params.get("task")
+        if task:
+            qs = qs.filter(task_id=task)
+        return qs
+
+    def _check(self, task):
+        if not (self.request.user.is_admin or can_act_as_member(self.request.user, task.subproject_id)):
+            raise PermissionDenied("Not allowed.")
+
+    def perform_create(self, serializer):
+        self._check(serializer.validated_data["task"])
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._check(serializer.instance.task)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._check(instance.task)
+        instance.delete()
 
 
 class ApprovalsView(APIView):

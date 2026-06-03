@@ -5,6 +5,7 @@ import { useUsers } from "../users";
 import { useStatuses } from "../statuses";
 import { Modal, StatusPill, PriorityIcon } from "./common";
 import { CommentSection } from "./CommentSection";
+import { SubtaskEditor } from "./SubtaskEditor";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
 import { PRIORITY_META, type Me, type Recurrence, type Task } from "../types";
 
@@ -340,6 +341,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
         </div>
       </form>
+      {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} />}
     </Modal>
   );

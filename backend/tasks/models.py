@@ -134,6 +134,22 @@ class Task(SoftDeleteModel):
         return self.recurrence_rule_id is not None
 
 
+class Subtask(models.Model):
+    """A checklist item under a Task, with its own status (same status keys as
+    tasks). Simple and ordered — not a full task (no assignees/dates)."""
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="subtasks")
+    title = models.CharField(max_length=300)
+    status = models.CharField(max_length=12, default="todo")  # a Status.key
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.title} [{self.status}]"
+
+
 class TaskOccurrence(models.Model):
     """A concrete dated instance of a recurring Task. Status is independent per
     occurrence. Materialized by the recurrence engine (step 6)."""

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import CalendarEvent, Comment, RecurrenceRule, Status, Task
+from .models import CalendarEvent, Comment, RecurrenceRule, Status, Subtask, Task
 
 
 class WeekdaysField(serializers.Field):
@@ -32,10 +32,24 @@ class RecurrenceRuleSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class SubtaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subtask
+        fields = ["id", "task", "title", "status", "order"]
+
+
 class TaskSerializer(serializers.ModelSerializer):
     recurrence = RecurrenceRuleSerializer(source="recurrence_rule", required=False, allow_null=True)
     project = serializers.IntegerField(source="project_id", read_only=True)
     comment_count = serializers.IntegerField(source="comments.count", read_only=True)
+    subtask_counts = serializers.SerializerMethodField()
+
+    def get_subtask_counts(self, obj):
+        """{status_key: count} over the task's subtasks (only non-zero)."""
+        counts = {}
+        for s in obj.subtasks.all():
+            counts[s.status] = counts.get(s.status, 0) + 1
+        return counts
 
     class Meta:
         model = Task
@@ -45,6 +59,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "start_time", "end_time", "priority",
             "status", "approval_state", "recurrence", "links", "monitor", "auto_complete",
             "created_by", "created_at", "updated_at", "archived_at", "comment_count",
+            "subtask_counts",
         ]
         # status has its own endpoint; approval_state/created_by/archived_at are server-controlled
         read_only_fields = ["status", "approval_state", "created_by", "archived_at"]

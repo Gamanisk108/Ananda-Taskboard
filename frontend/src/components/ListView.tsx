@@ -3,7 +3,7 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { ColorDot, StatusPill, Spinner, PriorityIcon } from "./common";
+import { ColorDot, StatusPill, Spinner, PriorityIcon, SubtaskDots } from "./common";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
 interface Props {
@@ -178,6 +178,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
                     <strong>{t.title}</strong>
                     {ds === "overdue" && <span className="od" title="Missed Deadline"> ❗</span>}
                     {ds === "soon" && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
+                    {Object.keys(t.subtask_counts ?? {}).length > 0 && (
+                      <div style={{ marginTop: 3 }}><SubtaskDots counts={t.subtask_counts} /></div>
+                    )}
                   </td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.projectColor} /> {info.projectName}</span>}</td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.color} /> {info.name}</span>}</td>

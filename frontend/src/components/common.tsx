@@ -65,6 +65,22 @@ export function Modal({
   );
 }
 
+/** Colored status dots with counts, summarizing a task's subtasks. */
+export function SubtaskDots({ counts }: { counts: Record<string, number> }) {
+  const entries = Object.entries(counts).filter(([, n]) => n > 0);
+  if (entries.length === 0) return null;
+  return (
+    <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }} title="Subtasks by status">
+      {entries.map(([key, n]) => (
+        <span key={key} title={`${statusLabel(key)}: ${n}`}
+          style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--text-muted)" }}>
+          <span className="dot" style={{ background: statusColor(key) }} />{n}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function Spinner({ label }: { label?: string }) {
   return <div className="muted" style={{ padding: 24 }}>{label ?? "Loading…"}</div>;
 }
