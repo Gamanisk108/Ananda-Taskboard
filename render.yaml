@@ -16,7 +16,11 @@ services:
       python backend/manage.py collectstatic --noinput &&
       python backend/manage.py migrate --noinput &&
       python backend/manage.py seed_demo
-    startCommand: gunicorn config.wsgi --chdir backend --bind 0.0.0.0:$PORT
+    # 2 workers x 4 threads: serves the burst of parallel /api calls each view
+    # fires without queueing behind a single worker. Threads are cheap here
+    # because requests are I/O-bound (waiting on Neon). If the free tier's 512MB
+    # ever OOMs, dial to "--workers 1 --threads 8".
+    startCommand: gunicorn config.wsgi --chdir backend --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60
     envVars:
       - key: DJANGO_DEBUG
         value: "false"
