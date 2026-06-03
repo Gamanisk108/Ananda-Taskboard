@@ -25,7 +25,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   const colorByProject = !projectId;
 
   useEffect(() => {
-    const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
+    const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
     const from = format(gridStart, "yyyy-MM-dd");
     const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
     const p = new URLSearchParams({ from, to });
@@ -54,7 +54,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
     return m;
   }, [items]);
 
-  const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
+  const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
   // 6 weeks max, but drop any whole week with no day in the current month
   const allCells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
   const cells = Array.from({ length: 6 }, (_, w) => allCells.slice(w * 7, w * 7 + 7))
@@ -89,7 +89,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
       ) : (
         <>
           <div className="month">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
               <div className="dow" key={d}>{d}</div>
             ))}
             {cells.map((d) => {

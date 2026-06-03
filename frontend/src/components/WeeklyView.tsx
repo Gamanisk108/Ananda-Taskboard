@@ -26,7 +26,7 @@ interface Bar {
 }
 
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
   const users = useUsers();
@@ -91,7 +91,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
     <div className="rise">
       <div className="bulkbar">
         <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>← Prev</button>
-        <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>This week</button>
+        <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>This week</button>
         <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>Next →</button>
         <span className="muted mono">{format(weekStart, "MMM d")} – {format(addDays(weekStart, 6), "MMM d, yyyy")}</span>
       </div>
