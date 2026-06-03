@@ -92,13 +92,14 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
               const dayItems = byDate.get(iso) ?? [];
               const dayEvents = eventsByDate.get(iso) ?? [];
               const inMonth = isSameMonth(d, month);
+              const hasOverdue = dayItems.some((i) => i.overdue);
               return (
                 <button
                   key={iso}
-                  className={`mcell ${inMonth ? "" : "dim"}`}
+                  className={`mcell ${inMonth ? "" : "dim"} ${hasOverdue ? "has-overdue" : ""}`}
                   onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
                 >
-                  <span className="day-num">{format(d, "MMM d")}</span>
+                  <span className="day-num">{format(d, "MMM d")}{hasOverdue && <span className="od" title="Has overdue tasks"> ❗</span>}</span>
                   {dayEvents.map((e, k) => (
                     <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
                   ))}
@@ -121,12 +122,13 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                 <div
                   key={`${i.task_id}-${idx}`}
                   className="card"
-                  style={{ padding: 10, marginBottom: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  style={{ padding: 10, marginBottom: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center",
+                    background: i.overdue ? "#b4452f12" : undefined, boxShadow: i.overdue ? "inset 3px 0 0 var(--danger)" : undefined }}
                   onClick={() => open(i.task_id)}
                 >
                   <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <span className="dot" style={{ background: colorByProject ? i.project_color : i.subproject_color }} />
-                    {i.is_deadline ? "⏰ " : ""}{i.title}
+                    {i.overdue ? "❗ " : i.is_deadline ? "⏰ " : ""}{i.title}
                     {i.assignee_ids.length > 0 && (
                       <span className="muted" style={{ fontSize: 12 }}>
                         · {i.assignee_ids.map((id) => userName(users, id)).join(", ")}

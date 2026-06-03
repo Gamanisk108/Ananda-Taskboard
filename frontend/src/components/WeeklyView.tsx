@@ -113,11 +113,11 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
               <button
                 key={b.task_id}
                 className={`wk-bar ${b.overdue ? "overdue" : ""}`}
-                style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1, background: b.color }}
+                style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1, background: b.overdue ? "var(--danger)" : b.color }}
                 onClick={() => open(b.task_id)}
-                title={b.title}
+                title={b.overdue ? `OVERDUE — ${b.title}` : b.title}
               >
-                <span className="wk-bar-title">{b.endsThisWeek ? "⏰ " : ""}{b.title}</span>
+                <span className="wk-bar-title">{b.overdue ? "❗ " : b.endsThisWeek ? "⏰ " : ""}{b.title}</span>
                 {b.assignee_ids.length > 0 && (
                   <span className="chip-initials" title={b.assignee_ids.map((id) => userName(users, id)).join(", ")}>
                     {b.assignee_ids.map((id) => userInitials(users, id)).join(" ")}

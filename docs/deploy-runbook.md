@@ -2,6 +2,25 @@
 
 > Living doc. Target: free-tier hosting, fully free to operate.
 
+## Backup & emergency access (if the app misbehaves)
+The **Django admin** is a always-available back door to view/edit/export every
+record directly, independent of the React UI.
+
+1. **Create an admin login on the server** (once): Render → your service → **Shell** →
+   `python backend/manage.py createsuperuser`.
+2. **Open** `https://<your-app>.onrender.com/admin/` and log in. You can inspect and
+   fix Users, Projects, Sub-projects, Tasks, Grants, Trash (deleted_at), etc.
+3. **Download a full data backup** (Render Shell):
+   `python backend/manage.py dumpdata --natural-foreign --indent 2 > backup.json`
+   Restore later with `python backend/manage.py loaddata backup.json`.
+4. **Database-level safety:** Neon (our Postgres) keeps automatic backups with
+   point-in-time restore — the strongest "lost everything" recovery. See the Neon
+   dashboard → Branches / Restore.
+
+> In-app "Restore points" (admin snapshots of the whole board) are a planned
+> feature on top of this — see the build notes.
+
+
 ## Hosting — easiest: one Render service (serves app + API together)
 The repo includes `render.yaml` (a Blueprint). Because Django now serves the built
 React app, the whole thing runs as **one free web service** — no separate frontend

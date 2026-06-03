@@ -45,8 +45,11 @@
 .tbl tbody tr:nth-child(even) { background: #fbf9f5; }
 .tbl tbody tr:hover { background: var(--primary-weak); cursor: pointer; }
 .tbl td { padding: 8px 12px; vertical-align: middle; }
-.tbl tr.overdue { box-shadow: inset 3px 0 0 var(--danger); }
-.tbl tr.overdue .deadline { color: var(--danger); font-weight: 600; }
+.tbl tr.overdue, .tbl tr.overdue:nth-child(even) { background: #b4452f16; box-shadow: inset 3px 0 0 var(--danger); }
+.tbl tr.overdue:hover { background: #b4452f24; }
+.tbl tr.overdue td { color: var(--danger); }
+.tbl tr.overdue .deadline { font-weight: 600; }
+.od { color: var(--danger); font-weight: 700; margin-right: 3px; }
 
 .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .filters input, .filters select { width: auto; min-width: 130px; }
@@ -97,6 +100,7 @@
   min-height: 84px; padding: 6px; cursor: pointer; text-align: left; }
 .mcell:hover { border-color: var(--primary); }
 .mcell.dim { background: var(--surface-sunk); opacity: .55; }
+.mcell.has-overdue { background: #b4452f0d; border-color: #b4452f55; }
 .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .badge { font-family: var(--font-mono); font-size: 11px; color: #fff; border-radius: var(--r-pill);
   padding: 1px 7px; font-weight: 600; }
@@ -135,3 +139,32 @@
   background: transparent; border: none; padding: 9px 10px; border-radius: var(--r-ctl); color: var(--text); }
 .usermenu-item:hover { background: var(--surface-sunk); }
 .usermenu-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ---------------- Mobile responsiveness ---------------- */
+@media (max-width: 760px) {
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+  .topbar-actions { flex-wrap: wrap; gap: 6px; }
+  .topbar-actions button { padding: 6px 9px; font-size: 12px; }
+  .tabs, .subtabs { padding-left: 10px; padding-right: 10px; }
+  .viewbar { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 12px 0; }
+  .viewbar > div { flex-wrap: wrap; }
+  .content { padding: 12px 12px 40px; }
+
+  /* Modals fill the screen and scroll */
+  .modal-backdrop { padding: 10px; }
+  .modal { max-width: 100% !important; }
+  .modal-body { padding: 14px; }
+  .row2 { grid-template-columns: 1fr; }            /* stack paired fields (Task popup) */
+  .modal-foot { flex-wrap: wrap; }
+  .modal-foot button { flex: 1 1 auto; }
+
+  /* Wide tables scroll sideways instead of squishing */
+  .tbl { display: block; overflow-x: auto; white-space: nowrap; }
+
+  /* Calendars scroll horizontally so columns stay legible */
+  .rise { overflow-x: auto; }
+  .wk-head, .wk-body, .month, .week { min-width: 680px; }
+
+  .filters input, .filters select { min-width: 0; flex: 1 1 130px; }
+  .usermenu-pop { right: auto; left: 0; }
+}

@@ -146,7 +146,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
               const names = assigneeNames(t);
               return (
                 <tr key={t.id} className={overdue ? "overdue" : ""} onClick={() => onEdit(t)}>
-                  <td><strong>{t.title}</strong></td>
+                  <td><strong>{overdue && <span className="od" title="Overdue">❗</span>}{t.title}</strong></td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.projectColor} /> {info.projectName}</span>}</td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.color} /> {info.name}</span>}</td>
                   <td>

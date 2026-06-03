@@ -2,6 +2,30 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [1.1] — post-launch iteration (deployed to Render + Neon Postgres)
+Shipped since v1.0.0 (all live on `main`, browser-QA'd each step):
+- **Persistence:** deployed single-server to Render; data on **Neon Postgres**
+  (DATABASE_URL, SSL-aware parser) — survives redeploys. `/api/health` reports DB.
+- **Task editing:** editable Project/Sub-project (move tasks); status change no
+  longer closes the modal; Delete grouped with Cancel/Save; **Start date** +
+  calendar **spanning** start→deadline (deadline-only spans from creation date).
+- **List:** combinable filters (project/sub-project/assignee/status/recurring) +
+  search + sort; separate Project & Sub-project & Assignee columns.
+- **Assignees:** collapsed-with-search picker (by name; admin group filter +
+  whole-group assign); initials on calendars with full-name hover.
+- **Calendar:** Weekly = Google-Calendar spanning bars (lane-packed, initials,
+  ⏰ due day); Monthly assignees + month-dated cells; **birthdays/events** as
+  text (🎂/📌); **overdue = whole row/bar tinted red + ❗** in List/Weekly/Monthly.
+- **Admin in-app:** Team (members/groups/grants), Manage Projects (colors,
+  **emoji**, delete-with-move), Settings (push time, events), **Trash** (soft-delete
+  + 7-day restore), approvals inbox (clickable). Account menu dropdown.
+- **Copy Summary:** rebuilt — grouped **by person** (alpha), deadlines, project
+  emoji, filters (project/person/group), live preview.
+- **Phase 2:** assign-to-group (live); subtasks + webhooks (on a side branch).
+- **Theme:** Ananda "Temple of Light" (Nayaswami blue / ivory / temple gold,
+  Fraunces + Instrument Sans). **Mobile-responsive** layouts.
+- **Ops:** Django admin backup access + dumpdata documented (deploy-runbook).
+
 ## [1.0.0] — 2026-06-02
 ### Verified
 - **Step 12 — Verify.** End-to-end verification passed: `manage.py check` clean,
