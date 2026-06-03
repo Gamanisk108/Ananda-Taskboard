@@ -55,7 +55,11 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   }, [items]);
 
   const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
-  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  // 6 weeks max, but drop any whole week with no day in the current month
+  const allCells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const cells = Array.from({ length: 6 }, (_, w) => allCells.slice(w * 7, w * 7 + 7))
+    .filter((week) => week.some((d) => isSameMonth(d, month)))
+    .flat();
 
   function countsByColor(dayItems: CalendarInstance[]) {
     const m = new Map<string, number>();
