@@ -35,12 +35,18 @@ body {
   margin: 0;
   font-family: var(--font-ui);
   font-size: 14px;
+  line-height: 1.45;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3 { font-family: var(--font-display); font-weight: 700; margin: 0; }
+/* Display serif headings: slightly tighter tracking, optical sizing */
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
 
 button {
   font-family: var(--font-ui);

@@ -127,9 +127,8 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                 <div
                   key={`${i.task_id}-${idx}`}
                   className="card"
-                  style={{ padding: 10, marginBottom: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center",
-                    background: i.overdue ? "#b4452f12" : (!i.overdue && i.is_deadline && i.date === tomorrow) ? "#c9a24b1e" : undefined,
-                    boxShadow: i.overdue ? "inset 3px 0 0 var(--danger)" : (!i.overdue && i.is_deadline && i.date === tomorrow) ? "inset 3px 0 0 var(--gold)" : undefined }}
+                  style={{ padding: "8px 10px", marginBottom: 6, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center",
+                    background: i.overdue ? "#b4452f12" : (!i.overdue && i.is_deadline && i.date === tomorrow) ? "#c9a24b1e" : undefined }}
                   onClick={() => open(i.task_id)}
                 >
                   <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

@@ -38,20 +38,21 @@
   border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
 .tbl thead th {
   text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--text-muted); background: var(--surface-sunk); padding: 9px 12px; font-weight: 600;
+  color: var(--text-muted); background: var(--surface-sunk); padding: 7px 11px; font-weight: 600;
   border-bottom: 1px solid var(--border); white-space: nowrap;
 }
 .tbl tbody tr { border-bottom: 1px solid var(--border); }
 .tbl tbody tr:nth-child(even) { background: #fbf9f5; }
 .tbl tbody tr:hover { background: var(--primary-weak); cursor: pointer; }
-.tbl td { padding: 8px 12px; vertical-align: middle; }
-.tbl tr.overdue, .tbl tr.overdue:nth-child(even) { background: #b4452f16; box-shadow: inset 3px 0 0 var(--danger); }
+.tbl td { padding: 6px 11px; vertical-align: middle; }
+/* overdue / due-soon: full-row tint (no side stripe) */
+.tbl tr.overdue, .tbl tr.overdue:nth-child(even) { background: #b4452f16; }
 .tbl tr.overdue:hover { background: #b4452f24; }
 .tbl tr.overdue td { color: var(--danger); }
 .tbl tr.overdue .deadline { font-weight: 600; }
 .od { color: var(--danger); font-weight: 700; cursor: help; }
-.od-soon { color: var(--gold); font-weight: 700; cursor: help; }
-.tbl tr.due-soon, .tbl tr.due-soon:nth-child(even) { background: #c9a24b20; box-shadow: inset 3px 0 0 var(--gold); }
+.od-soon { color: var(--warn); font-weight: 700; cursor: help; }
+.tbl tr.due-soon, .tbl tr.due-soon:nth-child(even) { background: #c9a24b20; }
 .tbl tr.due-soon:hover { background: #c9a24b33; }
 .mcell.has-soon { background: #c9a24b14; border-color: #c9a24b66; }
 
