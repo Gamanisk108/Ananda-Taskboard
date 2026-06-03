@@ -55,6 +55,7 @@ export interface Task {
   recurrence: Recurrence | null;
   links: string[];
   monitor: boolean;
+  auto_complete: boolean;
   created_by: number | null;
   created_at: string;
   updated_at: string;

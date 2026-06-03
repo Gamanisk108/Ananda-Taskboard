@@ -26,19 +26,25 @@ def _ids(param):
 
 
 def _on_date(task, day):
-    """True if the task is active on `day`: recurring occurrence, or its span
-    (start/creation → deadline) covers the day, or it's overdue and not done."""
+    """Whether a (non-complete) task belongs on `day`'s summary:
+    - recurring → an occurrence lands on `day`
+    - overdue (deadline before `day`) → keeps showing until done
+    - date range (start + deadline) → only while `day` is inside [start, deadline]
+    - deadline only (no start) → only on the deadline date
+    - start only (no deadline) → only on the start date
+    (Completed tasks are already filtered out before this is called.)"""
     if task.is_recurring:
         return bool(occurrence_dates(task.recurrence_rule, day, day))
-    end = task.deadline or task.timeline_start
-    if not end:
-        return False
-    if task.deadline and task.deadline < day and task.status != Task.Status.DONE:
-        return True  # overdue still shows
-    start = task.timeline_start or (task.created_at.date() if (task.deadline and task.created_at) else end)
-    if start > end:
-        start, end = end, start
-    return start <= day <= end
+    dl, st = task.deadline, task.timeline_start
+    if dl and dl < day:
+        return True  # overdue, not done → still shows
+    if st and dl:
+        return st <= day <= dl       # date range: only within the range
+    if dl:
+        return day == dl              # deadline only: only on the deadline day
+    if st:
+        return day == st              # start only
+    return False
 
 
 def _first_name(user):

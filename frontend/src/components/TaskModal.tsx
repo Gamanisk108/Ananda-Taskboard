@@ -42,6 +42,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
   const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
   const [monitor, setMonitor] = useState<boolean>(task?.monitor ?? false);
+  const [autoComplete, setAutoComplete] = useState<boolean>(task?.auto_complete ?? false);
   const [groups, setGroups] = useState<GroupLite[]>([]);
   const statuses = useStatuses();
   const [err, setErr] = useState("");
@@ -94,6 +95,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       assignees,
       assignee_groups: assigneeGroups,
       monitor,
+      auto_complete: autoComplete,
       links: links.split("\n").map((l) => l.trim()).filter(Boolean),
       recurrence,
     };
@@ -263,6 +265,10 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input type="checkbox" style={{ width: "auto" }} checked={monitor} onChange={(e) => setMonitor(e.target.checked)} />
             Monitor — notify admins when this task is moved
+          </label>
+          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+            <input type="checkbox" style={{ width: "auto" }} checked={autoComplete} onChange={(e) => setAutoComplete(e.target.checked)} />
+            Auto-complete — mark Done automatically after the deadline (mundane one-off tasks)
           </label>
         </div>
 

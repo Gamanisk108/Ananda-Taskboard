@@ -180,6 +180,37 @@ def test_summary_unassigned_section(admin, sp):
     assert "Unassigned" in res.data["text"] and "Nobody" in res.data["text"]
 
 
+def test_summary_deadline_only_shows_only_on_deadline_day(admin, sp):
+    from datetime import timedelta
+    today = local_today()
+    Task.objects.create(subproject=sp, title="DueFriday", deadline=today + timedelta(days=2))  # no start date
+    assert "DueFriday" not in login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}").data["text"]
+    on_day = login(admin).get(f"/api/summary/groupchat?date={(today + timedelta(days=2)).isoformat()}").data["text"]
+    assert "DueFriday" in on_day
+
+
+def test_summary_date_range_only_within_range(admin, sp):
+    from datetime import timedelta
+    today = local_today()
+    Task.objects.create(subproject=sp, title="Ranged", timeline_start=today, deadline=today + timedelta(days=3))
+    assert "Ranged" in login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}").data["text"]
+    before = login(admin).get(f"/api/summary/groupchat?date={(today - timedelta(days=1)).isoformat()}").data["text"]
+    assert "Ranged" not in before
+
+
+def test_summary_overdue_still_shows(admin, sp):
+    from datetime import timedelta
+    today = local_today()
+    Task.objects.create(subproject=sp, title="Late", deadline=today - timedelta(days=2), status="todo")
+    assert "Late" in login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}").data["text"]
+
+
+def test_summary_excludes_done(admin, sp):
+    today = local_today()
+    Task.objects.create(subproject=sp, title="Finished", deadline=today, status="done")
+    assert "Finished" not in login(admin).get(f"/api/summary/groupchat?date={today.isoformat()}").data["text"]
+
+
 def test_summary_empty_message(member):
     res = login(member).get("/api/summary/groupchat")
     assert "Nothing scheduled" in res.data["text"]

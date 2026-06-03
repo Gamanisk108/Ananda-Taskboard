@@ -108,7 +108,7 @@ def restore_point(rp):
 
 
 def daily_autosave():
-    save_point(f"Daily auto-save — {timezone.now().strftime('%Y-%m-%d')}", auto=True)
+    return save_point(f"Daily auto-save — {timezone.now().strftime('%Y-%m-%d')}", auto=True)
 
 
 # --- API (admin) ------------------------------------------------------------

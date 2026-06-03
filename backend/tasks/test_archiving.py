@@ -7,8 +7,8 @@ from rest_framework.test import APIClient
 from accounts.models import User
 from permissions.models import AccessGrant
 from projects.models import Project, SubProject
-from tasks.archiving import archive_completed
-from tasks.models import Task
+from tasks.archiving import archive_completed, auto_complete_overdue
+from tasks.models import RecurrenceRule, Task
 
 
 @pytest.fixture
@@ -70,6 +70,26 @@ def test_unarchive_recovers(admin, sp):
     assert res.status_code == 200
     t.refresh_from_db()
     assert t.archived_at is None
+
+
+def test_auto_complete_marks_past_due(sp):
+    past = Task.objects.create(subproject=sp, title="Mundane", deadline=date.today() - timedelta(days=1), auto_complete=True)
+    future = Task.objects.create(subproject=sp, title="Future", deadline=date.today() + timedelta(days=1), auto_complete=True)
+    normal = Task.objects.create(subproject=sp, title="Manual", deadline=date.today() - timedelta(days=1))  # no flag
+    n = auto_complete_overdue()
+    assert n == 1
+    past.refresh_from_db(); future.refresh_from_db(); normal.refresh_from_db()
+    assert past.status == "done"
+    assert future.status != "done"   # not past due
+    assert normal.status != "done"   # not flagged
+
+
+def test_auto_complete_skips_recurring(sp):
+    rr = RecurrenceRule.objects.create(freq="weekly", interval=1, anchor=date.today() - timedelta(days=7))
+    t = Task.objects.create(subproject=sp, title="Weekly", recurrence_rule=rr, deadline=date.today() - timedelta(days=1), auto_complete=True)
+    auto_complete_overdue()
+    t.refresh_from_db()
+    assert t.status != "done"  # recurring tasks aren't auto-completed (they recur)
 
 
 def test_member_with_access_can_unarchive(member, sp):

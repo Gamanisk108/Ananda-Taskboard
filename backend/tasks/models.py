@@ -96,6 +96,9 @@ class Task(SoftDeleteModel):
     archived_at = models.DateTimeField(null=True, blank=True, db_index=True)
     # When ON, admins are notified whenever this task is moved (status changed). Default off.
     monitor = models.BooleanField(default=False)
+    # When ON, a one-off task auto-marks Done the morning after its deadline passes
+    # (for mundane tasks you don't want to tick off manually). Default off.
+    auto_complete = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["deadline", "title"]

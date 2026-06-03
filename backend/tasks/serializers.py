@@ -26,7 +26,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             "id", "subproject", "project", "title", "details", "requirements",
             "assignees", "assignee_groups", "deadline", "timeline_start", "timeline_end",
-            "status", "approval_state", "recurrence", "links", "monitor",
+            "status", "approval_state", "recurrence", "links", "monitor", "auto_complete",
             "created_by", "created_at", "updated_at", "archived_at", "comment_count",
         ]
         # status has its own endpoint; approval_state/created_by/archived_at are server-controlled

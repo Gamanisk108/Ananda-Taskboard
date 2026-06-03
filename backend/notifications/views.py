@@ -84,8 +84,9 @@ class DailyPushJobView(APIView):
         from restore_service import daily_autosave
 
         result["purged"] = purge_expired()
-        from tasks.archiving import archive_completed
+        from tasks.archiving import archive_completed, auto_complete_overdue
 
+        result["auto_completed"] = auto_complete_overdue()  # before archiving
         result["archived"] = archive_completed()
         rp = daily_autosave()
         result["restore_point"] = rp.id
