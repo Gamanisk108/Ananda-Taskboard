@@ -21,6 +21,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   const [dayOpen, setDayOpen] = useState<string | null>(null);
   const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
   const users = useUsers();
+  const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
   const colorByProject = !projectId;
 
@@ -98,7 +99,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
               const dayEvents = eventsByDate.get(iso) ?? [];
               const inMonth = isSameMonth(d, month);
               const hasOverdue = dayItems.some((i) => i.overdue);
-              const hasSoon = !hasOverdue && dayItems.some((i) => i.is_deadline && i.date === tomorrow && !i.overdue);
+              const hasSoon = !hasOverdue && dayItems.some((i) => i.is_deadline && (i.date === today || i.date === tomorrow) && !i.overdue);
               return (
                 <button
                   key={iso}
@@ -107,7 +108,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                 >
                   <span className="day-num">{format(d, "MMM d")}
                     {hasOverdue && <span className="od" title="Missed Deadline"> ❗</span>}
-                    {hasSoon && <span className="od-soon" title="Deadline Tomorrow"> ❗</span>}
+                    {hasSoon && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
                   </span>
                   {dayEvents.map((e, k) => (
                     <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
@@ -132,14 +133,14 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                   key={`${i.task_id}-${idx}`}
                   className="card"
                   style={{ padding: "8px 10px", marginBottom: 6, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center",
-                    background: i.overdue ? "#b4452f12" : (!i.overdue && i.is_deadline && i.date === tomorrow) ? "#c9a24b1e" : undefined }}
+                    background: i.overdue ? "#b4452f12" : (!i.overdue && i.is_deadline && (i.date === today || i.date === tomorrow)) ? "#c9a24b1e" : undefined }}
                   onClick={() => open(i.task_id)}
                 >
                   <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <span className="dot" style={{ background: colorByProject ? i.project_color : i.subproject_color }} />
                     {i.title}
                     {i.overdue && <span className="od" title="Missed Deadline">❗</span>}
-                    {!i.overdue && i.is_deadline && i.date === tomorrow && <span className="od-soon" title="Deadline Tomorrow">❗</span>}
+                    {!i.overdue && i.is_deadline && (i.date === today || i.date === tomorrow) && <span className="od-soon" title="Due today or tomorrow">❗</span>}
                     {i.assignee_ids.length > 0 && (
                       <span className="muted" style={{ fontSize: 12 }}>
                         · {i.assignee_ids.map((id) => userName(users, id)).join(", ")}

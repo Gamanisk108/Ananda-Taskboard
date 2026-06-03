@@ -59,10 +59,10 @@ export function tomorrowISO(): string {
   return localISO(d);
 }
 
-/** Deadline urgency for an open task: 'overdue' (past), 'tomorrow' (due next day), or null. */
-export function deadlineState(deadline: string | null, complete: boolean): "overdue" | "tomorrow" | null {
+/** Deadline urgency for an open task: 'overdue' (past), 'soon' (due today or tomorrow), or null. */
+export function deadlineState(deadline: string | null, complete: boolean): "overdue" | "soon" | null {
   if (!deadline || complete) return null;
   if (deadline < todayISO()) return "overdue";
-  if (deadline === tomorrowISO()) return "tomorrow";
+  if (deadline === todayISO() || deadline === tomorrowISO()) return "soon";
   return null;
 }

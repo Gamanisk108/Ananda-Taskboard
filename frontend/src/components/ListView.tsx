@@ -161,11 +161,11 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
               const ds = deadlineState(t.deadline, isComplete(t.status));
               const names = assigneeNames(t);
               return (
-                <tr key={t.id} className={ds === "overdue" ? "overdue" : ds === "tomorrow" ? "due-soon" : ""} onClick={() => onEdit(t)}>
+                <tr key={t.id} className={ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : ""} onClick={() => onEdit(t)}>
                   <td>
                     <strong>{t.title}</strong>
                     {ds === "overdue" && <span className="od" title="Missed Deadline"> ❗</span>}
-                    {ds === "tomorrow" && <span className="od-soon" title="Deadline Tomorrow"> ❗</span>}
+                    {ds === "soon" && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
                   </td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.projectColor} /> {info.projectName}</span>}</td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.color} /> {info.name}</span>}</td>

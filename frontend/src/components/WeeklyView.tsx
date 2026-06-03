@@ -20,7 +20,7 @@ interface Bar {
   startCol: number; // 1..7
   endCol: number;   // 1..7
   overdue: boolean;
-  dueTomorrow: boolean;
+  dueSoon: boolean;
   assignee_ids: number[];
   lane: number;
 }
@@ -34,6 +34,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const dayIso = useMemo(() => days.map((d) => format(d, "yyyy-MM-dd")), [days]);
+  const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
         startCol: Math.min(...cols),
         endCol: Math.max(...cols),
         overdue: insts.some((i) => i.overdue),
-        dueTomorrow: !!deadlineInst && deadlineInst.date === tomorrow && !insts.some((i) => i.overdue),
+        dueSoon: !!deadlineInst && (deadlineInst.date === today || deadlineInst.date === tomorrow) && !insts.some((i) => i.overdue),
         assignee_ids: first.assignee_ids,
       });
     }
@@ -85,7 +86,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
       return { ...b, lane };
     });
     return { bars: packed, laneCount: Math.max(1, laneEnds.length) };
-  }, [items, dayIso, colorByProject, tomorrow]);
+  }, [items, dayIso, colorByProject, today, tomorrow]);
 
   return (
     <div className="rise">
@@ -116,14 +117,14 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
                 key={b.task_id}
                 className="wk-bar"
                 style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1,
-                  background: b.overdue ? "var(--danger)" : b.dueTomorrow ? "var(--gold)" : b.color }}
+                  background: b.overdue ? "var(--danger)" : b.dueSoon ? "var(--gold)" : b.color }}
                 onClick={() => open(b.task_id)}
                 title={b.title}
               >
                 <span className="wk-bar-title">
                   {b.title}
                   {b.overdue && <span title="Missed Deadline"> ❗</span>}
-                  {b.dueTomorrow && <span title="Deadline Tomorrow"> ❗</span>}
+                  {b.dueSoon && <span title="Due today or tomorrow"> ❗</span>}
                 </span>
                 {b.assignee_ids.length > 0 && (
                   <span className="chip-initials" title={b.assignee_ids.map((id) => userName(users, id)).join(", ")}>
