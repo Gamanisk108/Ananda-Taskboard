@@ -164,3 +164,51 @@ def test_materialize_idempotent_no_duplicates(recurring_task):
     materialize_occurrences(recurring_task, date(2026, 6, 1), date(2026, 6, 3))
     materialize_occurrences(recurring_task, date(2026, 6, 1), date(2026, 6, 3))
     assert recurring_task.occurrences.count() == 3  # no duplicates
+
+
+# --- weekly multi-weekday (tasks) ------------------------------------------
+
+def mrule(anchor, weekdays, interval=1, end_date=None, count=None):
+    r = RecurrenceRule(freq="weekly", interval=interval, anchor=anchor, end_date=end_date, count=count)
+    r.weekdays = ",".join(str(w) for w in weekdays)
+    return r
+
+
+def test_multiday_count_is_occurrences():
+    # Sat(5)+Sun(6) from Sat 2026-06-06; count=4 OCCURRENCES (not weeks).
+    r = mrule(date(2026, 6, 6), [5, 6], count=4)
+    out = occurrence_dates(r, date(2026, 6, 1), date(2026, 7, 31))
+    assert out == [date(2026, 6, 6), date(2026, 6, 7), date(2026, 6, 13), date(2026, 6, 14)]
+
+
+def test_multiday_excludes_days_before_anchor():
+    # Anchor Sunday 06-07; the Saturday of that week (06-06) precedes the anchor.
+    r = mrule(date(2026, 6, 7), [5, 6], count=3)
+    out = occurrence_dates(r, date(2026, 6, 1), date(2026, 7, 31))
+    assert out == [date(2026, 6, 7), date(2026, 6, 13), date(2026, 6, 14)]
+
+
+def test_multiday_end_date_inclusive():
+    r = mrule(date(2026, 6, 6), [5, 6], end_date=date(2026, 6, 14))
+    out = occurrence_dates(r, date(2026, 6, 1), date(2026, 7, 31))
+    assert out == [date(2026, 6, 6), date(2026, 6, 7), date(2026, 6, 13), date(2026, 6, 14)]
+
+
+def test_multiday_interval_two_weeks():
+    r = mrule(date(2026, 6, 6), [5, 6], interval=2, count=4)
+    out = occurrence_dates(r, date(2026, 6, 1), date(2026, 7, 31))
+    assert out == [date(2026, 6, 6), date(2026, 6, 7), date(2026, 6, 20), date(2026, 6, 21)]
+
+
+def test_multiday_window_clips_but_count_from_anchor():
+    # count=4 from anchor; window only shows the later half.
+    r = mrule(date(2026, 6, 6), [5, 6], count=4)
+    out = occurrence_dates(r, date(2026, 6, 10), date(2026, 6, 30))
+    assert out == [date(2026, 6, 13), date(2026, 6, 14)]
+
+
+def test_weekly_without_weekdays_unchanged():
+    # Empty weekdays → classic single-weekday weekly from the anchor.
+    r = mrule(date(2026, 6, 1), [])
+    out = occurrence_dates(r, date(2026, 6, 1), date(2026, 6, 30))
+    assert out == [date(2026, 6, 1), date(2026, 6, 8), date(2026, 6, 15), date(2026, 6, 22), date(2026, 6, 29)]

@@ -51,6 +51,12 @@ class RecurrenceRule(models.Model):
     # Optional end: indefinite if both null; else stops at end_date OR after count.
     end_date = models.DateField(null=True, blank=True)
     count = models.PositiveIntegerField(null=True, blank=True)
+    # WEEKLY only: fire on these weekdays each active week (CSV, Mon=0..Sun=6).
+    # Empty = the anchor's own weekday (classic single-day weekly).
+    weekdays = models.CharField(max_length=20, blank=True, default="")
+
+    def weekday_list(self):
+        return [int(x) for x in self.weekdays.split(",") if x != ""]
 
     def __str__(self):
         every = f"every {self.interval} " if self.interval != 1 else "every "

@@ -3,16 +3,32 @@ from rest_framework import serializers
 from .models import CalendarEvent, Comment, RecurrenceRule, Status, Task
 
 
+class WeekdaysField(serializers.Field):
+    """JSON list of ints (Mon=0..Sun=6) <-> CSV string stored on the model."""
+
+    def to_representation(self, value):
+        return [int(x) for x in value.split(",") if x != ""] if value else []
+
+    def to_internal_value(self, data):
+        if not isinstance(data, list) or not all(isinstance(x, int) and 0 <= x <= 6 for x in data):
+            raise serializers.ValidationError("weekdays must be a list of ints 0..6 (Mon..Sun).")
+        return ",".join(str(x) for x in sorted(set(data)))
+
+
 class RecurrenceRuleSerializer(serializers.ModelSerializer):
+    weekdays = WeekdaysField(required=False)
+
     class Meta:
         model = RecurrenceRule
-        fields = ["id", "freq", "interval", "anchor", "end_date", "count"]
+        fields = ["id", "freq", "interval", "anchor", "end_date", "count", "weekdays"]
 
     def validate(self, attrs):
         if attrs.get("end_date") and attrs.get("count"):
             raise serializers.ValidationError("Set at most one of end_date or count.")
         if attrs.get("interval", 1) < 1:
             raise serializers.ValidationError("interval must be >= 1.")
+        if attrs.get("weekdays") and attrs.get("freq", "weekly") != "weekly":
+            raise serializers.ValidationError("weekdays apply only to weekly recurrence.")
         return attrs
 
 
@@ -101,18 +117,6 @@ class StatusSerializer(serializers.ModelSerializer):
         if not attrs.get("key") and attrs.get("label"):
             attrs["key"] = slugify(attrs["label"])[:50] or "status"
         return attrs
-
-
-class WeekdaysField(serializers.Field):
-    """JSON list of ints (Mon=0..Sun=6) <-> CSV string stored on the model."""
-
-    def to_representation(self, value):
-        return [int(x) for x in value.split(",") if x != ""] if value else []
-
-    def to_internal_value(self, data):
-        if not isinstance(data, list) or not all(isinstance(x, int) and 0 <= x <= 6 for x in data):
-            raise serializers.ValidationError("weekdays must be a list of ints 0..6 (Mon..Sun).")
-        return ",".join(str(x) for x in sorted(set(data)))
 
 
 class CalendarEventSerializer(serializers.ModelSerializer):

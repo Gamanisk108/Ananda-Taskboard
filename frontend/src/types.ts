@@ -36,6 +36,7 @@ export interface Recurrence {
   anchor: string;
   end_date?: string | null;
   count?: number | null;
+  weekdays?: number[]; // weekly only: Mon=0..Sun=6; [] = anchor's weekday
 }
 
 export interface Task {

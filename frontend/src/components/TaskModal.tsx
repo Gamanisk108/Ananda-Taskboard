@@ -20,6 +20,12 @@ interface Props {
 
 type EndMode = "none" | "date" | "count";
 
+// Weekday toggles shown Sunday-first; stored Mon=0..Sun=6 (matches the backend).
+const WD_TOGGLES = [
+  { n: 6, label: "S" }, { n: 0, label: "M" }, { n: 1, label: "T" }, { n: 2, label: "W" },
+  { n: 3, label: "T" }, { n: 4, label: "F" }, { n: 5, label: "S" },
+];
+
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
@@ -57,6 +63,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
   const [repeats, setRepeats] = useState(!!task?.recurrence);
   const [freq, setFreq] = useState<Recurrence["freq"]>(task?.recurrence?.freq ?? "weekly");
+  const [weekdays, setWeekdays] = useState<number[]>(task?.recurrence?.weekdays ?? []);
   const [interval, setInterval] = useState(task?.recurrence?.interval ?? 1);
   const [anchor, setAnchor] = useState(task?.recurrence?.anchor ?? (deadline || todayISO()));
   const [endMode, setEndMode] = useState<EndMode>(
@@ -90,7 +97,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     if (!!startTime !== !!endTime) { setErr("Set both a start and end time, or neither."); return; }
     if (startTime && endTime && endTime <= startTime) { setErr("End time must be after the start time."); return; }
     const recurrence: Recurrence | null = repeats
-      ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null, count: endMode === "count" ? count : null }
+      ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null, count: endMode === "count" ? count : null,
+          weekdays: freq === "weekly" ? weekdays : [] }
       : null;
     const payload = {
       subproject, title, details, requirements,
@@ -243,6 +251,20 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
                 <input type="number" min={1} value={interval} onChange={(e) => setInterval(Number(e.target.value))} />
               </div>
             </div>
+            {freq === "weekly" && (
+              <div className="field">
+                <label>On days <span className="muted" style={{ fontWeight: 400 }}>(none = same weekday as start)</span></label>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {WD_TOGGLES.map((w, i) => (
+                    <button key={i} type="button"
+                      className={weekdays.includes(w.n) ? "btn-primary" : "btn-secondary"}
+                      style={{ width: 34, padding: "6px 0" }}
+                      onClick={() => setWeekdays((d) => d.includes(w.n) ? d.filter((x) => x !== w.n) : [...d, w.n])}>
+                      {w.label}</button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="row2">
               <div className="field">
                 <label>Starts (anchor)</label>

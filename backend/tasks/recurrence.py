@@ -71,10 +71,54 @@ def _fast_forward_start(rule, window_start):
     return 0
 
 
+def _weekly_multiday_dates(rule, window_start, window_end):
+    """WEEKLY recurrence firing on multiple weekdays (rule.weekdays).
+
+    Unlike `event_weekly_dates`, `count` here caps the number of fired
+    OCCURRENCES (matching the task model's "after N times"), counted from the
+    anchor onward — consistent with the single-weekday path below.
+    """
+    wds = sorted({int(x) for x in rule.weekdays.split(",") if x != ""})
+    interval = max(1, rule.interval or 1)
+    week0_monday = rule.anchor - timedelta(days=rule.anchor.weekday())
+
+    w = 0
+    if rule.count is None and window_start > week0_monday:
+        w = max(0, (window_start - week0_monday).days // (7 * interval) - 1)
+
+    dates = []
+    fired = 0
+    iterations = 0
+    while iterations < MAX_SLOTS:
+        iterations += 1
+        if rule.count is not None and fired >= rule.count:
+            break
+        week_monday = week0_monday + timedelta(weeks=w * interval)
+        if week_monday > window_end:
+            break
+        if rule.end_date is not None and week_monday > rule.end_date:
+            break
+        for wd in wds:
+            d = week_monday + timedelta(days=wd)
+            if d < rule.anchor:
+                continue
+            if rule.count is not None and fired >= rule.count:
+                break
+            if rule.end_date is not None and d > rule.end_date:
+                break  # later weekdays this week are later still
+            if window_start <= d <= window_end:
+                dates.append(d)
+            fired += 1
+        w += 1
+    return dates
+
+
 def occurrence_dates(rule, window_start, window_end):
     """All occurrence dates of `rule` within [window_start, window_end] inclusive."""
     if window_end < rule.anchor:
         return []
+    if rule.freq == "weekly" and getattr(rule, "weekdays", ""):
+        return _weekly_multiday_dates(rule, window_start, window_end)
     dates = []
     fired = 0  # count of occurrences that have fired from the anchor onward
     n = _fast_forward_start(rule, window_start) if rule.count is None else 0
