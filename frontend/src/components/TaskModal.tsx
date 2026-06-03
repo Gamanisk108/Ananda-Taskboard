@@ -43,6 +43,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [groups, setGroups] = useState<GroupLite[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [shareLabel, setShareLabel] = useState("🔗 Share");
 
   useEffect(() => {
     if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
@@ -248,6 +249,12 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 
         <div className="modal-foot">
+          {editing && (
+            <button type="button" className="btn-secondary" style={{ marginRight: "auto" }}
+              onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel("🔗 Share"), 2500); }}>
+              {shareLabel}
+            </button>
+          )}
           <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
           {editing && <button type="button" className="btn-danger" onClick={del}>Delete</button>}
           <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save"}</button>

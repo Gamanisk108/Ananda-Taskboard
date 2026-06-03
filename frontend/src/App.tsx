@@ -53,6 +53,33 @@ export default function App() {
     return currentProject.subprojects[0]?.id ?? null;
   }, [subTab, currentProject]);
 
+  // Deep-link IN: on first login, honor ?project / ?sub / ?view / ?task in the URL.
+  useEffect(() => {
+    if (!me) return;
+    const q = new URLSearchParams(window.location.search);
+    const proj = q.get("project"), sub = q.get("sub"), v = q.get("view"), task = q.get("task");
+    if (proj === "global") setTopTab("global");
+    else if (proj) setTopTab(Number(proj));
+    if (sub) setSubTab(Number(sub));
+    if (v === "list" || v === "weekly" || v === "monthly") setView(v);
+    if (task) {
+      import("./api/client").then(({ api }) =>
+        api.get(`/api/tasks/${task}`).then((t) => setEditing(t as Task)).catch(() => {})
+      );
+    }
+  }, [me?.id]); // once per login
+
+  // Deep-link OUT: keep the URL in sync with the current view so it's shareable.
+  useEffect(() => {
+    if (!me) return;
+    const q = new URLSearchParams();
+    if (typeof effectiveTop === "number") q.set("project", String(effectiveTop));
+    else if (effectiveTop === "global") q.set("project", "global");
+    if (typeof effectiveSub === "number") q.set("sub", String(effectiveSub));
+    q.set("view", view);
+    window.history.replaceState(null, "", `?${q.toString()}`);
+  }, [effectiveTop, effectiveSub, view, me?.id]);
+
   if (loading) return <Spinner />;
   if (!me) return <Login />;
 
@@ -134,6 +161,7 @@ export default function App() {
           ))}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
+          <ShareViewButton />
           <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
           <ExportButtons projectId={projectId} subprojectId={subprojectId} />
         </div>
@@ -234,6 +262,16 @@ function UserMenu({ name, isAdmin, onSettings, onRestore, onLogout }: {
       )}
     </div>
   );
+}
+
+function ShareViewButton() {
+  const [label, setLabel] = useState("Share view");
+  async function share() {
+    const { shareUrl } = await import("./share");
+    setLabel(await shareUrl(window.location.href));
+    setTimeout(() => setLabel("Share view"), 2500);
+  }
+  return <button className="btn-secondary" onClick={share} title="Copy a link to this exact view">🔗 {label}</button>;
 }
 
 function ExportButtons({ projectId, subprojectId }: { projectId?: number; subprojectId?: number }) {
