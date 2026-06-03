@@ -100,6 +100,58 @@ def occurrence_dates(rule, window_start, window_end):
     return dates
 
 
+def event_weekly_dates(anchor, weekdays, interval=1, count=None, end_date=None,
+                       window_start=None, window_end=None):
+    """Weekly multi-weekday recurrence for CalendarEvents (distinct from the task
+    engine above, which fires on a single weekday).
+
+    - `weekdays`: ints Mon=0..Sun=6. Weeks are indexed from the Monday of
+      `anchor`'s week; active weeks step by `interval`.
+    - `count`: cap on the number of ACTIVE weeks (None = unbounded).
+    - `end_date`: inclusive last day (None = unbounded).
+    - A day fires only if it is >= anchor, <= end_date, and within the window.
+
+    Returns sorted dates in [window_start, window_end].
+    """
+    wds = sorted({int(w) for w in weekdays})
+    if not wds:
+        return []
+    interval = max(1, interval or 1)
+    week0_monday = anchor - timedelta(days=anchor.weekday())
+
+    # Fast-forward toward the window so an old anchor doesn't cost a long loop.
+    # Only safe when count is None (count must be measured from week 0).
+    k = 0
+    if count is None and window_start is not None and window_start > week0_monday:
+        k = max(0, (window_start - week0_monday).days // (7 * interval) - 1)
+
+    out = []
+    iterations = 0
+    while iterations < MAX_SLOTS:
+        iterations += 1
+        if count is not None and k >= count:
+            break
+        week_monday = week0_monday + timedelta(weeks=k * interval)
+        if window_end is not None and week_monday > window_end:
+            break
+        if end_date is not None and week_monday > end_date:
+            break
+        for wd in wds:
+            d = week_monday + timedelta(days=wd)
+            if d < anchor:
+                continue
+            if end_date is not None and d > end_date:
+                continue
+            if window_start is not None and d < window_start:
+                continue
+            if window_end is not None and d > window_end:
+                continue
+            out.append(d)
+        k += 1
+    out.sort()
+    return out
+
+
 def materialize_occurrences(task, window_start, window_end):
     """Create any missing TaskOccurrence rows for a recurring task within the
     window and return all of the task's occurrences in that window (ordered).

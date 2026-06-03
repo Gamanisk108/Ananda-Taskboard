@@ -88,6 +88,22 @@ export interface CalendarInstance {
   assignee_ids: number[];
 }
 
+export type EventKind = "single" | "yearly" | "range" | "repeating";
+
+/** One occurrence-span from /api/events/range. start/end are true (unclipped). */
+export interface EventSpan {
+  id: number;
+  title: string;
+  kind: EventKind;
+  yearly: boolean;
+  start: string; // YYYY-MM-DD
+  end: string;
+}
+
+export const EVENT_ICON: Record<EventKind, string> = {
+  single: "📍", yearly: "🎂", range: "📌", repeating: "🔁",
+};
+
 export const STATUS_LABEL: Record<Status, string> = {
   todo: "To Do",
   in_progress: "In Progress",

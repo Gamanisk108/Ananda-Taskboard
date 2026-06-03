@@ -3,7 +3,7 @@ import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
 import { useUsers, userInitials, userName } from "../users";
 import { Spinner } from "./common";
-import type { CalendarInstance, Me, Task } from "../types";
+import { EVENT_ICON, type CalendarInstance, type EventSpan, type Me, type Task } from "../types";
 
 interface Props {
   projectId?: number;
@@ -25,10 +25,12 @@ interface Bar {
   lane: number;
 }
 
+interface EventBar { id: number; title: string; icon: string; startCol: number; endCol: number; lane: number; }
+
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
-  const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
+  const [events, setEvents] = useState<EventSpan[]>([]);
   const users = useUsers();
   const colorByProject = !projectId;
 
@@ -88,6 +90,30 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
     return { bars: packed, laneCount: Math.max(1, laneEnds.length) };
   }, [items, dayIso, colorByProject, today, tomorrow]);
 
+  // Event spans clipped to this week, then lane-packed (same algorithm as tasks).
+  const { eventBars, eventLaneCount } = useMemo(() => {
+    const first = dayIso[0], last = dayIso[6];
+    const raw: Omit<EventBar, "lane">[] = [];
+    for (const e of events) {
+      if (e.start > last || e.end < first) continue; // outside this week
+      const startCol = Math.max(0, dayIso.findIndex((d) => d >= e.start)) + 1;
+      let endIdx = dayIso.length - 1;
+      while (endIdx > 0 && dayIso[endIdx] > e.end) endIdx--;
+      const endCol = endIdx + 1;
+      if (startCol > endCol) continue;
+      raw.push({ id: e.id, title: e.title, icon: EVENT_ICON[e.kind], startCol, endCol });
+    }
+    raw.sort((a, b) => a.startCol - b.startCol || a.endCol - b.endCol);
+    const laneEnds: number[] = [];
+    const packed: EventBar[] = raw.map((b) => {
+      let lane = laneEnds.findIndex((end) => end < b.startCol);
+      if (lane === -1) { lane = laneEnds.length; laneEnds.push(b.endCol); }
+      else laneEnds[lane] = b.endCol;
+      return { ...b, lane };
+    });
+    return { eventBars: packed, eventLaneCount: Math.max(0, laneEnds.length) };
+  }, [events, dayIso]);
+
   return (
     <div className="rise">
       <div className="bulkbar">
@@ -104,12 +130,23 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
             {days.map((d, idx) => (
               <div className="wk-hcell" key={idx}>
                 <div>{format(d, "EEE")} <span className="day-num">{format(d, "MMM d")}</span></div>
-                {events.filter((e) => e.date === dayIso[idx]).map((e, k) => (
-                  <div key={k} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
-                ))}
               </div>
             ))}
           </div>
+          {eventLaneCount > 0 && (
+            <div className="wk-body wk-events" style={{ gridTemplateRows: `repeat(${eventLaneCount}, 26px)` }}>
+              {eventBars.map((b) => (
+                <div
+                  key={b.id}
+                  className="wk-bar ev"
+                  style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1 }}
+                  title={b.title}
+                >
+                  <span className="wk-bar-title">{b.icon} {b.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="wk-body" style={{ gridTemplateRows: `repeat(${laneCount}, 30px)` }}>
             {bars.length === 0 && <div className="wk-empty muted">No tasks this week.</div>}
             {bars.map((b) => (

@@ -88,6 +88,12 @@
   overflow: hidden; white-space: nowrap; margin: 1px 0; cursor: pointer; }
 .wk-bar-title { overflow: hidden; text-overflow: ellipsis; }
 .wk-bar.overdue { outline: 2px solid var(--danger); }
+/* calendar events: gold-edged accent bars, distinct from project-colored task bars */
+.wk-events { min-height: 0; border-bottom: 1px solid var(--border); }
+.wk-bar.ev { background: var(--primary-weak); color: var(--accent); border: 1px solid var(--gold); font-weight: 600; }
+.mcell .ev-bar { display: block; font-size: 11px; font-weight: 600; color: var(--accent);
+  background: var(--primary-weak); border: 1px solid var(--gold); border-radius: var(--r-ctl);
+  padding: 1px 5px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wk-empty { grid-column: 1 / 8; text-align: center; padding: 24px; }
 .day-num { font-family: var(--font-mono); }
 .chip { margin: 5px; padding: 5px 7px; border-radius: var(--r-ctl); font-size: 12px;

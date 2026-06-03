@@ -135,19 +135,39 @@ class TaskOccurrence(models.Model):
 
 
 class CalendarEvent(models.Model):
-    """A dated text note shown in the Weekly/Monthly calendars (birthdays, major
-    events). Not a task. `yearly` repeats it every year (e.g. birthdays)."""
+    """A dated note shown in the Weekly/Monthly calendars (birthdays, retreats,
+    class series). Not a task. Exactly one `kind`:
+    - single    : one day (`date`)
+    - yearly    : repeats annually on `date` (e.g. birthdays)
+    - range     : a continuous span from `date` to `end_date` (inclusive)
+    - repeating : weekly on `weekdays`, every `interval` weeks from `date`,
+                  stopping after `count` weeks OR on `end_date` (or never).
+    """
 
-    date = models.DateField()
+    class Kind(models.TextChoices):
+        SINGLE = "single", "Single date"
+        YEARLY = "yearly", "Yearly"
+        RANGE = "range", "Date range"
+        REPEATING = "repeating", "Repeating"
+
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.SINGLE)
+    date = models.DateField()                 # single/yearly date, range start, or series anchor
+    end_date = models.DateField(null=True, blank=True)   # range end (incl) or repeat "until"
+    weekdays = models.CharField(max_length=20, blank=True, default="")  # repeating: CSV, Mon=0..Sun=6
+    interval = models.PositiveIntegerField(default=1)    # repeating: every N weeks
+    count = models.PositiveIntegerField(null=True, blank=True)  # repeating: stop after N weeks
     title = models.CharField(max_length=200)
-    yearly = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["date"]
 
+    def weekday_list(self):
+        """Parsed weekdays as ints (Mon=0..Sun=6); [] when not repeating."""
+        return [int(x) for x in self.weekdays.split(",") if x != ""]
+
     def __str__(self):
-        return f"{self.title} ({self.date})"
+        return f"{self.title} ({self.kind} @ {self.date})"
 
 
 class HistoryDay(models.Model):

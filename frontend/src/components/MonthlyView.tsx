@@ -5,7 +5,7 @@ import {
 import { api } from "../api/client";
 import { useUsers, userName } from "../users";
 import { Modal, Spinner, StatusPill } from "./common";
-import type { CalendarInstance, Me, Task } from "../types";
+import { EVENT_ICON, type CalendarInstance, type EventSpan, type Me, type Task } from "../types";
 
 interface Props {
   projectId?: number;
@@ -19,7 +19,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
-  const [events, setEvents] = useState<{ date: string; title: string; yearly: boolean }[]>([]);
+  const [events, setEvents] = useState<EventSpan[]>([]);
   const users = useUsers();
   const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
@@ -37,14 +37,24 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
     api.get(`/api/events/range?from=${from}&to=${to}`).then(setEvents).catch(() => setEvents([]));
   }, [month, projectId, subprojectId, refreshKey]);
 
+  // Expand each span into the days it covers within the visible grid, so a
+  // multi-day range shows a bar on each of its days and a series on each date.
   const eventsByDate = useMemo(() => {
-    const m = new Map<string, { title: string; yearly: boolean }[]>();
+    const grid0 = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
+    const lo = format(grid0, "yyyy-MM-dd");
+    const hi = format(addDays(grid0, 41), "yyyy-MM-dd");
+    const m = new Map<string, EventSpan[]>();
     for (const e of events) {
-      if (!m.has(e.date)) m.set(e.date, []);
-      m.get(e.date)!.push(e);
+      let cur = e.start < lo ? lo : e.start;
+      const last = e.end > hi ? hi : e.end;
+      while (cur <= last) {
+        if (!m.has(cur)) m.set(cur, []);
+        m.get(cur)!.push(e);
+        cur = format(addDays(new Date(`${cur}T00:00:00`), 1), "yyyy-MM-dd");
+      }
     }
     return m;
-  }, [events]);
+  }, [events, month]);
 
   const byDate = useMemo(() => {
     const m = new Map<string, CalendarInstance[]>();
@@ -111,7 +121,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                     {hasSoon && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
                   </span>
                   {dayEvents.map((e, k) => (
-                    <div key={`ev-${k}`} className="cal-event" title={e.title}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
+                    <div key={`ev-${k}`} className="ev-bar" title={e.title}>{EVENT_ICON[e.kind]} {e.title}</div>
                   ))}
                   <div className="badges">
                     {countsByColor(dayItems).map(([c, n]) => (
@@ -126,7 +136,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
           {dayOpen && (
             <Modal title={format(new Date(dayOpen), "EEEE, MMM d, yyyy")} onClose={() => setDayOpen(null)}>
               {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
-                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{e.yearly ? "🎂" : "📌"} {e.title}</div>
+                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{EVENT_ICON[e.kind]} {e.title}</div>
               ))}
               {(byDate.get(dayOpen) ?? []).map((i, idx) => (
                 <div

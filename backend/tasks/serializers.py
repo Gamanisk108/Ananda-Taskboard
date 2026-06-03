@@ -92,10 +92,49 @@ class StatusSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class WeekdaysField(serializers.Field):
+    """JSON list of ints (Mon=0..Sun=6) <-> CSV string stored on the model."""
+
+    def to_representation(self, value):
+        return [int(x) for x in value.split(",") if x != ""] if value else []
+
+    def to_internal_value(self, data):
+        if not isinstance(data, list) or not all(isinstance(x, int) and 0 <= x <= 6 for x in data):
+            raise serializers.ValidationError("weekdays must be a list of ints 0..6 (Mon..Sun).")
+        return ",".join(str(x) for x in sorted(set(data)))
+
+
 class CalendarEventSerializer(serializers.ModelSerializer):
+    weekdays = WeekdaysField(required=False)
+
     class Meta:
         model = CalendarEvent
-        fields = ["id", "date", "title", "yearly"]
+        fields = ["id", "kind", "date", "end_date", "weekdays", "interval", "count", "title"]
+
+    def validate(self, attrs):
+        # Merge against the existing instance so PATCH validates the full picture.
+        kind = attrs.get("kind", getattr(self.instance, "kind", "single"))
+        date = attrs.get("date", getattr(self.instance, "date", None))
+        end_date = attrs.get("end_date", getattr(self.instance, "end_date", None))
+        weekdays = attrs.get("weekdays", getattr(self.instance, "weekdays", ""))
+        count = attrs.get("count", getattr(self.instance, "count", None))
+        interval = attrs.get("interval", getattr(self.instance, "interval", 1))
+
+        if kind == "range":
+            if not end_date:
+                raise serializers.ValidationError("A date range needs an end date.")
+            if date and end_date < date:
+                raise serializers.ValidationError("End date must be on or after the start date.")
+        elif kind == "repeating":
+            if not weekdays:
+                raise serializers.ValidationError("Pick at least one weekday to repeat on.")
+            if end_date and count:
+                raise serializers.ValidationError("Set at most one of: number of weeks, or until-date.")
+            if date and end_date and end_date < date:
+                raise serializers.ValidationError("Until-date must be on or after the start date.")
+            if interval is not None and interval < 1:
+                raise serializers.ValidationError("Interval (every N weeks) must be >= 1.")
+        return attrs
 
 
 class CommentSerializer(serializers.ModelSerializer):
