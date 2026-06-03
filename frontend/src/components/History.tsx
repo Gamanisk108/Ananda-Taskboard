@@ -1,0 +1,90 @@
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../api/client";
+import { todayISO } from "../lookup";
+import { ColorDot, StatusPill, Spinner } from "./common";
+import { Modal } from "./common";
+
+interface Inst {
+  title: string;
+  status: string;
+  project_name: string;
+  project_color: string;
+  subproject_name: string;
+  subproject_color: string;
+  assignees: string[];
+  groups: string[];
+  deadline: string | null;
+  is_recurring: boolean;
+  date: string;
+}
+
+function shiftDay(iso: string, delta: number) {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + delta);
+  return d.toISOString().slice(0, 10);
+}
+
+export function History({ onClose }: { onClose: () => void }) {
+  const [day, setDay] = useState(todayISO());
+  const [rows, setRows] = useState<Inst[] | null>(null);
+
+  useEffect(() => {
+    setRows(null);
+    api.get(`/api/history?from=${day}&to=${day}`).then(setRows).catch(() => setRows([]));
+  }, [day]);
+
+  // group by project → subproject
+  const grouped = useMemo(() => {
+    const m = new Map<string, { color: string; subs: Map<string, { color: string; items: Inst[] }> }>();
+    for (const r of rows ?? []) {
+      const p = m.get(r.project_name) ?? { color: r.project_color, subs: new Map() };
+      const s = p.subs.get(r.subproject_name) ?? { color: r.subproject_color, items: [] };
+      s.items.push(r);
+      p.subs.set(r.subproject_name, s);
+      m.set(r.project_name, p);
+    }
+    return m;
+  }, [rows]);
+
+  return (
+    <Modal title="History — look back at any day" onClose={onClose} wide>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+        An accurate snapshot of who was assigned to what on a given day (recorded daily).
+        History builds up from today forward.
+      </p>
+      <div className="bulkbar">
+        <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, -1))}>← Prev day</button>
+        <input type="date" value={day} max={todayISO()} onChange={(e) => setDay(e.target.value)} style={{ width: "auto" }} />
+        <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, 1))} disabled={day >= todayISO()}>Next day →</button>
+        <button className="btn-ghost" onClick={() => setDay(todayISO())}>Today</button>
+      </div>
+
+      {!rows ? <Spinner /> : rows.length === 0 ? (
+        <div className="empty">No snapshot stored for {day}. (History records daily, starting from when the feature went live.)</div>
+      ) : (
+        [...grouped.entries()].sort().map(([proj, p]) => (
+          <div key={proj} style={{ marginBottom: 14 }}>
+            <h3 style={{ fontSize: 15, display: "flex", gap: 7, alignItems: "center" }}><ColorDot color={p.color} /> {proj}</h3>
+            {[...p.subs.entries()].sort().map(([sub, s]) => (
+              <div key={sub} style={{ margin: "6px 0 0 6px" }}>
+                <div className="muted" style={{ fontSize: 12, margin: "4px 0" }}><ColorDot color={s.color} /> {sub}</div>
+                {s.items.map((i, k) => (
+                  <div key={k} className="card" style={{ padding: "7px 10px", marginBottom: 6, display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span>
+                      {i.title}
+                      {(i.assignees.length > 0 || i.groups.length > 0) && (
+                        <span className="muted" style={{ fontSize: 12 }}> · {[...i.assignees, ...i.groups.map((g) => `👥 ${g}`)].join(", ") || "unassigned"}</span>
+                      )}
+                      {i.assignees.length === 0 && i.groups.length === 0 && <span className="muted" style={{ fontSize: 12 }}> · unassigned</span>}
+                    </span>
+                    <StatusPill status={i.status} />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+    </Modal>
+  );
+}

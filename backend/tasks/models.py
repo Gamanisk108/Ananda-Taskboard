@@ -150,6 +150,22 @@ class CalendarEvent(models.Model):
         return f"{self.title} ({self.date})"
 
 
+class HistoryDay(models.Model):
+    """A point-in-time snapshot of which tasks were live on a given date and who
+    was assigned then — so you can look back accurately even after reassignments.
+    One row per date; captured by the daily cron, pruned after ~12 months."""
+
+    date = models.DateField(unique=True)
+    instances = models.JSONField(default=list)  # denormalized task rows for that day
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"history {self.date} ({len(self.instances)} items)"
+
+
 class RestorePoint(models.Model):
     """A full-board snapshot (projects, sub-projects, tasks, events, groups,
     grants) an admin can restore to. Auto-saves are pruned (keep last N); manual

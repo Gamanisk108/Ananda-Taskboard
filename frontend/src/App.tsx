@@ -15,6 +15,7 @@ import { Settings } from "./components/Settings";
 import { Trash } from "./components/Trash";
 import { CopySummary } from "./components/CopySummary";
 import { RestorePoints } from "./components/RestorePoints";
+import { History } from "./components/History";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "board" | "weekly" | "monthly";
@@ -33,6 +34,7 @@ export default function App() {
   const [showSummary, setShowSummary] = useState(false);
   const [showRestore, setShowRestore] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -127,6 +129,7 @@ export default function App() {
             isAdmin={me.is_admin}
             onSettings={() => setShowSettings(true)}
             onRestore={() => setShowRestore(true)}
+            onHistory={() => setShowHistory(true)}
             onLogout={logout}
           />
         </div>
@@ -222,6 +225,7 @@ export default function App() {
       {showTrash && <Trash onClose={() => setShowTrash(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showSummary && <CopySummary me={me} onClose={() => setShowSummary(false)} />}
       {showRestore && <RestorePoints onClose={() => setShowRestore(false)} onChanged={() => { refreshMe(); bump(); }} />}
+      {showHistory && <History onClose={() => setShowHistory(false)} />}
     </div>
   );
 }
@@ -230,8 +234,8 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
 }
 
-function UserMenu({ name, isAdmin, onSettings, onRestore, onLogout }: {
-  name: string; isAdmin: boolean; onSettings: () => void; onRestore: () => void; onLogout: () => void;
+function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onLogout }: {
+  name: string; isAdmin: boolean; onSettings: () => void; onRestore: () => void; onHistory: () => void; onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
@@ -259,6 +263,11 @@ function UserMenu({ name, isAdmin, onSettings, onRestore, onLogout }: {
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
               <span>⚙️</span> Settings
+            </button>
+          )}
+          {isAdmin && (
+            <button className="usermenu-item" onClick={() => { setOpen(false); onHistory(); }}>
+              <span>🕰️</span> History
             </button>
           )}
           {isAdmin && (

@@ -88,6 +88,9 @@ class DailyPushJobView(APIView):
 
         result["auto_completed"] = auto_complete_overdue()  # before archiving
         result["archived"] = archive_completed()
+        from tasks.history_service import snapshot_history_day
+
+        snapshot_history_day()  # record today's board for the History view
         rp = daily_autosave()
         result["restore_point"] = rp.id
         return Response(result)
