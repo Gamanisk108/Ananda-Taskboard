@@ -14,6 +14,7 @@ import { TeamAdmin } from "./components/TeamAdmin";
 import { Settings } from "./components/Settings";
 import { Trash } from "./components/Trash";
 import { CopySummary } from "./components/CopySummary";
+import { ExportDialog } from "./components/ExportDialog";
 import { RestorePoints } from "./components/RestorePoints";
 import { History } from "./components/History";
 import type { ProjectNode, Task } from "./types";
@@ -173,7 +174,7 @@ export default function App() {
         <div style={{ display: "flex", gap: 8 }}>
           <ShareViewButton />
           <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
-          <ExportButtons projectId={projectId} subprojectId={subprojectId} />
+          <ExportDialog projectId={projectId} subprojectId={subprojectId} />
           <button
             className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
             onClick={() => { setView("list"); setShowArchived((a) => !a); }}
@@ -298,19 +299,3 @@ function ShareViewButton() {
   return <button className="btn-secondary" onClick={share} title="Copy a link to this exact view">🔗 {label}</button>;
 }
 
-function ExportButtons({ projectId, subprojectId }: { projectId?: number; subprojectId?: number }) {
-  function qs(fmt: string) {
-    const p = new URLSearchParams({ fmt });
-    if (subprojectId) p.set("subproject", String(subprojectId));
-    else if (projectId) p.set("project", String(projectId));
-    return p.toString();
-  }
-  const dl = (fmt: string, ext: string) =>
-    import("./api/client").then(({ api }) => api.download(`/api/export?${qs(fmt)}`, `tasks.${ext}`));
-  return (
-    <>
-      <button className="btn-secondary" onClick={() => dl("csv", "csv")}>Export CSV</button>
-      <button className="btn-secondary" onClick={() => dl("xlsx", "xlsx")}>Export XLSX</button>
-    </>
-  );
-}

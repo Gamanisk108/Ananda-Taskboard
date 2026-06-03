@@ -61,9 +61,44 @@ def test_csv_has_header_and_rows(admin, sp):
 def test_empty_export_still_valid(admin, db):
     rows = read_csv(login(admin).get("/api/export?fmt=csv"))
     assert rows == [[
-        "Project", "Sub-project", "Title", "Status", "Approval", "Deadline",
-        "Recurrence", "Assignees", "Details", "Requirements", "Links",
+        "Project", "Sub-project", "Title", "Status", "Priority", "Approval",
+        "Deadline", "Start time", "End time", "Recurrence", "Assignees",
+        "Details", "Requirements", "Links",
     ]]
+
+
+def test_column_selection(admin, sp):
+    Task.objects.create(subproject=sp, title="Flyer")
+    rows = read_csv(login(admin).get("/api/export?fmt=csv&columns=title,priority"))
+    assert rows[0] == ["Title", "Priority"]
+    assert rows[1] == ["Flyer", "Medium"]
+
+
+def test_filter_by_priority(admin, sp):
+    Task.objects.create(subproject=sp, title="Hi", priority=5)
+    Task.objects.create(subproject=sp, title="Lo", priority=1)
+    rows = read_csv(login(admin).get("/api/export?fmt=csv&priority=5&columns=title"))
+    flat = [c for r in rows for c in r]
+    assert "Hi" in flat and "Lo" not in flat
+
+
+def test_filter_unassigned(admin, sp):
+    other = User.objects.create_user(email="x@example.com", name="X", password="pw-strong-123")
+    t = Task.objects.create(subproject=sp, title="Assigned")
+    t.assignees.add(other)
+    Task.objects.create(subproject=sp, title="Free")
+    rows = read_csv(login(admin).get("/api/export?fmt=csv&assignee=unassigned&columns=title"))
+    flat = [c for r in rows for c in r]
+    assert "Free" in flat and "Assigned" not in flat
+
+
+def test_archived_excluded_by_default_included_on_flag(admin, sp):
+    from django.utils import timezone
+    Task.objects.create(subproject=sp, title="Archived", archived_at=timezone.now())
+    default_rows = read_csv(login(admin).get("/api/export?fmt=csv&columns=title"))
+    assert "Archived" not in [c for r in default_rows for c in r]
+    incl = read_csv(login(admin).get("/api/export?fmt=csv&columns=title&archived=1"))
+    assert "Archived" in [c for r in incl for c in r]
 
 
 def test_formula_injection_sanitized_in_output(admin, sp):
