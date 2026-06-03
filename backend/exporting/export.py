@@ -65,6 +65,11 @@ def sanitize_csv(value):
     return s
 
 
+def _csv_ids(raw):
+    """Parse "1,2,3" -> [1, 2, 3]; ignores blanks/non-numerics."""
+    return [int(x) for x in (raw or "").split(",") if x.strip().isdigit()]
+
+
 def _selected_columns(params):
     raw = params.get("columns")
     if not raw:
@@ -83,10 +88,27 @@ def _queryset(user, params):
         qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
     if params.get("archived") not in ("1", "true", "True"):
         qs = qs.filter(archived_at__isnull=True)
-    if params.get("subproject"):
+    # Scope: any mix of whole projects and individual sub-projects (union).
+    # Nothing selected = everything the user can see.
+    sub_ids = _csv_ids(params.get("subprojects"))
+    proj_ids = _csv_ids(params.get("projects"))
+    if sub_ids or proj_ids:
+        from django.db.models import Q
+        scope = Q()
+        if sub_ids:
+            scope |= Q(subproject_id__in=sub_ids)
+        if proj_ids:
+            scope |= Q(subproject__project_id__in=proj_ids)
+        qs = qs.filter(scope)
+    # legacy single-id params still honored (older callers)
+    elif params.get("subproject"):
         qs = qs.filter(subproject_id=params["subproject"])
     elif params.get("project"):
         qs = qs.filter(subproject__project_id=params["project"])
+
+    group_ids = _csv_ids(params.get("groups"))
+    if group_ids:
+        qs = qs.filter(assignee_groups__id__in=group_ids)
     if params.get("status"):
         qs = qs.filter(status=params["status"])
     if params.get("priority"):

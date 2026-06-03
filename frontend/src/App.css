@@ -81,6 +81,9 @@
 .mention-item { display: block; width: 100%; text-align: left; background: transparent; border: none;
   padding: 6px 9px; border-radius: var(--r-ctl); font-size: 13px; color: var(--text); }
 .mention-item:hover { background: var(--primary-weak); }
+/* export dialog: scrollable project/sub-project picker */
+.export-scope { border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 9px 11px;
+  max-height: 190px; overflow-y: auto; background: var(--surface); }
 
 .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
 .week-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); min-height: 120px; }

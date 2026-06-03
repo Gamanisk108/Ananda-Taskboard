@@ -179,13 +179,31 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           </div>
         </div>
 
-        <div className="field" style={{ maxWidth: 220 }}>
-          <label>Priority</label>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <PriorityIcon level={priority} size={16} />
-            <select data-testid="task-priority-select" value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
-              {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
-            </select>
+        <div className="row2">
+          <div className="field">
+            <label>Status{canChangeStatus ? " (applied immediately)" : ""}</label>
+            {canChangeStatus ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <StatusPill status={curStatus} />
+                <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
+                  <option value="">Change to…</option>
+                  {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                </select>
+              </div>
+            ) : editing ? (
+              <StatusPill status={curStatus} />
+            ) : (
+              <span className="muted" style={{ fontSize: 13 }}>Set after creating</span>
+            )}
+          </div>
+          <div className="field">
+            <label>Priority</label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <PriorityIcon level={priority} size={16} />
+              <select data-testid="task-priority-select" value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
+                {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -300,19 +318,6 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
               <div className="field"><label>Occurrences</label>
                 <input type="number" min={1} value={count} onChange={(e) => setCount(Number(e.target.value))} /></div>
             )}
-          </div>
-        )}
-
-        {canChangeStatus && (
-          <div className="field">
-            <label>Status (applied immediately)</label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <StatusPill status={curStatus} />
-              <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
-                <option value="">Change to…</option>
-                {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
-            </div>
           </div>
         )}
 

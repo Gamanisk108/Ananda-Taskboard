@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { useUsers } from "../users";
 import { Modal } from "./common";
-import { PRIORITY_META } from "../types";
+import { PRIORITY_META, type Me } from "../types";
 
 // keys MUST match the backend COLUMNS registry in exporting/export.py
 const COLUMNS: { key: string; label: string }[] = [
@@ -23,30 +23,47 @@ const COLUMNS: { key: string; label: string }[] = [
   { key: "links", label: "Links" },
 ];
 
-export function ExportDialog({ projectId, subprojectId }: { projectId?: number; subprojectId?: number }) {
+interface GroupLite { id: number; name: string }
+
+export function ExportDialog({ me }: { me: Me }) {
   const [open, setOpen] = useState(false);
   const [fmt, setFmt] = useState<"csv" | "xlsx">("xlsx");
-  const [scope, setScope] = useState<"view" | "all">("view");
+  const [selProjects, setSelProjects] = useState<Set<number>>(new Set());
+  const [selSubs, setSelSubs] = useState<Set<number>>(new Set());
+  const [selGroups, setSelGroups] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState("");
-  const [assignee, setAssignee] = useState("");      // "" | "unassigned" | "<id>"
-  const [priority, setPriority] = useState("");       // "" | "1".."5"
+  const [assignee, setAssignee] = useState("");
+  const [priority, setPriority] = useState("");
   const [archived, setArchived] = useState(false);
+  const [groups, setGroups] = useState<GroupLite[]>([]);
   const [cols, setCols] = useState<Record<string, boolean>>(
     Object.fromEntries(COLUMNS.map((c) => [c.key, true])),
   );
   const statuses = useStatuses();
   const users = useUsers();
 
-  const scoped = scope === "view" && (subprojectId || projectId);
+  useEffect(() => {
+    if (open && me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
+  }, [open, me.is_admin]);
+
+  const projects = me.tree.projects;
   const allCols = COLUMNS.map((c) => c.key);
   const selected = allCols.filter((k) => cols[k]);
 
+  function toggle(set: Set<number>, id: number, setter: (s: Set<number>) => void) {
+    const next = new Set(set);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setter(next);
+  }
+
   function run() {
     const p = new URLSearchParams({ fmt });
-    if (scope === "view") {
-      if (subprojectId) p.set("subproject", String(subprojectId));
-      else if (projectId) p.set("project", String(projectId));
-    }
+    if (selProjects.size) p.set("projects", [...selProjects].join(","));
+    // only send sub-projects not already covered by a whole-project selection
+    const subs = [...selSubs].filter((sid) =>
+      !projects.some((pr) => selProjects.has(pr.id) && pr.subprojects.some((s) => s.id === sid)));
+    if (subs.length) p.set("subprojects", subs.join(","));
+    if (selGroups.size) p.set("groups", [...selGroups].join(","));
     if (status) p.set("status", status);
     if (assignee) p.set("assignee", assignee);
     if (priority) p.set("priority", priority);
@@ -60,8 +77,8 @@ export function ExportDialog({ projectId, subprojectId }: { projectId?: number; 
     <>
       <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>Export ▾</button>
       {open && (
-        <Modal title="Export tasks" onClose={() => setOpen(false)}>
-          <div className="row2" data-testid="export-dialog">
+        <Modal title="Export tasks" onClose={() => setOpen(false)} wide>
+          <div className="row2">
             <div className="field">
               <label>Format</label>
               <select data-testid="export-format" value={fmt} onChange={(e) => setFmt(e.target.value as "csv" | "xlsx")}>
@@ -70,13 +87,56 @@ export function ExportDialog({ projectId, subprojectId }: { projectId?: number; 
               </select>
             </div>
             <div className="field">
-              <label>Scope</label>
-              <select value={scope} onChange={(e) => setScope(e.target.value as "view" | "all")}>
-                <option value="view">{scoped ? "Current project / view" : "Everything visible"}</option>
-                <option value="all">Entire board (all visible)</option>
-              </select>
+              <label>Include</label>
+              <label className="muted" style={{ display: "flex", gap: 8, alignItems: "center", margin: "7px 0 0" }}>
+                <input type="checkbox" style={{ width: "auto" }} checked={archived} onChange={(e) => setArchived(e.target.checked)} />
+                Archived tasks
+              </label>
             </div>
           </div>
+
+          <div className="field">
+            <label>What to export <span className="muted" style={{ fontWeight: 400 }}>(leave all unchecked = everything you can see)</span></label>
+            <div className="export-scope" data-testid="export-scope">
+              {projects.map((pr) => {
+                const projChecked = selProjects.has(pr.id);
+                return (
+                  <div key={pr.id} style={{ marginBottom: 6 }}>
+                    <label style={{ display: "flex", gap: 7, alignItems: "center", fontWeight: 600, margin: 0 }}>
+                      <input type="checkbox" style={{ width: "auto" }} checked={projChecked}
+                        onChange={() => toggle(selProjects, pr.id, setSelProjects)} />
+                      {pr.name}
+                    </label>
+                    <div style={{ paddingLeft: 22, display: "flex", flexWrap: "wrap", gap: "2px 14px" }}>
+                      {pr.subprojects.map((s) => (
+                        <label key={s.id} className="muted" style={{ display: "flex", gap: 6, alignItems: "center", margin: 0, fontSize: 13 }}>
+                          <input type="checkbox" style={{ width: "auto" }}
+                            checked={projChecked || selSubs.has(s.id)} disabled={projChecked}
+                            onChange={() => toggle(selSubs, s.id, setSelSubs)} />
+                          {s.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {me.is_admin && groups.length > 0 && (
+            <div className="field">
+              <label>Group(s) <span className="muted" style={{ fontWeight: 400 }}>(only tasks assigned to these groups)</span></label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px" }} data-testid="export-groups">
+                {groups.map((g) => (
+                  <label key={g.id} className="muted" style={{ display: "flex", gap: 6, alignItems: "center", margin: 0, fontSize: 13 }}>
+                    <input type="checkbox" style={{ width: "auto" }} checked={selGroups.has(g.id)}
+                      onChange={() => toggle(selGroups, g.id, setSelGroups)} />
+                    {g.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="row2">
             <div className="field">
@@ -95,21 +155,13 @@ export function ExportDialog({ projectId, subprojectId }: { projectId?: number; 
             </div>
           </div>
 
-          <div className="row2">
-            <div className="field">
-              <label>Assignee</label>
-              <select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-                <option value="">Any assignee</option>
-                <option value="unassigned">Unassigned</option>
-                {users.map((u) => <option key={u.id} value={String(u.id)}>{u.name || u.email}</option>)}
-              </select>
-            </div>
-            <div className="field" style={{ display: "flex", alignItems: "flex-end" }}>
-              <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                <input type="checkbox" style={{ width: "auto" }} checked={archived} onChange={(e) => setArchived(e.target.checked)} />
-                Include archived tasks
-              </label>
-            </div>
+          <div className="field">
+            <label>Assignee</label>
+            <select value={assignee} onChange={(e) => setAssignee(e.target.value)} style={{ maxWidth: 260 }}>
+              <option value="">Any assignee</option>
+              <option value="unassigned">Unassigned</option>
+              {users.map((u) => <option key={u.id} value={String(u.id)}>{u.name || u.email}</option>)}
+            </select>
           </div>
 
           <div className="field">

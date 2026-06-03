@@ -174,7 +174,7 @@ export default function App() {
         <div style={{ display: "flex", gap: 8 }}>
           <ShareViewButton />
           <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
-          <ExportDialog projectId={projectId} subprojectId={subprojectId} />
+          <ExportDialog me={me} />
           <button
             className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
             onClick={() => { setView("list"); setShowArchived((a) => !a); }}

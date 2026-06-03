@@ -143,3 +143,29 @@ def test_xlsx_is_valid_workbook(admin, sp):
     ws = wb.active
     assert ws["A1"].value == "Project"
     assert any(cell.value == "Flyer" for col in ws.iter_cols() for cell in col)
+
+
+def test_export_scope_multiple_subprojects(admin):
+    p = Project.objects.create(name="MP")
+    a = SubProject.objects.create(project=p, name="A")
+    b = SubProject.objects.create(project=p, name="B")
+    c = SubProject.objects.create(project=p, name="C")
+    Task.objects.create(subproject=a, title="TA")
+    Task.objects.create(subproject=b, title="TB")
+    Task.objects.create(subproject=c, title="TC")
+    rows = read_csv(login(admin).get(f"/api/export?fmt=csv&subprojects={a.id},{b.id}&columns=title"))
+    flat = [c for r in rows for c in r]
+    assert "TA" in flat and "TB" in flat and "TC" not in flat
+
+
+def test_export_filter_by_group(admin):
+    from accounts.models import Group
+    p = Project.objects.create(name="GP")
+    sp = SubProject.objects.create(project=p, name="S")
+    g = Group.objects.create(name="Team")
+    t = Task.objects.create(subproject=sp, title="GroupTask")
+    t.assignee_groups.add(g)
+    Task.objects.create(subproject=sp, title="NoGroup")
+    rows = read_csv(login(admin).get(f"/api/export?fmt=csv&groups={g.id}&columns=title"))
+    flat = [c for r in rows for c in r]
+    assert "GroupTask" in flat and "NoGroup" not in flat
