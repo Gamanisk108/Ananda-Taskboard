@@ -57,6 +57,7 @@ export interface Task {
   created_by: number | null;
   created_at: string;
   updated_at: string;
+  archived_at: string | null;
   comment_count: number;
 }
 

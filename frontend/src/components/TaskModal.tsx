@@ -126,6 +126,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             </span>
           </div>
         )}
+        {editing && task!.archived_at && (
+          <div className="field" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span className="pill" style={{ background: "var(--surface-sunk)" }}>🗄 Archived</span>
+            <button type="button" className="btn-secondary"
+              onClick={async () => { await api.post(`/api/tasks/${task!.id}/unarchive`, {}); onSaved(); }}>
+              Unarchive (put back on board)
+            </button>
+          </div>
+        )}
 
         <div className="field">
           <label>Task name</label>

@@ -66,6 +66,9 @@ class Task(SoftDeleteModel):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Completed tasks auto-archive after a few days: hidden from board/calendar but
+    # recoverable from the Archive (distinct from Trash/soft-delete).
+    archived_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ["deadline", "title"]

@@ -47,7 +47,8 @@ def _first_name(user):
 
 def build_summary_text(user, day, *, project_ids=None, subproject_ids=None, group_ids=None, assignee_ids=None):
     qs = (
-        Task.objects.filter(approval_state=Task.Approval.APPROVED)
+        Task.objects.filter(approval_state=Task.Approval.APPROVED, archived_at__isnull=True)
+        .exclude(status=Task.Status.DONE)
         .select_related("subproject__project", "recurrence_rule")
         .prefetch_related("assignees", "assignee_groups")
     )

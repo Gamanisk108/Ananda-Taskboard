@@ -56,7 +56,8 @@ class CalendarView(APIView):
 
         user = request.user
         qs = (
-            Task.objects.filter(approval_state=Task.Approval.APPROVED)
+            Task.objects.filter(approval_state=Task.Approval.APPROVED, archived_at__isnull=True)
+            .exclude(status=Task.Status.DONE)  # completed tasks drop off the calendar
             .select_related("subproject__project", "recurrence_rule")
             .prefetch_related("assignees")
         )

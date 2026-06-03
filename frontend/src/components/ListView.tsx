@@ -25,6 +25,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
   const [fAssignee, setFAssignee] = useState(0);
   const [fStatus, setFStatus] = useState<"" | Status>("");
   const [fRecur, setFRecur] = useState<"" | "yes" | "no">("");
+  const [showArchived, setShowArchived] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("created");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
 
@@ -37,9 +38,10 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
     const params = new URLSearchParams();
     if (subprojectId) params.set("subproject", String(subprojectId));
     else if (projectId) params.set("project", String(projectId));
+    if (showArchived) params.set("archived", "1");
     setTasks(null);
     api.get(`/api/tasks?${params}`).then(setTasks).catch(() => setTasks([]));
-  }, [projectId, subprojectId, refreshKey]);
+  }, [projectId, subprojectId, refreshKey, showArchived]);
 
   const assigneeNames = (t: Task) => t.assignees.map((id) => userName(users, id));
 
@@ -122,6 +124,10 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
           <option value="no">One-off only</option>
         </select>
         {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>Clear ({activeFilters})</button>}
+        <button className={showArchived ? "btn-primary" : "btn-ghost"} onClick={() => setShowArchived((a) => !a)}
+          title="Completed tasks auto-archive after 7 days">
+          {showArchived ? "← Back to board" : "🗄 Archive"}
+        </button>
       </div>
 
       {filtered.length === 0 ? (

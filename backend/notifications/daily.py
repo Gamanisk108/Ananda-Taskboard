@@ -39,7 +39,8 @@ def tasks_for_user(user, today):
     group_ids = list(user.member_groups.values_list("id", flat=True))
     visible = visible_subproject_ids(user)  # admin → all
     assigned = (
-        Task.objects.filter(approval_state=Task.Approval.APPROVED, subproject_id__in=visible)
+        Task.objects.filter(approval_state=Task.Approval.APPROVED, subproject_id__in=visible, archived_at__isnull=True)
+        .exclude(status=Task.Status.DONE)  # completed tasks don't need a reminder
         .filter(Q(assignees=user) | Q(assignee_groups__in=group_ids))
         .select_related("recurrence_rule")
         .distinct()

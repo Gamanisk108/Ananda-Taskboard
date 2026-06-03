@@ -47,6 +47,12 @@ class TaskViewSet(ModelViewSet):
         elif self.action == "list":
             qs = qs.filter(approval_state=Task.Approval.APPROVED)
         params = self.request.query_params
+        # Archive: list hides archived by default; ?archived=1 shows only archived.
+        if self.action == "list":
+            if params.get("archived") in ("1", "true"):
+                qs = qs.filter(archived_at__isnull=False)
+            else:
+                qs = qs.filter(archived_at__isnull=True)
         if params.get("subproject"):
             qs = qs.filter(subproject_id=params["subproject"])
         if params.get("project"):
@@ -112,6 +118,15 @@ class TaskViewSet(ModelViewSet):
         if changed:
             emit.emit(emit.TASK_STATUS_CHANGED, {"task": task.id, "status": new_status})
         return Response({"id": task.id, "status": new_status})
+
+    @action(detail=True, methods=["post"])
+    def unarchive(self, request, pk=None):
+        """Recover an archived task back onto the board."""
+        task = self.get_object()
+        if not (request.user.is_admin or can_act_as_member(request.user, task.subproject_id)):
+            raise PermissionDenied("Not allowed.")
+        Task.objects.filter(pk=task.pk).update(archived_at=None)
+        return Response({"id": task.id, "archived_at": None})
 
     @action(detail=True, methods=["get", "post"])
     def comments(self, request, pk=None):
