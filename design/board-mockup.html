@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — design mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<!--
+  ANANDA TASKBOARD — self-contained design mockup (no build, no data needed).
+  Paste into Claude to iterate on the aesthetic. Brief: a data-dense, space-
+  economical in-house team task board. Theme = Ananda "Temple of Light":
+  Nayaswami blue (workhorse), ivory cream canvas, temple gold as sacred accent;
+  Fraunces (display serif) + Instrument Sans (UI). Keep it FUNCTIONAL and DENSE —
+  this is a working tool, not a marketing page. Improve hierarchy, rhythm, polish,
+  and distinctiveness without sacrificing density or adding clutter.
+-->
+<style>
+  :root{
+    --bg:#fbf6ea; --surface:#fffdf8; --surface-sunk:#efe5cc; --border:#e3d6b8;
+    --text:#23262b; --text-muted:#4a5568; --primary:#1e3a6e; --primary-weak:#eaf0f8;
+    --accent:#2c5499; --gold:#c9a24b; --success:#3f7d54; --warn:#7a5c22; --danger:#b4452f;
+    --r-card:10px; --r-ctl:7px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(30,58,110,.07); --sh-2:0 4px 14px rgba(30,58,110,.10);
+    --font-display:"Fraunces",Georgia,serif; --font-ui:"Instrument Sans",system-ui,sans-serif;
+    --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font-family:var(--font-ui);font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:-.012em;line-height:1.15}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  .muted{color:var(--text-muted)}
+  button{font-family:var(--font-ui);font-weight:500;border:1px solid transparent;border-radius:var(--r-ctl);padding:6px 11px;font-size:13px;cursor:pointer}
+  .btn-secondary{background:var(--surface);border-color:var(--border);color:var(--text)}
+  .btn-primary{background:var(--primary);color:var(--surface)}
+  .btn-ghost{background:transparent;color:var(--text-muted)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .pill{display:inline-flex;align-items:center;gap:5px;border-radius:var(--r-pill);padding:2px 9px;font-size:12px;font-weight:500}
+
+  /* header */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+  .brand{display:flex;align-items:center;gap:8px;font-size:15px}
+  .brand strong{font-family:var(--font-display)}
+  .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+  /* tabs */
+  .tabs{display:flex;gap:2px;padding:8px 16px 0;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .tab{display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--text-muted);padding:8px 14px;border-radius:var(--r-pill)}
+  .tab.on{color:var(--text);font-weight:600;background:var(--primary-weak)}
+  .subtabs{background:var(--surface-sunk);padding:6px 16px;border-bottom:1px solid var(--border)}
+
+  /* viewbar */
+  .viewbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 0;gap:10px;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--surface-sunk);border-radius:var(--r-pill);padding:3px}
+  .seg button{border:none;border-radius:var(--r-pill);padding:6px 16px;background:transparent;color:var(--text-muted)}
+  .seg .on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--sh-1)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px 0}
+  .filters select,.filters input{font-family:var(--font-ui);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:6px 10px}
+
+  .content{padding:14px 20px 40px}
+  /* table */
+  table.tbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
+  thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);background:var(--surface-sunk);padding:7px 11px;font-weight:600;border-bottom:1px solid var(--border)}
+  tbody tr{border-bottom:1px solid var(--border)}
+  tbody tr:nth-child(even){background:#fbf9f5}
+  td{padding:6px 11px;vertical-align:middle}
+  tr.overdue,tr.overdue:nth-child(even){background:#b4452f16}
+  tr.overdue td{color:var(--danger)}
+  tr.due-soon,tr.due-soon:nth-child(even){background:#c9a24b20}
+  .od{color:var(--danger);font-weight:700} .od-soon{color:var(--warn);font-weight:700}
+  .who .pill{background:var(--surface-sunk);color:var(--text)}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="dot" style="background:var(--primary);width:11px;height:11px"></span><strong>Ananda Taskboard</strong></div>
+    <div class="actions">
+      <button class="btn-secondary">✅ Approvals</button>
+      <button class="btn-secondary">👥 Team</button>
+      <button class="btn-ghost">🕰️ History</button>
+      <button class="btn-secondary">♻️ Trash</button>
+      <button class="btn-secondary">🗂️ Projects</button>
+      <button class="btn-primary">＋ New task</button>
+      <button class="btn-secondary">Ada ▾</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab">Global Overview</button>
+    <button class="tab on"><span class="dot" style="background:#c8762f"></span> Karuna Devi</button>
+    <button class="tab"><span class="dot" style="background:#2f7d74"></span> Sunday Service</button>
+    <button class="tab"><span class="dot" style="background:#7a5aa6"></span> Alliance Electric</button>
+  </nav>
+  <nav class="tabs subtabs">
+    <button class="tab on">Project Overview</button>
+    <button class="tab"><span class="dot" style="background:#c8762f"></span> Marketing</button>
+    <button class="tab"><span class="dot" style="background:#b4452f"></span> Warehouse</button>
+  </nav>
+
+  <div class="viewbar">
+    <div class="seg">
+      <button class="on">List</button><button>Board</button><button>Weekly</button><button>Monthly</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-secondary">🔗 Share view</button>
+      <button class="btn-secondary">Copy summary</button>
+      <button class="btn-secondary">Export CSV</button>
+      <button class="btn-secondary">📖 Archive</button>
+    </div>
+  </div>
+  <div class="filters">
+    <input placeholder="Search…" />
+    <select><option>All projects</option></select>
+    <select><option>All sub-projects</option></select>
+    <select><option>Any assignee</option></select>
+    <select><option>Any status</option></select>
+    <select><option>Deadline: any</option></select>
+    <select><option>Recurring? any</option></select>
+  </div>
+
+  <main class="content">
+    <table class="tbl">
+      <thead><tr><th>Task</th><th>Project</th><th>Sub-project</th><th>Assignees</th><th>Status</th><th>Deadline</th><th>Recurs</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Design spring flyer</strong></td><td><span class="dot" style="background:#c8762f"></span> Karuna Devi</td><td><span class="dot" style="background:#c8762f"></span> Marketing</td><td class="who"><span class="pill">Mara</span></td><td><span class="pill" style="background:#2f7d741a;color:#2f7d74"><span class="dot" style="background:#2f7d74"></span> In Progress</span></td><td class="mono">Jun 14</td><td class="muted">—</td></tr>
+        <tr class="overdue"><td><strong>Send newsletter</strong> <span class="od" title="Missed Deadline">❗</span></td><td><span class="dot" style="background:#c8762f"></span> Karuna Devi</td><td><span class="dot" style="background:#c8762f"></span> Marketing</td><td class="who"><span class="pill">Omar</span></td><td><span class="pill" style="background:#6b72801a;color:#6b7280"><span class="dot" style="background:#6b7280"></span> To Do</span></td><td class="mono">Jun 02</td><td class="muted">—</td></tr>
+        <tr class="due-soon"><td><strong>Stock count</strong> <span class="od-soon" title="Deadline Tomorrow">❗</span></td><td><span class="dot" style="background:#c8762f"></span> Karuna Devi</td><td><span class="dot" style="background:#b4452f"></span> Warehouse</td><td class="who"><span class="pill">Mara</span><span class="pill">Ada</span></td><td><span class="pill" style="background:#6b72801a;color:#6b7280"><span class="dot" style="background:#6b7280"></span> To Do</span></td><td class="mono">Jun 13</td><td class="muted">weekly</td></tr>
+        <tr><td><strong>Weekly service prep</strong></td><td><span class="dot" style="background:#2f7d74"></span> Sunday Service</td><td><span class="dot" style="background:#2f7d74"></span> General</td><td class="who"><span class="pill">👥 Seva</span></td><td><span class="pill" style="background:#3f7d541a;color:#3f7d54"><span class="dot" style="background:#3f7d54"></span> Done</span></td><td class="mono">—</td><td class="muted">weekly</td></tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>
