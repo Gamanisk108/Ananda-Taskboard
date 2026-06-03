@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
-import { useUsers, userInitials } from "../users";
+import { useUsers, userInitials, userName } from "../users";
 import { Spinner } from "./common";
 import type { CalendarInstance, Me, Task } from "../types";
 
@@ -119,7 +119,9 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
               >
                 <span className="wk-bar-title">{b.endsThisWeek ? "⏰ " : ""}{b.title}</span>
                 {b.assignee_ids.length > 0 && (
-                  <span className="chip-initials">{b.assignee_ids.map((id) => userInitials(users, id)).join(" ")}</span>
+                  <span className="chip-initials" title={b.assignee_ids.map((id) => userName(users, id)).join(", ")}>
+                    {b.assignee_ids.map((id) => userInitials(users, id)).join(" ")}
+                  </span>
                 )}
               </button>
             ))}

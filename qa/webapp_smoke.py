@@ -106,8 +106,10 @@ with sync_playwright() as p:
     page.locator(".modal-head button").first.click()
     page.wait_for_timeout(300)
 
-    # Settings
-    page.click('button[title="Settings"]'); page.wait_for_timeout(500)
+    # Settings (now inside the user menu dropdown)
+    page.click(".usermenu-btn"); page.wait_for_timeout(200)
+    check("user menu has Settings", page.locator('.usermenu-item:has-text("Settings")').count() > 0)
+    page.click('.usermenu-item:has-text("Settings")'); page.wait_for_timeout(500)
     page.screenshot(path=str(SHOTS / "08_settings.png"), full_page=True)
     check("settings: timezone selector", page.locator('.modal select').count() > 0)
     page.locator(".modal-head button").first.click()
@@ -123,7 +125,10 @@ with sync_playwright() as p:
     page2.screenshot(path=str(SHOTS / "09_viewer_board.png"), full_page=True)
     check("non-admin: NO Team button", page2.locator('button:has-text("Team")').count() == 0)
     check("non-admin: NO Manage projects", page2.locator('button:has-text("Projects")').count() == 0)
-    check("non-admin: NO Settings gear", page2.locator('button[title="Settings"]').count() == 0)
+    page2.click(".usermenu-btn"); page2.wait_for_timeout(200)
+    check("non-admin menu: NO Settings", page2.locator('.usermenu-item:has-text("Settings")').count() == 0)
+    check("non-admin menu: has Log out", page2.locator('.usermenu-item:has-text("Log out")').count() > 0)
+    page2.click(".usermenu-btn"); page2.wait_for_timeout(200)  # close menu
     # member-via-group can create — open modal and inspect writable project options
     check("omar can create (member via group)", page2.locator('button:has-text("New task")').count() > 0)
     page2.click('button:has-text("New task")')

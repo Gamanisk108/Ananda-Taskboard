@@ -32,10 +32,11 @@ def sp(db):
 
 
 def test_non_recurring_task_on_deadline(admin, sp):
-    Task.objects.create(subproject=sp, title="Due", deadline=date(2026, 6, 10))
+    # start == deadline → exactly one day on the deadline
+    Task.objects.create(subproject=sp, title="Due", timeline_start=date(2026, 6, 10), deadline=date(2026, 6, 10))
     res = login(admin).get("/api/calendar?from=2026-06-01&to=2026-06-30")
     assert res.status_code == 200
-    assert len(res.data) == 1 and res.data[0]["date"] == "2026-06-10"
+    assert len(res.data) == 1 and res.data[0]["date"] == "2026-06-10" and res.data[0]["is_deadline"]
 
 
 def test_task_spans_start_to_deadline(admin, sp):
@@ -46,6 +47,21 @@ def test_task_spans_start_to_deadline(admin, sp):
     assert dates == ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05"]
     deadline_days = [i["date"] for i in res.data if i["is_deadline"]]
     assert deadline_days == ["2026-06-05"]
+
+
+def test_deadline_only_spans_from_creation(admin, sp):
+    # No start date → the calendar spans from the creation date up to the deadline.
+    from datetime import date as _date, timedelta
+    today = _date.today()
+    deadline = today + timedelta(days=3)
+    Task.objects.create(subproject=sp, title="DueSoon", deadline=deadline)
+    res = login(admin).get(f"/api/calendar?from={(today - timedelta(days=2)).isoformat()}&to={(today + timedelta(days=10)).isoformat()}")
+    dates = sorted(i["date"] for i in res.data)
+    # robust to UTC/local date offset: span ends on the deadline, covers >1 day,
+    # and the deadline day is flagged.
+    assert dates[-1] == deadline.isoformat()
+    assert len(dates) >= 2
+    assert any(i["is_deadline"] and i["date"] == deadline.isoformat() for i in res.data)
 
 
 def test_span_clipped_to_window(admin, sp):
@@ -87,8 +103,8 @@ def test_member_calendar_respects_visibility(member, sp):
     Task.objects.create(subproject=sp, title="Mine", deadline=date(2026, 6, 5))
     Task.objects.create(subproject=hidden, title="NotMine", deadline=date(2026, 6, 5))
     res = login(member).get("/api/calendar?from=2026-06-01&to=2026-06-30")
-    titles = [i["title"] for i in res.data]
-    assert titles == ["Mine"]
+    titles = {i["title"] for i in res.data}  # may span multiple days → use a set
+    assert "Mine" in titles and "NotMine" not in titles
 
 
 def test_bad_date_returns_400(admin, sp):

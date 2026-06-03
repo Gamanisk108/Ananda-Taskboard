@@ -170,7 +170,10 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="row2">
           <div className="field">
-            <label>Start date (optional — shows on the calendar from here to the deadline)</label>
+            <label>
+              Start date{" "}
+              <span className="info" title="If left blank and a deadline is set, the task shows on the calendar from its creation date up to the deadline.">ⓘ</span>
+            </label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
           <div className="field">

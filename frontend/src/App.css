@@ -122,3 +122,16 @@
 .tbl thead th.sortable { cursor: pointer; user-select: none; }
 .tbl thead th.sortable:hover { color: var(--text); }
 .sort-arrow { font-size: 9px; margin-left: 3px; }
+
+.info { color: var(--text-muted); cursor: help; font-size: 12px; }
+
+/* user menu dropdown */
+.usermenu { position: relative; }
+.usermenu-btn { display: inline-flex; align-items: center; gap: 6px; }
+.usermenu-pop { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-2);
+  min-width: 190px; padding: 6px; z-index: 30; }
+.usermenu-item { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+  background: transparent; border: none; padding: 9px 10px; border-radius: var(--r-ctl); color: var(--text); }
+.usermenu-item:hover { background: var(--surface-sunk); }
+.usermenu-sep { height: 1px; background: var(--border); margin: 4px 0; }

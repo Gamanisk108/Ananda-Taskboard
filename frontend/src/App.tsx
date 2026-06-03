@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
@@ -76,21 +76,20 @@ export default function App() {
             <button className="btn-secondary" onClick={() => setShowTeam(true)} title="Team & permissions">👥 Team</button>
           )}
           {me.is_admin && (
-            <button className="btn-ghost" onClick={() => setShowTrash(true)} title="Trash (restore deleted)">🗑</button>
+            <button className="btn-secondary" onClick={() => setShowTrash(true)} title="Restore deleted items">🗑 Trash</button>
           )}
-          {me.is_admin && (
-            <button className="btn-ghost" onClick={() => setShowSettings(true)} title="Settings">⚙</button>
-          )}
-          {/* New task + Manage projects grouped together */}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowManage(true)} title="Manage projects">🗂️ Projects</button>
           )}
           {canCreate && (
             <button className="btn-primary" onClick={() => setEditing("new")} title="Create a task">＋ New task</button>
           )}
-          <NotifyButton />
-          <span className="muted" style={{ fontSize: 13 }}>{me.name || me.email}</span>
-          <button className="btn-ghost" onClick={logout} title="Sign out">⎋</button>
+          <UserMenu
+            name={me.name || me.email}
+            isAdmin={me.is_admin}
+            onSettings={() => setShowSettings(true)}
+            onLogout={logout}
+          />
         </div>
       </header>
 
@@ -181,17 +180,47 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
 }
 
-function NotifyButton() {
+function UserMenu({ name, isAdmin, onSettings, onLogout }: {
+  name: string; isAdmin: boolean; onSettings: () => void; onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
-  async function enable() {
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [open]);
+
+  async function enableNotifications() {
     const { enablePush } = await import("./push");
     setMsg(await enablePush());
-    setTimeout(() => setMsg(""), 3000);
+    setTimeout(() => setMsg(""), 3500);
   }
+
   return (
-    <button className="btn-ghost" onClick={enable} title={msg || "Enable daily push notifications"}>
-      {msg ? msg : "🔔"}
-    </button>
+    <div className="usermenu" onClick={(e) => e.stopPropagation()}>
+      <button className="btn-secondary usermenu-btn" onClick={() => setOpen((o) => !o)} title="Account menu">
+        <span style={{ fontSize: 14 }}>🧑</span> {name} <span style={{ fontSize: 10 }}>▾</span>
+      </button>
+      {open && (
+        <div className="usermenu-pop">
+          {isAdmin && (
+            <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
+              <span>⚙️</span> Settings
+            </button>
+          )}
+          <button className="usermenu-item" onClick={enableNotifications}>
+            <span>🔔</span> {msg || "Turn on notifications"}
+          </button>
+          <div className="usermenu-sep" />
+          <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
+            <span>🚪</span> Log out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
