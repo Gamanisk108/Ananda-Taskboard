@@ -53,6 +53,19 @@ export function todayISO(): string {
   return localISO(new Date());
 }
 
+/** "13:00" -> "1:00 PM"; "" for null/empty. */
+export function fmtTime(hhmm: string | null): string {
+  if (!hhmm) return "";
+  const [h, m] = hhmm.split(":").map(Number);
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+}
+
+/** "1:00 PM – 4:00 PM"; "" when not timed. */
+export function timeRange(start: string | null, end: string | null): string {
+  return start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : "";
+}
+
 export function tomorrowISO(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
 import { useUsers, userInitials, userName } from "../users";
-import { Spinner } from "./common";
+import { Modal, Spinner } from "./common";
+import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type EventSpan, type Me, type Task } from "../types";
 
 interface Props {
@@ -38,6 +39,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
   const dayIso = useMemo(() => days.map((d) => format(d, "yyyy-MM-dd")), [days]);
   const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
+  const [dayOpen, setDayOpen] = useState<string | null>(null);
 
   useEffect(() => {
     const from = dayIso[0];
@@ -52,6 +54,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
 
   async function open(id: number) {
     const t = (await api.get(`/api/tasks/${id}`)) as Task;
+    setDayOpen(null);
     onEdit(t);
   }
 
@@ -128,7 +131,8 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
         <div className="wk">
           <div className="wk-head">
             {days.map((d, idx) => (
-              <div className="wk-hcell" key={idx}>
+              <div className="wk-hcell wk-hcell-click" key={idx}
+                title="Open this day's tasks" onClick={() => setDayOpen(dayIso[idx])}>
                 <div>{format(d, "EEE")} <span className="day-num">{format(d, "MMM d")}</span></div>
               </div>
             ))}
@@ -172,6 +176,15 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
             ))}
           </div>
         </div>
+      )}
+      {dayOpen && (
+        <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy")} onClose={() => setDayOpen(null)}>
+          <DayTaskList
+            items={(items ?? []).filter((i) => i.date === dayOpen)}
+            colorByProject={colorByProject}
+            onOpen={open}
+          />
+        </Modal>
       )}
     </div>
   );

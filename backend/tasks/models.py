@@ -80,6 +80,11 @@ class Task(SoftDeleteModel):
     deadline = models.DateField(null=True, blank=True)
     timeline_start = models.DateField(null=True, blank=True)
     timeline_end = models.DateField(null=True, blank=True)
+    # Optional time-of-day (e.g. a class 1pm-4pm). "Timed" when both are set;
+    # both-or-neither is enforced by the serializer. Applies to every occurrence
+    # of a recurring task.
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.TODO)
     approval_state = models.CharField(max_length=10, choices=Approval.choices, default=Approval.APPROVED)
     recurrence_rule = models.OneToOneField(

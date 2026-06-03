@@ -26,6 +26,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             "id", "subproject", "project", "title", "details", "requirements",
             "assignees", "assignee_groups", "deadline", "timeline_start", "timeline_end",
+            "start_time", "end_time",
             "status", "approval_state", "recurrence", "links", "monitor", "auto_complete",
             "created_by", "created_at", "updated_at", "archived_at", "comment_count",
         ]
@@ -36,6 +37,16 @@ class TaskSerializer(serializers.ModelSerializer):
         if not isinstance(value, list) or not all(isinstance(u, str) for u in value):
             raise serializers.ValidationError("links must be a list of URL strings.")
         return value
+
+    def validate(self, attrs):
+        # Time-of-day is both-or-neither, with end strictly after start.
+        start = attrs.get("start_time", getattr(self.instance, "start_time", None))
+        end = attrs.get("end_time", getattr(self.instance, "end_time", None))
+        if bool(start) != bool(end):
+            raise serializers.ValidationError("Set both a start time and an end time, or neither.")
+        if start and end and end <= start:
+            raise serializers.ValidationError("End time must be after the start time.")
+        return attrs
 
     def _write_recurrence(self, instance, recurrence_data):
         if recurrence_data is None:

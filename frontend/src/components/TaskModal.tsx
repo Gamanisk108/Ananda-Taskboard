@@ -38,6 +38,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [requirements, setRequirements] = useState(task?.requirements ?? "");
   const [startDate, setStartDate] = useState(task?.timeline_start ?? "");
   const [deadline, setDeadline] = useState(task?.deadline ?? "");
+  const [startTime, setStartTime] = useState(task?.start_time ?? "");
+  const [endTime, setEndTime] = useState(task?.end_time ?? "");
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
   const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
@@ -85,6 +87,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     e.preventDefault();
     setErr("");
     if (!subproject) { setErr("Pick a project and sub-project."); return; }
+    if (!!startTime !== !!endTime) { setErr("Set both a start and end time, or neither."); return; }
+    if (startTime && endTime && endTime <= startTime) { setErr("End time must be after the start time."); return; }
     const recurrence: Recurrence | null = repeats
       ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null, count: endMode === "count" ? count : null }
       : null;
@@ -92,6 +96,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       subproject, title, details, requirements,
       timeline_start: startDate || null,
       deadline: deadline || null,
+      start_time: startTime || null,
+      end_time: endTime || null,
       assignees,
       assignee_groups: assigneeGroups,
       monitor,
@@ -195,6 +201,20 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <div className="field">
             <label>Deadline</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="row2">
+          <div className="field">
+            <label>
+              Start time{" "}
+              <span className="info" title="Optional. Set both times for a timed task (e.g. a class 1pm–4pm). Timed tasks sort to the top of a day's list.">ⓘ</span>
+            </label>
+            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>End time</label>
+            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </div>
         </div>
 

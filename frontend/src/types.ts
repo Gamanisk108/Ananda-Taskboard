@@ -50,6 +50,8 @@ export interface Task {
   deadline: string | null;
   timeline_start: string | null;
   timeline_end: string | null;
+  start_time: string | null; // "HH:MM" when timed
+  end_time: string | null;
   status: string;            // dynamic status key (see /api/statuses)
   approval_state: Approval;
   recurrence: Recurrence | null;
@@ -86,6 +88,8 @@ export interface CalendarInstance {
   project_color: string;
   overdue: boolean;
   assignee_ids: number[];
+  start_time: string | null; // "HH:MM" when timed
+  end_time: string | null;
 }
 
 export type EventKind = "single" | "yearly" | "range" | "repeating";

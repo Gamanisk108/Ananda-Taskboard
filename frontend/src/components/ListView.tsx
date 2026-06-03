@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import { buildSubLookup, deadlineState } from "../lookup";
+import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
 import { ColorDot, StatusPill, Spinner } from "./common";
@@ -15,7 +15,7 @@ interface Props {
   showArchived?: boolean;
 }
 
-type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "assignee" | "created";
+type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "assignee" | "created";
 
 export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, showArchived = false }: Props) {
   const [tasks, setTasks] = useState<Task[] | null>(null);
@@ -61,6 +61,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
       case "subproject": return (info?.name ?? "").toLowerCase();
       case "status": return statusOrder[t.status] ?? 99;
       case "deadline": return t.deadline ?? "9999-99-99";
+      case "time": return t.start_time ?? "99:99"; // untimed sort last
       case "assignee": return (assigneeNames(t)[0] ?? "~").toLowerCase();
       case "created": return t.created_at;
     }
@@ -152,6 +153,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
               <Th k="assignee">Assignees</Th>
               <Th k="status">Status</Th>
               <Th k="deadline">Deadline</Th>
+              <Th k="time">Time</Th>
               <th>Recurs</th>
             </tr>
           </thead>
@@ -176,6 +178,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
                   </td>
                   <td><StatusPill status={t.status} /></td>
                   <td className="deadline mono">{t.deadline ?? "—"}</td>
+                  <td className="mono" style={{ whiteSpace: "nowrap" }}>{timeRange(t.start_time, t.end_time) || <span className="muted">—</span>}</td>
                   <td className="muted">{t.recurrence ? t.recurrence.freq : "—"}</td>
                 </tr>
               );
