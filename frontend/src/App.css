@@ -49,7 +49,11 @@
 .tbl tr.overdue:hover { background: #b4452f24; }
 .tbl tr.overdue td { color: var(--danger); }
 .tbl tr.overdue .deadline { font-weight: 600; }
-.od { color: var(--danger); font-weight: 700; margin-right: 3px; }
+.od { color: var(--danger); font-weight: 700; cursor: help; }
+.od-soon { color: var(--gold); font-weight: 700; cursor: help; }
+.tbl tr.due-soon, .tbl tr.due-soon:nth-child(even) { background: #c9a24b20; box-shadow: inset 3px 0 0 var(--gold); }
+.tbl tr.due-soon:hover { background: #c9a24b33; }
+.mcell.has-soon { background: #c9a24b14; border-color: #c9a24b66; }
 
 .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .filters input, .filters select { width: auto; min-width: 130px; }
@@ -107,6 +111,18 @@
 
 .section-title { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; }
 .bulkbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+
+/* Kanban */
+.kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
+.kan-col { flex: 0 0 270px; background: var(--surface-sunk); border: 1px solid var(--border);
+  border-radius: var(--r-card); display: flex; flex-direction: column; max-height: 75vh; }
+.kan-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px;
+  font-weight: 600; font-size: 13px; border-top: 3px solid var(--border); border-radius: var(--r-card) var(--r-card) 0 0; }
+.kan-body { padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+.kan-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-ctl);
+  padding: 9px 10px; cursor: grab; box-shadow: var(--sh-1); font-size: 13px; }
+.kan-card:hover { border-color: var(--primary); }
+.kan-card:active { cursor: grabbing; }
 
 /* assignee picker */
 .assignee-list { max-height: 160px; overflow-y: auto; border: 1px solid var(--border);

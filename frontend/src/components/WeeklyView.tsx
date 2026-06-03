@@ -19,8 +19,8 @@ interface Bar {
   color: string;
   startCol: number; // 1..7
   endCol: number;   // 1..7
-  endsThisWeek: boolean; // deadline within the week → show ⏰
   overdue: boolean;
+  dueTomorrow: boolean;
   assignee_ids: number[];
   lane: number;
 }
@@ -34,6 +34,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const dayIso = useMemo(() => days.map((d) => format(d, "yyyy-MM-dd")), [days]);
+  const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
   useEffect(() => {
     const from = dayIso[0];
@@ -63,14 +64,15 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
       const cols = insts.map((i) => dayIso.indexOf(i.date) + 1).filter((c) => c >= 1);
       if (!cols.length) continue;
       const first = insts[0];
+      const deadlineInst = insts.find((i) => i.is_deadline);
       raw.push({
         task_id,
         title: first.title,
         color: colorByProject ? first.project_color : first.subproject_color,
         startCol: Math.min(...cols),
         endCol: Math.max(...cols),
-        endsThisWeek: insts.some((i) => i.is_deadline),
         overdue: insts.some((i) => i.overdue),
+        dueTomorrow: !!deadlineInst && deadlineInst.date === tomorrow && !insts.some((i) => i.overdue),
         assignee_ids: first.assignee_ids,
       });
     }
@@ -83,7 +85,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
       return { ...b, lane };
     });
     return { bars: packed, laneCount: Math.max(1, laneEnds.length) };
-  }, [items, dayIso, colorByProject]);
+  }, [items, dayIso, colorByProject, tomorrow]);
 
   return (
     <div className="rise">
@@ -112,12 +114,17 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
             {bars.map((b) => (
               <button
                 key={b.task_id}
-                className={`wk-bar ${b.overdue ? "overdue" : ""}`}
-                style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1, background: b.overdue ? "var(--danger)" : b.color }}
+                className="wk-bar"
+                style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1,
+                  background: b.overdue ? "var(--danger)" : b.dueTomorrow ? "var(--gold)" : b.color }}
                 onClick={() => open(b.task_id)}
-                title={b.overdue ? `OVERDUE — ${b.title}` : b.title}
+                title={b.title}
               >
-                <span className="wk-bar-title">{b.overdue ? "❗ " : b.endsThisWeek ? "⏰ " : ""}{b.title}</span>
+                <span className="wk-bar-title">
+                  {b.title}
+                  {b.overdue && <span title="Missed Deadline"> ❗</span>}
+                  {b.dueTomorrow && <span title="Deadline Tomorrow"> ❗</span>}
+                </span>
                 {b.assignee_ids.length > 0 && (
                   <span className="chip-initials" title={b.assignee_ids.map((id) => userName(users, id)).join(", ")}>
                     {b.assignee_ids.map((id) => userInitials(users, id)).join(" ")}

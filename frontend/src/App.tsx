@@ -6,6 +6,7 @@ import { Spinner, ColorDot } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
 import { MonthlyView } from "./components/MonthlyView";
+import { KanbanView } from "./components/KanbanView";
 import { TaskModal } from "./components/TaskModal";
 import { Approvals } from "./components/Approvals";
 import { ManageProjects } from "./components/ManageProjects";
@@ -16,7 +17,7 @@ import { CopySummary } from "./components/CopySummary";
 import { RestorePoints } from "./components/RestorePoints";
 import type { ProjectNode, Task } from "./types";
 
-type ViewMode = "list" | "weekly" | "monthly";
+type ViewMode = "list" | "board" | "weekly" | "monthly";
 
 export default function App() {
   const { me, loading, logout, refreshMe } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
   const [showTrash, setShowTrash] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showRestore, setShowRestore] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -52,6 +54,11 @@ export default function App() {
     if (currentProject.show_project_overview) return "overview";
     return currentProject.subprojects[0]?.id ?? null;
   }, [subTab, currentProject]);
+
+  // Load the universal statuses once logged in (used by pills, filters, Kanban).
+  useEffect(() => {
+    if (me) import("./statuses").then((m) => m.fetchStatuses(true));
+  }, [me?.id]);
 
   // Deep-link IN: on first login, honor ?project / ?sub / ?view / ?task in the URL.
   useEffect(() => {
@@ -107,7 +114,7 @@ export default function App() {
             <button className="btn-secondary" onClick={() => setShowTeam(true)} title="Team & permissions">👥 Team</button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowTrash(true)} title="Restore deleted items">🗑 Trash</button>
+            <button className="btn-secondary" onClick={() => setShowTrash(true)} title="Restore deleted items">♻️ Trash</button>
           )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowManage(true)} title="Manage projects">🗂️ Projects</button>
@@ -154,7 +161,7 @@ export default function App() {
 
       <div className="viewbar">
         <div className="seg">
-          {(["list", "weekly", "monthly"] as ViewMode[]).map((v) => (
+          {(["list", "board", "weekly", "monthly"] as ViewMode[]).map((v) => (
             <button key={v} className={view === v ? "seg-on" : "seg-off"} onClick={() => setView(v)}>
               {v[0].toUpperCase() + v.slice(1)}
             </button>
@@ -164,11 +171,19 @@ export default function App() {
           <ShareViewButton />
           <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
           <ExportButtons projectId={projectId} subprojectId={subprojectId} />
+          <button
+            className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
+            onClick={() => { setView("list"); setShowArchived((a) => !a); }}
+            title="Completed tasks auto-archive after 7 days"
+          >
+            📖 {showArchived ? "Hide archive" : "Archive"}
+          </button>
         </div>
       </div>
 
       <main className="content">
         {view === "list" && <ListView {...viewProps} />}
+        {view === "board" && <KanbanView {...viewProps} />}
         {view === "weekly" && <WeeklyView {...viewProps} />}
         {view === "monthly" && <MonthlyView {...viewProps} />}
       </main>

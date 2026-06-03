@@ -87,6 +87,9 @@ with sync_playwright() as p:
     page.click('button:has-text("Monthly")'); page.wait_for_timeout(500)
     page.screenshot(path=str(SHOTS / "05_monthly.png"), full_page=True)
     check("monthly view renders", page.locator(".month").count() > 0)
+    page.click('button:has-text("Board")'); page.wait_for_timeout(500)
+    page.screenshot(path=str(SHOTS / "05b_board.png"), full_page=True)
+    check("kanban board renders columns", page.locator(".kan-col").count() >= 4)
     page.click('button:has-text("List")'); page.wait_for_timeout(300)
 
     # Team panel

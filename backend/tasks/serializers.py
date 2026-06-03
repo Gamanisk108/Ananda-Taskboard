@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import CalendarEvent, Comment, RecurrenceRule, Task
+from .models import CalendarEvent, Comment, RecurrenceRule, Status, Task
 
 
 class RecurrenceRuleSerializer(serializers.ModelSerializer):
@@ -26,7 +26,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             "id", "subproject", "project", "title", "details", "requirements",
             "assignees", "assignee_groups", "deadline", "timeline_start", "timeline_end",
-            "status", "approval_state", "recurrence", "links",
+            "status", "approval_state", "recurrence", "links", "monitor",
             "created_by", "created_at", "updated_at", "archived_at", "comment_count",
         ]
         # status has its own endpoint; approval_state/created_by/archived_at are server-controlled
@@ -77,6 +77,19 @@ class TaskSerializer(serializers.ModelSerializer):
         if assignee_groups is not None:
             instance.assignee_groups.set(assignee_groups)
         return instance
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ["id", "key", "label", "color", "order", "is_complete", "is_initial"]
+        extra_kwargs = {"key": {"required": False}}
+
+    def validate(self, attrs):
+        from django.utils.text import slugify
+        if not attrs.get("key") and attrs.get("label"):
+            attrs["key"] = slugify(attrs["label"])[:50] or "status"
+        return attrs
 
 
 class CalendarEventSerializer(serializers.ModelSerializer):

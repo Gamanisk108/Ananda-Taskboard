@@ -54,6 +54,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <button className="btn-primary" onClick={save}>Save time settings</button>
           </div>
 
+          <StatusManager />
+
           <EventsManager />
 
           <div className="modal-foot">
@@ -62,6 +64,60 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </>
       )}
     </Modal>
+  );
+}
+
+interface St { id: number; key: string; label: string; color: string; order: number; is_complete: boolean; is_initial: boolean; }
+
+function StatusManager() {
+  const [list, setList] = useState<St[]>([]);
+  const [label, setLabel] = useState("");
+  const [color, setColor] = useState("#6b7280");
+
+  async function load() {
+    const d = await api.get("/api/statuses");
+    setList((d as St[]).sort((a, b) => a.order - b.order));
+    const { invalidateStatuses } = await import("../statuses");
+    invalidateStatuses();
+  }
+  useEffect(() => { load(); }, []);
+
+  async function add() {
+    if (!label.trim()) return;
+    await api.post("/api/statuses", { label: label.trim(), color, order: list.length });
+    setLabel(""); setColor("#6b7280"); load();
+  }
+  async function patch(s: St, changes: Partial<St>) { await api.patch(`/api/statuses/${s.id}`, changes); load(); }
+  async function remove(s: St) {
+    if (list.length <= 1) { alert("Keep at least one status."); return; }
+    if (!confirm(`Delete status "${s.label}"? Tasks in it will keep the value but show greyed.`)) return;
+    await api.del(`/api/statuses/${s.id}`); load();
+  }
+
+  return (
+    <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
+      <h3 className="section-title">Task statuses (Kanban columns — apply to all projects)</h3>
+      <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        Rename, recolor, reorder, or add columns. Tick "complete" for the Done state
+        (drives auto-archiving + hiding from calendars).
+      </div>
+      {list.map((s, idx) => (
+        <div key={s.id} className="assignee-row" style={{ gap: 8 }}>
+          <input type="color" value={s.color || "#6b7280"} onChange={(e) => patch(s, { color: e.target.value })} style={{ width: 38, padding: 2 }} />
+          <input defaultValue={s.label} onBlur={(e) => e.target.value !== s.label && patch(s, { label: e.target.value })} style={{ flex: 1 }} />
+          <input type="number" value={s.order} onChange={(e) => patch(s, { order: Number(e.target.value) })} style={{ width: 56 }} title="order" />
+          <label className="muted" style={{ display: "flex", gap: 4, alignItems: "center", margin: 0, whiteSpace: "nowrap" }}>
+            <input type="checkbox" style={{ width: "auto" }} checked={s.is_complete} onChange={(e) => patch(s, { is_complete: e.target.checked })} /> complete
+          </label>
+          <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(s)} disabled={idx === 0}>✕</button>
+        </div>
+      ))}
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 38, padding: 2 }} />
+        <input placeholder="New status name…" value={label} onChange={(e) => setLabel(e.target.value)} />
+        <button className="btn-secondary" type="button" onClick={add}>Add status</button>
+      </div>
+    </div>
   );
 }
 

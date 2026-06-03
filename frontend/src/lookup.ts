@@ -47,3 +47,17 @@ export function writableProjects(me: Me): WritableProject[] {
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+export function tomorrowISO(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Deadline urgency for an open task: 'overdue' (past), 'tomorrow' (due next day), or null. */
+export function deadlineState(deadline: string | null, complete: boolean): "overdue" | "tomorrow" | null {
+  if (!deadline || complete) return null;
+  if (deadline < todayISO()) return "overdue";
+  if (deadline === tomorrowISO()) return "tomorrow";
+  return null;
+}

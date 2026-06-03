@@ -10,9 +10,9 @@ ARCHIVE_AFTER_DAYS = 7
 
 
 def archive_completed(days=ARCHIVE_AFTER_DAYS):
-    from .models import Task
+    from .models import Task, complete_status_keys
 
     cutoff = timezone.now() - timedelta(days=days)
     return Task.objects.filter(
-        status=Task.Status.DONE, archived_at__isnull=True, updated_at__lt=cutoff
+        status__in=complete_status_keys(), archived_at__isnull=True, updated_at__lt=cutoff
     ).update(archived_at=timezone.now())

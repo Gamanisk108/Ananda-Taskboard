@@ -13,6 +13,31 @@ from projects.models import SubProject
 from softdelete import SoftDeleteModel
 
 
+class Status(models.Model):
+    """A universal task status (Kanban column) shared by ALL projects. Admin-
+    editable: rename/recolor/reorder/add/remove. The statuses here are the allowed
+    values of Task.status (stored by `key`). One is flagged `is_complete` (=
+    "Done") which drives auto-archiving and hiding from calendars."""
+
+    key = models.SlugField(unique=True)          # stable id stored on Task.status
+    label = models.CharField(max_length=60)
+    color = models.CharField(max_length=9, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    is_complete = models.BooleanField(default=False)  # the "Done/Complete" state
+    is_initial = models.BooleanField(default=False)   # default for brand-new tasks
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.label
+
+
+def complete_status_keys():
+    keys = list(Status.objects.filter(is_complete=True).values_list("key", flat=True))
+    return keys or ["done"]  # fallback to seeded default
+
+
 class RecurrenceRule(models.Model):
     class Freq(models.TextChoices):
         DAILY = "daily", "Daily"
@@ -69,6 +94,8 @@ class Task(SoftDeleteModel):
     # Completed tasks auto-archive after a few days: hidden from board/calendar but
     # recoverable from the Archive (distinct from Trash/soft-delete).
     archived_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # When ON, admins are notified whenever this task is moved (status changed). Default off.
+    monitor = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["deadline", "title"]

@@ -16,6 +16,24 @@ from .models import Comment, Task
 from .serializers import CommentSerializer, TaskSerializer
 
 
+def _notify_admins_moved(task, new_status, mover):
+    """Push to all admins that a monitored task was moved (best-effort, never raises)."""
+    try:
+        from accounts.models import User
+        from notifications.models import PushSubscription
+        from notifications.push import send_web_push
+
+        payload = {
+            "title": "Task moved",
+            "body": f"{mover.name or mover.email} moved “{task.title}” → {new_status}",
+        }
+        admin_ids = User.objects.filter(role=User.Role.ADMIN, is_active=True).values_list("id", flat=True)
+        for sub in PushSubscription.objects.filter(user_id__in=admin_ids):
+            send_web_push(sub, payload)
+    except Exception:
+        pass
+
+
 def _approval_for(user, subproject):
     """Decide a Member's task approval state. Admin or a trusted sub-project →
     live (approved); otherwise pending."""
@@ -107,8 +125,10 @@ class TaskViewSet(ModelViewSet):
         user = request.user
         if not (user.is_admin or task.assignees.filter(pk=user.pk).exists()):
             raise PermissionDenied("Only assignees or admins can change status.")
+        from .models import Status
+
         new_status = request.data.get("status")
-        if new_status not in dict(Task.Status.choices):
+        if not Status.objects.filter(key=new_status).exists():
             raise ValidationError({"status": "Invalid status."})
         with transaction.atomic():
             locked = Task.objects.select_for_update().get(pk=task.pk)
@@ -117,6 +137,8 @@ class TaskViewSet(ModelViewSet):
             locked.save(update_fields=["status", "updated_at"])
         if changed:
             emit.emit(emit.TASK_STATUS_CHANGED, {"task": task.id, "status": new_status})
+            if task.monitor:
+                _notify_admins_moved(task, new_status, user)
         return Response({"id": task.id, "status": new_status})
 
     @action(detail=True, methods=["post"])

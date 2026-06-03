@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
+import { useStatuses } from "../statuses";
 import { Modal, StatusPill } from "./common";
 import { CommentSection } from "./CommentSection";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
-import { STATUS_LABEL, type Me, type Recurrence, type Status, type Task } from "../types";
+import { type Me, type Recurrence, type Task } from "../types";
 
 interface Props {
   task: Task | null;
@@ -40,7 +41,9 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [links, setLinks] = useState((task?.links ?? []).join("\n"));
   const [assignees, setAssignees] = useState<number[]>(task?.assignees ?? []);
   const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
+  const [monitor, setMonitor] = useState<boolean>(task?.monitor ?? false);
   const [groups, setGroups] = useState<GroupLite[]>([]);
+  const statuses = useStatuses();
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [shareLabel, setShareLabel] = useState("🔗 Share");
@@ -59,7 +62,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [endDate, setEndDate] = useState(task?.recurrence?.end_date ?? "");
   const [count, setCount] = useState(task?.recurrence?.count ?? 10);
 
-  const [curStatus, setCurStatus] = useState<Status>(task?.status ?? "todo");
+  const [curStatus, setCurStatus] = useState<string>(task?.status ?? "todo");
   const canChangeStatus = editing && (me.is_admin || (task!.assignees ?? []).includes(me.id));
 
   function pickProject(id: number) {
@@ -67,7 +70,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     const subs = projects.find((p) => p.id === id)?.subprojects ?? [];
     setSubproject(subs[0]?.id ?? 0);
   }
-  async function changeStatus(s: Status) {
+  async function changeStatus(s: string) {
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
       setCurStatus(s);          // update in place — do NOT close the modal
@@ -90,6 +93,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       deadline: deadline || null,
       assignees,
       assignee_groups: assigneeGroups,
+      monitor,
       links: links.split("\n").map((l) => l.trim()).filter(Boolean),
       recurrence,
     };
@@ -247,13 +251,20 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             <label>Status (applied immediately)</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <StatusPill status={curStatus} />
-              <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value as Status)} style={{ width: "auto" }}>
+              <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
                 <option value="">Change to…</option>
-                {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
           </div>
         )}
+
+        <div className="field">
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input type="checkbox" style={{ width: "auto" }} checked={monitor} onChange={(e) => setMonitor(e.target.checked)} />
+            Monitor — notify admins when this task is moved
+          </label>
+        </div>
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 

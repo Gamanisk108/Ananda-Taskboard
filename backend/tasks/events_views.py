@@ -11,8 +11,8 @@ from rest_framework.views import APIView
 
 from permissions.drf import IsAdminOrReadOnly
 
-from .models import CalendarEvent
-from .serializers import CalendarEventSerializer
+from .models import CalendarEvent, Status
+from .serializers import CalendarEventSerializer, StatusSerializer
 
 
 class CalendarEventViewSet(viewsets.ModelViewSet):
@@ -20,6 +20,14 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
     queryset = CalendarEvent.objects.all()
     serializer_class = CalendarEventSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class StatusViewSet(viewsets.ModelViewSet):
+    """Universal task statuses (Kanban columns). Everyone reads; admins edit."""
+
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 

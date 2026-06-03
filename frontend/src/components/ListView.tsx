@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import { buildSubLookup, todayISO } from "../lookup";
+import { buildSubLookup, deadlineState } from "../lookup";
 import { useUsers, userName } from "../users";
+import { useStatuses, isComplete } from "../statuses";
 import { ColorDot, StatusPill, Spinner } from "./common";
-import { STATUS_LABEL, type Me, type Status, type Task } from "../types";
+import type { Me, Task } from "../types";
 
 interface Props {
   projectId?: number;
@@ -11,27 +12,28 @@ interface Props {
   refreshKey: number;
   onEdit: (t: Task) => void;
   me: Me;
+  showArchived?: boolean;
 }
 
 type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "assignee" | "created";
-const STATUS_ORDER: Record<Status, number> = { todo: 0, in_progress: 1, delayed: 2, done: 3 };
 
-export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Props) {
+export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, showArchived = false }: Props) {
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [q, setQ] = useState("");
   // combinable filters
   const [fProject, setFProject] = useState(0);
   const [fSub, setFSub] = useState(0);
   const [fAssignee, setFAssignee] = useState(0);
-  const [fStatus, setFStatus] = useState<"" | Status>("");
+  const [fStatus, setFStatus] = useState<string>("");
   const [fRecur, setFRecur] = useState<"" | "yes" | "no">("");
-  const [showArchived, setShowArchived] = useState(false);
+  const [fDeadline, setFDeadline] = useState<"" | "pending" | "overdue">("");
   const [sortKey, setSortKey] = useState<SortKey>("created");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
 
   const subs = useMemo(() => buildSubLookup(me.tree), [me.tree]);
   const users = useUsers();
-  const today = todayISO();
+  const statuses = useStatuses();
+  const statusOrder = useMemo(() => Object.fromEntries(statuses.map((s, i) => [s.key, i])), [statuses]);
 
   // Tab scope (project/subproject) is applied server-side; everything else is client-side.
   useEffect(() => {
@@ -57,7 +59,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
       case "title": return t.title.toLowerCase();
       case "project": return (info?.projectName ?? "").toLowerCase();
       case "subproject": return (info?.name ?? "").toLowerCase();
-      case "status": return STATUS_ORDER[t.status];
+      case "status": return statusOrder[t.status] ?? 99;
       case "deadline": return t.deadline ?? "9999-99-99";
       case "assignee": return (assigneeNames(t)[0] ?? "~").toLowerCase();
       case "created": return t.created_at;
@@ -68,9 +70,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
     else { setSortKey(key); setSortDir(1); }
   }
   function clearFilters() {
-    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFStatus(""); setFRecur("");
+    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFStatus(""); setFRecur(""); setFDeadline("");
   }
-  const activeFilters = [q, fProject, fSub, fAssignee, fStatus, fRecur].filter(Boolean).length;
+  const activeFilters = [q, fProject, fSub, fAssignee, fStatus, fRecur, fDeadline].filter(Boolean).length;
 
   if (!tasks) return <Spinner />;
 
@@ -84,6 +86,12 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
       if (fStatus && t.status !== fStatus) return false;
       if (fRecur === "yes" && !t.recurrence) return false;
       if (fRecur === "no" && t.recurrence) return false;
+      if (fDeadline) {
+        const ds = deadlineState(t.deadline, isComplete(t.status));
+        if (fDeadline === "overdue" && ds !== "overdue") return false;
+        // 'pending' = an open task with a current/upcoming deadline (not overdue)
+        if (fDeadline === "pending" && !(t.deadline && !isComplete(t.status) && ds !== "overdue")) return false;
+      }
       return true;
     })
     .sort((a, b) => {
@@ -114,9 +122,14 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
           <option value={0}>Any assignee</option>
           {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
         </select>
-        <select value={fStatus} onChange={(e) => setFStatus(e.target.value as "" | Status)}>
+        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
           <option value="">Any status</option>
-          {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </select>
+        <select value={fDeadline} onChange={(e) => setFDeadline(e.target.value as "" | "pending" | "overdue")}>
+          <option value="">Deadline: any</option>
+          <option value="pending">Pending (upcoming)</option>
+          <option value="overdue">Overdue</option>
         </select>
         <select value={fRecur} onChange={(e) => setFRecur(e.target.value as "" | "yes" | "no")}>
           <option value="">Recurring? any</option>
@@ -124,10 +137,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
           <option value="no">One-off only</option>
         </select>
         {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>Clear ({activeFilters})</button>}
-        <button className={showArchived ? "btn-primary" : "btn-ghost"} onClick={() => setShowArchived((a) => !a)}
-          title="Completed tasks auto-archive after 7 days">
-          {showArchived ? "← Back to board" : "🗄 Archive"}
-        </button>
+        {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)" }}>📖 Showing archive</span>}
       </div>
 
       {filtered.length === 0 ? (
@@ -148,11 +158,15 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me }: Pr
           <tbody>
             {filtered.map((t) => {
               const info = subs.get(t.subproject);
-              const overdue = !!t.deadline && t.deadline < today && t.status !== "done";
+              const ds = deadlineState(t.deadline, isComplete(t.status));
               const names = assigneeNames(t);
               return (
-                <tr key={t.id} className={overdue ? "overdue" : ""} onClick={() => onEdit(t)}>
-                  <td><strong>{overdue && <span className="od" title="Overdue">❗</span>}{t.title}</strong></td>
+                <tr key={t.id} className={ds === "overdue" ? "overdue" : ds === "tomorrow" ? "due-soon" : ""} onClick={() => onEdit(t)}>
+                  <td>
+                    <strong>{t.title}</strong>
+                    {ds === "overdue" && <span className="od" title="Missed Deadline"> ❗</span>}
+                    {ds === "tomorrow" && <span className="od-soon" title="Deadline Tomorrow"> ❗</span>}
+                  </td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.projectColor} /> {info.projectName}</span>}</td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.color} /> {info.name}</span>}</td>
                   <td>

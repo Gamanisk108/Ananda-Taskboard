@@ -50,10 +50,11 @@ export interface Task {
   deadline: string | null;
   timeline_start: string | null;
   timeline_end: string | null;
-  status: Status;
+  status: string;            // dynamic status key (see /api/statuses)
   approval_state: Approval;
   recurrence: Recurrence | null;
   links: string[];
+  monitor: boolean;
   created_by: number | null;
   created_at: string;
   updated_at: string;
@@ -73,7 +74,7 @@ export interface CalendarInstance {
   task_id: number;
   title: string;
   date: string;
-  status: Status;
+  status: string;
   is_recurring: boolean;
   is_deadline: boolean;
   subproject_id: number;
