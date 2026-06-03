@@ -85,10 +85,11 @@ def test_overdue_flagged(admin, sp):
     assert res.data[0]["overdue"] is True
 
 
-def test_done_not_overdue(admin, sp):
+def test_done_excluded(admin, sp):
+    # Completed tasks drop off the calendar entirely (so never flagged overdue).
     Task.objects.create(subproject=sp, title="Old", deadline=date(2020, 1, 1), status="done")
     res = login(admin).get("/api/calendar?from=2019-01-01&to=2021-01-01")
-    assert res.data[0]["overdue"] is False
+    assert res.data == []
 
 
 def test_pending_excluded(admin, sp):
