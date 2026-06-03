@@ -11,10 +11,15 @@ from django.conf import settings
 from django.contrib import admin
 from django.http import FileResponse, JsonResponse
 from django.urls import include, path, re_path
+from rest_framework.routers import DefaultRouter
 
+from restore_service import RestorePointViewSet
 from trashbin import TrashActionView, TrashView
 
 FRONTEND_DIST = settings.BASE_DIR.parent / "frontend" / "dist"
+
+_restore_router = DefaultRouter(trailing_slash=False)
+_restore_router.register("restore-points", RestorePointViewSet, basename="restorepoint")
 
 
 def health(_request):
@@ -51,6 +56,7 @@ urlpatterns = [
     path("api/", include("notifications.urls")),
     path("api/trash", TrashView.as_view(), name="trash"),
     path("api/trash/action", TrashActionView.as_view(), name="trash-action"),
+    path("api/", include(_restore_router.urls)),  # restore points (admin)
     # SPA catch-all (must be last; excludes api/ and admin/).
     re_path(r"^(?!api/|admin/)(?P<path>.*)$", spa, name="spa"),
 ]

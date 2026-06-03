@@ -117,6 +117,24 @@ class CalendarEvent(models.Model):
         return f"{self.title} ({self.date})"
 
 
+class RestorePoint(models.Model):
+    """A full-board snapshot (projects, sub-projects, tasks, events, groups,
+    grants) an admin can restore to. Auto-saves are pruned (keep last N); manual
+    saves are kept permanently."""
+
+    label = models.CharField(max_length=200)
+    auto = models.BooleanField(default=False)
+    data = models.JSONField(default=list)   # serialized rows in dependency order
+    stats = models.JSONField(default=dict)  # {projects, subprojects, tasks, ...}
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{'auto' if self.auto else 'manual'}: {self.label}"
+
+
 class Comment(models.Model):
     """A comment on a Task. Media is referenced by URL (no file storage)."""
 

@@ -6,19 +6,16 @@
 The **Django admin** is a always-available back door to view/edit/export every
 record directly, independent of the React UI.
 
-1. **Create an admin login on the server** (once): Render → your service → **Shell** →
-   `python backend/manage.py createsuperuser`.
-2. **Open** `https://<your-app>.onrender.com/admin/` and log in. You can inspect and
-   fix Users, Projects, Sub-projects, Tasks, Grants, Trash (deleted_at), etc.
-3. **Download a full data backup** (Render Shell):
-   `python backend/manage.py dumpdata --natural-foreign --indent 2 > backup.json`
-   Restore later with `python backend/manage.py loaddata backup.json`.
-4. **Database-level safety:** Neon (our Postgres) keeps automatic backups with
-   point-in-time restore — the strongest "lost everything" recovery. See the Neon
-   dashboard → Branches / Restore.
-
-> In-app "Restore points" (admin snapshots of the whole board) are a planned
-> feature on top of this — see the build notes.
+1. **Log into the admin** at `https://<your-app>.onrender.com/admin/` with any
+   **Admin** account — app Admins are Django superusers. The seeded
+   `admin@ananda.test` / `taskboard123` works; or promote someone in the in-app
+   **Team** panel. (Render free tier has **no Shell**, so this is the way — no CLI
+   needed.) Inspect/fix Users, Projects, Tasks, Grants, Trash, Restore points, etc.
+2. **In-app Restore points** (admin) — full-board snapshots with one-click restore;
+   auto-saved daily (keeps the last 10) plus unlimited manual saves. Primary
+   "oops, restore everything" tool.
+3. **Database-level safety:** Neon keeps automatic backups with point-in-time
+   restore (strongest recovery). Neon dashboard → Branches / Restore.
 
 
 ## Hosting — easiest: one Render service (serves app + API together)
