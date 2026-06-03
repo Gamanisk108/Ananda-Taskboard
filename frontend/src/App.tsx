@@ -123,7 +123,7 @@ export default function App() {
             <button className="btn-secondary" onClick={() => setShowManage(true)} title="Manage projects">🗂️ Projects</button>
           )}
           {canCreate && (
-            <button className="btn-primary" onClick={() => setEditing("new")} title="Create a task">＋ New task</button>
+            <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title="Create a task">＋ New task</button>
           )}
           <UserMenu
             name={me.name || me.email}

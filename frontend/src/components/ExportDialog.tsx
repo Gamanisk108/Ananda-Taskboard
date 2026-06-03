@@ -58,13 +58,13 @@ export function ExportDialog({ projectId, subprojectId }: { projectId?: number; 
 
   return (
     <>
-      <button className="btn-secondary" onClick={() => setOpen(true)}>Export ▾</button>
+      <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>Export ▾</button>
       {open && (
         <Modal title="Export tasks" onClose={() => setOpen(false)}>
-          <div className="row2">
+          <div className="row2" data-testid="export-dialog">
             <div className="field">
               <label>Format</label>
-              <select value={fmt} onChange={(e) => setFmt(e.target.value as "csv" | "xlsx")}>
+              <select data-testid="export-format" value={fmt} onChange={(e) => setFmt(e.target.value as "csv" | "xlsx")}>
                 <option value="xlsx">Excel (.xlsx)</option>
                 <option value="csv">CSV (.csv)</option>
               </select>
@@ -127,7 +127,7 @@ export function ExportDialog({ projectId, subprojectId }: { projectId?: number; 
 
           <div className="modal-foot">
             <button className="btn-secondary" onClick={() => setOpen(false)}>Cancel</button>
-            <button className="btn-primary" disabled={selected.length === 0} onClick={run}>Download</button>
+            <button className="btn-primary" data-testid="export-download" disabled={selected.length === 0} onClick={run}>Download</button>
           </div>
         </Modal>
       )}

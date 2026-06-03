@@ -92,16 +92,16 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
       {comments.map((c) => {
         const canManage = c.author === meId || meIsAdmin;
         return (
-          <div key={c.id} className="card" style={{ padding: 9, marginBottom: 6 }}>
+          <div key={c.id} className="card" data-testid="comment" style={{ padding: 9, marginBottom: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, alignItems: "center" }}>
               <strong>{c.author === meId ? "You" : "Team member"}</strong>
               <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span className="muted mono">{c.created_at.slice(0, 10)}</span>
                 {canManage && editing?.id !== c.id && (
                   <>
-                    <button type="button" className="btn-ghost" style={{ padding: "1px 6px", fontSize: 12 }}
+                    <button type="button" className="btn-ghost" data-testid="comment-edit" style={{ padding: "1px 6px", fontSize: 12 }}
                       onClick={() => setEditing({ id: c.id, text: c.text })}>Edit</button>
-                    <button type="button" className="btn-ghost" style={{ padding: "1px 6px", fontSize: 12, color: "var(--danger)" }}
+                    <button type="button" className="btn-ghost" data-testid="comment-delete" style={{ padding: "1px 6px", fontSize: 12, color: "var(--danger)" }}
                       onClick={() => del(c.id)}>Delete</button>
                   </>
                 )}
@@ -109,9 +109,9 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
             </div>
             {editing?.id === c.id ? (
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                <input value={editing.text} onChange={(e) => setEditing({ id: c.id, text: e.target.value })}
+                <input data-testid="comment-edit-input" value={editing.text} onChange={(e) => setEditing({ id: c.id, text: e.target.value })}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); saveEdit(); } }} />
-                <button type="button" className="btn-primary" onClick={saveEdit}>Save</button>
+                <button type="button" className="btn-primary" data-testid="comment-save" onClick={saveEdit}>Save</button>
                 <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>Cancel</button>
               </div>
             ) : (
@@ -122,9 +122,9 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
       })}
       <form onSubmit={add} style={{ display: "flex", gap: 8, marginTop: 8, position: "relative" }}>
         {matches.length > 0 && (
-          <div className="mention-pop">
+          <div className="mention-pop" data-testid="mention-popup">
             {matches.map((u) => (
-              <button type="button" key={u.id} className="mention-item" onClick={() => pick(u)}>
+              <button type="button" key={u.id} className="mention-item" data-testid="mention-item" onClick={() => pick(u)}>
                 {u.name || u.email}
               </button>
             ))}
@@ -132,12 +132,13 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
         )}
         <input
           ref={inputRef}
+          data-testid="comment-input"
           placeholder="Add a comment… (type @ to mention)"
           value={text}
           onChange={onChange}
           onKeyDown={onKeyDown}
         />
-        <button className="btn-secondary" disabled={busy}>Post</button>
+        <button className="btn-secondary" data-testid="comment-post" disabled={busy}>Post</button>
       </form>
     </div>
   );

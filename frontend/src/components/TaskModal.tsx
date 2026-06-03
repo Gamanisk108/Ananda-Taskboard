@@ -161,7 +161,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="field">
           <label>Task name</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="e.g. Design spring flyer" />
+          <input data-testid="task-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="e.g. Design spring flyer" />
         </div>
 
         <div className="row2">
@@ -183,7 +183,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <label>Priority</label>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <PriorityIcon level={priority} size={16} />
-            <select value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
+            <select data-testid="task-priority-select" value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
               {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
             </select>
           </div>
@@ -338,7 +338,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           )}
           <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
           {editing && <button type="button" className="btn-danger" onClick={del}>Delete</button>}
-          <button className="btn-primary" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
+          <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
         </div>
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}

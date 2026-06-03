@@ -122,12 +122,12 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
           <option value={0}>All sub-projects</option>
           {subOpts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <select value={fAssignee} onChange={(e) => setFAssignee(Number(e.target.value))}>
+        <select data-testid="filter-assignee" value={fAssignee} onChange={(e) => setFAssignee(Number(e.target.value))}>
           <option value={0}>Any assignee</option>
           <option value={-1}>Unassigned</option>
           {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
         </select>
-        <select value={fPriority} onChange={(e) => setFPriority(Number(e.target.value))}>
+        <select data-testid="filter-priority" value={fPriority} onChange={(e) => setFPriority(Number(e.target.value))}>
           <option value={0}>Any priority</option>
           {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
         </select>
@@ -172,14 +172,14 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
               const ds = deadlineState(t.deadline, isComplete(t.status));
               const names = assigneeNames(t);
               return (
-                <tr key={t.id} className={ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : ""} onClick={() => onEdit(t)}>
-                  <td title={PRIORITY_META[t.priority].label}><PriorityIcon level={t.priority} /></td>
+                <tr key={t.id} data-testid="task-row" className={ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : ""} onClick={() => onEdit(t)}>
+                  <td title={PRIORITY_META[t.priority].label} data-testid="task-priority"><PriorityIcon level={t.priority} /></td>
                   <td>
                     <strong>{t.title}</strong>
                     {ds === "overdue" && <span className="od" title="Missed Deadline"> ❗</span>}
                     {ds === "soon" && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
                     {Object.keys(t.subtask_counts ?? {}).length > 0 && (
-                      <div style={{ marginTop: 3 }}><SubtaskDots counts={t.subtask_counts} /></div>
+                      <div style={{ marginTop: 3 }} data-testid="subtask-dots"><SubtaskDots counts={t.subtask_counts} /></div>
                     )}
                   </td>
                   <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.projectColor} /> {info.projectName}</span>}</td>
