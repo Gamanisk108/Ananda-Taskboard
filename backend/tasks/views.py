@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import status as http
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -73,7 +74,11 @@ class TaskViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Task.objects.select_related("subproject", "recurrence_rule").prefetch_related("assignees", "subtasks")
+        qs = (
+            Task.objects.select_related("subproject", "recurrence_rule")
+            .prefetch_related("assignees", "subtasks")
+            .annotate(comment_count_anno=Count("comments", distinct=True))
+        )
         if not user.is_admin:
             qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
         # The live board shows only approved tasks; pending/rejected live in the

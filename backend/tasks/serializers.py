@@ -41,8 +41,14 @@ class SubtaskSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     recurrence = RecurrenceRuleSerializer(source="recurrence_rule", required=False, allow_null=True)
     project = serializers.IntegerField(source="project_id", read_only=True)
-    comment_count = serializers.IntegerField(source="comments.count", read_only=True)
+    comment_count = serializers.SerializerMethodField()
     subtask_counts = serializers.SerializerMethodField()
+
+    def get_comment_count(self, obj):
+        # Uses the list queryset's annotation when present (one query for all
+        # tasks); falls back to a per-object count for un-annotated callers.
+        cc = getattr(obj, "comment_count_anno", None)
+        return cc if cc is not None else obj.comments.count()
 
     def get_subtask_counts(self, obj):
         """{status_key: count} over the task's subtasks (only non-zero)."""
