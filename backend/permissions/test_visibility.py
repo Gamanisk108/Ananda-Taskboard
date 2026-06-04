@@ -225,3 +225,21 @@ def test_member_cannot_touch_tiers_or_exclusions(member):
     api = login(member)
     assert api.get("/api/tiers").status_code in (403, 401)
     assert api.post("/api/exclusions", {"user": member.id, "excluded_task": 1}, format="json").status_code in (403, 401)
+
+
+# --- audit log --------------------------------------------------------------
+
+def test_grant_and_exclusion_are_audited(admin, member, karuna):
+    from permissions.models import AuditLog
+    api = login(admin)
+    api.post("/api/grants", {"user": member.id, "subproject": karuna["marketing"].id, "level": "member", "sees": "own"}, format="json")
+    api.post("/api/exclusions", {"user": member.id, "excluded_subproject": karuna["warehouse"].id}, format="json")
+    actions = set(AuditLog.objects.values_list("action", flat=True))
+    assert {"grant.create", "exclusion.create"} <= actions
+    feed = api.get("/api/audit")
+    assert feed.status_code == 200 and len(feed.data) >= 2
+    assert all(set(e.keys()) == {"id", "actor", "action", "summary", "created_at"} for e in feed.data)
+
+
+def test_audit_log_is_admin_only(member):
+    assert login(member).get("/api/audit").status_code in (401, 403)

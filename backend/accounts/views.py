@@ -92,6 +92,15 @@ class UserDetailView(APIView):
         ser = UserWriteSerializer(user, data=request.data, partial=True)
         ser.is_valid(raise_exception=True)
         ser.save()
+        # Audit role/tier/active changes (permission-relevant); ignore name/password.
+        from permissions.models import audit
+        who = user.name or user.email
+        if "role" in request.data:
+            audit(request.user, "user.role", f"Set {who} role = {user.role}")
+        if "tier" in request.data:
+            audit(request.user, "user.tier", f"Set {who} tier = {user.tier.name if user.tier else 'none'}")
+        if "is_active" in request.data:
+            audit(request.user, "user.active", f"{'Enabled' if user.is_active else 'Disabled'} {who}")
         return Response(UserSerializer(user).data)
 
 
@@ -109,3 +118,18 @@ class TierViewSet(viewsets.ModelViewSet):
     queryset = Tier.objects.all()
     serializer_class = TierSerializer
     permission_classes = [IsAdmin]
+
+    def perform_create(self, serializer):
+        from permissions.models import audit
+        tier = serializer.save()
+        audit(self.request.user, "tier.create", f"Created tier '{tier.name}'")
+
+    def perform_update(self, serializer):
+        from permissions.models import audit
+        tier = serializer.save()
+        audit(self.request.user, "tier.update", f"Updated tier '{tier.name}'")
+
+    def perform_destroy(self, instance):
+        from permissions.models import audit
+        audit(self.request.user, "tier.delete", f"Deleted tier '{instance.name}'")
+        instance.delete()

@@ -115,3 +115,28 @@ class Exclusion(models.Model):
         who = self.user or self.group or self.tier
         what = next((t for t in self._targets() if t), "?")
         return f"{who} ⊘ {what}"
+
+
+class AuditLog(models.Model):
+    """Append-only trail of permission/visibility changes (grants, exclusions,
+    tiers, role/tier assignments) — who did what, when. Read-only via the API."""
+
+    actor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name="audit_actions")
+    action = models.CharField(max_length=40)   # e.g. "grant.create", "tier.delete", "user.role"
+    summary = models.CharField(max_length=300)  # human-readable description
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.action}: {self.summary}"
+
+
+def audit(actor, action, summary):
+    """Record one audit entry (best-effort; never breaks the triggering action)."""
+    try:
+        AuditLog.objects.create(actor=actor if getattr(actor, "is_authenticated", False) else None,
+                                action=action, summary=summary[:300])
+    except Exception:
+        pass

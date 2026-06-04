@@ -4,7 +4,7 @@ import { invalidateUsers } from "../users";
 import { Modal, Spinner } from "./common";
 import { SEES_LABEL, type Sees } from "../types";
 
-type Tab = "members" | "groups" | "access" | "tiers";
+type Tab = "members" | "groups" | "access" | "tiers" | "activity";
 
 interface UserRow { id: number; name: string; email: string; role: string; is_active: boolean; is_admin: boolean; tier: number | null; }
 interface GroupRow { id: number; name: string; member_ids: number[]; }
@@ -17,6 +17,7 @@ interface Exclusion {
   excluded_user: number | null; excluded_group: number | null; excluded_project: number | null;
   excluded_subproject: number | null; excluded_task: number | null;
 }
+interface AuditRow { id: number; actor: string; action: string; summary: string; created_at: string; }
 
 export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const [tab, setTab] = useState<Tab>("members");
@@ -26,27 +27,30 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
   const [projects, setProjects] = useState<Proj[]>([]);
   const [grants, setGrants] = useState<Grant[]>([]);
   const [exclusions, setExclusions] = useState<Exclusion[]>([]);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function loadAll() {
-    const [u, g, t, p, gr, ex] = await Promise.all([
+    const [u, g, t, p, gr, ex, au] = await Promise.all([
       api.get("/api/users"), api.get("/api/groups"), api.get("/api/tiers"),
       api.get("/api/projects"), api.get("/api/grants"), api.get("/api/exclusions"),
+      api.get("/api/audit"),
     ]);
     setUsers(u as UserRow[]); setGroups(g as GroupRow[]); setTiers(t as TierRow[]);
     setProjects(p as Proj[]); setGrants(gr as Grant[]); setExclusions(ex as Exclusion[]);
+    setAudit(au as AuditRow[]);
     setLoading(false);
     invalidateUsers();
     onChanged();
   }
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
 
-  const labels: Record<Tab, string> = { members: "Members", groups: "Groups", access: "Access", tiers: "Tiers" };
+  const labels: Record<Tab, string> = { members: "Members", groups: "Groups", access: "Access", tiers: "Tiers", activity: "Activity" };
 
   return (
     <Modal title="Team & Permissions" onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
-        {(["members", "groups", "access", "tiers"] as Tab[]).map((t) => (
+        {(["members", "groups", "access", "tiers", "activity"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>
         ))}
       </div>
@@ -59,6 +63,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
               tiers={tiers} projects={projects} reload={loadAll} />
           )}
           {tab === "tiers" && <Tiers tiers={tiers} reload={loadAll} onEditAccess={() => setTab("access")} />}
+          {tab === "activity" && <Activity rows={audit} />}
         </>
       )}
     </Modal>
@@ -232,6 +237,30 @@ function Tiers({ tiers, reload, onEditAccess }: { tiers: TierRow[]; reload: () =
         </div>
       ))}
       {tiers.length === 0 && <div className="empty">No tiers yet. Add one above.</div>}
+    </>
+  );
+}
+
+function Activity({ rows }: { rows: AuditRow[] }) {
+  return (
+    <>
+      <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        Recent permission &amp; visibility changes — who changed what, and when. Read-only.
+      </div>
+      {rows.length === 0 ? <div className="empty">No activity yet.</div> : (
+        <table className="tbl">
+          <thead><tr><th>When</th><th>Who</th><th>Change</th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{r.created_at.slice(0, 16).replace("T", " ")}</td>
+                <td style={{ fontSize: 13 }}>{r.actor}</td>
+                <td style={{ fontSize: 13 }}>{r.summary}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </>
   );
 }
