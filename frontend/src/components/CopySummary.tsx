@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useUsers } from "../users";
 import { Modal } from "./common";
@@ -6,6 +7,7 @@ import { todayISO } from "../lookup";
 import type { Me } from "../types";
 
 export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
+  const { t } = useTranslation();
   const users = useUsers();
   const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
   const [date, setDate] = useState(todayISO());
@@ -44,7 +46,7 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
   }
 
   return (
-    <Modal title="Copy daily summary" onClose={onClose} wide>
+    <Modal title={t("modals.copySummary")} onClose={onClose} wide>
       <div className="row2">
         <div className="field">
           <label>Day</label>

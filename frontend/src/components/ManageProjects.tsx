@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 import { DeleteWithMove } from "./DeleteWithMove";
@@ -20,6 +21,7 @@ interface Proj {
 }
 
 export function ManageProjects({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<Proj[] | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -73,7 +75,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
     setDeleting({ kind: "subproject", id: s.id, name: s.name });
   }
 
-  if (!projects) return <Modal title="Manage projects" onClose={onClose}><Spinner /></Modal>;
+  if (!projects) return <Modal title={t("modals.projects")} onClose={onClose}><Spinner /></Modal>;
 
   if (deleting) {
     return (
@@ -89,7 +91,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   return (
-    <Modal title="Manage projects" onClose={onClose} wide>
+    <Modal title={t("modals.projects")} onClose={onClose} wide>
       <div className="field" style={{ display: "flex", gap: 8 }}>
         <input placeholder="New project name…" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} />
         <button className="btn-primary" onClick={addProject} disabled={busy}>Add project</button>
@@ -99,7 +101,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
         <ProjectEditor key={p.id} project={p} onSaveProject={saveProject} onAddSub={addSub}
           onSaveSub={saveSub} onDeleteProject={deleteProject} onDeleteSub={deleteSub} />
       ))}
-      {projects.length === 0 && <div className="empty">No projects yet. Add one above.</div>}
+      {projects.length === 0 && <div className="empty">{t("empty.noProjects")}</div>}
     </Modal>
   );
 }

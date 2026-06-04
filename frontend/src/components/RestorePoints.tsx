@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 
@@ -6,6 +7,7 @@ interface Stats { projects?: number; subprojects?: number; tasks?: number; event
 interface Point { id: number; label: string; auto: boolean; stats: Stats; created_at: string; }
 
 export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
+  const { t } = useTranslation();
   const [points, setPoints] = useState<Point[] | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -35,7 +37,7 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
   }
 
   return (
-    <Modal title="Restore points" onClose={onClose} wide>
+    <Modal title={t("modals.restore")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
         Full snapshots of the whole board. Restoring auto-saves the current state first (so it's
         undoable). Auto-saves happen daily (last 10 kept); manual saves stay forever.

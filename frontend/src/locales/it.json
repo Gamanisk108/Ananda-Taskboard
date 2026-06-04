@@ -106,5 +106,32 @@
     "dueSoon": "In scadenza oggi o domani",
     "people": "Persone",
     "groups": "Gruppi"
+  },
+  "modals": {
+    "team": "Team e autorizzazioni",
+    "settings": "Impostazioni",
+    "projects": "Gestisci progetti",
+    "trash": "Cestino",
+    "restore": "Punti di ripristino",
+    "approvals": "Approvazioni",
+    "history": "Cronologia",
+    "exportTasks": "Esporta attività",
+    "importTasks": "Importa attività",
+    "copySummary": "Copia riepilogo giornaliero"
+  },
+  "tabs": {
+    "members": "Membri",
+    "groups": "Gruppi",
+    "access": "Accesso",
+    "tiers": "Livelli",
+    "activity": "Attività"
+  },
+  "empty": {
+    "approvals": "Nulla in attesa di approvazione.",
+    "trash": "Il cestino è vuoto.",
+    "noTiers": "Ancora nessun livello.",
+    "noGroups": "Ancora nessun gruppo.",
+    "noActivity": "Ancora nessuna attività.",
+    "noProjects": "Ancora nessun progetto."
   }
 }

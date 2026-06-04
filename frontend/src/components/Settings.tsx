@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 
@@ -10,6 +11,7 @@ const TZS = [
 ];
 
 export function Settings({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [s, setS] = useState<S | null>(null);
   const [msg, setMsg] = useState("");
 
@@ -23,7 +25,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title="Settings" onClose={onClose}>
+    <Modal title={t("modals.settings")} onClose={onClose}>
       {!s ? <Spinner /> : (
         <>
           <h3 className="section-title">Daily push notification time</h3>

@@ -106,5 +106,32 @@
     "dueSoon": "今天或明天到期",
     "people": "人员",
     "groups": "群组"
+  },
+  "modals": {
+    "team": "团队与权限",
+    "settings": "设置",
+    "projects": "管理项目",
+    "trash": "回收站",
+    "restore": "还原点",
+    "approvals": "审批",
+    "history": "历史",
+    "exportTasks": "导出任务",
+    "importTasks": "导入任务",
+    "copySummary": "复制每日摘要"
+  },
+  "tabs": {
+    "members": "成员",
+    "groups": "群组",
+    "access": "访问权限",
+    "tiers": "层级",
+    "activity": "活动"
+  },
+  "empty": {
+    "approvals": "没有待审批的内容。",
+    "trash": "回收站是空的。",
+    "noTiers": "还没有层级。",
+    "noGroups": "还没有群组。",
+    "noActivity": "还没有活动。",
+    "noProjects": "还没有项目。"
   }
 }

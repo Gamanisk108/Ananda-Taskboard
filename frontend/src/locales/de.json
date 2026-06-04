@@ -106,5 +106,32 @@
     "dueSoon": "Heute oder morgen fällig",
     "people": "Personen",
     "groups": "Gruppen"
+  },
+  "modals": {
+    "team": "Team & Berechtigungen",
+    "settings": "Einstellungen",
+    "projects": "Projekte verwalten",
+    "trash": "Papierkorb",
+    "restore": "Wiederherstellungspunkte",
+    "approvals": "Genehmigungen",
+    "history": "Verlauf",
+    "exportTasks": "Aufgaben exportieren",
+    "importTasks": "Aufgaben importieren",
+    "copySummary": "Tageszusammenfassung kopieren"
+  },
+  "tabs": {
+    "members": "Mitglieder",
+    "groups": "Gruppen",
+    "access": "Zugriff",
+    "tiers": "Stufen",
+    "activity": "Aktivität"
+  },
+  "empty": {
+    "approvals": "Nichts zur Genehmigung ausstehend.",
+    "trash": "Papierkorb ist leer.",
+    "noTiers": "Noch keine Stufen.",
+    "noGroups": "Noch keine Gruppen.",
+    "noActivity": "Noch keine Aktivität.",
+    "noProjects": "Noch keine Projekte."
   }
 }

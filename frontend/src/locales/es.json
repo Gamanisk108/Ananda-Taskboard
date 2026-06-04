@@ -106,5 +106,32 @@
     "dueSoon": "Vence hoy o mañana",
     "people": "Personas",
     "groups": "Grupos"
+  },
+  "modals": {
+    "team": "Equipo y permisos",
+    "settings": "Configuración",
+    "projects": "Gestionar proyectos",
+    "trash": "Papelera",
+    "restore": "Puntos de restauración",
+    "approvals": "Aprobaciones",
+    "history": "Historial",
+    "exportTasks": "Exportar tareas",
+    "importTasks": "Importar tareas",
+    "copySummary": "Copiar resumen diario"
+  },
+  "tabs": {
+    "members": "Miembros",
+    "groups": "Grupos",
+    "access": "Acceso",
+    "tiers": "Niveles",
+    "activity": "Actividad"
+  },
+  "empty": {
+    "approvals": "Nada pendiente de aprobación.",
+    "trash": "La papelera está vacía.",
+    "noTiers": "Aún no hay niveles.",
+    "noGroups": "Aún no hay grupos.",
+    "noActivity": "Aún no hay actividad.",
+    "noProjects": "Aún no hay proyectos."
   }
 }

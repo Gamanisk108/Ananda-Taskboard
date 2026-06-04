@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { invalidateUsers } from "../users";
 import { Modal, Spinner } from "./common";
@@ -20,6 +21,7 @@ interface Exclusion {
 interface AuditRow { id: number; actor: string; action: string; summary: string; created_at: string; }
 
 export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
+  const { t: tr } = useTranslation();  // `t` is used below as the tab loop var
   const [tab, setTab] = useState<Tab>("members");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [groups, setGroups] = useState<GroupRow[]>([]);
@@ -45,10 +47,13 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
   }
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
 
-  const labels: Record<Tab, string> = { members: "Members", groups: "Groups", access: "Access", tiers: "Tiers", activity: "Activity" };
+  const labels: Record<Tab, string> = {
+    members: tr("tabs.members"), groups: tr("tabs.groups"), access: tr("tabs.access"),
+    tiers: tr("tabs.tiers"), activity: tr("tabs.activity"),
+  };
 
   return (
-    <Modal title="Team & Permissions" onClose={onClose} wide>
+    <Modal title={tr("modals.team")} onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
         {(["members", "groups", "access", "tiers", "activity"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>
@@ -151,6 +156,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
 }
 
 function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[]; reload: () => void }) {
+  const { t: tr } = useTranslation();
   const [name, setName] = useState("");
   async function add() { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }
   async function del(g: GroupRow) { if (confirm(`Delete group "${g.name}"?`)) { await api.del(`/api/groups/${g.id}`); reload(); } }
@@ -181,12 +187,13 @@ function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[
           </div>
         </div>
       ))}
-      {groups.length === 0 && <div className="empty">No groups yet.</div>}
+      {groups.length === 0 && <div className="empty">{tr("empty.noGroups")}</div>}
     </>
   );
 }
 
 function Tiers({ tiers, reload, onEditAccess }: { tiers: TierRow[]; reload: () => void; onEditAccess: () => void }) {
+  const { t: tr } = useTranslation();
   const [name, setName] = useState("");
   const [sees, setSees] = useState<Sees>("subproject");
 
@@ -236,18 +243,19 @@ function Tiers({ tiers, reload, onEditAccess }: { tiers: TierRow[]; reload: () =
           </div>
         </div>
       ))}
-      {tiers.length === 0 && <div className="empty">No tiers yet. Add one above.</div>}
+      {tiers.length === 0 && <div className="empty">{tr("empty.noTiers")}</div>}
     </>
   );
 }
 
 function Activity({ rows }: { rows: AuditRow[] }) {
+  const { t: tr } = useTranslation();
   return (
     <>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
         Recent permission &amp; visibility changes — who changed what, and when. Read-only.
       </div>
-      {rows.length === 0 ? <div className="empty">No activity yet.</div> : (
+      {rows.length === 0 ? <div className="empty">{tr("empty.noActivity")}</div> : (
         <table className="tbl">
           <thead><tr><th>When</th><th>Who</th><th>Change</th></tr></thead>
           <tbody>

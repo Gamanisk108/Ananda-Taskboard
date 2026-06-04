@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useAuth } from "../state/auth";
 import { buildSubLookup } from "../lookup";
@@ -13,6 +14,7 @@ export function Approvals({
   onChanged: () => void;
   onOpen: (t: Task) => void;
 }) {
+  const { t: tr } = useTranslation();  // `t` is the task param in onOpen
   const { me } = useAuth();
   const [pending, setPending] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
@@ -47,7 +49,7 @@ export function Approvals({
   }
 
   return (
-    <Modal title="Approvals" onClose={onClose} wide>
+    <Modal title={tr("modals.approvals")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
         Tasks members created that need your OK before they appear on the board. Tick rows to
         bulk-approve, click <strong>Open</strong> to see full details, or approve/reject each.
@@ -55,7 +57,7 @@ export function Approvals({
       {!pending ? (
         <Spinner />
       ) : pending.length === 0 ? (
-        <div className="empty">Nothing waiting for approval. 🎉</div>
+        <div className="empty">{tr("empty.approvals")} 🎉</div>
       ) : (
         <>
           <div className="bulkbar">

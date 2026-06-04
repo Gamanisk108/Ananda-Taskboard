@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { Modal } from "./common";
 
@@ -40,6 +41,7 @@ async function fileToContent(file: File): Promise<{ fmt: Fmt; content: string }>
 }
 
 export function ImportDialog({ onImported }: { onImported: () => void }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [fmt, setFmt] = useState<Fmt>("csv");
   const [content, setContent] = useState("");
@@ -108,7 +110,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
     <>
       <button className="btn-secondary" data-testid="import-button" onClick={() => setOpen(true)}>Import ▾</button>
       {open && (
-        <Modal title="Import tasks" onClose={close} wide>
+        <Modal title={t("modals.importTasks")} onClose={close} wide>
           {!result && (
             <>
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>

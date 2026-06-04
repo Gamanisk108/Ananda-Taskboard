@@ -106,5 +106,32 @@
     "dueSoon": "Due today or tomorrow",
     "people": "People",
     "groups": "Groups"
+  },
+  "modals": {
+    "team": "Team & Permissions",
+    "settings": "Settings",
+    "projects": "Manage projects",
+    "trash": "Trash",
+    "restore": "Restore points",
+    "approvals": "Approvals",
+    "history": "History",
+    "exportTasks": "Export tasks",
+    "importTasks": "Import tasks",
+    "copySummary": "Copy daily summary"
+  },
+  "tabs": {
+    "members": "Members",
+    "groups": "Groups",
+    "access": "Access",
+    "tiers": "Tiers",
+    "activity": "Activity"
+  },
+  "empty": {
+    "approvals": "Nothing waiting for approval.",
+    "trash": "Trash is empty.",
+    "noTiers": "No tiers yet.",
+    "noGroups": "No groups yet.",
+    "noActivity": "No activity yet.",
+    "noProjects": "No projects yet."
   }
 }

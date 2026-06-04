@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { todayISO } from "../lookup";
 import { ColorDot, StatusPill, Spinner } from "./common";
@@ -25,6 +26,7 @@ function shiftDay(iso: string, delta: number) {
 }
 
 export function History({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [day, setDay] = useState(todayISO());
   const [rows, setRows] = useState<Inst[] | null>(null);
 
@@ -47,7 +49,7 @@ export function History({ onClose }: { onClose: () => void }) {
   }, [rows]);
 
   return (
-    <Modal title="History — look back at any day" onClose={onClose} wide>
+    <Modal title={t("modals.history")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
         An accurate snapshot of who was assigned to what on a given day (recorded daily).
         History builds up from today forward.

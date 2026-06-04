@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { useUsers } from "../users";
@@ -29,6 +30,7 @@ interface GroupLite { id: number; name: string }
 type Fmt = "csv" | "xlsx" | "json";
 
 export function ExportDialog({ me }: { me: Me }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [fmt, setFmt] = useState<Fmt>("xlsx");
   const [selProjects, setSelProjects] = useState<Set<number>>(new Set());
@@ -94,7 +96,7 @@ export function ExportDialog({ me }: { me: Me }) {
     <>
       <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>Export ▾</button>
       {open && (
-        <Modal title="Export tasks" onClose={() => setOpen(false)} wide>
+        <Modal title={t("modals.exportTasks")} onClose={() => setOpen(false)} wide>
           <div className="row2">
             <div className="field">
               <label>Format</label>
