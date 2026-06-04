@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — new features (Import / Export / Language / Archive)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<!--
+  ANANDA TASKBOARD — DELTA mockups: only the screens/dialogs added or changed
+  since the last Claude Design upload (which already covered the Task popup, Tiers,
+  Access, Exclusions, and the Task ID). Same "Temple of Light" theme tokens as the
+  other design/*.html files. Each <section> is one screen/state. Covered here:
+    1. Toolbar — Import button added beside Export
+    2. Account menu — with the new per-user Language picker (i18n)
+    3. Export dialog — UPDATED: JSON format + "Copy for Google Sheets"
+    4. Import dialog — Step 1: source (paste or upload)
+    5. Import dialog — Step 2: dry-run preview + per-row decisions (overwrite/create/skip)
+    6. Import dialog — Step 3: result summary
+    7. Archive view — the List in archive mode (+ note: Unarchive lives in the Task popup)
+-->
+<style>
+  :root{
+    --bg:#fbf6ea;--surface:#fffdf8;--surface-sunk:#efe5cc;--border:#e3d6b8;
+    --text:#23262b;--text-muted:#4a5568;--primary:#1e3a6e;--primary-weak:#eaf0f8;
+    --accent:#2c5499;--gold:#c9a24b;--success:#3f7d54;--warn:#7a5c22;--danger:#b4452f;
+    --r-card:10px;--r-ctl:7px;--r-pill:999px;--sh-1:0 1px 2px rgba(30,58,110,.07);--sh-2:0 4px 14px rgba(30,58,110,.10);
+    --font-display:"Fraunces",Georgia,serif;--font-ui:"Instrument Sans",system-ui,sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:var(--font-ui);font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;padding:24px}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:-.012em;line-height:1.15}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.muted{color:var(--text-muted)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .pill{display:inline-flex;align-items:center;gap:5px;border-radius:var(--r-pill);padding:2px 9px;font-size:12px;font-weight:500}
+  .screen{max-width:760px;margin:0 auto 40px}
+  .screen>.label{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px}
+  .screen>.label .as{color:var(--text-muted);text-transform:none;letter-spacing:0}
+  .note{font-size:12px;color:var(--text-muted);margin:-2px 0 8px;max-width:680px}
+  button{font-family:var(--font-ui);font-weight:500;border:1px solid transparent;border-radius:var(--r-ctl);padding:6px 11px;font-size:13px;cursor:pointer}
+  .btn-secondary{background:var(--surface);border-color:var(--border);color:var(--text)}
+  .btn-primary{background:var(--primary);color:var(--surface)}
+  .btn-ghost{background:transparent;color:var(--text-muted)}
+  input,select,textarea{font-family:var(--font-ui);font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 10px;width:100%}
+  textarea{resize:vertical}
+  label{font-size:12px;color:var(--text-muted);font-weight:500;display:block;margin-bottom:4px}
+  .field{margin-bottom:14px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .section-title{font-family:var(--font-display);font-size:13px;color:var(--text-muted);margin-bottom:8px}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-2)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+  .modal-body{padding:18px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-1)}
+  table.tbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
+  thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);background:var(--surface-sunk);padding:7px 11px;font-weight:600;border-bottom:1px solid var(--border)}
+  tbody tr{border-bottom:1px solid var(--border)} td{padding:6px 11px;vertical-align:top}
+  .empty{padding:16px;text-align:center;color:var(--text-muted);background:var(--surface-sunk);border-radius:var(--r-ctl)}
+  .seg{display:inline-flex;background:var(--surface-sunk);border-radius:var(--r-pill);padding:3px}
+  .seg button{border:none;border-radius:var(--r-pill);padding:6px 16px;background:transparent;color:var(--text-muted)}
+  .seg .on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--sh-1)}
+  .od{color:var(--danger);font-weight:700}.od-soon{color:var(--warn);font-weight:700}
+
+  /* toolbar strip */
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:10px 12px}
+
+  /* account menu dropdown */
+  .usermenu-pop{width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-2);padding:6px}
+  .usermenu-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:9px 10px;border-radius:var(--r-ctl);font-size:13px}
+  .usermenu-item:hover{background:var(--surface-sunk)}
+  .usermenu-sep{height:1px;background:var(--border);margin:5px 4px}
+
+  /* import preview badges + file drop */
+  .badge{display:inline-flex;align-items:center;border-radius:var(--r-pill);padding:1px 9px;font-size:12px;font-weight:600}
+  .b-create{background:#3f7d541a;color:var(--success)}
+  .b-update{background:var(--primary-weak);color:var(--accent)}
+  .b-error{background:#b4452f1a;color:var(--danger)}
+  .drop{border:1.5px dashed var(--border);border-radius:var(--r-ctl);padding:14px;text-align:center;color:var(--text-muted);font-size:13px;background:var(--surface)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .filters select,.filters input{width:auto}
+</style>
+</head>
+<body>
+
+<!-- ============================================ 1) TOOLBAR (Import added) -->
+<section class="screen">
+  <div class="label">Toolbar — Import button added <span class="as">· App.tsx viewbar (admins)</span></div>
+  <div class="note">The view bar gains an <strong>Import ▾</strong> button beside Export (admin-only). Everything else here is unchanged.</div>
+  <div class="toolbar">
+    <span class="seg"><button class="on">List</button><button>Board</button><button>Weekly</button><button>Monthly</button></span>
+    <span style="flex:1"></span>
+    <button class="btn-secondary">🔗 Share view</button>
+    <button class="btn-secondary">Copy summary</button>
+    <button class="btn-secondary">Export ▾</button>
+    <button class="btn-secondary" style="border-color:var(--primary);color:var(--primary)">Import ▾</button>
+    <button class="btn-secondary">📖 Archive</button>
+  </div>
+</section>
+
+<!-- ====================================== 2) ACCOUNT MENU + LANGUAGE PICKER -->
+<section class="screen" style="max-width:420px">
+  <div class="label">Account menu — Language picker (NEW) <span class="as">· App.tsx UserMenu (all users)</span></div>
+  <div class="note">Opened from the name button (top-right). The 🌐 <strong>Language</strong> row is new and shown to <em>every</em> user; admin-only items (Settings/History/Restore points) stay above. Changing it re-renders the app instantly and saves to the user's profile.</div>
+  <div style="display:flex;justify-content:flex-end">
+    <div class="usermenu-pop">
+      <button class="usermenu-item"><span>⚙️</span> Settings</button>
+      <button class="usermenu-item"><span>🕰️</span> History</button>
+      <button class="usermenu-item"><span>↻</span> Restore points</button>
+      <button class="usermenu-item"><span>🔔</span> Turn on notifications</button>
+      <div class="usermenu-sep"></div>
+      <label class="usermenu-item" style="cursor:default">
+        <span>🌐</span> Language
+        <select style="width:auto;margin-left:auto">
+          <option>English</option><option>Italiano</option><option selected>Español (México)</option>
+          <option>हिन्दी</option><option>বাংলা</option><option>தமிழ்</option>
+          <option>తెలుగు</option><option>मराठी</option><option>ગુજરાતી</option>
+        </select>
+      </label>
+      <div class="usermenu-sep"></div>
+      <button class="usermenu-item"><span>🚪</span> Log out</button>
+    </div>
+  </div>
+  <div class="note" style="margin-top:10px">9 languages: English, Italian, Spanish (Mexico), Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati. Untranslated screens fall back to English (never blank).</div>
+</section>
+
+<!-- ============================================ 3) EXPORT DIALOG (updated) -->
+<section class="screen">
+  <div class="label">Dialog — Export tasks (UPDATED) <span class="as">· ExportDialog.tsx — adds JSON + Copy for Sheets</span></div>
+  <div class="note">Two changes vs the previous mockup: <strong>JSON</strong> joins the Format list, and a <strong>📋 Copy for Google Sheets</strong> button (copies TSV to the clipboard, paste-ready). An <strong>ID</strong> column is now always included so an exported file can be re-imported and matched.</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Export tasks</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field"><label>Format</label>
+          <select><option>Excel (.xlsx)</option><option>CSV (.csv)</option><option>JSON (.json)</option></select>
+        </div>
+        <div class="field"><label>Include</label><label class="muted" style="display:flex;gap:8px;align-items:center;margin:7px 0 0"><input type="checkbox" style="width:auto" /> Archived tasks</label></div>
+      </div>
+      <div class="field"><label>Columns <span class="muted" style="font-weight:400">(ID is always included for round-trip)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 14px">
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> ID</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Title</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Status</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Assignees</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Details</label>
+          <span class="muted" style="font-size:12px">… + Project, Sub-project, Priority, Deadline, etc.</span>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-secondary" style="margin-right:auto" title="Copy as TSV — paste straight into a Google Sheet">📋 Copy for Google Sheets</button>
+        <button class="btn-secondary">Cancel</button>
+        <button class="btn-primary">Download</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ 4) IMPORT — STEP 1 (input) -->
+<section class="screen">
+  <div class="label">Dialog — Import tasks · Step 1: source (NEW) <span class="as">· ImportDialog.tsx (admin-only)</span></div>
+  <div class="note">Paste rows copied from a spreadsheet (incl. the header row), or upload a CSV / TSV / JSON / Excel file. Nothing is written yet — the next step is a dry-run preview.</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Import tasks</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin-top:0;font-size:13px">Rows are matched to existing tasks by the <strong>ID</strong> column; rows without a known ID create new tasks. Missing projects/sub-projects are created automatically.</p>
+      <div class="row2">
+        <div class="field"><label>Paste from a spreadsheet</label>
+          <textarea rows="6" class="mono" style="font-size:12px" placeholder="ID&#9;Project&#9;Sub-project&#9;Title
+&#9;Karuna Devi&#9;Marketing&#9;New task"></textarea>
+        </div>
+        <div class="field"><label>…or upload a file</label>
+          <div class="drop">⬆️ Choose a file<br><span style="font-size:11px">.csv · .tsv · .json · .xlsx</span></div>
+          <label style="margin-top:10px">Format</label>
+          <select><option>CSV (comma)</option><option selected>TSV / Google Sheets paste (tab)</option><option>JSON</option><option>Excel (.xlsx) — upload only</option></select>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn-secondary">Cancel</button><button class="btn-primary">Preview import</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================== 5) IMPORT — STEP 2 (dry-run preview) -->
+<section class="screen">
+  <div class="label">Dialog — Import tasks · Step 2: preview &amp; decisions (NEW) <span class="as">· the dry-run checklist</span></div>
+  <div class="note">A dry run shows what WILL happen per row before anything is written. Rows matched by ID default to <strong>Overwrite</strong> (with a warning) and can be switched to <strong>Create new</strong> or <strong>Skip</strong>. Error rows are skipped automatically.</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Import tasks</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <strong>4 rows</strong>
+        <span class="pill b-create">2 create</span>
+        <span class="pill b-update">1 update</span>
+        <span class="pill b-error">1 error</span>
+      </div>
+      <div class="muted" style="font-size:12px;margin-bottom:8px">Will create: 📁 Sangha · ↳ Sangha / Outreach</div>
+      <div class="muted" style="font-size:12px;margin-bottom:8px">⚠ Rows with a matching ID will <strong>overwrite</strong> the existing task. Switch any to “Create new” or “Skip” below.</div>
+      <div style="max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:var(--r-ctl)">
+        <table class="tbl" style="border:none">
+          <thead><tr><th>#</th><th>Action</th><th>Task</th><th>Where</th><th>Decision</th></tr></thead>
+          <tbody>
+            <tr><td class="mono" style="font-size:12px">#42</td><td><span class="badge b-update">Update</span></td><td>Design spring flyer</td><td class="muted" style="font-size:12px">Karuna Devi / Marketing</td><td><select style="width:auto;font-size:12px"><option>Overwrite</option><option>Create new</option><option>Skip</option></select></td></tr>
+            <tr><td class="mono" style="font-size:12px">2</td><td><span class="badge b-create">Create</span></td><td>Order extra chairs</td><td class="muted" style="font-size:12px">Sunday Service / Seva</td><td><select style="width:auto;font-size:12px"><option>Create</option><option>Skip</option></select></td></tr>
+            <tr><td class="mono" style="font-size:12px">3</td><td><span class="badge b-create">Create</span></td><td>Newsletter draft <span class="muted" style="font-size:11px">· no user matched "ghost@x" — left unassigned</span></td><td class="muted" style="font-size:12px">Sangha / Outreach <span style="color:var(--success)">＋new</span></td><td><select style="width:auto;font-size:12px"><option>Create</option><option>Skip</option></select></td></tr>
+            <tr><td class="mono" style="font-size:12px">4</td><td><span class="badge b-error">Error</span></td><td>—<div style="color:var(--danger);font-size:11px">Title is required</div></td><td class="muted" style="font-size:12px">Karuna Devi / Marketing</td><td class="muted" style="font-size:12px">skipped</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-foot"><button class="btn-secondary">Cancel</button><button class="btn-primary">Confirm import</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================== 6) IMPORT — STEP 3 (result) -->
+<section class="screen" style="max-width:520px">
+  <div class="label">Dialog — Import tasks · Step 3: result (NEW)</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Import tasks</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="empty" style="background:#3f7d541a;color:var(--text)">✅ Imported — <strong>2</strong> created, <strong>1</strong> updated, 1 skipped.</div>
+      <div class="modal-foot"><button class="btn-secondary">Import more</button><button class="btn-primary">Done</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ 7) ARCHIVE VIEW -->
+<section class="screen">
+  <div class="label">View — Archive (NEW) <span class="as">· ListView in archive mode</span></div>
+  <div class="note">Completed tasks auto-archive ~7 days after they're done. The <strong>📖 Archive</strong> toolbar button flips the List into archive mode (a “Showing archive” pill appears, the filters stay usable). To bring one back, open it → the Task popup shows an <strong>🗄 Archived</strong> banner with an <strong>Unarchive</strong> button (already in the Task-popup mockup).</div>
+  <div class="modal" style="padding:14px">
+    <div class="filters">
+      <span class="pill" style="background:var(--surface-sunk)">📖 Showing archive</span>
+      <input placeholder="Search…" style="max-width:160px" />
+      <select style="width:auto"><option>Any assignee</option></select>
+      <select style="width:auto"><option>Any status</option></select>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Priority</th><th>Task</th><th>Project</th><th>Assignees</th><th>Status</th><th>Deadline</th></tr></thead>
+      <tbody>
+        <tr><td><span class="muted">▬</span></td><td>Send save-the-date</td><td class="muted" style="font-size:12px"><span class="dot" style="background:#c8762f"></span> Karuna / Marketing</td><td class="muted" style="font-size:12px">Ada</td><td><span class="pill" style="background:#4f7a3c1a;color:#4f7a3c"><span class="dot" style="background:#4f7a3c"></span> Done</span></td><td class="mono" style="font-size:12px">2026-05-20</td></tr>
+        <tr><td><span class="muted">▬</span></td><td>Stock count — winter</td><td class="muted" style="font-size:12px"><span class="dot" style="background:#b4452f"></span> Karuna / Warehouse</td><td class="muted" style="font-size:12px">Omar</td><td><span class="pill" style="background:#4f7a3c1a;color:#4f7a3c"><span class="dot" style="background:#4f7a3c"></span> Done</span></td><td class="mono" style="font-size:12px">2026-05-12</td></tr>
+      </tbody>
+    </table>
+    <div class="muted" style="font-size:12px;margin-top:8px">Tip: archived tasks are also includable in Export via the “Archived tasks” checkbox.</div>
+  </div>
+</section>
+
+</body>
+</html>
