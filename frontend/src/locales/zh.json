@@ -243,5 +243,17 @@
     "saveChanges": "保存更改",
     "cancelEdit": "取消编辑",
     "close": "关闭"
+  },
+  "mp": {
+    "newProjectPh": "新项目名称…",
+    "addProject": "添加项目",
+    "doneAll": "✓ 全部完成",
+    "doneTitle": "将所有任务标记为完成并归档",
+    "emojiTitle": "用于聊天摘要的表情",
+    "newSubPh": "新子项目…",
+    "addSub": "+ 添加子项目",
+    "trusted": "受信任",
+    "trustedTitle": "成员无需管理员批准即可在此发布任务",
+    "markDoneConfirm": "将“{{name}}”中的所有任务标记为完成并归档？无法自动撤销。"
   }
 }

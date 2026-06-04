@@ -243,5 +243,17 @@
     "saveChanges": "Änderungen speichern",
     "cancelEdit": "Bearbeitung abbrechen",
     "close": "Schließen"
+  },
+  "mp": {
+    "newProjectPh": "Neuer Projektname…",
+    "addProject": "Projekt hinzufügen",
+    "doneAll": "✓ Alle fertig",
+    "doneTitle": "Alle Aufgaben als Erledigt markieren + archivieren",
+    "emojiTitle": "Emoji für Chat-Zusammenfassungen",
+    "newSubPh": "Neues Unterprojekt…",
+    "addSub": "+ Unterprojekt hinzufügen",
+    "trusted": "vertraut",
+    "trustedTitle": "Mitglieder können hier ohne Admin-Freigabe Aufgaben erstellen",
+    "markDoneConfirm": "ALLE Aufgaben in \"{{name}}\" als Erledigt markieren und archivieren? Nicht automatisch rückgängig zu machen."
   }
 }

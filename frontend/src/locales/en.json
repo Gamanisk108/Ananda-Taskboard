@@ -243,5 +243,17 @@
     "saveChanges": "Save changes",
     "cancelEdit": "Cancel edit",
     "close": "Close"
+  },
+  "mp": {
+    "newProjectPh": "New project name…",
+    "addProject": "Add project",
+    "doneAll": "✓ Done all",
+    "doneTitle": "Mark all tasks Done + archive",
+    "emojiTitle": "Emoji for chat summaries",
+    "newSubPh": "New sub-project…",
+    "addSub": "+ Add sub-project",
+    "trusted": "trusted",
+    "trustedTitle": "Members can post tasks here without admin approval",
+    "markDoneConfirm": "Mark ALL tasks in \"{{name}}\" as Done and archive them? This can't be auto-undone."
   }
 }

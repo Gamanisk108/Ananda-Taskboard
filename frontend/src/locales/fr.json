@@ -243,5 +243,17 @@
     "saveChanges": "Enregistrer",
     "cancelEdit": "Annuler la modification",
     "close": "Fermer"
+  },
+  "mp": {
+    "newProjectPh": "Nom du nouveau projet…",
+    "addProject": "Ajouter un projet",
+    "doneAll": "✓ Tout terminé",
+    "doneTitle": "Marquer toutes les tâches Terminées + archiver",
+    "emojiTitle": "Emoji pour les résumés de chat",
+    "newSubPh": "Nouveau sous-projet…",
+    "addSub": "+ Ajouter un sous-projet",
+    "trusted": "de confiance",
+    "trustedTitle": "Les membres peuvent publier des tâches ici sans validation admin",
+    "markDoneConfirm": "Marquer TOUTES les tâches de \"{{name}}\" comme Terminées et les archiver ? Non annulable automatiquement."
   }
 }

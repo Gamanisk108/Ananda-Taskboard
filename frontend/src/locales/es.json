@@ -243,5 +243,17 @@
     "saveChanges": "Guardar cambios",
     "cancelEdit": "Cancelar edición",
     "close": "Cerrar"
+  },
+  "mp": {
+    "newProjectPh": "Nombre del nuevo proyecto…",
+    "addProject": "Añadir proyecto",
+    "doneAll": "✓ Todo hecho",
+    "doneTitle": "Marcar todas las tareas Hechas + archivar",
+    "emojiTitle": "Emoji para resúmenes de chat",
+    "newSubPh": "Nuevo subproyecto…",
+    "addSub": "+ Añadir subproyecto",
+    "trusted": "de confianza",
+    "trustedTitle": "Los miembros pueden publicar tareas aquí sin aprobación del admin",
+    "markDoneConfirm": "¿Marcar TODAS las tareas en \"{{name}}\" como Hechas y archivarlas? No se puede deshacer automáticamente."
   }
 }

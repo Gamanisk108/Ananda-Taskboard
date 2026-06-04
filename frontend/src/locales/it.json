@@ -243,5 +243,17 @@
     "saveChanges": "Salva modifiche",
     "cancelEdit": "Annulla modifica",
     "close": "Chiudi"
+  },
+  "mp": {
+    "newProjectPh": "Nome nuovo progetto…",
+    "addProject": "Aggiungi progetto",
+    "doneAll": "✓ Tutto fatto",
+    "doneTitle": "Segna tutte le attività Fatte + archivia",
+    "emojiTitle": "Emoji per i riepiloghi chat",
+    "newSubPh": "Nuovo sotto-progetto…",
+    "addSub": "+ Aggiungi sotto-progetto",
+    "trusted": "fidato",
+    "trustedTitle": "I membri possono pubblicare attività qui senza approvazione admin",
+    "markDoneConfirm": "Segnare TUTTE le attività in \"{{name}}\" come Fatte e archiviarle? Non è annullabile automaticamente."
   }
 }

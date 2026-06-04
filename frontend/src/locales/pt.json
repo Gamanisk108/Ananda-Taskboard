@@ -243,5 +243,17 @@
     "saveChanges": "Salvar alterações",
     "cancelEdit": "Cancelar edição",
     "close": "Fechar"
+  },
+  "mp": {
+    "newProjectPh": "Nome do novo projeto…",
+    "addProject": "Adicionar projeto",
+    "doneAll": "✓ Tudo concluído",
+    "doneTitle": "Marcar todas as tarefas Concluídas + arquivar",
+    "emojiTitle": "Emoji para resumos de chat",
+    "newSubPh": "Novo subprojeto…",
+    "addSub": "+ Adicionar subprojeto",
+    "trusted": "confiável",
+    "trustedTitle": "Membros podem publicar tarefas aqui sem aprovação do admin",
+    "markDoneConfirm": "Marcar TODAS as tarefas em \"{{name}}\" como Concluídas e arquivá-las? Não pode ser desfeito automaticamente."
   }
 }
