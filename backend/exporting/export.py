@@ -39,7 +39,9 @@ def _rr_text(task):
 
 
 # key -> (header, value-getter). Order here is the default column order.
+# `id` is first so an exported file round-trips: re-importing matches tasks by it.
 COLUMNS = OrderedDict([
+    ("id", ("ID", lambda t: t.id)),
     ("project", ("Project", lambda t: t.subproject.project.name)),
     ("subproject", ("Sub-project", lambda t: t.subproject.name)),
     ("title", ("Title", lambda t: t.title)),
@@ -130,16 +132,30 @@ class ExportView(APIView):
         headers = [COLUMNS[k][0] for k in cols]
         getters = [COLUMNS[k][1] for k in cols]
         tasks = list(_queryset(request.user, request.query_params))
+        if fmt == "json":
+            # machine-friendly: keyed by column key, raw (un-sanitized) values.
+            data = [{k: COLUMNS[k][1](t) for k in cols} for t in tasks]
+            return self._json(data)
         rows = [[sanitize_csv(get(t)) for get in getters] for t in tasks]
-        return self._xlsx(headers, rows) if fmt == "xlsx" else self._csv(headers, rows)
+        if fmt == "xlsx":
+            return self._xlsx(headers, rows)
+        if fmt == "tsv":
+            return self._csv(headers, rows, delimiter="\t", ext="tsv", mime="text/tab-separated-values")
+        return self._csv(headers, rows)
 
-    def _csv(self, headers, rows):
+    def _csv(self, headers, rows, delimiter=",", ext="csv", mime="text/csv"):
         buf = io.StringIO()
-        writer = csv.writer(buf)
+        writer = csv.writer(buf, delimiter=delimiter)
         writer.writerow(headers)
         writer.writerows(rows)
-        resp = HttpResponse(buf.getvalue(), content_type="text/csv")
-        resp["Content-Disposition"] = 'attachment; filename="tasks.csv"'
+        resp = HttpResponse(buf.getvalue(), content_type=mime)
+        resp["Content-Disposition"] = f'attachment; filename="tasks.{ext}"'
+        return resp
+
+    def _json(self, data):
+        import json
+        resp = HttpResponse(json.dumps(data, indent=2, default=str), content_type="application/json")
+        resp["Content-Disposition"] = 'attachment; filename="tasks.json"'
         return resp
 
     def _xlsx(self, headers, rows):

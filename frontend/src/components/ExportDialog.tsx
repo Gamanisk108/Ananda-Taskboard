@@ -7,6 +7,7 @@ import { PRIORITY_META, type Me } from "../types";
 
 // keys MUST match the backend COLUMNS registry in exporting/export.py
 const COLUMNS: { key: string; label: string }[] = [
+  { key: "id", label: "ID" },  // include for round-trip: re-import matches on it
   { key: "project", label: "Project" },
   { key: "subproject", label: "Sub-project" },
   { key: "title", label: "Title" },
@@ -25,9 +26,11 @@ const COLUMNS: { key: string; label: string }[] = [
 
 interface GroupLite { id: number; name: string }
 
+type Fmt = "csv" | "xlsx" | "json";
+
 export function ExportDialog({ me }: { me: Me }) {
   const [open, setOpen] = useState(false);
-  const [fmt, setFmt] = useState<"csv" | "xlsx">("xlsx");
+  const [fmt, setFmt] = useState<Fmt>("xlsx");
   const [selProjects, setSelProjects] = useState<Set<number>>(new Set());
   const [selSubs, setSelSubs] = useState<Set<number>>(new Set());
   const [selGroups, setSelGroups] = useState<Set<number>>(new Set());
@@ -56,8 +59,10 @@ export function ExportDialog({ me }: { me: Me }) {
     setter(next);
   }
 
-  function run() {
-    const p = new URLSearchParams({ fmt });
+  const [copied, setCopied] = useState(false);
+
+  function buildParams(overrideFmt?: string) {
+    const p = new URLSearchParams({ fmt: overrideFmt ?? fmt });
     if (selProjects.size) p.set("projects", [...selProjects].join(","));
     // only send sub-projects not already covered by a whole-project selection
     const subs = [...selSubs].filter((sid) =>
@@ -69,8 +74,20 @@ export function ExportDialog({ me }: { me: Me }) {
     if (priority) p.set("priority", priority);
     if (archived) p.set("archived", "1");
     if (selected.length && selected.length !== allCols.length) p.set("columns", selected.join(","));
-    api.download(`/api/export?${p}`, `tasks.${fmt}`);
+    return p;
+  }
+
+  function run() {
+    api.download(`/api/export?${buildParams()}`, `tasks.${fmt}`);
     setOpen(false);
+  }
+
+  // Fetch a TSV export and copy it to the clipboard, ready to paste into a Google Sheet.
+  async function copyForSheets() {
+    const tsv = await api.text(`/api/export?${buildParams("tsv")}`);
+    await navigator.clipboard.writeText(tsv);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -81,9 +98,10 @@ export function ExportDialog({ me }: { me: Me }) {
           <div className="row2">
             <div className="field">
               <label>Format</label>
-              <select data-testid="export-format" value={fmt} onChange={(e) => setFmt(e.target.value as "csv" | "xlsx")}>
+              <select data-testid="export-format" value={fmt} onChange={(e) => setFmt(e.target.value as Fmt)}>
                 <option value="xlsx">Excel (.xlsx)</option>
                 <option value="csv">CSV (.csv)</option>
+                <option value="json">JSON (.json)</option>
               </select>
             </div>
             <div className="field">
@@ -178,6 +196,10 @@ export function ExportDialog({ me }: { me: Me }) {
           </div>
 
           <div className="modal-foot">
+            <button className="btn-secondary" style={{ marginRight: "auto" }} disabled={selected.length === 0}
+              onClick={copyForSheets} data-testid="export-copy-sheets" title="Copy as TSV — paste straight into a Google Sheet">
+              {copied ? "Copied!" : "📋 Copy for Google Sheets"}
+            </button>
             <button className="btn-secondary" onClick={() => setOpen(false)}>Cancel</button>
             <button className="btn-primary" data-testid="export-download" disabled={selected.length === 0} onClick={run}>Download</button>
           </div>

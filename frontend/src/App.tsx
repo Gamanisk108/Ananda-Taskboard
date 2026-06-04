@@ -15,6 +15,7 @@ import { Settings } from "./components/Settings";
 import { Trash } from "./components/Trash";
 import { CopySummary } from "./components/CopySummary";
 import { ExportDialog } from "./components/ExportDialog";
+import { ImportDialog } from "./components/ImportDialog";
 import { RestorePoints } from "./components/RestorePoints";
 import { History } from "./components/History";
 import type { ProjectNode, Task } from "./types";
@@ -175,6 +176,7 @@ export default function App() {
           <ShareViewButton />
           <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
           <ExportDialog me={me} />
+          {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
           <button
             className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
             onClick={() => { setView("list"); setShowArchived((a) => !a); }}
