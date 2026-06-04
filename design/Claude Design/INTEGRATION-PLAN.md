@@ -68,3 +68,19 @@
 
 ## Decisions log (append as the port proceeds)
 - (start) Branch created; design decoded; status-key rename rejected (styling-only); DISPATCH = router.
+- **Dark mode SHIPPED** (`c…` commit): design dark palette mapped onto existing token names
+  (additive `html[data-theme="dark"]`, zero component edits) + System/Light/Dark picker in the
+  account menu (System follows OS), persisted in localStorage `at-theme`. i18n across 13 catalogs.
+  Verified: bg ivory→navy, persists reload, switches back; 0 functional errors.
+- **Avatar full-name tooltips ALREADY PRESENT in live app** — KanbanView (board cards) and
+  WeeklyView (spanning-bar avatar) already use `title=` full names. No separate "today-column"
+  avatar exists in the React app (that was a design-only element); Monthly has no avatars. So
+  design tweak #2/#3 = already satisfied. (Optional later: swap native `title` for the design's
+  styled `data-tip` tooltip — cosmetic only.)
+
+## Remaining chunks (next session, larger / need budget)
+- **emoji-mart native** picker (replace ManageProjects emoji input; npm i @emoji-mart/react @emoji-mart/data).
+- **Chrome polish** (topbar/brand/tabs/viewbar/filters) + per-screen spacing to match the design.
+- **Brand logo** (extract inlined PNG from the standalone → frontend/public) — pending Q5.
+- Dark-mode contrast sweep across every dialog (pills, overdue/soon tints, focus rings) once chrome lands.
+- Answer the 6 open questions; they gate the chrome/markup decisions.
