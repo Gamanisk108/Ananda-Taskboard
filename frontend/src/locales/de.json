@@ -103,6 +103,8 @@
     "colTime": "Zeit",
     "colRecurs": "Wiederholung",
     "missedDeadline": "Frist verpasst",
-    "dueSoon": "Heute oder morgen fällig"
+    "dueSoon": "Heute oder morgen fällig",
+    "people": "Personen",
+    "groups": "Gruppen"
   }
 }

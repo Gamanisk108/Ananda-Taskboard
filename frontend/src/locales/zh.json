@@ -103,6 +103,8 @@
     "colTime": "时间",
     "colRecurs": "重复",
     "missedDeadline": "已错过截止日期",
-    "dueSoon": "今天或明天到期"
+    "dueSoon": "今天或明天到期",
+    "people": "人员",
+    "groups": "群组"
   }
 }

@@ -69,6 +69,7 @@ export interface Me {
   is_admin: boolean;
   tier: number | null;
   language: string;
+  groups: { id: number; name: string }[];
   tree: Tree;
 }
 

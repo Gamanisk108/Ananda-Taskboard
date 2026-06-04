@@ -103,6 +103,8 @@
     "colTime": "Hora",
     "colRecurs": "Se repite",
     "missedDeadline": "Fecha límite vencida",
-    "dueSoon": "Vence hoy o mañana"
+    "dueSoon": "Vence hoy o mañana",
+    "people": "Personas",
+    "groups": "Grupos"
   }
 }

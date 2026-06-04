@@ -245,3 +245,31 @@ def test_recurrence_rejects_both_end_date_and_count(admin, sp):
 def test_links_must_be_list_of_strings(admin, sp):
     res = login(admin).post("/api/tasks", {"subproject": sp.id, "title": "X", "links": "nope"}, format="json")
     assert res.status_code == 400
+
+
+# --- assignee_group filter (group → members) --------------------------------
+
+def test_filter_by_assignee_group_includes_members_and_direct(admin, member, other, sp):
+    from accounts.models import Group
+    g = Group.objects.create(name="Seva")
+    g.members.add(member)
+    t_member = Task.objects.create(subproject=sp, title="member task")
+    t_member.assignees.add(member)              # via group membership
+    t_direct = Task.objects.create(subproject=sp, title="group task")
+    t_direct.assignee_groups.add(g)             # assigned to the group directly
+    Task.objects.create(subproject=sp, title="unrelated")
+    t_other = Task.objects.create(subproject=sp, title="other task")
+    t_other.assignees.add(other)                # not in the group
+
+    res = login(admin).get(f"/api/tasks?assignee_group={g.id}")
+    titles = {t["title"] for t in res.data}
+    assert titles == {"member task", "group task"}
+
+
+def test_me_exposes_group_names(admin):
+    from accounts.models import Group
+    Group.objects.create(name="Kitchen")
+    data = login(admin).get("/api/me").data
+    assert "groups" in data and any(g["name"] == "Kitchen" for g in data["groups"])
+    # names only — no membership leaked
+    assert all(set(g.keys()) == {"id", "name"} for g in data["groups"])

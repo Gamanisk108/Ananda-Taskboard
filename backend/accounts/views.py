@@ -33,6 +33,9 @@ class MeView(APIView):
             data["tree"] = visible_tree(request.user)
         except (ImportError, ModuleNotFoundError):
             data["tree"] = {"projects": [], "show_global_overview": False}
+        # Group NAMES (not membership) so any user can filter by group; the
+        # member-expansion happens server-side (task list ?assignee_group=).
+        data["groups"] = list(Group.objects.values("id", "name"))
         return Response(data)
 
     def patch(self, request):

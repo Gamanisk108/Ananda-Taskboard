@@ -103,6 +103,8 @@
     "colTime": "Time",
     "colRecurs": "Recurs",
     "missedDeadline": "Missed Deadline",
-    "dueSoon": "Due today or tomorrow"
+    "dueSoon": "Due today or tomorrow",
+    "people": "People",
+    "groups": "Groups"
   }
 }

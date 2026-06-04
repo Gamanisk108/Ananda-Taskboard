@@ -103,6 +103,8 @@
     "colTime": "वेळ",
     "colRecurs": "पुनरावृत्ती",
     "missedDeadline": "मुदत चुकली",
-    "dueSoon": "आज किंवा उद्या देय"
+    "dueSoon": "आज किंवा उद्या देय",
+    "people": "व्यक्ती",
+    "groups": "गट"
   }
 }

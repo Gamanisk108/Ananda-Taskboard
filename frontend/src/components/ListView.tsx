@@ -25,7 +25,8 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
   // combinable filters
   const [fProject, setFProject] = useState(0);
   const [fSub, setFSub] = useState(0);
-  const [fAssignee, setFAssignee] = useState(0);
+  const [fAssignee, setFAssignee] = useState(0);     // person id; -1 = unassigned; 0 = any
+  const [fAssigneeGroup, setFAssigneeGroup] = useState(0); // group id; 0 = none (server-side filter)
   const [fStatus, setFStatus] = useState<string>("");
   const [fRecur, setFRecur] = useState<"" | "yes" | "no">("");
   const [fDeadline, setFDeadline] = useState<"" | "pending" | "overdue">("");
@@ -44,9 +45,11 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
     if (subprojectId) params.set("subproject", String(subprojectId));
     else if (projectId) params.set("project", String(projectId));
     if (showArchived) params.set("archived", "1");
+    // Group filter is server-side (needs membership expansion the client can't see).
+    if (fAssigneeGroup) params.set("assignee_group", String(fAssigneeGroup));
     setTasks(null);
     api.get(`/api/tasks?${params}`).then(setTasks).catch(() => setTasks([]));
-  }, [projectId, subprojectId, refreshKey, showArchived]);
+  }, [projectId, subprojectId, refreshKey, showArchived, fAssigneeGroup]);
 
   const assigneeNames = (t: Task) => t.assignees.map((id) => userName(users, id));
 
@@ -75,9 +78,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
     else { setSortKey(key); setSortDir(1); }
   }
   function clearFilters() {
-    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFStatus(""); setFRecur(""); setFDeadline(""); setFPriority(0);
+    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFAssigneeGroup(0); setFStatus(""); setFRecur(""); setFDeadline(""); setFPriority(0);
   }
-  const activeFilters = [q, fProject, fSub, fAssignee, fStatus, fRecur, fDeadline, fPriority].filter(Boolean).length;
+  const activeFilters = [q, fProject, fSub, fAssignee, fAssigneeGroup, fStatus, fRecur, fDeadline, fPriority].filter(Boolean).length;
 
   if (!tasks) return <Spinner />;
 
@@ -124,10 +127,23 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
           <option value={0}>{tr("list.allSubprojects")}</option>
           {subOpts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <select data-testid="filter-assignee" value={fAssignee} onChange={(e) => setFAssignee(Number(e.target.value))}>
-          <option value={0}>{tr("list.anyAssignee")}</option>
-          <option value={-1}>{tr("list.unassigned")}</option>
-          {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
+        <select data-testid="filter-assignee"
+          value={fAssigneeGroup ? `g:${fAssigneeGroup}` : fAssignee === -1 ? "unassigned" : fAssignee ? `u:${fAssignee}` : ""}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v.startsWith("g:")) { setFAssigneeGroup(Number(v.slice(2))); setFAssignee(0); }
+            else { setFAssigneeGroup(0); setFAssignee(v === "unassigned" ? -1 : v.startsWith("u:") ? Number(v.slice(2)) : 0); }
+          }}>
+          <option value="">{tr("list.anyAssignee")}</option>
+          <option value="unassigned">{tr("list.unassigned")}</option>
+          <optgroup label={tr("list.people")}>
+            {users.map((u) => <option key={u.id} value={`u:${u.id}`}>{u.name || u.email}</option>)}
+          </optgroup>
+          {me.groups.length > 0 && (
+            <optgroup label={tr("list.groups")}>
+              {me.groups.map((g) => <option key={g.id} value={`g:${g.id}`}>👥 {g.name}</option>)}
+            </optgroup>
+          )}
         </select>
         <select data-testid="filter-priority" value={fPriority} onChange={(e) => setFPriority(Number(e.target.value))}>
           <option value={0}>{tr("list.anyPriority")}</option>

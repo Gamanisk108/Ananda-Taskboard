@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework import status as http
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -110,6 +110,13 @@ class TaskViewSet(ModelViewSet):
             qs = qs.filter(status=params["status"])
         if params.get("member"):
             qs = qs.filter(assignees__id=params["member"])
+        # Filter by group: tasks assigned to the group directly OR to any of its
+        # members (member-expansion done here so membership stays server-side).
+        if params.get("assignee_group"):
+            from accounts.models import Group
+            gid = params["assignee_group"]
+            member_ids = list(Group.objects.filter(id=gid).values_list("members__id", flat=True))
+            qs = qs.filter(Q(assignee_groups__id=gid) | Q(assignees__id__in=member_ids))
         return qs.distinct()
 
     def _require_visible_subproject(self, subproject_id):
