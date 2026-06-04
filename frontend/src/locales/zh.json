@@ -37,7 +37,8 @@
     "notificationsOn": "开启通知",
     "logout": "退出登录",
     "language": "语言",
-    "theme": "主题"
+    "theme": "主题",
+    "bulkMigrate": "批量迁移"
   },
   "login": {
     "subtitle": "登录到你的团队看板。",

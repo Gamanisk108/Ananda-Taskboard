@@ -37,7 +37,8 @@
     "notificationsOn": "Benachrichtigungen aktivieren",
     "logout": "Abmelden",
     "language": "Sprache",
-    "theme": "Design"
+    "theme": "Design",
+    "bulkMigrate": "Massenmigration"
   },
   "login": {
     "subtitle": "Melden Sie sich bei Ihrem Team-Board an.",

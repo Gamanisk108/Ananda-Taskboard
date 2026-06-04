@@ -37,7 +37,8 @@
     "notificationsOn": "Turn on notifications",
     "logout": "Log out",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "bulkMigrate": "Bulk migrate"
   },
   "login": {
     "subtitle": "Sign in to your team board.",

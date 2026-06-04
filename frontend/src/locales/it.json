@@ -37,7 +37,8 @@
     "notificationsOn": "Attiva le notifiche",
     "logout": "Esci",
     "language": "Lingua",
-    "theme": "Tema"
+    "theme": "Tema",
+    "bulkMigrate": "Migrazione di massa"
   },
   "login": {
     "subtitle": "Accedi alla bacheca del tuo team.",

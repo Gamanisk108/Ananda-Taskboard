@@ -37,7 +37,8 @@
     "notificationsOn": "Activer les notifications",
     "logout": "Se déconnecter",
     "language": "Langue",
-    "theme": "Thème"
+    "theme": "Thème",
+    "bulkMigrate": "Migration groupée"
   },
   "login": {
     "subtitle": "Connectez-vous au tableau de votre équipe.",

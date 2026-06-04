@@ -37,7 +37,8 @@
     "notificationsOn": "सूचनाएँ चालू करें",
     "logout": "लॉग आउट",
     "language": "भाषा",
-    "theme": "थीम"
+    "theme": "थीम",
+    "bulkMigrate": "बल्क माइग्रेट"
   },
   "login": {
     "subtitle": "अपने टीम बोर्ड में साइन इन करें।",

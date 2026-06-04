@@ -76,6 +76,13 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
     setDeleting({ kind: "subproject", id: s.id, name: s.name });
   }
 
+  async function markDone(kind: "project" | "subproject", id: number, name: string) {
+    if (!confirm(`Mark ALL tasks in "${name}" as Done and archive them? This can't be auto-undone.`)) return;
+    const r = await api.post(`/api/${kind}/${id}/mark-done`, {}) as { updated: number };
+    alert(`${r.updated} task(s) marked Done + archived.`);
+    load(); onChanged();
+  }
+
   if (!projects) return <Modal title={t("modals.projects")} onClose={onClose}><Spinner /></Modal>;
 
   if (deleting) {
@@ -100,7 +107,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
 
       {projects.map((p) => (
         <ProjectEditor key={p.id} project={p} onSaveProject={saveProject} onAddSub={addSub}
-          onSaveSub={saveSub} onDeleteProject={deleteProject} onDeleteSub={deleteSub} />
+          onSaveSub={saveSub} onDeleteProject={deleteProject} onDeleteSub={deleteSub} onMarkDone={markDone} />
       ))}
       {projects.length === 0 && <div className="empty">{t("empty.noProjects")}</div>}
     </Modal>
@@ -108,7 +115,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
 }
 
 function ProjectEditor({
-  project, onSaveProject, onAddSub, onSaveSub, onDeleteProject, onDeleteSub,
+  project, onSaveProject, onAddSub, onSaveSub, onDeleteProject, onDeleteSub, onMarkDone,
 }: {
   project: Proj;
   onSaveProject: (p: Proj) => void;
@@ -116,6 +123,7 @@ function ProjectEditor({
   onSaveSub: (s: Sub) => void;
   onDeleteProject: (p: Proj) => void;
   onDeleteSub: (s: Sub) => void;
+  onMarkDone: (kind: "project" | "subproject", id: number, name: string) => void;
 }) {
   const [p, setP] = useState(project);
   const [newSub, setNewSub] = useState("");
@@ -128,12 +136,13 @@ function ProjectEditor({
         <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title="Emoji for chat summaries" />
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>Save</button>
+        <button className="btn-ghost" title="Mark all tasks Done + archive" onClick={() => onMarkDone("project", project.id, p.name)}>✓ Done all</button>
         <button className="btn-danger" onClick={() => onDeleteProject(project)}>Delete</button>
       </div>
 
       <div style={{ paddingLeft: 8 }}>
         {p.subprojects.map((s) => (
-          <SubEditor key={s.id} sub={s} onSave={onSaveSub} onDelete={onDeleteSub} />
+          <SubEditor key={s.id} sub={s} onSave={onSaveSub} onDelete={onDeleteSub} onMarkDone={onMarkDone} />
         ))}
         <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
           <input placeholder="New sub-project…" value={newSub} onChange={(e) => setNewSub(e.target.value)} />
@@ -144,7 +153,7 @@ function ProjectEditor({
   );
 }
 
-function SubEditor({ sub, onSave, onDelete }: { sub: Sub; onSave: (s: Sub) => void; onDelete: (s: Sub) => void }) {
+function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s: Sub) => void; onDelete: (s: Sub) => void; onMarkDone: (kind: "project" | "subproject", id: number, name: string) => void }) {
   const [s, setS] = useState(sub);
   useEffect(() => setS(sub), [sub]);
   return (
@@ -158,6 +167,7 @@ function SubEditor({ sub, onSave, onDelete }: { sub: Sub; onSave: (s: Sub) => vo
         trusted
       </label>
       <button className="btn-ghost" onClick={() => onSave(s)}>Save</button>
+      <button className="btn-ghost" title="Mark all tasks Done + archive" onClick={() => onMarkDone("subproject", sub.id, sub.name)}>✓</button>
       {!s.is_default && <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => onDelete(sub)}>✕</button>}
     </div>
   );

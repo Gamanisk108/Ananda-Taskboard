@@ -21,6 +21,7 @@ import { ExportDialog } from "./components/ExportDialog";
 import { ImportDialog } from "./components/ImportDialog";
 import { RestorePoints } from "./components/RestorePoints";
 import { History } from "./components/History";
+import { BulkMigrate } from "./components/BulkMigrate";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "board" | "weekly" | "monthly";
@@ -65,6 +66,7 @@ export default function App() {
   const [showRestore, setShowRestore] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -164,6 +166,7 @@ export default function App() {
             onSettings={() => setShowSettings(true)}
             onRestore={() => setShowRestore(true)}
             onHistory={() => setShowHistory(true)}
+            onBulk={() => setShowBulk(true)}
             onLogout={logout}
           />
         </div>
@@ -261,6 +264,7 @@ export default function App() {
       {showSummary && <CopySummary me={me} onClose={() => setShowSummary(false)} />}
       {showRestore && <RestorePoints onClose={() => setShowRestore(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showHistory && <History onClose={() => setShowHistory(false)} />}
+      {showBulk && <BulkMigrate me={me} onClose={() => setShowBulk(false)} onChanged={() => { refreshMe(); bump(); }} />}
     </div>
   );
 }
@@ -269,10 +273,10 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
 }
 
-function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSettings, onRestore, onHistory, onLogout }: {
+function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSettings, onRestore, onHistory, onBulk, onLogout }: {
   name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
   theme: string; onTheme: (v: string) => void;
-  onSettings: () => void; onRestore: () => void; onHistory: () => void; onLogout: () => void;
+  onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void; onLogout: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -311,6 +315,11 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSetti
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onRestore(); }}>
               <span>↻</span> {t("menu.restorePoints")}
+            </button>
+          )}
+          {isAdmin && (
+            <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
+              <span>↔</span> {t("menu.bulkMigrate")}
             </button>
           )}
           <button className="usermenu-item" onClick={enableNotifications}>

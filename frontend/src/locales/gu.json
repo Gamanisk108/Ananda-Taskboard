@@ -37,7 +37,8 @@
     "notificationsOn": "સૂચનાઓ ચાલુ કરો",
     "logout": "લૉગ આઉટ",
     "language": "ભાષા",
-    "theme": "થીમ"
+    "theme": "થીમ",
+    "bulkMigrate": "બલ્ક સ્થળાંતર"
   },
   "login": {
     "subtitle": "તમારા ટીમ બોર્ડમાં સાઇન ઇન કરો.",

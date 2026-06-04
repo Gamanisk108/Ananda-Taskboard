@@ -37,7 +37,8 @@
     "notificationsOn": "বিজ্ঞপ্তি চালু করুন",
     "logout": "লগ আউট",
     "language": "ভাষা",
-    "theme": "থিম"
+    "theme": "থিম",
+    "bulkMigrate": "বাল্ক মাইগ্রেট"
   },
   "login": {
     "subtitle": "আপনার দলের বোর্ডে সাইন ইন করুন।",

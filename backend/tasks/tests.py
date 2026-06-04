@@ -273,3 +273,48 @@ def test_me_exposes_group_names(admin):
     assert "groups" in data and any(g["name"] == "Kitchen" for g in data["groups"])
     # names only — no membership leaked
     assert all(set(g.keys()) == {"id", "name"} for g in data["groups"])
+
+
+# --- bulk operations (admin) ------------------------------------------------
+
+def test_bulk_move_status_deadline_assign(admin, member, sp):
+    from accounts.models import Group  # noqa
+    other_sp = SubProject.objects.create(project=sp.project, name="Design")
+    t1 = Task.objects.create(subproject=sp, title="A")
+    t2 = Task.objects.create(subproject=sp, title="B")
+    api = login(admin)
+    ids = [t1.id, t2.id]
+    assert api.post("/api/tasks/bulk", {"ids": ids, "action": "move", "value": other_sp.id}, format="json").data["updated"] == 2
+    assert set(Task.objects.filter(id__in=ids).values_list("subproject_id", flat=True)) == {other_sp.id}
+    api.post("/api/tasks/bulk", {"ids": ids, "action": "status", "value": "done"}, format="json")
+    assert set(Task.objects.filter(id__in=ids).values_list("status", flat=True)) == {"done"}
+    api.post("/api/tasks/bulk", {"ids": ids, "action": "deadline", "value": "2026-08-01"}, format="json")
+    assert Task.objects.get(pk=t1.id).deadline.isoformat() == "2026-08-01"
+    api.post("/api/tasks/bulk", {"ids": ids, "action": "assign", "value": [member.id]}, format="json")
+    assert list(Task.objects.get(pk=t1.id).assignees.values_list("id", flat=True)) == [member.id]
+
+
+def test_bulk_unknown_action_400(admin, sp):
+    t = Task.objects.create(subproject=sp, title="A")
+    assert login(admin).post("/api/tasks/bulk", {"ids": [t.id], "action": "nope"}, format="json").status_code == 400
+
+
+def test_bulk_admin_only(member, sp):
+    t = Task.objects.create(subproject=sp, title="A")
+    assert login(member).post("/api/tasks/bulk", {"ids": [t.id], "action": "archive"}, format="json").status_code in (401, 403)
+
+
+def test_mark_subproject_done_archives(admin, sp):
+    from tasks.models import Status
+    Status.objects.get_or_create(key="done", defaults={"label": "Done", "is_complete": True})
+    Task.objects.create(subproject=sp, title="A")
+    Task.objects.create(subproject=sp, title="B")
+    res = login(admin).post(f"/api/subproject/{sp.id}/mark-done", {}, format="json")
+    assert res.status_code == 200 and res.data["updated"] == 2
+    assert all(t.status == "done" and t.archived_at for t in Task.objects.filter(subproject=sp))
+
+
+def test_mark_project_done(admin, sp):
+    Task.objects.create(subproject=sp, title="A")
+    res = login(admin).post(f"/api/project/{sp.project_id}/mark-done", {}, format="json")
+    assert res.status_code == 200 and res.data["updated"] == 1

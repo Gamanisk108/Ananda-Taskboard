@@ -37,7 +37,8 @@
     "notificationsOn": "सूचना सुरू करा",
     "logout": "लॉग आउट",
     "language": "भाषा",
-    "theme": "थीम"
+    "theme": "थीम",
+    "bulkMigrate": "मोठ्या प्रमाणात स्थलांतर"
   },
   "login": {
     "subtitle": "तुमच्या संघ बोर्डवर साइन इन करा.",

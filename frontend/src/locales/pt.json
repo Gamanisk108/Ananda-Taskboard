@@ -37,7 +37,8 @@
     "notificationsOn": "Ativar notificações",
     "logout": "Sair",
     "language": "Idioma",
-    "theme": "Tema"
+    "theme": "Tema",
+    "bulkMigrate": "Migração em massa"
   },
   "login": {
     "subtitle": "Entre no quadro da sua equipe.",

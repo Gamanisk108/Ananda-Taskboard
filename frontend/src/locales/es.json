@@ -37,7 +37,8 @@
     "notificationsOn": "Activar notificaciones",
     "logout": "Cerrar sesión",
     "language": "Idioma",
-    "theme": "Tema"
+    "theme": "Tema",
+    "bulkMigrate": "Migración masiva"
   },
   "login": {
     "subtitle": "Inicia sesión en el tablero de tu equipo.",

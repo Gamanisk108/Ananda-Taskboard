@@ -1,6 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from .bulk import BulkTasksView, MarkDoneView
 from .calendar import CalendarView
 from .events_views import CalendarEventViewSet, EventsRangeView, StatusViewSet
 from .history_service import HistoryDatesView, HistoryView
@@ -19,4 +20,6 @@ urlpatterns = [
     path("events/range", EventsRangeView.as_view(), name="events-range"),  # before router
     path("history", HistoryView.as_view(), name="history"),
     path("history/dates", HistoryDatesView.as_view(), name="history-dates"),
+    path("tasks/bulk", BulkTasksView.as_view(), name="tasks-bulk"),  # before router (pk route)
+    path("<str:kind>/<int:pk>/mark-done", MarkDoneView.as_view(), name="mark-done"),
 ] + router.urls
