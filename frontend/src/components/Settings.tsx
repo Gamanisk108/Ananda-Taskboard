@@ -20,29 +20,29 @@ export function Settings({ onClose }: { onClose: () => void }) {
   async function save() {
     if (!s) return;
     setMsg("");
-    try { await api.patch("/api/settings", s); setMsg("Saved."); setTimeout(() => setMsg(""), 2000); }
-    catch { setMsg("Could not save — check the values."); }
+    try { await api.patch("/api/settings", s); setMsg(t("settings.saved")); setTimeout(() => setMsg(""), 2000); }
+    catch { setMsg(t("settings.saveErr")); }
   }
 
   return (
     <Modal title={t("modals.settings")} onClose={onClose}>
       {!s ? <Spinner /> : (
         <>
-          <h3 className="section-title">Daily push notification time</h3>
+          <h3 className="section-title">{t("settings.pushTime")}</h3>
           <div className="row2">
             <div className="field">
-              <label>Hour (0–23)</label>
+              <label>{t("settings.hour")}</label>
               <input type="number" min={0} max={23} value={s.daily_push_hour}
                 onChange={(e) => setS({ ...s, daily_push_hour: Number(e.target.value) })} />
             </div>
             <div className="field">
-              <label>Minute (0–59)</label>
+              <label>{t("settings.minute")}</label>
               <input type="number" min={0} max={59} value={s.daily_push_minute}
                 onChange={(e) => setS({ ...s, daily_push_minute: Number(e.target.value) })} />
             </div>
           </div>
           <div className="field">
-            <label>Timezone</label>
+            <label>{t("settings.timezone")}</label>
             <select value={s.timezone} onChange={(e) => setS({ ...s, timezone: e.target.value })}>
               {TZS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
@@ -53,7 +53,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
           </div>
           {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 10 }}>{msg}</div>}
           <div className="modal-foot" style={{ marginBottom: 8 }}>
-            <button className="btn-primary" onClick={save}>Save time settings</button>
+            <button className="btn-primary" onClick={save}>{t("settings.saveTime")}</button>
           </div>
 
           <StatusManager />
@@ -61,7 +61,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
           <EventsManager />
 
           <div className="modal-foot">
-            <button className="btn-secondary" onClick={onClose}>Close</button>
+            <button className="btn-secondary" onClick={onClose}>{t("settings.close")}</button>
           </div>
         </>
       )}
@@ -72,6 +72,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
 interface St { id: number; key: string; label: string; color: string; order: number; is_complete: boolean; is_initial: boolean; }
 
 function StatusManager() {
+  const { t } = useTranslation();
   const [list, setList] = useState<St[]>([]);
   const [label, setLabel] = useState("");
   const [color, setColor] = useState("#6b7280");
@@ -98,7 +99,7 @@ function StatusManager() {
 
   return (
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">Task statuses (Kanban columns — apply to all projects)</h3>
+      <h3 className="section-title">{t("settings.statusesTitle")}</h3>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
         Rename, recolor, reorder, or add columns. Tick "complete" for the Done state
         (drives auto-archiving + hiding from calendars).
@@ -109,15 +110,15 @@ function StatusManager() {
           <input defaultValue={s.label} onBlur={(e) => e.target.value !== s.label && patch(s, { label: e.target.value })} style={{ flex: 1 }} />
           <input type="number" value={s.order} onChange={(e) => patch(s, { order: Number(e.target.value) })} style={{ width: 56 }} title="order" />
           <label className="muted" style={{ display: "flex", gap: 4, alignItems: "center", margin: 0, whiteSpace: "nowrap" }}>
-            <input type="checkbox" style={{ width: "auto" }} checked={s.is_complete} onChange={(e) => patch(s, { is_complete: e.target.checked })} /> complete
+            <input type="checkbox" style={{ width: "auto" }} checked={s.is_complete} onChange={(e) => patch(s, { is_complete: e.target.checked })} /> {t("settings.complete")}
           </label>
           <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(s)} disabled={idx === 0}>✕</button>
         </div>
       ))}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
         <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 38, padding: 2 }} />
-        <input placeholder="New status name…" value={label} onChange={(e) => setLabel(e.target.value)} />
-        <button className="btn-secondary" type="button" onClick={add}>Add status</button>
+        <input placeholder={t("settings.newStatus")} value={label} onChange={(e) => setLabel(e.target.value)} />
+        <button className="btn-secondary" type="button" onClick={add}>{t("settings.addStatus")}</button>
       </div>
     </div>
   );
@@ -175,6 +176,7 @@ function summarize(e: Ev): string {
 }
 
 function EventsManager() {
+  const { t } = useTranslation();
   const [list, setList] = useState<Ev[]>([]);
   const [d, setD] = useState<Draft>(EMPTY_DRAFT);
   const [err, setErr] = useState("");
@@ -232,7 +234,7 @@ function EventsManager() {
 
   return (
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">Calendar events (birthdays, retreats, class series)</h3>
+      <h3 className="section-title">{t("settings.eventsTitle")}</h3>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
         Shown as bars on the Weekly &amp; Monthly calendars. Use a date range for a multi-day
         event, or Repeating for a weekly series (e.g. every Sat &amp; Sun for 4 weeks).
@@ -242,7 +244,7 @@ function EventsManager() {
         <div key={e.id} className="assignee-row" style={{ justifyContent: "space-between" }}>
           <span>{KIND_ICON[e.kind]} <strong>{e.title}</strong> · <span className="muted">{summarize(e)}</span></span>
           <span style={{ display: "flex", gap: 4 }}>
-            <button type="button" className="btn-ghost" onClick={() => startEdit(e)}>Edit</button>
+            <button type="button" className="btn-ghost" onClick={() => startEdit(e)}>{t("common.edit")}</button>
             <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(e.id)}>✕</button>
           </span>
         </div>
@@ -251,28 +253,28 @@ function EventsManager() {
       <div className="card" style={{ padding: 12, marginTop: 10, background: "var(--surface-sunk)" }}>
         <div className="row2">
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Type</label>
+            <label>{t("settings.evType")}</label>
             <select value={d.kind} onChange={(e) => setD({ ...d, kind: e.target.value as EvKind })}>
-              <option value="single">Single date</option>
-              <option value="yearly">Yearly (birthday)</option>
-              <option value="range">Date range</option>
-              <option value="repeating">Repeating (weekly)</option>
+              <option value="single">{t("settings.evSingle")}</option>
+              <option value="yearly">{t("settings.evYearly")}</option>
+              <option value="range">{t("settings.evRange")}</option>
+              <option value="repeating">{t("settings.evRepeating")}</option>
             </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Title</label>
-            <input placeholder="Event title…" value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} />
+            <label>{t("settings.evTitle")}</label>
+            <input placeholder={t("settings.evTitlePh")} value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} />
           </div>
         </div>
 
         <div className="row2" style={{ marginTop: 10 }}>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>{ranged || repeating ? "Start date" : "Date"}</label>
+            <label>{ranged || repeating ? t("settings.startDate") : t("settings.date")}</label>
             <input type="date" value={d.date} onChange={(e) => setD({ ...d, date: e.target.value })} />
           </div>
           {ranged && (
             <div className="field" style={{ marginBottom: 0 }}>
-              <label>End date</label>
+              <label>{t("settings.endDate")}</label>
               <input type="date" value={d.end_date} onChange={(e) => setD({ ...d, end_date: e.target.value })} />
             </div>
           )}
@@ -281,7 +283,7 @@ function EventsManager() {
         {repeating && (
           <>
             <div className="field" style={{ marginTop: 10, marginBottom: 0 }}>
-              <label>Repeat on</label>
+              <label>{t("settings.repeatOn")}</label>
               <div style={{ display: "flex", gap: 4 }}>
                 {WD_TOGGLES.map((w, i) => (
                   <button key={i} type="button"
@@ -293,29 +295,29 @@ function EventsManager() {
             </div>
             <div className="row2" style={{ marginTop: 10 }}>
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>Every (weeks)</label>
+                <label>{t("settings.everyWeeks")}</label>
                 <input type="number" min={1} value={d.interval}
                   onChange={(e) => setD({ ...d, interval: Number(e.target.value) })} />
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
-                <label>Ends</label>
+                <label>{t("settings.ends")}</label>
                 <select value={d.endMode} onChange={(e) => setD({ ...d, endMode: e.target.value as EndMode })}>
-                  <option value="weeks">After N weeks</option>
-                  <option value="until">Until date</option>
-                  <option value="never">Never</option>
+                  <option value="weeks">{t("settings.endsWeeks")}</option>
+                  <option value="until">{t("settings.endsUntil")}</option>
+                  <option value="never">{t("settings.endsNever")}</option>
                 </select>
               </div>
             </div>
             {d.endMode === "weeks" && (
               <div className="field" style={{ marginTop: 10, marginBottom: 0 }}>
-                <label>Number of weeks</label>
+                <label>{t("settings.numWeeks")}</label>
                 <input type="number" min={1} value={d.count}
                   onChange={(e) => setD({ ...d, count: Number(e.target.value) })} />
               </div>
             )}
             {d.endMode === "until" && (
               <div className="field" style={{ marginTop: 10, marginBottom: 0 }}>
-                <label>Until date</label>
+                <label>{t("settings.untilDate")}</label>
                 <input type="date" value={d.end_date} onChange={(e) => setD({ ...d, end_date: e.target.value })} />
               </div>
             )}
@@ -324,8 +326,8 @@ function EventsManager() {
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginTop: 10 }}>{err}</div>}
         <div className="modal-foot" style={{ marginTop: 12 }}>
-          {d.id && <button type="button" className="btn-secondary" style={{ marginRight: "auto" }} onClick={reset}>Cancel edit</button>}
-          <button className="btn-primary" type="button" onClick={save}>{d.id ? "Save changes" : "Add event"}</button>
+          {d.id && <button type="button" className="btn-secondary" style={{ marginRight: "auto" }} onClick={reset}>{t("settings.cancelEdit")}</button>}
+          <button className="btn-primary" type="button" onClick={save}>{d.id ? t("settings.saveChanges") : t("settings.addEvent")}</button>
         </div>
       </div>
     </div>
