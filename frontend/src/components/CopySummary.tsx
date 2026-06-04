@@ -49,13 +49,13 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
     <Modal title={t("modals.copySummary")} onClose={onClose} wide>
       <div className="row2">
         <div className="field">
-          <label>Day</label>
+          <label>{t("copy.day")}</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
       </div>
 
       <div className="field">
-        <label>Filter by project (none = all)</label>
+        <label>{t("copy.filterProject")}</label>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {projectOpts.map((p) => (
             <button key={p.id} type="button"
@@ -70,7 +70,7 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
 
       <div className="row2">
         <div className="field">
-          <label>Filter by person (none = everyone)</label>
+          <label>{t("copy.filterPerson")}</label>
           <div className="assignee-list" style={{ maxHeight: 130 }}>
             {users.map((u) => (
               <label key={u.id} className="assignee-row">
@@ -82,7 +82,7 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
         </div>
         {me.is_admin && groups.length > 0 && (
           <div className="field">
-            <label>Filter by group</label>
+            <label>{t("copy.filterGroup")}</label>
             <div className="assignee-list" style={{ maxHeight: 130 }}>
               {groups.map((g) => (
                 <label key={g.id} className="assignee-row">
@@ -96,13 +96,13 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
       </div>
 
       <div className="field">
-        <label>Preview (paste-ready for WhatsApp / Slack)</label>
+        <label>{t("copy.preview")}</label>
         <textarea readOnly rows={12} value={text} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
       </div>
 
       <div className="modal-foot">
-        <button className="btn-secondary" onClick={onClose}>Close</button>
-        <button className="btn-primary" onClick={copy}>{copied ? "Copied!" : "Copy to clipboard"}</button>
+        <button className="btn-secondary" onClick={onClose}>{t("copy.close")}</button>
+        <button className="btn-primary" onClick={copy}>{copied ? t("copy.copied") : t("copy.copy")}</button>
       </div>
     </Modal>
   );

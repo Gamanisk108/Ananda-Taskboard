@@ -189,5 +189,23 @@
     "colContents": "Inhalt",
     "auto": "auto",
     "manual": "manuell"
+  },
+  "history": {
+    "intro": "Eine genaue Momentaufnahme, wer an einem bestimmten Tag was zugewiesen hatte (täglich erfasst). Der Verlauf baut sich ab heute auf.",
+    "prevDay": "← Vortag",
+    "nextDay": "Nächster Tag →",
+    "today": "Heute",
+    "none": "Keine Momentaufnahme für {{day}}. (Der Verlauf wird täglich erfasst, ab Aktivierung der Funktion.)",
+    "unassigned": "nicht zugewiesen"
+  },
+  "copy": {
+    "day": "Tag",
+    "filterProject": "Nach Projekt filtern (keins = alle)",
+    "filterPerson": "Nach Person filtern (keine = alle)",
+    "filterGroup": "Nach Gruppe filtern",
+    "preview": "Vorschau (bereit zum Einfügen in WhatsApp / Slack)",
+    "close": "Schließen",
+    "copy": "In Zwischenablage kopieren",
+    "copied": "Kopiert!"
   }
 }

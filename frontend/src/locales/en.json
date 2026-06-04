@@ -189,5 +189,23 @@
     "colContents": "Contents",
     "auto": "auto",
     "manual": "manual"
+  },
+  "history": {
+    "intro": "An accurate snapshot of who was assigned to what on a given day (recorded daily). History builds up from today forward.",
+    "prevDay": "← Prev day",
+    "nextDay": "Next day →",
+    "today": "Today",
+    "none": "No snapshot stored for {{day}}. (History records daily, starting from when the feature went live.)",
+    "unassigned": "unassigned"
+  },
+  "copy": {
+    "day": "Day",
+    "filterProject": "Filter by project (none = all)",
+    "filterPerson": "Filter by person (none = everyone)",
+    "filterGroup": "Filter by group",
+    "preview": "Preview (paste-ready for WhatsApp / Slack)",
+    "close": "Close",
+    "copy": "Copy to clipboard",
+    "copied": "Copied!"
   }
 }

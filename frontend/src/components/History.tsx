@@ -50,19 +50,16 @@ export function History({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title={t("modals.history")} onClose={onClose} wide>
-      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-        An accurate snapshot of who was assigned to what on a given day (recorded daily).
-        History builds up from today forward.
-      </p>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("history.intro")}</p>
       <div className="bulkbar">
-        <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, -1))}>← Prev day</button>
+        <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, -1))}>{t("history.prevDay")}</button>
         <input type="date" value={day} max={todayISO()} onChange={(e) => setDay(e.target.value)} style={{ width: "auto" }} />
-        <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, 1))} disabled={day >= todayISO()}>Next day →</button>
-        <button className="btn-ghost" onClick={() => setDay(todayISO())}>Today</button>
+        <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, 1))} disabled={day >= todayISO()}>{t("history.nextDay")}</button>
+        <button className="btn-ghost" onClick={() => setDay(todayISO())}>{t("history.today")}</button>
       </div>
 
       {!rows ? <Spinner /> : rows.length === 0 ? (
-        <div className="empty">No snapshot stored for {day}. (History records daily, starting from when the feature went live.)</div>
+        <div className="empty">{t("history.none", { day })}</div>
       ) : (
         [...grouped.entries()].sort().map(([proj, p]) => (
           <div key={proj} style={{ marginBottom: 14 }}>
@@ -75,9 +72,9 @@ export function History({ onClose }: { onClose: () => void }) {
                     <span>
                       {i.title}
                       {(i.assignees.length > 0 || i.groups.length > 0) && (
-                        <span className="muted" style={{ fontSize: 12 }}> · {[...i.assignees, ...i.groups.map((g) => `👥 ${g}`)].join(", ") || "unassigned"}</span>
+                        <span className="muted" style={{ fontSize: 12 }}> · {[...i.assignees, ...i.groups.map((g) => `👥 ${g}`)].join(", ") || t("history.unassigned")}</span>
                       )}
-                      {i.assignees.length === 0 && i.groups.length === 0 && <span className="muted" style={{ fontSize: 12 }}> · unassigned</span>}
+                      {i.assignees.length === 0 && i.groups.length === 0 && <span className="muted" style={{ fontSize: 12 }}> · {t("history.unassigned")}</span>}
                     </span>
                     <StatusPill status={i.status} />
                   </div>

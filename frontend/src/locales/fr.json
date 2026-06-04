@@ -189,5 +189,23 @@
     "colContents": "Contenu",
     "auto": "auto",
     "manual": "manuel"
+  },
+  "history": {
+    "intro": "Un instantané précis de qui était affecté à quoi un jour donné (enregistré quotidiennement). L'historique s'accumule à partir d'aujourd'hui.",
+    "prevDay": "← Jour préc.",
+    "nextDay": "Jour suiv. →",
+    "today": "Aujourd'hui",
+    "none": "Aucun instantané pour {{day}}. (L'historique enregistre chaque jour, depuis l'activation de la fonction.)",
+    "unassigned": "non affecté"
+  },
+  "copy": {
+    "day": "Jour",
+    "filterProject": "Filtrer par projet (aucun = tous)",
+    "filterPerson": "Filtrer par personne (aucune = tout le monde)",
+    "filterGroup": "Filtrer par groupe",
+    "preview": "Aperçu (prêt à coller dans WhatsApp / Slack)",
+    "close": "Fermer",
+    "copy": "Copier dans le presse-papiers",
+    "copied": "Copié !"
   }
 }

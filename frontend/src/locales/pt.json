@@ -189,5 +189,23 @@
     "colContents": "Conteúdo",
     "auto": "auto",
     "manual": "manual"
+  },
+  "history": {
+    "intro": "Uma captura precisa de quem estava atribuído a quê em um dia (registrada diariamente). O histórico acumula a partir de hoje.",
+    "prevDay": "← Dia ant.",
+    "nextDay": "Dia seg. →",
+    "today": "Hoje",
+    "none": "Nenhuma captura para {{day}}. (O histórico registra diariamente, desde que o recurso foi ativado.)",
+    "unassigned": "sem responsável"
+  },
+  "copy": {
+    "day": "Dia",
+    "filterProject": "Filtrar por projeto (nenhum = todos)",
+    "filterPerson": "Filtrar por pessoa (nenhuma = todos)",
+    "filterGroup": "Filtrar por grupo",
+    "preview": "Pré-visualização (pronta para colar no WhatsApp / Slack)",
+    "close": "Fechar",
+    "copy": "Copiar para a área de transferência",
+    "copied": "Copiado!"
   }
 }

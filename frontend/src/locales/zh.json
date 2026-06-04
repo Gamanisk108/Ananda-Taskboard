@@ -189,5 +189,23 @@
     "colContents": "内容",
     "auto": "自动",
     "manual": "手动"
+  },
+  "history": {
+    "intro": "某一天谁负责什么的准确快照（每日记录）。历史从今天起逐日累积。",
+    "prevDay": "← 前一天",
+    "nextDay": "后一天 →",
+    "today": "今天",
+    "none": "没有 {{day}} 的快照。（历史每日记录，自功能上线起。）",
+    "unassigned": "未分配"
+  },
+  "copy": {
+    "day": "日期",
+    "filterProject": "按项目筛选（无 = 全部）",
+    "filterPerson": "按人员筛选（无 = 所有人）",
+    "filterGroup": "按群组筛选",
+    "preview": "预览（可直接粘贴到 WhatsApp / Slack）",
+    "close": "关闭",
+    "copy": "复制到剪贴板",
+    "copied": "已复制！"
   }
 }

@@ -189,5 +189,23 @@
     "colContents": "Contenido",
     "auto": "auto",
     "manual": "manual"
+  },
+  "history": {
+    "intro": "Una instantánea precisa de quién estaba asignado a qué en un día dado (registrada a diario). El historial se acumula desde hoy en adelante.",
+    "prevDay": "← Día ant.",
+    "nextDay": "Día sig. →",
+    "today": "Hoy",
+    "none": "No hay instantánea para {{day}}. (El historial se registra a diario, desde que se activó la función.)",
+    "unassigned": "sin asignar"
+  },
+  "copy": {
+    "day": "Día",
+    "filterProject": "Filtrar por proyecto (ninguno = todos)",
+    "filterPerson": "Filtrar por persona (ninguno = todos)",
+    "filterGroup": "Filtrar por grupo",
+    "preview": "Vista previa (lista para pegar en WhatsApp / Slack)",
+    "close": "Cerrar",
+    "copy": "Copiar al portapapeles",
+    "copied": "¡Copiado!"
   }
 }
