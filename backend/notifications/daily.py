@@ -34,13 +34,13 @@ def tasks_for_user(user, today):
     occurrence lands today."""
     from django.db.models import Q
 
-    from permissions.engine import visible_subproject_ids
+    from permissions.engine import visible_tasks_q
     from tasks.models import complete_status_keys
 
     group_ids = list(user.member_groups.values_list("id", flat=True))
-    visible = visible_subproject_ids(user)  # admin → all
     assigned = (
-        Task.objects.filter(approval_state=Task.Approval.APPROVED, subproject_id__in=visible, archived_at__isnull=True)
+        Task.objects.filter(approval_state=Task.Approval.APPROVED, archived_at__isnull=True)
+        .filter(visible_tasks_q(user))  # respects own-scope + exclusions (deny > assignment)
         .exclude(status__in=complete_status_keys())  # completed tasks don't need a reminder
         .filter(Q(assignees=user) | Q(assignee_groups__in=group_ids))
         .select_related("recurrence_rule")

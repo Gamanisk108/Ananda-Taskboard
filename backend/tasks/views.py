@@ -10,7 +10,12 @@ from rest_framework.viewsets import ModelViewSet
 
 from events import emit
 from permissions.drf import IsAdmin
-from permissions.engine import can_act_as_member, visible_subproject_ids
+from permissions.engine import (
+    can_act_as_member,
+    can_see_task,
+    visible_subproject_ids,
+    visible_tasks_q,
+)
 from projects.models import SubProject
 
 from .models import Comment, Subtask, Task
@@ -80,7 +85,9 @@ class TaskViewSet(ModelViewSet):
             .annotate(comment_count_anno=Count("comments", distinct=True))
         )
         if not user.is_admin:
-            qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
+            # Task-level visibility: sub-project access + "own tasks only" narrowing
+            # + exclusions (deny > assignment > allow). .distinct() applied below.
+            qs = qs.filter(visible_tasks_q(user))
         # The live board shows only approved tasks; pending/rejected live in the
         # approvals inbox. Admins/creators can opt in via ?approval=.
         approval = self.request.query_params.get("approval")
@@ -186,14 +193,13 @@ class TaskViewSet(ModelViewSet):
         comment = Comment.objects.create(task=task, author=request.user, text=text)
         # @-mentions: client sends the picked user ids; we store + push-notify them.
         from accounts.models import User
-        from permissions.engine import level_for_subproject
 
         raw = request.data.get("mentions") or []
         # Only mention users who can actually see this task (don't leak its title
-        # via a push to someone without access).
+        # via a push to someone without access — respects "own" + exclusions).
         mention_ids = [
             u.id for u in User.objects.filter(id__in=raw)
-            if u.is_admin or level_for_subproject(u, task.subproject_id) is not None
+            if can_see_task(u, task)
         ]
         if mention_ids:
             comment.mentions.set(mention_ids)
@@ -236,7 +242,7 @@ class CommentViewSet(ModelViewSet):
         user = self.request.user
         qs = Comment.objects.select_related("task__subproject", "author")
         if not user.is_admin:
-            qs = qs.filter(task__subproject_id__in=visible_subproject_ids(user))
+            qs = qs.filter(visible_tasks_q(user, prefix="task__")).distinct()
         return qs
 
     def _check(self, comment):
@@ -263,7 +269,7 @@ class SubtaskViewSet(ModelViewSet):
         user = self.request.user
         qs = Subtask.objects.select_related("task__subproject")
         if not user.is_admin:
-            qs = qs.filter(task__subproject_id__in=visible_subproject_ids(user))
+            qs = qs.filter(visible_tasks_q(user, prefix="task__")).distinct()
         task = self.request.query_params.get("task")
         if task:
             qs = qs.filter(task_id=task)

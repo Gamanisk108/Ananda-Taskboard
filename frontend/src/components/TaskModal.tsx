@@ -140,7 +140,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal title={editing ? "Edit task" : "New task"} onClose={onClose} wide>
+    <Modal title={editing ? `Edit task · #${task!.id}` : "New task"} onClose={onClose} wide>
       <form onSubmit={save}>
         {editing && task!.approval_state !== "approved" && (
           <div className="field">

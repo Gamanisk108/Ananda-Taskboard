@@ -21,9 +21,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import serializers as drf
 
-from accounts.models import Group
+from accounts.models import Group, Tier
 from permissions.drf import IsAdmin
-from permissions.models import AccessGrant
+from permissions.models import AccessGrant, Exclusion
 from projects.models import Project, SubProject
 from tasks.models import CalendarEvent, Comment, RecurrenceRule, RestorePoint, Task, TaskOccurrence
 
@@ -31,9 +31,11 @@ MAX_AUTO = 10
 
 
 def _all_objs():
-    # dependency order for deserialize/save (FK targets first)
+    # dependency order for deserialize/save (FK targets first). Tier comes early
+    # (AccessGrant/Exclusion reference it); Exclusion last (references tasks etc.).
     return chain(
         Group.objects.all(),
+        Tier.objects.all(),
         Project.all_objects.all(),
         SubProject.all_objects.all(),
         RecurrenceRule.objects.all(),
@@ -42,6 +44,7 @@ def _all_objs():
         Comment.objects.all(),
         CalendarEvent.objects.all(),
         AccessGrant.objects.all(),
+        Exclusion.objects.all(),
     )
 
 
@@ -57,6 +60,8 @@ def board_stats():
         "events": CalendarEvent.objects.count(),
         "groups": Group.objects.count(),
         "grants": AccessGrant.objects.count(),
+        "tiers": Tier.objects.count(),
+        "exclusions": Exclusion.objects.count(),
     }
 
 
@@ -85,7 +90,12 @@ def _restore_data(data):
     post_save.disconnect(create_default_subproject, sender=Project)
     try:
         with transaction.atomic():
-            # delete current board in reverse dependency order (hard delete)
+            # delete current board in reverse dependency order (hard delete).
+            # NOTE: Tiers are intentionally NOT deleted — User.tier is SET_NULL and
+            # users aren't part of the snapshot, so wiping tiers would unassign every
+            # member. Instead the snapshot's tiers are re-saved (upserted by pk) below,
+            # which recreates any deleted tier a restored grant still references.
+            Exclusion.objects.all().delete()
             AccessGrant.objects.all().delete()
             CalendarEvent.objects.all().delete()
             Comment.objects.all().delete()

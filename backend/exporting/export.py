@@ -23,7 +23,7 @@ from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from permissions.engine import visible_subproject_ids
+from permissions.engine import visible_tasks_q
 from tasks.models import Task
 
 _DANGEROUS_PREFIXES = ("=", "+", "-", "@")
@@ -85,7 +85,7 @@ def _queryset(user, params):
         .prefetch_related("assignees")
     )
     if not user.is_admin:
-        qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
+        qs = qs.filter(visible_tasks_q(user))
     if params.get("archived") not in ("1", "true", "True"):
         qs = qs.filter(archived_at__isnull=True)
     # Scope: any mix of whole projects and individual sub-projects (union).

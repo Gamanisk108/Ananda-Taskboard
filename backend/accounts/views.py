@@ -8,8 +8,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from permissions.drf import IsAdmin
 
-from .models import Group, User
-from .serializers import GroupSerializer, UserSerializer, UserWriteSerializer
+from .models import Group, Tier, User
+from .serializers import GroupSerializer, TierSerializer, UserSerializer, UserWriteSerializer
 
 
 class EmailTokenObtainSerializer(TokenObtainPairSerializer):
@@ -50,7 +50,7 @@ class UsersView(APIView):
         for u in User.objects.filter(is_active=True):
             out.append({
                 "id": u.id, "name": u.name, "email": u.email, "is_admin": u.is_admin,
-                "role": u.role, "is_active": u.is_active,
+                "role": u.role, "is_active": u.is_active, "tier": u.tier_id,
                 "subproject_ids": visible_subproject_ids(u),
             })
         return Response(out)
@@ -86,4 +86,12 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     queryset = Group.objects.prefetch_related("members").all()
     serializer_class = GroupSerializer
+    permission_classes = [IsAdmin]
+
+
+class TierViewSet(viewsets.ModelViewSet):
+    """Admin management of permission Tiers (reusable templates for members)."""
+
+    queryset = Tier.objects.all()
+    serializer_class = TierSerializer
     permission_classes = [IsAdmin]

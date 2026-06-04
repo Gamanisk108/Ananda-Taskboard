@@ -1,6 +1,17 @@
 from rest_framework import serializers
 
-from .models import Group, User
+from .models import Group, Tier, User
+
+
+class TierSerializer(serializers.ModelSerializer):
+    member_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tier
+        fields = ["id", "name", "default_sees", "member_count"]
+
+    def get_member_count(self, obj):
+        return obj.users.count()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -8,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "role", "is_admin", "is_active"]
+        fields = ["id", "email", "name", "role", "is_admin", "is_active", "tier"]
 
 
 class UserWriteSerializer(serializers.ModelSerializer):
@@ -19,7 +30,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "role", "is_active", "password"]
+        fields = ["id", "email", "name", "role", "is_active", "password", "tier"]
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
@@ -32,6 +43,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
             name=validated_data.get("name", ""),
             password=password,
             role=role,
+            tier=validated_data.get("tier"),
             is_staff=is_admin,
             is_superuser=is_admin,
         )

@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from permissions.engine import visible_subproject_ids
+from permissions.engine import visible_tasks_q
 
 from .models import Task
 from .recurrence import occurrence_dates
@@ -68,7 +68,7 @@ class CalendarView(APIView):
             .prefetch_related("assignees")
         )
         if not user.is_admin:
-            qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
+            qs = qs.filter(visible_tasks_q(user)).distinct()
 
         for key, field in (("project", "subproject__project_id"), ("subproject", "subproject_id")):
             if request.query_params.get(key):

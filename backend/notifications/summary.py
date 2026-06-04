@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Group, User
-from permissions.engine import visible_subproject_ids
+from permissions.engine import visible_tasks_q
 from tasks.models import Task
 from tasks.recurrence import occurrence_dates
 
@@ -61,7 +61,7 @@ def build_summary_text(user, day, *, project_ids=None, subproject_ids=None, grou
         .prefetch_related("assignees", "assignee_groups")
     )
     if not user.is_admin:
-        qs = qs.filter(subproject_id__in=visible_subproject_ids(user))
+        qs = qs.filter(visible_tasks_q(user)).distinct()
     if project_ids:
         qs = qs.filter(subproject__project_id__in=project_ids)
     if subproject_ids:

@@ -46,6 +46,35 @@ def test_save_and_restore_roundtrip(db):
     assert Task.objects.filter(title="Flyer").exists()
 
 
+def test_restore_roundtrips_grants_sees_and_exclusions(db):
+    from accounts.models import Tier, User
+    from permissions.models import AccessGrant, Exclusion
+
+    p = Project.objects.create(name="Karuna")
+    sp = SubProject.objects.create(project=p, name="Marketing")
+    t = Task.objects.create(subproject=sp, title="Flyer")
+    member = User.objects.create_user(email="m@example.com", name="Mara", password="pw-strong-123")
+    tier = Tier.objects.create(name="Volunteer", default_sees="own")
+    member.tier = tier
+    member.save(update_fields=["tier"])
+    AccessGrant.objects.create(tier=tier, subproject=sp, level="member", sees="own")
+    Exclusion.objects.create(user=member, excluded_task=t)
+
+    point = rs.save_point("snap", auto=False)
+    assert point.stats["exclusions"] == 1 and point.stats["tiers"] == 1
+
+    # mutate: drop the exclusion, widen the grant
+    Exclusion.objects.all().delete()
+    AccessGrant.objects.update(sees="subproject")
+
+    rs.restore_point(point)
+    # exclusion came back, grant's sees breadth restored, member's tier link intact
+    assert Exclusion.objects.filter(user=member, excluded_task=t).exists()
+    assert AccessGrant.objects.get(tier=tier).sees == "own"
+    member.refresh_from_db()
+    assert member.tier_id == tier.id  # tier link survived the restore
+
+
 def test_restore_autosaves_current_first(db):
     Project.objects.create(name="P1")
     snap = rs.save_point("snap", auto=False)
