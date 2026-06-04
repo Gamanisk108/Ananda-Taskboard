@@ -36,7 +36,8 @@
     "restorePoints": "Wiederherstellungspunkte",
     "notificationsOn": "Benachrichtigungen aktivieren",
     "logout": "Abmelden",
-    "language": "Sprache"
+    "language": "Sprache",
+    "theme": "Design"
   },
   "login": {
     "subtitle": "Melden Sie sich bei Ihrem Team-Board an.",
@@ -133,5 +134,10 @@
     "noGroups": "Noch keine Gruppen.",
     "noActivity": "Noch keine Aktivität.",
     "noProjects": "Noch keine Projekte."
+  },
+  "theme": {
+    "system": "System",
+    "light": "Hell",
+    "dark": "Dunkel"
   }
 }

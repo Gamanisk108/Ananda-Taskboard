@@ -36,7 +36,8 @@
     "restorePoints": "પુનઃસ્થાપન બિંદુઓ",
     "notificationsOn": "સૂચનાઓ ચાલુ કરો",
     "logout": "લૉગ આઉટ",
-    "language": "ભાષા"
+    "language": "ભાષા",
+    "theme": "થીમ"
   },
   "login": {
     "subtitle": "તમારા ટીમ બોર્ડમાં સાઇન ઇન કરો.",
@@ -133,5 +134,10 @@
     "noGroups": "હજી કોઈ જૂથ નથી.",
     "noActivity": "હજી કોઈ પ્રવૃત્તિ નથી.",
     "noProjects": "હજી કોઈ પ્રોજેક્ટ નથી."
+  },
+  "theme": {
+    "system": "સિસ્ટમ",
+    "light": "આછું",
+    "dark": "ઘેરું"
   }
 }

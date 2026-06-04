@@ -36,7 +36,8 @@
     "restorePoints": "Punti di ripristino",
     "notificationsOn": "Attiva le notifiche",
     "logout": "Esci",
-    "language": "Lingua"
+    "language": "Lingua",
+    "theme": "Tema"
   },
   "login": {
     "subtitle": "Accedi alla bacheca del tuo team.",
@@ -133,5 +134,10 @@
     "noGroups": "Ancora nessun gruppo.",
     "noActivity": "Ancora nessuna attività.",
     "noProjects": "Ancora nessun progetto."
+  },
+  "theme": {
+    "system": "Sistema",
+    "light": "Chiaro",
+    "dark": "Scuro"
   }
 }

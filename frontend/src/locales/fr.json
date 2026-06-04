@@ -36,7 +36,8 @@
     "restorePoints": "Points de restauration",
     "notificationsOn": "Activer les notifications",
     "logout": "Se déconnecter",
-    "language": "Langue"
+    "language": "Langue",
+    "theme": "Thème"
   },
   "login": {
     "subtitle": "Connectez-vous au tableau de votre équipe.",
@@ -133,5 +134,10 @@
     "noGroups": "Aucun groupe pour l'instant.",
     "noActivity": "Aucune activité pour l'instant.",
     "noProjects": "Aucun projet pour l'instant."
+  },
+  "theme": {
+    "system": "Système",
+    "light": "Clair",
+    "dark": "Sombre"
   }
 }

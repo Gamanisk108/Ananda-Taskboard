@@ -36,7 +36,8 @@
     "restorePoints": "还原点",
     "notificationsOn": "开启通知",
     "logout": "退出登录",
-    "language": "语言"
+    "language": "语言",
+    "theme": "主题"
   },
   "login": {
     "subtitle": "登录到你的团队看板。",
@@ -133,5 +134,10 @@
     "noGroups": "还没有群组。",
     "noActivity": "还没有活动。",
     "noProjects": "还没有项目。"
+  },
+  "theme": {
+    "system": "跟随系统",
+    "light": "浅色",
+    "dark": "深色"
   }
 }

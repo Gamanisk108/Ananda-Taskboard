@@ -38,6 +38,20 @@ export default function App() {
     await i18n.changeLanguage(lang);
     try { await api.patch("/api/me", { language: lang }); refreshMe(); } catch { /* keep local change */ }
   }
+
+  // Theme (light/dark/system). Persisted in localStorage "at-theme"; "system" follows OS.
+  const [theme, setTheme] = useState<string>(() => localStorage.getItem("at-theme") || "system");
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const dark = theme === "dark" || (theme === "system" && mql.matches);
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    };
+    apply();
+    if (theme === "system") { mql.addEventListener("change", apply); return () => mql.removeEventListener("change", apply); }
+  }, [theme]);
+  function changeTheme(v: string) { setTheme(v); localStorage.setItem("at-theme", v); }
+
   const [topTab, setTopTab] = useState<"global" | number | null>(null);
   const [subTab, setSubTab] = useState<"overview" | number | null>(null);
   const [view, setView] = useState<ViewMode>("list");
@@ -145,6 +159,8 @@ export default function App() {
             isAdmin={me.is_admin}
             language={resolveLanguage(me.language)}
             onLanguage={changeLanguage}
+            theme={theme}
+            onTheme={changeTheme}
             onSettings={() => setShowSettings(true)}
             onRestore={() => setShowRestore(true)}
             onHistory={() => setShowHistory(true)}
@@ -253,8 +269,9 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
 }
 
-function UserMenu({ name, isAdmin, language, onLanguage, onSettings, onRestore, onHistory, onLogout }: {
+function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSettings, onRestore, onHistory, onLogout }: {
   name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
+  theme: string; onTheme: (v: string) => void;
   onSettings: () => void; onRestore: () => void; onHistory: () => void; onLogout: () => void;
 }) {
   const { t } = useTranslation();
@@ -307,6 +324,17 @@ function UserMenu({ name, isAdmin, language, onLanguage, onSettings, onRestore, 
               onClick={(e) => e.stopPropagation()}
               style={{ width: "auto", marginLeft: "auto" }}>
               {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          </label>
+          <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
+            <span>🌗</span> {t("menu.theme")}
+            <select data-testid="theme-select" value={theme}
+              onChange={(e) => onTheme(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "auto", marginLeft: "auto" }}>
+              <option value="system">{t("theme.system")}</option>
+              <option value="light">{t("theme.light")}</option>
+              <option value="dark">{t("theme.dark")}</option>
             </select>
           </label>
           <div className="usermenu-sep" />

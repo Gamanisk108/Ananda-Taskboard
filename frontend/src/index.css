@@ -27,6 +27,28 @@
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
+/* Dark theme — Claude Design palette, mapped onto the same token names so every
+   component that uses var(--…) switches automatically. Toggled via the account
+   menu (sets <html data-theme="dark">, persisted in localStorage "at-theme"). */
+html[data-theme="dark"] {
+  --bg: #0f1b30;            /* deep navy canvas */
+  --surface: #15223b;       /* cards/tables */
+  --surface-sunk: #1c2c49;  /* headers, hovers, sunk panels */
+  --border: #27395b;
+  --text: #eaf0fb;
+  --text-muted: #9fb0cc;
+  --primary: #2c5499;
+  --primary-weak: #1d3358;
+  --accent: #7fa8d9;        /* azure — links/active read better on dark */
+  --gold: #e0be6a;
+  --success: #5fb27a;
+  --warn: #e0be6a;
+  --danger: #e07a63;
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --sh-2: 0 6px 22px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;       /* native form controls/scrollbars follow */
+}
+
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }

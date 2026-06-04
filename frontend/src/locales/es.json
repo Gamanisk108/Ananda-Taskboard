@@ -36,7 +36,8 @@
     "restorePoints": "Puntos de restauración",
     "notificationsOn": "Activar notificaciones",
     "logout": "Cerrar sesión",
-    "language": "Idioma"
+    "language": "Idioma",
+    "theme": "Tema"
   },
   "login": {
     "subtitle": "Inicia sesión en el tablero de tu equipo.",
@@ -133,5 +134,10 @@
     "noGroups": "Aún no hay grupos.",
     "noActivity": "Aún no hay actividad.",
     "noProjects": "Aún no hay proyectos."
+  },
+  "theme": {
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
   }
 }

@@ -36,7 +36,8 @@
     "restorePoints": "पुनर्स्थापना बिंदु",
     "notificationsOn": "सूचनाएँ चालू करें",
     "logout": "लॉग आउट",
-    "language": "भाषा"
+    "language": "भाषा",
+    "theme": "थीम"
   },
   "login": {
     "subtitle": "अपने टीम बोर्ड में साइन इन करें।",
@@ -133,5 +134,10 @@
     "noGroups": "अभी कोई समूह नहीं।",
     "noActivity": "अभी कोई गतिविधि नहीं।",
     "noProjects": "अभी कोई परियोजना नहीं।"
+  },
+  "theme": {
+    "system": "सिस्टम",
+    "light": "हल्का",
+    "dark": "गहरा"
   }
 }

@@ -36,7 +36,8 @@
     "restorePoints": "Restore points",
     "notificationsOn": "Turn on notifications",
     "logout": "Log out",
-    "language": "Language"
+    "language": "Language",
+    "theme": "Theme"
   },
   "login": {
     "subtitle": "Sign in to your team board.",
@@ -133,5 +134,10 @@
     "noGroups": "No groups yet.",
     "noActivity": "No activity yet.",
     "noProjects": "No projects yet."
+  },
+  "theme": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
   }
 }

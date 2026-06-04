@@ -36,7 +36,8 @@
     "restorePoints": "Pontos de restauração",
     "notificationsOn": "Ativar notificações",
     "logout": "Sair",
-    "language": "Idioma"
+    "language": "Idioma",
+    "theme": "Tema"
   },
   "login": {
     "subtitle": "Entre no quadro da sua equipe.",
@@ -133,5 +134,10 @@
     "noGroups": "Ainda não há grupos.",
     "noActivity": "Ainda não há atividade.",
     "noProjects": "Ainda não há projetos."
+  },
+  "theme": {
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Escuro"
   }
 }
