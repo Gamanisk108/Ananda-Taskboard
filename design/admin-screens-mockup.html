@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — every dialog & popup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<!--
+  ANANDA TASKBOARD — complete popup / dialog reference.
+  This single self-contained file mirrors EVERY modal the live React app renders,
+  1:1 with the components in frontend/src/components. Same "Temple of Light" theme
+  tokens as the app and the other design/*.html mockups. Each <section> is one
+  dialog (or one state of one dialog); conditional banners and states are marked
+  with comments. Paste into Claude to iterate; keep it one self-contained file.
+
+  Covered (component → section):
+    Login.tsx ............... Login
+    TaskModal.tsx ........... Task popup (create / edit)  — the big one
+      ├ AssigneePicker.tsx .. Assignees (collapsed + expanded states)
+      ├ SubtaskEditor.tsx ... Subtasks  (refined rows + progress summary)
+      └ CommentSection.tsx .. Comments  (with @-mentions, edit/delete)
+    TeamAdmin.tsx ........... Team & Permissions (Members / Groups / Access)
+    ManageProjects.tsx ...... Manage projects
+    DeleteWithMove.tsx ...... Delete project / sub-project (move tasks)
+    Settings.tsx ............ Settings (push time, statuses, calendar events)
+    ExportDialog.tsx ........ Export tasks
+    CopySummary.tsx ......... Copy daily summary
+    Approvals.tsx ........... Approvals inbox
+    Trash.tsx ............... Trash (7-day restore)
+    RestorePoints.tsx ....... Restore points (full-board snapshots)
+    History.tsx ............. History (point-in-time assignments)
+    MonthlyView/WeeklyView .. Day detail (calendar day popup, DayTaskList.tsx)
+-->
+<style>
+  :root{
+    --bg:#fbf6ea;--surface:#fffdf8;--surface-sunk:#efe5cc;--border:#e3d6b8;
+    --text:#23262b;--text-muted:#4a5568;--primary:#1e3a6e;--primary-weak:#eaf0f8;
+    --accent:#2c5499;--gold:#c9a24b;--success:#3f7d54;--warn:#7a5c22;--danger:#b4452f;
+    --r-card:10px;--r-ctl:7px;--r-pill:999px;--sh-1:0 1px 2px rgba(30,58,110,.07);--sh-2:0 4px 14px rgba(30,58,110,.10);
+    --font-display:"Fraunces",Georgia,serif;--font-ui:"Instrument Sans",system-ui,sans-serif;--font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:var(--font-ui);font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;padding:24px}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:-.012em;line-height:1.15}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.muted{color:var(--text-muted)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .pill{display:inline-flex;align-items:center;gap:5px;border-radius:var(--r-pill);padding:2px 9px;font-size:12px;font-weight:500}
+  .info{color:var(--text-muted);cursor:help}
+  .screen{max-width:760px;margin:0 auto 40px}
+  .screen.wide{max-width:760px}
+  .screen>.label{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px}
+  .screen>.label .as{color:var(--text-muted);text-transform:none;letter-spacing:0}
+  .note{font-size:12px;color:var(--text-muted);margin:-2px 0 8px;max-width:680px}
+  button{font-family:var(--font-ui);font-weight:500;border:1px solid transparent;border-radius:var(--r-ctl);padding:6px 11px;font-size:13px;cursor:pointer;transition:background 120ms,border-color 120ms,transform 80ms}
+  button:active{transform:translateY(1px)}
+  .btn-secondary{background:var(--surface);border-color:var(--border);color:var(--text)}
+  .btn-secondary:hover{background:var(--surface-sunk)}
+  .btn-primary{background:var(--primary);color:var(--surface)}
+  .btn-primary:hover{background:#16294f}
+  .btn-ghost{background:transparent;color:var(--text-muted)}
+  .btn-ghost:hover{background:var(--surface-sunk);color:var(--text)}
+  .btn-danger{background:var(--surface);border:1px solid var(--danger);color:var(--danger)}
+  input,select,textarea{font-family:var(--font-ui);font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 10px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
+  textarea{resize:vertical}
+  label{font-size:12px;color:var(--text-muted);font-weight:500;display:block;margin-bottom:4px}
+  .field{margin-bottom:14px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .section-title{font-family:var(--font-display);font-size:13px;color:var(--text-muted);margin-bottom:8px}
+
+  /* modal shell (mirrors common.tsx Modal + App.css) */
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-2)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+  .modal-body{padding:18px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-1)}
+
+  /* tables */
+  table.tbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
+  thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);background:var(--surface-sunk);padding:7px 11px;font-weight:600;border-bottom:1px solid var(--border)}
+  tbody tr{border-bottom:1px solid var(--border)} td{padding:6px 11px}
+
+  /* segmented tabs (TeamAdmin) */
+  .seg{display:inline-flex;background:var(--surface-sunk);border-radius:var(--r-pill);padding:3px}
+  .seg button{border:none;border-radius:var(--r-pill);padding:6px 16px;background:transparent;color:var(--text-muted)}
+  .seg .on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--sh-1)}
+
+  /* generic list rows */
+  .listrow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r-ctl)}
+  .listrow:hover{background:var(--surface-sunk)}
+  .swatch{width:30px;height:24px;border-radius:6px;border:1px solid var(--border)}
+  .bulkbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .empty{padding:18px;text-align:center;color:var(--text-muted);background:var(--surface-sunk);border-radius:var(--r-ctl)}
+
+  /* assignee picker + checkbox lists */
+  .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .assignee-list{border:1px solid var(--border);border-radius:var(--r-ctl);padding:6px;max-height:180px;overflow:auto;background:var(--surface)}
+  .assignee-row{display:flex;gap:8px;align-items:center;padding:5px 7px;border-radius:var(--r-ctl);margin:0;font-size:13px;color:var(--text)}
+  .assignee-row:hover{background:var(--surface-sunk)}
+  .assignee-row.no-access{opacity:.6}
+  .noaccess-tag{font-size:10px;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r-pill);padding:0 6px;margin-left:auto}
+
+  /* weekday toggle buttons (recurrence / events) */
+  .wd{width:34px;padding:6px 0;text-align:center}
+
+  /* subtasks — refined rows + progress summary (SubtaskEditor) */
+  .sub-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .sub-counts{display:inline-flex;gap:8px;align-items:center}
+  .sub-counts .c{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-muted)}
+  .sub-prog{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:11px;color:var(--text-muted)}
+  .track{width:120px;height:5px;border-radius:var(--r-pill);background:var(--surface-sunk);overflow:hidden}
+  .track>i{display:block;height:100%;background:var(--success);border-radius:var(--r-pill)}
+  .sub-row{display:flex;gap:8px;align-items:center;padding:6px 7px;border-radius:var(--r-ctl)}
+  .sub-row:hover{background:var(--surface-sunk)}
+  .sub-row .t{flex:1}
+  .sub-row select{width:auto}
+  .sub-add{display:flex;gap:8px;margin-top:8px}
+
+  /* comments + @mention popup (CommentSection) */
+  .mention-pop{position:absolute;bottom:42px;left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);box-shadow:var(--sh-2);min-width:180px;z-index:5;padding:4px}
+  .mention-item{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:6px 8px;border-radius:5px}
+  .mention-item:hover{background:var(--surface-sunk)}
+
+  /* export scope tree */
+  .export-scope{border:1px solid var(--border);border-radius:var(--r-ctl);padding:8px;background:var(--surface)}
+
+  /* day detail divider */
+  .day-divider{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px}
+  .day-divider::after{content:"";flex:1;height:1px;background:var(--border)}
+  .od{color:var(--danger);font-weight:700}.od-soon{color:var(--warn);font-weight:700}
+  .ev-line{font-size:12px;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ============================================================= LOGIN -->
+<section class="screen" style="max-width:420px">
+  <div class="label">Dialog — Login <span class="as">· Login.tsx</span></div>
+  <div class="modal" style="padding:32px">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px"><span class="dot" style="background:var(--primary);width:12px;height:12px"></span><h1 style="font-size:22px">Ananda Taskboard</h1></div>
+    <p class="muted" style="margin-top:0">Sign in to your team board.</p>
+    <div class="field"><label>Email</label><input type="email" value="admin@ananda.test" /></div>
+    <div class="field"><label>Password</label><input type="password" value="••••••••" /></div>
+    <!-- error line: <div style="color:var(--danger);font-size:13px;margin-bottom:12px">Incorrect email or password.</div> -->
+    <button class="btn-primary" style="width:100%">Sign in</button>
+  </div>
+</section>
+
+<!-- ===================================================== TASK POPUP (big) -->
+<section class="screen">
+  <div class="label">Dialog — Task popup (create / edit) <span class="as">· TaskModal.tsx (wide, 720px)</span></div>
+  <div class="note">The workhorse dialog. Shown here in the EDIT state with every field the live component renders. Conditional banners/states are marked with comments. Below the form: the Subtasks and Comments blocks (only present when editing an existing task).</div>
+  <div class="modal">
+    <div class="modal-head">
+      <h2 style="font-size:18px;display:flex;align-items:baseline;gap:10px">Edit task
+        <!-- read-only Task ID. Equals task.id; matches the share URL  /?task=42  exactly. Editing only (new tasks have no id yet). -->
+        <span class="mono" title="Task ID — read-only. Used in the share link /?task=42 and for webhooks / automations." style="font-size:12px;color:var(--text-muted);background:var(--surface-sunk);border-radius:var(--r-pill);padding:1px 9px;font-weight:500">#42</span>
+      </h2>
+      <button class="btn-ghost" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="return false">
+
+        <!-- CONDITIONAL: shown only when approval_state !== "approved" ("Pending approval" or "Rejected") -->
+        <div class="field"><span class="pill" style="background:#b7791f1a;color:var(--warn)">Pending approval</span></div>
+
+        <!-- CONDITIONAL: shown only when the task is archived
+        <div class="field" style="display:flex;gap:10px;align-items:center">
+          <span class="pill" style="background:var(--surface-sunk)">🗄 Archived</span>
+          <button type="button" class="btn-secondary">Unarchive (put back on board)</button>
+        </div> -->
+
+        <div class="field">
+          <label>Task name</label>
+          <input value="Design spring retreat flyer" placeholder="e.g. Design spring flyer" />
+        </div>
+
+        <div class="row2">
+          <div class="field"><label>Project</label><select><option>Karuna Devi</option><option>Sangha Outreach</option></select></div>
+          <div class="field"><label>Sub-project</label><select><option>Marketing</option><option>Design</option></select></div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Status (applied immediately)</label>
+            <!-- editable for admins or the task's assignees; otherwise just the StatusPill (or "Set after creating" when new) -->
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span class="pill" style="background:#2f7d741a;color:#2f7d74"><span class="dot" style="background:#2f7d74"></span> In Progress</span>
+              <select style="width:auto"><option>Change to…</option><option>To Do</option><option>Delayed</option><option>Done</option></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Priority</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <!-- PriorityIcon: chevron glyph, color per level (Highest/High = up, Medium = equals, Low/Lowest = down) -->
+              <svg width="16" height="16" viewBox="0 0 14 14" aria-label="Priority: Medium" style="flex:none"><polyline points="3,5 11,5" stroke="#b7791f" stroke-width="2" fill="none" stroke-linecap="round"/><polyline points="3,9 11,9" stroke="#b7791f" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              <select><option>Medium</option><option>Highest</option><option>High</option><option>Low</option><option>Lowest</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- AssigneePicker — COLLAPSED summary (default). Expanded editor shown as its own section below. -->
+        <div class="field">
+          <label>Assignees</label>
+          <div class="chips">
+            <span class="pill">Lila Devi</span>
+            <span class="pill">Arjuna</span>
+            <span class="pill" style="background:var(--primary-weak)">👥 Seva</span>
+            <button type="button" class="btn-ghost">Edit</button>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field"><label>Details</label><textarea rows="3">Single-page flyer for the June meditation retreat. Include date, venue, and the registration QR code.</textarea></div>
+          <div class="field"><label>Requirements</label><textarea rows="3">Print-ready PDF at A4, 300dpi. Use temple-gold accent sparingly. Two rounds of review before sending to print.</textarea></div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Start date <span class="info" title="If left blank and a deadline is set, the task shows on the calendar from its creation date up to the deadline.">ⓘ</span></label>
+            <input type="date" value="2026-06-07" />
+          </div>
+          <div class="field"><label>Deadline</label><input type="date" value="2026-06-12" /></div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Start time <span class="info" title="Optional. Set both times for a timed task (e.g. a class 1pm–4pm). Timed tasks sort to the top of a day's list.">ⓘ</span></label>
+            <input type="time" value="13:00" />
+          </div>
+          <div class="field"><label>End time</label><input type="time" value="16:00" /></div>
+        </div>
+
+        <div class="field">
+          <label>Links (one URL per line)</label>
+          <textarea rows="2" placeholder="https://drive.google.com/…">https://drive.google.com/folder/retreat-assets
+https://canva.com/design/spring-flyer</textarea>
+        </div>
+
+        <div class="field"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:auto" checked /> Repeats</label></div>
+
+        <!-- recurrence panel: shown only when "Repeats" is checked -->
+        <div class="card" style="padding:12px;margin-bottom:14px;background:var(--surface-sunk)">
+          <div class="row2">
+            <div class="field" style="margin-bottom:0"><label>Frequency</label><select><option>weekly</option><option>daily</option><option>monthly</option><option>yearly</option></select></div>
+            <div class="field" style="margin-bottom:0"><label>Every (interval)</label><input type="number" min="1" value="1" /></div>
+          </div>
+          <!-- weekday toggles: shown only when Frequency = "weekly". Sunday-first; none = same weekday as start -->
+          <div class="field" style="margin-top:12px;margin-bottom:0">
+            <label>On days <span class="muted" style="font-weight:400">(none = same weekday as start)</span></label>
+            <div style="display:flex;gap:4px">
+              <button type="button" class="btn-secondary wd">S</button>
+              <button type="button" class="btn-primary wd">M</button>
+              <button type="button" class="btn-secondary wd">T</button>
+              <button type="button" class="btn-secondary wd">W</button>
+              <button type="button" class="btn-primary wd">T</button>
+              <button type="button" class="btn-secondary wd">F</button>
+              <button type="button" class="btn-secondary wd">S</button>
+            </div>
+          </div>
+          <div class="row2" style="margin-top:12px">
+            <div class="field" style="margin-bottom:0"><label>Starts (anchor)</label><input type="date" value="2026-06-12" /></div>
+            <div class="field" style="margin-bottom:0"><label>Ends</label><select><option>Never</option><option>On date</option><option>After N times</option></select></div>
+          </div>
+          <!-- when Ends = "On date" → End date field; when "After N times" → Occurrences field -->
+        </div>
+
+        <div class="field">
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:auto" checked /> Monitor — notify admins when this task is moved</label>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" style="width:auto" /> Auto-complete — mark Done automatically after the deadline (mundane one-off tasks)</label>
+        </div>
+
+        <!-- error line: <div style="color:var(--danger);font-size:13px;margin-bottom:10px">…</div> -->
+
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" style="margin-right:auto" title="Copies https://app/?task=42 — the same id shown in the header">🔗 Share</button>  <!-- editing only; link is /?task={id} -->
+          <button type="button" class="btn-secondary">Cancel</button>
+          <button type="button" class="btn-danger">Delete</button>  <!-- editing only -->
+          <button class="btn-primary">Save</button>
+        </div>
+      </form>
+
+      <!-- ===== SUBTASKS (editing only) — refined rows + progress summary ===== -->
+      <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:14px">
+        <div class="sub-head">
+          <h3 class="section-title" style="margin:0">Subtasks (4)</h3>
+          <span class="sub-counts" title="Subtasks by status">
+            <span class="c"><span class="dot" style="background:#4f7a3c"></span>2</span>
+            <span class="c"><span class="dot" style="background:#2f7d74"></span>1</span>
+            <span class="c"><span class="dot" style="background:#6b7280"></span>1</span>
+          </span>
+          <span class="sub-prog"><span class="track"><i style="width:50%"></i></span> 2 / 4 done</span>
+        </div>
+        <div class="sub-row"><span class="dot" style="background:#4f7a3c"></span><span class="t">Draft headline + body copy</span><select style="max-width:130px"><option>Lila Devi</option><option>Unassigned</option></select><select><option>Done</option><option>To Do</option><option>In Progress</option><option>Delayed</option></select><button type="button" class="btn-ghost" style="color:var(--danger)">✕</button></div>
+        <div class="sub-row"><span class="dot" style="background:#4f7a3c"></span><span class="t">Gather retreat photos</span><select style="max-width:130px"><option>Arjuna</option><option>Unassigned</option></select><select><option>Done</option><option>To Do</option><option>In Progress</option></select><button type="button" class="btn-ghost" style="color:var(--danger)">✕</button></div>
+        <div class="sub-row"><span class="dot" style="background:#2f7d74"></span><span class="t">Lay out A4 master</span><select style="max-width:130px"><option>Lila Devi</option><option>Unassigned</option></select><select><option>In Progress</option><option>To Do</option><option>Done</option></select><button type="button" class="btn-ghost" style="color:var(--danger)">✕</button></div>
+        <div class="sub-row"><span class="dot" style="background:#6b7280"></span><span class="t">Send proof to printer</span><select style="max-width:130px"><option>Unassigned</option><option>Arjuna</option></select><select><option>To Do</option><option>In Progress</option><option>Done</option></select><button type="button" class="btn-ghost" style="color:var(--danger)">✕</button></div>
+        <div class="sub-add">
+          <input placeholder="Add a subtask…" />
+          <button type="button" class="btn-secondary">Add</button>
+        </div>
+      </div>
+
+      <!-- ===== COMMENTS (editing only) — with @-mentions, edit/delete ===== -->
+      <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:14px">
+        <h3 class="section-title">Comments (2)</h3>
+        <div class="card" style="padding:9px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;align-items:center">
+            <strong>You</strong>
+            <span style="display:flex;gap:8px;align-items:center">
+              <span class="muted mono">2026-06-02</span>
+              <button class="btn-ghost" style="padding:1px 6px;font-size:12px">Edit</button>
+              <button class="btn-ghost" style="padding:1px 6px;font-size:12px;color:var(--danger)">Delete</button>
+            </span>
+          </div>
+          <div style="white-space:pre-wrap;margin-top:3px">First draft is in the Drive folder — feedback welcome.</div>
+        </div>
+        <div class="card" style="padding:9px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;align-items:center">
+            <strong>Team member</strong><span class="muted mono">2026-06-03</span>
+          </div>
+          <div style="white-space:pre-wrap;margin-top:3px">Looks great <span style="color:var(--accent)">@Lila Devi</span> — can we make the date line bigger?</div>
+        </div>
+        <form onsubmit="return false" style="display:flex;gap:8px;margin-top:8px;position:relative">
+          <!-- @-mention popup: appears above the input while typing "@" + a name -->
+          <div class="mention-pop">
+            <button type="button" class="mention-item">Lila Devi</button>
+            <button type="button" class="mention-item">Lakshmi</button>
+          </div>
+          <input placeholder="Add a comment… (type @ to mention)" value="Thanks @L" />
+          <button class="btn-secondary">Post</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================== ASSIGNEE PICKER — expanded editor state -->
+<section class="screen" style="max-width:520px">
+  <div class="label">State — Assignees, expanded editor <span class="as">· AssigneePicker.tsx (inside Task popup)</span></div>
+  <div class="note">The "Edit" button above swaps the collapsed pill summary for this inline editor. Group assignment + the "no access" tag are admin-only.</div>
+  <div class="modal" style="padding:18px">
+    <div class="field" style="margin-bottom:0">
+      <label>Assignees</label>
+      <div class="card" style="padding:10px;background:var(--surface-sunk)">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input placeholder="Search by name…" />
+          <select style="max-width:170px"><option>Filter: any group</option><option>Seva</option></select>
+        </div>
+        <div style="margin-bottom:8px">
+          <div class="muted" style="font-size:11px;margin-bottom:4px">Assign a WHOLE group:</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn-primary" style="padding:3px 9px;font-size:12px">👥 Seva</button>
+            <button type="button" class="btn-secondary" style="padding:3px 9px;font-size:12px">👥 Kitchen</button>
+          </div>
+        </div>
+        <div class="assignee-list">
+          <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Lila Devi</span></label>
+          <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Arjuna</span></label>
+          <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>Lakshmi</span></label>
+          <label class="assignee-row no-access" title="No access to the selected sub-project"><input type="checkbox" style="width:auto" /><span>Mara</span><span class="noaccess-tag">no access</span></label>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn-secondary">Done</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== TEAM & PERMISSIONS -->
+<section class="screen">
+  <div class="label">Dialog — Team &amp; Permissions <span class="as">· TeamAdmin.tsx (wide) — Members tab</span></div>
+  <div class="note">Four tabs now: <strong>Members</strong> (people + their tier), <strong>Groups</strong> (membership), <strong>Access</strong> (grants + visibility + exclusions), <strong>Tiers</strong> (reusable defaults for new members).</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Team &amp; Permissions</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="seg" style="margin-bottom:14px"><button class="on">Members</button><button>Groups</button><button>Access</button><button>Tiers</button></div>
+      <div class="card" style="padding:12px;margin-bottom:14px;background:var(--surface-sunk)">
+        <h3 class="section-title">Add team member</h3>
+        <div class="row2"><div class="field"><label>Name</label><input placeholder="Full name" /></div><div class="field"><label>Email</label><input type="email" placeholder="name@ananda.test" /></div></div>
+        <div class="row2"><div class="field"><label>Starting password</label><input placeholder="≥ 8 characters" /></div><div class="field"><label>Role</label><select><option>Member</option><option>Admin</option></select></div></div>
+        <div class="row2"><div class="field" style="margin-bottom:0"><label>Tier <span class="muted" style="font-weight:400">(new member inherits this tier's access + visibility)</span></label><select><option>Volunteer</option><option>Coordinator</option><option>Lead</option><option>No tier (blank slate)</option></select></div><div class="field" style="margin-bottom:0"></div></div>
+        <button class="btn-primary" style="margin-top:12px">Add member</button>
+        <div class="muted" style="font-size:12px;margin-top:6px">Share the email + password with them directly. Admins ignore tiers — they see everything.</div>
+      </div>
+      <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tier</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Ada</td><td class="muted">admin@ananda.test</td><td><select style="width:auto"><option>Admin</option><option>Member</option></select></td><td class="muted" style="font-size:12px">— (admin)</td><td><button class="btn-ghost">Active</button></td><td><button class="btn-ghost">Reset pw</button></td></tr>
+          <tr><td>Mara</td><td class="muted">mara@ananda.test</td><td><select style="width:auto"><option>Member</option><option>Admin</option></select></td><td><select style="width:auto"><option>Coordinator</option><option>Volunteer</option><option>Lead</option><option>No tier</option></select></td><td><button class="btn-ghost">Disabled</button></td><td><button class="btn-ghost">Reset pw</button></td></tr>
+          <tr><td>Lila Devi</td><td class="muted">lila@ananda.test</td><td><select style="width:auto"><option>Member</option><option>Admin</option></select></td><td><select style="width:auto"><option>Volunteer</option><option>Coordinator</option><option>Lead</option><option>No tier</option></select></td><td><button class="btn-ghost">Active</button></td><td><button class="btn-ghost">Reset pw</button></td></tr>
+        </tbody></table>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="label">Dialog — Team &amp; Permissions <span class="as">· TeamAdmin.tsx — Groups + Access tabs</span></div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Team &amp; Permissions</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="seg" style="margin-bottom:14px"><button>Members</button><button class="on">Groups</button><button>Access</button><button>Tiers</button></div>
+      <div class="field" style="display:flex;gap:8px"><input placeholder="New group name…" /><button class="btn-primary">Add group</button></div>
+      <div class="card" style="padding:12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>Seva</strong><button class="btn-danger">Delete</button></div>
+        <div class="assignee-list">
+          <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Ada</span></label>
+          <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Lila Devi</span></label>
+          <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>Mara</span></label>
+        </div>
+      </div>
+
+      <h3 class="section-title" style="margin-top:18px">— and the Access tab —</h3>
+      <div class="note">Pick the subject first; grants + exclusions work the same whether you're editing a Tier, a Group, or one Person. Effective access stacks: <strong>tier → group → individual</strong>, then exclusions remove. <strong>Deny &gt; assignment &gt; allow</strong>.</div>
+      <div class="field" style="max-width:340px"><label>Define access for</label>
+        <div style="display:flex;gap:6px"><select style="width:110px"><option>Person</option><option>Group</option><option>Tier</option></select><select><option>Mara</option><option>Lila Devi</option></select></div>
+      </div>
+
+      <div class="card" style="padding:12px;margin-bottom:14px;background:var(--surface-sunk)">
+        <h3 class="section-title">Grant access</h3>
+        <div class="row2">
+          <div class="field"><label>To</label>
+            <div style="display:flex;gap:6px"><select style="width:140px"><option>Sub-project</option><option>Whole project</option></select><select><option>Select…</option><option>Karuna Devi / Marketing</option></select></div></div>
+          <div class="field"><label>Level</label><select><option>Member (can edit)</option><option>Viewer (read + comment)</option></select></div>
+        </div>
+        <div class="field" style="max-width:260px;margin-bottom:0"><label>Sees <span class="muted" style="font-weight:400">(which tasks in scope)</span></label>
+          <select><option>Own tasks only</option><option>All tasks in the sub-project</option><option>All tasks in the project</option></select>
+        </div>
+        <div class="muted" style="font-size:12px;margin:6px 0 10px">"Own" = the member is an assignee, or one of their groups is.</div>
+        <button class="btn-primary">Grant access</button>
+      </div>
+      <table class="tbl"><thead><tr><th>Grant (to)</th><th>Level</th><th>Sees</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Karuna Devi / Marketing</td><td><span class="pill" style="background:var(--surface-sunk)">member</span></td><td class="muted" style="font-size:12px">All in sub-project</td><td><button class="btn-ghost">Revoke</button></td></tr>
+          <tr><td>Karuna Devi / Design</td><td><span class="pill" style="background:var(--surface-sunk)">viewer</span></td><td class="muted" style="font-size:12px">Own tasks only</td><td><button class="btn-ghost">Revoke</button></td></tr>
+        </tbody></table>
+
+      <!-- ===== Exclusions builder (deny rules) — full: people / groups / projects / sub-projects / tasks ===== -->
+      <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px">
+        <h3 class="section-title">Exclusions — hide specific things from this subject</h3>
+        <div class="note">A deny always wins, even over a task the member is assigned to (<span class="mono">deny &gt; assignment &gt; allow</span>). Use sparingly — a member can be assigned a task they can't see.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+          <span class="pill" style="background:#b4452f12;color:var(--danger);border:1px solid #b4452f55">Task · #318 Salary review <button class="btn-ghost" style="padding:0 4px;color:var(--danger)">✕</button></span>
+          <span class="pill" style="background:#b4452f12;color:var(--danger);border:1px solid #b4452f55">👥 Leadership <button class="btn-ghost" style="padding:0 4px;color:var(--danger)">✕</button></span>
+          <span class="pill" style="background:#b4452f12;color:var(--danger);border:1px solid #b4452f55">Sub-project · Warehouse <button class="btn-ghost" style="padding:0 4px;color:var(--danger)">✕</button></span>
+          <span class="pill" style="background:#b4452f12;color:var(--danger);border:1px solid #b4452f55">Person · Lakshmi <button class="btn-ghost" style="padding:0 4px;color:var(--danger)">✕</button></span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select style="width:140px"><option>Task</option><option>Person</option><option>Group</option><option>Project</option><option>Sub-project</option></select>
+          <select><option>Select what to hide…</option><option>#318 Salary review</option><option>#412 Donor list</option></select>
+          <button class="btn-secondary">+ Add exclusion</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================== TEAM & PERMISSIONS — TIERS -->
+<section class="screen">
+  <div class="label">Dialog — Team &amp; Permissions <span class="as">· TeamAdmin.tsx — Tiers tab (NEW)</span></div>
+  <div class="note">Reusable permission templates. A new member is assigned a tier and inherits its grants + visibility. Editing a tier offers to re-apply to everyone on it. Each tier's grants/exclusions are edited via the Access tab (subject = Tier).</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Team &amp; Permissions</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="seg" style="margin-bottom:14px"><button>Members</button><button>Groups</button><button>Access</button><button class="on">Tiers</button></div>
+      <div class="field" style="display:flex;gap:8px"><input placeholder="New tier name… (e.g. Volunteer)" /><button class="btn-primary">Add tier</button></div>
+
+      <div class="card" style="padding:12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Volunteer</strong>
+          <span style="display:flex;gap:6px"><span class="pill muted" style="background:var(--surface-sunk)">3 members</span><button class="btn-secondary">Edit access →</button><button class="btn-danger">Delete</button></span>
+        </div>
+        <div class="muted" style="font-size:12px">Default visibility <strong>Own tasks only</strong> · grants: Karuna Devi / Marketing (member), Sunday Service / Seva (viewer)</div>
+      </div>
+      <div class="card" style="padding:12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Coordinator</strong>
+          <span style="display:flex;gap:6px"><span class="pill muted" style="background:var(--surface-sunk)">2 members</span><button class="btn-secondary">Edit access →</button><button class="btn-danger">Delete</button></span>
+        </div>
+        <div class="muted" style="font-size:12px">Default visibility <strong>All tasks in the sub-project</strong> · grants: Karuna Devi (whole project, member)</div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Lead</strong>
+          <span style="display:flex;gap:6px"><span class="pill muted" style="background:var(--surface-sunk)">1 member</span><button class="btn-secondary">Edit access →</button><button class="btn-danger">Delete</button></span>
+        </div>
+        <div class="muted" style="font-size:12px">Default visibility <strong>All tasks in the project</strong> · grants: all projects (member)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= MANAGE PROJECTS -->
+<section class="screen">
+  <div class="label">Dialog — Manage projects <span class="as">· ManageProjects.tsx (wide)</span></div>
+  <div class="note">Each project/sub-project uses a native colour picker; the project emoji feeds the chat summaries. Delete opens the "Delete with move" dialog (next).</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Manage projects</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="field" style="display:flex;gap:8px"><input placeholder="New project name…" /><button class="btn-primary">Add project</button></div>
+      <div class="card" style="padding:12px;margin-bottom:12px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <input type="color" value="#c8762f" style="width:44px;padding:2px" />
+          <input value="🎨" title="Emoji for chat summaries" style="width:52px;text-align:center" />
+          <input value="Karuna Devi" />
+          <button class="btn-secondary">Save</button><button class="btn-danger">Delete</button>
+        </div>
+        <div style="padding-left:8px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="color" value="#c8762f" style="width:40px;padding:2px" /><input value="General" disabled title="The default sub-project can't be renamed/deleted" /><label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;white-space:nowrap" title="Members can post tasks here without admin approval"><input type="checkbox" style="width:auto" checked> trusted</label><button class="btn-ghost">Save</button></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="color" value="#2563a8" style="width:40px;padding:2px" /><input value="Marketing" /><label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;white-space:nowrap" title="Members can post tasks here without admin approval"><input type="checkbox" style="width:auto" checked> trusted</label><button class="btn-ghost">Save</button><button class="btn-ghost" style="color:var(--danger)">✕</button></div>
+          <div style="display:flex;gap:8px;margin-top:6px"><input placeholder="New sub-project…" /><button class="btn-ghost">+ Add sub-project</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================== DELETE PROJECT / SUB-PROJECT (move) -->
+<section class="screen">
+  <div class="label">Dialog — Delete project / sub-project <span class="as">· DeleteWithMove.tsx (wide)</span></div>
+  <div class="note">Opened from Manage projects. Lets the admin rescue tasks into another sub-project before the item goes to Trash. Ticked = move; un-ticked = trashed with the parent. An empty project skips straight to a plain confirm.</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Delete sub-project: Warehouse</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin-top:0;font-size:13px">This sub-project has 3 task(s). Tick the ones to <strong>move</strong> to another sub-project; un-ticked tasks go to Trash with the sub-project (restorable 7 days).</p>
+      <div class="field"><label>Move ticked tasks to</label><select><option>Select a sub-project…</option><option>Karuna Devi / Marketing</option><option>Karuna Devi / Design</option></select></div>
+      <div class="assignee-list" style="max-height:220px">
+        <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Stock count — spring supplies</span></label>
+        <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Reorder candles</span></label>
+        <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>Old inventory audit (done)</span></label>
+      </div>
+      <div class="modal-foot" style="margin-top:14px">
+        <button class="btn-secondary">Cancel</button>
+        <button class="btn-primary">Move 2 &amp; delete</button>
+        <button class="btn-danger">Delete all (no move)</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== SETTINGS -->
+<section class="screen">
+  <div class="label">Dialog — Settings <span class="as">· Settings.tsx — push time, statuses, calendar events</span></div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Settings</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <h3 class="section-title">Daily push notification time</h3>
+      <div class="row2"><div class="field"><label>Hour (0–23)</label><input type="number" value="8" /></div><div class="field"><label>Minute (0–59)</label><input type="number" value="0" /></div></div>
+      <div class="field"><label>Timezone</label><select><option>America/Los_Angeles</option><option>America/New_York</option><option>UTC</option></select></div>
+      <div class="muted" style="font-size:12px;margin-bottom:12px">Determines the "today" boundary for the morning push. Exact send time is set by the daily scheduler (see deploy runbook); set the scheduler to match this hour.</div>
+      <div class="modal-foot" style="margin-bottom:8px"><button class="btn-primary">Save time settings</button></div>
+
+      <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:14px">
+        <h3 class="section-title">Task statuses (Kanban columns — apply to all projects)</h3>
+        <div class="muted" style="font-size:12px;margin-bottom:10px">Rename, recolor, reorder, or add columns. Tick "complete" for the Done state (drives auto-archiving + hiding from calendars).</div>
+        <div class="assignee-row" style="gap:8px"><input type="color" value="#6b7280" style="width:38px;padding:2px" /><input value="To Do" style="flex:1" /><input type="number" value="0" style="width:56px" title="order" /><label class="muted" style="margin:0;display:flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" style="width:auto"> complete</label><button class="btn-ghost" style="color:var(--danger)" disabled>✕</button></div>
+        <div class="assignee-row" style="gap:8px"><input type="color" value="#2f7d74" style="width:38px;padding:2px" /><input value="In Progress" style="flex:1" /><input type="number" value="1" style="width:56px" title="order" /><label class="muted" style="margin:0;display:flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" style="width:auto"> complete</label><button class="btn-ghost" style="color:var(--danger)">✕</button></div>
+        <div class="assignee-row" style="gap:8px"><input type="color" value="#4f7a3c" style="width:38px;padding:2px" /><input value="Done" style="flex:1" /><input type="number" value="3" style="width:56px" title="order" /><label class="muted" style="margin:0;display:flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" style="width:auto" checked> complete</label><button class="btn-ghost" style="color:var(--danger)">✕</button></div>
+        <div style="display:flex;gap:8px;margin-top:8px"><input type="color" value="#a23e6e" style="width:38px;padding:2px" /><input placeholder="New status name…" /><button class="btn-secondary">Add status</button></div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
+        <h3 class="section-title">Calendar events (birthdays, retreats, class series)</h3>
+        <div class="muted" style="font-size:12px;margin-bottom:10px">Shown as bars on the Weekly &amp; Monthly calendars. Use a date range for a multi-day event, or Repeating for a weekly series (e.g. every Sat &amp; Sun for 4 weeks).</div>
+        <div class="assignee-row" style="justify-content:space-between"><span>🎂 <strong>Karuna's birthday</strong> · <span class="muted">Every year on 06-09</span></span><span style="display:flex;gap:4px"><button class="btn-ghost">Edit</button><button class="btn-ghost" style="color:var(--danger)">✕</button></span></div>
+        <div class="assignee-row" style="justify-content:space-between"><span>🔁 <strong>Hatha class</strong> · <span class="muted">Sat &amp; Sun (weekly) from 2026-06-07, 4 wks</span></span><span style="display:flex;gap:4px"><button class="btn-ghost">Edit</button><button class="btn-ghost" style="color:var(--danger)">✕</button></span></div>
+
+        <div class="card" style="padding:12px;margin-top:10px;background:var(--surface-sunk)">
+          <div class="row2">
+            <div class="field" style="margin-bottom:0"><label>Type</label><select><option>Single date</option><option>Yearly (birthday)</option><option>Date range</option><option>Repeating (weekly)</option></select></div>
+            <div class="field" style="margin-bottom:0"><label>Title</label><input placeholder="Event title…" /></div>
+          </div>
+          <div class="row2" style="margin-top:10px">
+            <div class="field" style="margin-bottom:0"><label>Start date</label><input type="date" /></div>
+          </div>
+          <!-- Repeating-only block: weekday toggles + Every (weeks) + Ends (After N weeks / Until date / Never) -->
+          <div class="field" style="margin-top:10px;margin-bottom:0">
+            <label>Repeat on</label>
+            <div style="display:flex;gap:4px">
+              <button type="button" class="btn-primary wd">S</button><button type="button" class="btn-secondary wd">M</button><button type="button" class="btn-secondary wd">T</button><button type="button" class="btn-secondary wd">W</button><button type="button" class="btn-secondary wd">T</button><button type="button" class="btn-secondary wd">F</button><button type="button" class="btn-primary wd">S</button>
+            </div>
+          </div>
+          <div class="row2" style="margin-top:10px">
+            <div class="field" style="margin-bottom:0"><label>Every (weeks)</label><input type="number" value="1" /></div>
+            <div class="field" style="margin-bottom:0"><label>Ends</label><select><option>After N weeks</option><option>Until date</option><option>Never</option></select></div>
+          </div>
+          <div class="modal-foot" style="margin-top:12px"><button class="btn-primary">Add event</button></div>
+        </div>
+      </div>
+
+      <div class="modal-foot"><button class="btn-secondary">Close</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== EXPORT TASKS -->
+<section class="screen">
+  <div class="label">Dialog — Export tasks <span class="as">· ExportDialog.tsx (wide)</span></div>
+  <div class="note">Leaving the scope tree unchecked exports everything the user can see. Groups filter is admin-only. Columns map 1:1 to the backend export registry.</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Export tasks</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field"><label>Format</label><select><option>Excel (.xlsx)</option><option>CSV (.csv)</option></select></div>
+        <div class="field"><label>Include</label><label class="muted" style="display:flex;gap:8px;align-items:center;margin:7px 0 0"><input type="checkbox" style="width:auto" /> Archived tasks</label></div>
+      </div>
+      <div class="field">
+        <label>What to export <span class="muted" style="font-weight:400">(leave all unchecked = everything you can see)</span></label>
+        <div class="export-scope">
+          <div style="margin-bottom:6px">
+            <label style="display:flex;gap:7px;align-items:center;font-weight:600;margin:0;color:var(--text)"><input type="checkbox" style="width:auto" checked /> Karuna Devi</label>
+            <div style="padding-left:22px;display:flex;flex-wrap:wrap;gap:2px 14px">
+              <label class="muted" style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked disabled /> Marketing</label>
+              <label class="muted" style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked disabled /> Design</label>
+            </div>
+          </div>
+          <div style="margin-bottom:6px">
+            <label style="display:flex;gap:7px;align-items:center;font-weight:600;margin:0;color:var(--text)"><input type="checkbox" style="width:auto" /> Sunday Service</label>
+            <div style="padding-left:22px;display:flex;flex-wrap:wrap;gap:2px 14px">
+              <label class="muted" style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> General</label>
+              <label class="muted" style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Seva</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Group(s) <span class="muted" style="font-weight:400">(only tasks assigned to these groups)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:4px 14px">
+          <label class="muted" style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Seva</label>
+          <label class="muted" style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Kitchen</label>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Status</label><select><option>Any status</option><option>To Do</option><option>Done</option></select></div>
+        <div class="field"><label>Priority</label><select><option>Any priority</option><option>Highest</option><option>Medium</option></select></div>
+      </div>
+      <div class="field"><label>Assignee</label><select style="max-width:260px"><option>Any assignee</option><option>Unassigned</option><option>Lila Devi</option></select></div>
+      <div class="field">
+        <label>Columns</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 14px">
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Project</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Sub-project</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Title</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Status</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Priority</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Approval</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Deadline</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Start time</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> End time</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Recurrence</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" checked /> Assignees</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Details</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Requirements</label>
+          <label class="muted" style="display:flex;gap:5px;align-items:center;margin:0;font-size:13px"><input type="checkbox" style="width:auto" /> Links</label>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn-secondary">Cancel</button><button class="btn-primary">Download</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== COPY SUMMARY -->
+<section class="screen">
+  <div class="label">Dialog — Copy daily summary <span class="as">· CopySummary.tsx (wide)</span></div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Copy daily summary</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="row2"><div class="field"><label>Day</label><input type="date" value="2026-06-12" /></div></div>
+      <div class="field"><label>Filter by project (none = all)</label><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn-primary" style="padding:3px 10px;font-size:12px">Karuna Devi</button><button class="btn-secondary" style="padding:3px 10px;font-size:12px">Sunday Service</button></div></div>
+      <div class="row2">
+        <div class="field"><label>Filter by person (none = everyone)</label>
+          <div class="assignee-list" style="max-height:130px">
+            <label class="assignee-row"><input type="checkbox" style="width:auto" checked /><span>Ada</span></label>
+            <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>Mara</span></label>
+            <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>Lila Devi</span></label>
+          </div>
+        </div>
+        <div class="field"><label>Filter by group</label>
+          <div class="assignee-list" style="max-height:130px">
+            <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>👥 Seva</span></label>
+            <label class="assignee-row"><input type="checkbox" style="width:auto" /><span>👥 Kitchen</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label>Preview (paste-ready for WhatsApp / Slack)</label>
+        <textarea rows="9" readonly style="font-family:var(--font-mono);font-size:12px">📋 Tasks for 2026-06-12
+
+*Ada*
+  • 🎨 Stock count — due 2026-06-13
+*Mara*
+  • 🎨 Design spring flyer — due 2026-06-14
+  • 🎨 Send newsletter — overdue — was due 2026-06-02</textarea></div>
+      <div class="modal-foot"><button class="btn-secondary">Close</button><button class="btn-primary">Copy to clipboard</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= APPROVALS -->
+<section class="screen">
+  <div class="label">Dialog — Approvals inbox <span class="as">· Approvals.tsx (wide)</span></div>
+  <div class="note">Empty state: <span class="muted">"Nothing waiting for approval. 🎉"</span>. Bulk buttons relabel to "Approve N / Reject N" once rows are ticked.</div>
+  <div class="modal">
+    <div class="modal-head"><h2 style="font-size:18px">Approvals</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin-top:0;font-size:13px">Tasks members created that need your OK before they appear on the board. Tick rows to bulk-approve, click <strong>Open</strong> to see full details, or approve/reject each.</p>
+      <div class="bulkbar"><button class="btn-primary">Approve all</button><button class="btn-danger">Reject all</button><span class="muted">2 pending</span></div>
+      <table class="tbl"><thead><tr><th></th><th>Task</th><th>Where</th><th>Created by</th><th>Deadline</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><input type="checkbox" style="width:auto"></td><td><strong>Print A2 banner</strong><div class="muted" style="font-size:12px">Print A2 banner for the retreat entrance…</div></td><td style="font-size:12px"><span class="dot" style="background:#c8762f"></span> Karuna / Marketing</td><td class="muted" style="font-size:12px">Mara</td><td class="mono" style="font-size:12px">2026-06-20</td><td style="white-space:nowrap"><button class="btn-ghost">Open</button><button class="btn-ghost" style="color:var(--success)">✓</button><button class="btn-ghost" style="color:var(--danger)">✕</button></td></tr>
+          <tr><td><input type="checkbox" style="width:auto"></td><td><strong>Order extra chairs</strong></td><td style="font-size:12px"><span class="dot" style="background:#2f7d74"></span> Sunday / Seva</td><td class="muted" style="font-size:12px">Lila</td><td class="mono" style="font-size:12px">—</td><td style="white-space:nowrap"><button class="btn-ghost">Open</button><button class="btn-ghost" style="color:var(--success)">✓</button><button class="btn-ghost" style="color:var(--danger)">✕</button></td></tr>
+        </tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ TRASH -->
+<section class="screen">
+  <div class="label">Dialog — Trash (7-day restore) <span class="as">· Trash.tsx (wide)</span></div>
+  <div class="note">Empty state: <span class="muted">"Trash is empty. 🧹"</span>. Sections (Projects / Sub-projects / Tasks) hide when they have no rows.</div>
+  <div class="modal"><div class="modal-head"><h2 style="font-size:18px">Trash</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body"><p class="muted" style="margin-top:0;font-size:13px">Deleted items are kept for 7 days, then removed automatically. Restore brings an item (and anything deleted with it) back.</p>
+      <h3 class="section-title">Sub-projects</h3>
+      <div class="assignee-row" style="justify-content:space-between"><span>Warehouse <span class="muted" style="font-size:12px">· 6d left</span></span><span style="display:flex;gap:6px"><button class="btn-secondary">Restore</button><button class="btn-ghost" style="color:var(--danger)">Delete forever</button></span></div>
+      <h3 class="section-title" style="margin-top:14px">Tasks</h3>
+      <div class="assignee-row" style="justify-content:space-between"><span>Old flyer draft <span class="muted" style="font-size:12px">· 5d left</span></span><span style="display:flex;gap:6px"><button class="btn-secondary">Restore</button><button class="btn-ghost" style="color:var(--danger)">Delete forever</button></span></div>
+    </div></div>
+</section>
+
+<!-- ======================================================= RESTORE POINTS -->
+<section class="screen">
+  <div class="label">Dialog — Restore points (full-board snapshots) <span class="as">· RestorePoints.tsx (wide)</span></div>
+  <div class="modal"><div class="modal-head"><h2 style="font-size:18px">Restore points</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin-top:0;font-size:13px">Full snapshots of the whole board. Restoring auto-saves the current state first (so it's undoable). Auto-saves happen daily (last 10 kept); manual saves stay forever.</p>
+      <div class="bulkbar"><button class="btn-primary">＋ Save restore point now</button></div>
+      <table class="tbl"><thead><tr><th>When</th><th>Name</th><th>Contents</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="mono" style="font-size:12px">2026-06-03 08:00</td><td><strong>Daily auto-save</strong> <span class="pill" style="background:var(--surface-sunk);font-size:11px">auto</span></td><td class="muted" style="font-size:12px">3 projects · 5 sub-projects · 27 tasks · 4 events · 5 groups</td><td style="white-space:nowrap"><button class="btn-secondary">Restore</button><button class="btn-ghost" style="color:var(--danger)">✕</button></td></tr>
+          <tr><td class="mono" style="font-size:12px">2026-06-01 14:20</td><td><strong>Before reorg</strong> <span class="pill" style="background:var(--primary-weak);font-size:11px">manual</span></td><td class="muted" style="font-size:12px">3 projects · 4 sub-projects · 22 tasks · 3 events · 4 groups</td><td style="white-space:nowrap"><button class="btn-secondary">Restore</button><button class="btn-ghost" style="color:var(--danger)">✕</button></td></tr>
+        </tbody></table>
+    </div></div>
+</section>
+
+<!-- ============================================================== HISTORY -->
+<section class="screen">
+  <div class="label">Dialog — History (point-in-time, who was assigned then) <span class="as">· History.tsx (wide)</span></div>
+  <div class="modal"><div class="modal-head"><h2 style="font-size:18px">History — look back at any day</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin-top:0;font-size:13px">An accurate snapshot of who was assigned to what on a given day (recorded daily). History builds up from today forward.</p>
+      <div class="bulkbar"><button class="btn-secondary">← Prev day</button><input type="date" value="2026-03-08" style="width:auto" /><button class="btn-secondary">Next day →</button><button class="btn-ghost">Today</button></div>
+      <h3 style="font-size:15px;display:flex;gap:7px;align-items:center"><span class="dot" style="background:#2f7d74"></span> Sunday Service</h3>
+      <div style="margin:6px 0 0 6px">
+        <div class="muted" style="font-size:12px;margin:4px 0"><span class="dot" style="background:#2f7d74"></span> General</div>
+        <div class="card" style="padding:7px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span>Flowers for altar <span class="muted" style="font-size:12px">· Lakshmi</span></span><span class="pill" style="background:#4f7a3c1a;color:#4f7a3c"><span class="dot" style="background:#4f7a3c"></span> Done</span></div>
+        <div class="card" style="padding:7px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span>Set up chairs <span class="muted" style="font-size:12px">· 👥 Seva</span></span><span class="pill" style="background:#4f7a3c1a;color:#4f7a3c"><span class="dot" style="background:#4f7a3c"></span> Done</span></div>
+      </div>
+    </div></div>
+</section>
+
+<!-- =========================================================== DAY DETAIL -->
+<section class="screen" style="max-width:520px">
+  <div class="label">Dialog — Day detail (calendar day popup) <span class="as">· MonthlyView/WeeklyView + DayTaskList.tsx</span></div>
+  <div class="note">Opens when a day is clicked on the Weekly or Monthly calendar. Lists that day's events then its tasks; the sort defaults to timed-first (timed tasks above a "Untimed" divider). Clicking a row opens the Task popup.</div>
+  <div class="modal"><div class="modal-head"><h2 style="font-size:18px">Friday, Jun 12, 2026</h2><button class="btn-ghost">✕</button></div>
+    <div class="modal-body">
+      <div class="ev-line" style="margin:0 0 8px">🎂 Karuna's birthday</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><label class="muted" style="margin:0;font-size:12px">Sort</label><select style="width:auto"><option>Time (timed first)</option><option>A–Z</option><option>Status</option></select></div>
+      <div class="card" style="padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-label="Priority: High"><polyline points="2,9 7,4 12,9" stroke="#c2762a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="dot" style="background:#c8762f"></span>
+          <span class="mono" style="font-size:12px;color:var(--accent)">1:00–4:00 PM</span>
+          Hatha class
+        </span>
+        <span class="pill" style="background:#2f7d741a;color:#2f7d74"><span class="dot" style="background:#2f7d74"></span> In Progress</span>
+      </div>
+      <div class="day-divider"><span>Untimed</span></div>
+      <div class="card" style="padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#b4452f12">
+        <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-label="Priority: Highest"><polyline points="2,11 7,6 12,11" stroke="#b4452f" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><polyline points="2,7 7,2 12,7" stroke="#b4452f" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="dot" style="background:#c8762f"></span>
+          <span class="muted" style="font-size:12px">All day</span>
+          Design spring flyer <span class="od" title="Missed Deadline">❗</span>
+          <span class="muted" style="font-size:12px">· Mara</span>
+        </span>
+        <span class="pill" style="background:#6b72801a;color:#6b7280"><span class="dot" style="background:#6b7280"></span> To Do</span>
+      </div>
+    </div></div>
+</section>
+
+</body>
+</html>

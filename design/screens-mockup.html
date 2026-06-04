@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — more screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<!--
+  ANANDA TASKBOARD — additional screen mockups (Board, Weekly, Monthly, Task modal).
+  Same "Temple of Light" theme as board-mockup.html. Data-dense, space-economical,
+  functional working tool. Paste into Claude to iterate; keep it one self-contained
+  HTML file. Each <section> is one screen — they can be redesigned independently.
+-->
+<style>
+  :root{
+    --bg:#fbf6ea; --surface:#fffdf8; --surface-sunk:#efe5cc; --border:#e3d6b8;
+    --text:#23262b; --text-muted:#4a5568; --primary:#1e3a6e; --primary-weak:#eaf0f8;
+    --accent:#2c5499; --gold:#c9a24b; --success:#3f7d54; --warn:#7a5c22; --danger:#b4452f;
+    --r-card:10px; --r-ctl:7px; --r-pill:999px;
+    --sh-1:0 1px 2px rgba(30,58,110,.07); --sh-2:0 4px 14px rgba(30,58,110,.10);
+    --font-display:"Fraunces",Georgia,serif; --font-ui:"Instrument Sans",system-ui,sans-serif; --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:var(--font-ui);font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;padding:24px}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:-.012em;line-height:1.15}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  .muted{color:var(--text-muted)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .pill{display:inline-flex;align-items:center;gap:5px;border-radius:var(--r-pill);padding:2px 9px;font-size:12px;font-weight:500}
+  .screen{max-width:1100px;margin:0 auto 40px}
+  .screen > .label{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px}
+  button{font-family:var(--font-ui);font-weight:500;border:1px solid transparent;border-radius:var(--r-ctl);padding:6px 11px;font-size:13px;cursor:pointer}
+  .btn-secondary{background:var(--surface);border-color:var(--border);color:var(--text)}
+  .btn-primary{background:var(--primary);color:var(--surface)}
+  .btn-ghost{background:transparent;color:var(--text-muted)}
+  .bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+
+  /* ---- Kanban ---- */
+  .kanban{display:flex;gap:12px;overflow-x:auto;align-items:flex-start}
+  .kan-col{flex:0 0 250px;background:var(--surface-sunk);border:1px solid var(--border);border-radius:var(--r-card);display:flex;flex-direction:column}
+  .kan-head{display:flex;justify-content:space-between;align-items:center;padding:9px 11px;font-weight:600;font-size:13px;border-top:3px solid var(--border);border-radius:var(--r-card) var(--r-card) 0 0}
+  .kan-body{padding:8px;display:flex;flex-direction:column;gap:8px;min-height:60px}
+  .kan-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:9px 10px;box-shadow:var(--sh-1);font-size:13px;cursor:grab}
+  .kan-card .meta{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:4px}
+  .initials{font-family:var(--font-mono);font-size:10px;background:var(--surface-sunk);color:var(--text-muted);border-radius:var(--r-pill);padding:0 6px}
+
+  /* ---- Weekly (Google-calendar spanning) ---- */
+  .wk{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
+  .wk-head{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+  .wk-hcell{padding:6px 8px;font-size:12px;color:var(--text-muted);border-left:1px solid var(--border)}
+  .wk-hcell:first-child{border-left:none}
+  .wk-body{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px;grid-auto-rows:30px;
+    background:repeating-linear-gradient(to right,transparent,transparent calc(100%/7 - 1px),var(--border) calc(100%/7 - 1px),var(--border) calc(100%/7))}
+  .wk-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;color:#fff;border:none;border-radius:var(--r-pill);padding:3px 10px;font-size:12px;overflow:hidden;white-space:nowrap}
+  .cal-event{font-size:11px;color:var(--accent);font-weight:600;margin-top:4px}
+
+  /* ---- Monthly ---- */
+  .month{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .dow{font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px;font-weight:600}
+  .mcell{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);min-height:78px;padding:6px}
+  .mcell.dim{background:var(--surface-sunk);opacity:.55}
+  .mcell.has-overdue{background:#b4452f0d;border-color:#b4452f55}
+  .mcell.has-soon{background:#c9a24b14;border-color:#c9a24b66}
+  .day-num{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}
+  .badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  .badge{font-family:var(--font-mono);font-size:11px;color:#fff;border-radius:var(--r-pill);padding:1px 7px;font-weight:600}
+  .od{color:var(--danger);font-weight:700} .od-soon{color:var(--warn);font-weight:700}
+
+  /* ---- Modal ---- */
+  .backdrop{background:rgba(30,58,110,.18);border-radius:var(--r-card);padding:30px;display:grid;place-items:start center}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-2);width:100%;max-width:680px}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+  .modal-body{padding:20px}
+  .field{margin-bottom:14px} .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{font-size:12px;color:var(--text-muted);font-weight:500;display:block;margin-bottom:4px}
+  input,select,textarea{font-family:var(--font-ui);font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 10px;width:100%}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  .info{color:var(--text-muted);cursor:help;font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ===== BOARD (Kanban) ===== -->
+<section class="screen">
+  <div class="label">Screen — Board (Kanban, drag to move)</div>
+  <div class="bar"><strong style="font-family:var(--font-display);font-size:16px">Karuna Devi / Marketing</strong></div>
+  <div class="kanban">
+    <div class="kan-col"><div class="kan-head" style="border-top-color:#6b7280"><span><span class="dot" style="background:#6b7280"></span> To Do</span><span class="mono muted">2</span></div>
+      <div class="kan-body">
+        <div class="kan-card"><div style="font-weight:600">Order spring flowers</div><div class="meta"><span class="muted" style="font-size:11px"><span class="dot" style="background:#c8762f"></span> Marketing</span><span class="initials">MA</span></div></div>
+        <div class="kan-card"><div style="font-weight:600">Book hall</div><div class="meta"><span class="muted" style="font-size:11px"><span class="dot" style="background:#c8762f"></span> Marketing</span><span class="initials">OM</span></div></div>
+      </div></div>
+    <div class="kan-col"><div class="kan-head" style="border-top-color:#2f7d74"><span><span class="dot" style="background:#2f7d74"></span> In Progress</span><span class="mono muted">1</span></div>
+      <div class="kan-body"><div class="kan-card"><div style="font-weight:600">Design spring flyer</div><div class="meta"><span class="muted" style="font-size:11px"><span class="dot" style="background:#c8762f"></span> Marketing</span><span class="initials">MA</span></div></div></div></div>
+    <div class="kan-col"><div class="kan-head" style="border-top-color:#b7791f"><span><span class="dot" style="background:#b7791f"></span> Delayed</span><span class="mono muted">0</span></div><div class="kan-body"><div class="muted" style="font-size:12px;padding:8px">—</div></div></div>
+    <div class="kan-col"><div class="kan-head" style="border-top-color:#3f7d54"><span><span class="dot" style="background:#3f7d54"></span> Done</span><span class="mono muted">1</span></div>
+      <div class="kan-body"><div class="kan-card"><div style="font-weight:600">Send save-the-date</div><div class="meta"><span class="muted" style="font-size:11px"><span class="dot" style="background:#c8762f"></span> Marketing</span><span class="initials">AD</span></div></div></div></div>
+  </div>
+</section>
+
+<!-- ===== WEEKLY ===== -->
+<section class="screen">
+  <div class="label">Screen — Weekly (Sun–Sat, spanning bars, assignee initials)</div>
+  <div class="bar"><button class="btn-secondary">← Prev</button><button class="btn-secondary">This week</button><button class="btn-secondary">Next →</button><span class="muted mono">Jun 7 – Jun 13, 2026</span></div>
+  <div class="wk">
+    <div class="wk-head">
+      <div class="wk-hcell">Sun <span class="mono">Jun 7</span></div><div class="wk-hcell">Mon <span class="mono">Jun 8</span></div>
+      <div class="wk-hcell">Tue <span class="mono">Jun 9</span><div class="cal-event">🎂 Karuna's birthday</div></div>
+      <div class="wk-hcell">Wed <span class="mono">Jun 10</span></div><div class="wk-hcell">Thu <span class="mono">Jun 11</span></div>
+      <div class="wk-hcell">Fri <span class="mono">Jun 12</span></div><div class="wk-hcell">Sat <span class="mono">Jun 13</span></div>
+    </div>
+    <div class="wk-body">
+      <div class="wk-bar" style="grid-column:1/4;grid-row:1;background:#c8762f"><span>Design spring flyer ⏰</span><span class="initials" style="background:rgba(255,255,255,.28);color:#fff">MA</span></div>
+      <div class="wk-bar" style="grid-column:5/8;grid-row:1;background:#2f7d74"><span>Website refresh</span><span class="initials" style="background:rgba(255,255,255,.28);color:#fff">OM</span></div>
+      <div class="wk-bar" style="grid-column:6/7;grid-row:2;background:var(--gold)"><span>Stock count ❗</span><span class="initials" style="background:rgba(255,255,255,.28);color:#fff">AD</span></div>
+      <div class="wk-bar" style="grid-column:2/3;grid-row:2;background:var(--danger)"><span>Newsletter ❗</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MONTHLY ===== -->
+<section class="screen">
+  <div class="label">Screen — Monthly (color-coded count badges, ❗ overdue/tomorrow)</div>
+  <div class="bar"><button class="btn-secondary">← Prev</button><button class="btn-secondary">This month</button><button class="btn-secondary">Next →</button><span class="muted mono">June 2026</span></div>
+  <div class="month">
+    <div class="dow">Sun</div><div class="dow">Mon</div><div class="dow">Tue</div><div class="dow">Wed</div><div class="dow">Thu</div><div class="dow">Fri</div><div class="dow">Sat</div>
+    <div class="mcell"><span class="day-num">Jun 7</span><div class="badges"><span class="badge" style="background:#c8762f">2</span></div></div>
+    <div class="mcell has-overdue"><span class="day-num">Jun 8 <span class="od" title="Missed Deadline">❗</span></span><div class="badges"><span class="badge" style="background:#c8762f">1</span><span class="badge" style="background:#2f7d74">1</span></div></div>
+    <div class="mcell"><span class="day-num">Jun 9</span><div class="cal-event">🎂 Karuna</div></div>
+    <div class="mcell"><span class="day-num">Jun 10</span></div>
+    <div class="mcell"><span class="day-num">Jun 11</span><div class="badges"><span class="badge" style="background:#7a5aa6">3</span></div></div>
+    <div class="mcell has-soon"><span class="day-num">Jun 12 <span class="od-soon" title="Deadline Tomorrow">❗</span></span><div class="badges"><span class="badge" style="background:#c8762f">1</span></div></div>
+    <div class="mcell"><span class="day-num">Jun 13</span><div class="badges"><span class="badge" style="background:#2f7d74">2</span></div></div>
+    <div class="mcell dim"><span class="day-num">Jun 14</span></div><div class="mcell"><span class="day-num">Jun 15</span></div><div class="mcell"><span class="day-num">Jun 16</span></div>
+    <div class="mcell"><span class="day-num">Jun 17</span></div><div class="mcell"><span class="day-num">Jun 18</span></div><div class="mcell"><span class="day-num">Jun 19</span></div><div class="mcell"><span class="day-num">Jun 20</span></div>
+  </div>
+</section>
+
+<!-- ===== TASK MODAL ===== -->
+<section class="screen">
+  <div class="label">Screen — Task modal (create / edit)</div>
+  <div class="backdrop">
+    <div class="modal">
+      <div class="modal-head"><h2 style="font-size:18px">Edit task</h2><button class="btn-ghost">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Task name</label><input value="Design spring flyer" /></div>
+        <div class="row2">
+          <div class="field"><label>Project</label><select><option>Karuna Devi</option></select></div>
+          <div class="field"><label>Sub-project</label><select><option>Marketing</option></select></div>
+        </div>
+        <div class="field"><label>Assignees</label>
+          <div style="display:flex;align-items:center;gap:8px"><span class="pill" style="background:var(--surface-sunk)">Mara</span><span class="pill" style="background:var(--primary-weak)">👥 Seva</span><button class="btn-ghost">Edit</button></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Start date <span class="info" title="If blank and a deadline is set, shows from creation to the deadline">ⓘ</span></label><input type="date" value="2026-06-07" /></div>
+          <div class="field"><label>Deadline</label><input type="date" value="2026-06-12" /></div>
+        </div>
+        <div class="field"><label>Status (applied immediately)</label>
+          <div style="display:flex;gap:8px;align-items:center"><span class="pill" style="background:#2f7d741a;color:#2f7d74"><span class="dot" style="background:#2f7d74"></span> In Progress</span><select style="width:auto"><option>Change to…</option></select></div>
+        </div>
+        <div class="field"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:auto" checked /> Repeats</label></div>
+        <div class="field"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:auto" /> Monitor — notify admins when this task is moved</label></div>
+        <div class="modal-foot"><button class="btn-secondary">🔗 Share</button><button class="btn-secondary" style="margin-right:auto"></button><button class="btn-secondary">Cancel</button><button class="btn-secondary" style="border-color:var(--danger);color:var(--danger)">Delete</button><button class="btn-primary">Save</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
