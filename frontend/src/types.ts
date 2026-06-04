@@ -185,7 +185,7 @@ export const STATUS_LABEL: Record<Status, string> = {
 };
 export const STATUS_COLOR: Record<Status, string> = {
   todo: "#6b7280",
-  in_progress: "#2f7d74",
-  done: "#4f7a3c",
-  delayed: "#b7791f",
+  in_progress: "#2c64a8",  // Claude Design azure (was teal)
+  done: "#3f7d54",
+  delayed: "#bb3b28",      // terracotta (was gold)
 };

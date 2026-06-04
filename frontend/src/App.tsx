@@ -135,7 +135,7 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="dot" style={{ background: "var(--primary)", width: 11, height: 11 }} />
+          <img src="/logo.png" alt="" width={30} height={30} style={{ objectFit: "contain", display: "block", flex: "none" }} />
           <strong>Ananda Taskboard</strong>
         </div>
         <div className="topbar-actions">
