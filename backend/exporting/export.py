@@ -110,7 +110,12 @@ def _queryset(user, params):
 
     group_ids = _csv_ids(params.get("groups"))
     if group_ids:
-        qs = qs.filter(assignee_groups__id__in=group_ids)
+        # tasks assigned to the group directly OR to any of its members
+        # (member-expansion, matching the List view's ?assignee_group= filter)
+        from django.db.models import Q
+        from accounts.models import User
+        member_ids = list(User.objects.filter(member_groups__id__in=group_ids).values_list("id", flat=True))
+        qs = qs.filter(Q(assignee_groups__id__in=group_ids) | Q(assignees__id__in=member_ids))
     if params.get("status"):
         qs = qs.filter(status=params["status"])
     if params.get("priority"):

@@ -171,3 +171,17 @@ def test_export_filter_by_group(admin):
     rows = read_csv(login(admin).get(f"/api/export?fmt=csv&groups={g.id}&columns=title"))
     flat = [c for r in rows for c in r]
     assert "GroupTask" in flat and "NoGroup" not in flat
+
+
+def test_export_group_filter_includes_members(admin):
+    from accounts.models import Group, User
+    p = Project.objects.create(name="GE"); sp = SubProject.objects.create(project=p, name="S")
+    g = Group.objects.create(name="Team")
+    u = User.objects.create_user(email="gm@example.com", name="GM", password="pw-strong-123")
+    g.members.add(u)
+    t1 = Task.objects.create(subproject=sp, title="MemberTask"); t1.assignees.add(u)   # via membership
+    t2 = Task.objects.create(subproject=sp, title="DirectTask"); t2.assignee_groups.add(g)  # direct
+    Task.objects.create(subproject=sp, title="Outsider")
+    rows = read_csv(login(admin).get(f"/api/export?fmt=csv&groups={g.id}&columns=title"))
+    flat = [c for r in rows for c in r]
+    assert "MemberTask" in flat and "DirectTask" in flat and "Outsider" not in flat
