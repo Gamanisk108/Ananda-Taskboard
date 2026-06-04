@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 import { DeleteWithMove } from "./DeleteWithMove";
+import { EmojiPicker } from "./EmojiPicker";
 
 interface Sub {
   id: number;
@@ -124,7 +125,7 @@ function ProjectEditor({
     <div className="card" style={{ padding: 12, marginBottom: 12 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
         <input type="color" value={p.color} onChange={(e) => setP({ ...p, color: e.target.value })} style={{ width: 44, padding: 2 }} />
-        <input value={p.emoji} onChange={(e) => setP({ ...p, emoji: e.target.value })} placeholder="🎨" title="Emoji for chat summaries" style={{ width: 52, textAlign: "center" }} maxLength={4} />
+        <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title="Emoji for chat summaries" />
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>Save</button>
         <button className="btn-danger" onClick={() => onDeleteProject(project)}>Delete</button>
