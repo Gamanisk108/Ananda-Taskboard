@@ -140,5 +140,24 @@
     "system": "跟随系统",
     "light": "浅色",
     "dark": "深色"
+  },
+  "bulk": {
+    "title": "批量迁移任务",
+    "intro": "筛选、勾选要修改的任务，然后一次应用一种变更。仅管理员；更改立即生效。",
+    "counts": "已选 {{sel}} · 显示 {{shown}}",
+    "moveTo": "移动到",
+    "subprojectPh": "子项目…",
+    "setStatus": "设置状态",
+    "statusPh": "状态…",
+    "setDeadline": "设置截止日期",
+    "reassignTo": "重新分配给",
+    "personPh": "人员…",
+    "apply": "应用",
+    "archiveSelected": "归档所选",
+    "noMatch": "没有匹配的任务。",
+    "colWhere": "项目 / 子项目",
+    "updated": "已更新 {{n}} 个任务",
+    "error": "无法应用 — 请检查值。",
+    "archiveConfirm": "归档 {{n}} 个任务？"
   }
 }

@@ -140,5 +140,24 @@
     "system": "Sistema",
     "light": "Claro",
     "dark": "Oscuro"
+  },
+  "bulk": {
+    "title": "Migración masiva",
+    "intro": "Filtra, marca las tareas a cambiar y aplica una transición a la vez. Solo administradores; los cambios son inmediatos.",
+    "counts": "{{sel}} seleccionadas · {{shown}} mostradas",
+    "moveTo": "Mover a",
+    "subprojectPh": "Subproyecto…",
+    "setStatus": "Definir estado",
+    "statusPh": "Estado…",
+    "setDeadline": "Definir fecha límite",
+    "reassignTo": "Reasignar a",
+    "personPh": "Persona…",
+    "apply": "Aplicar",
+    "archiveSelected": "Archivar seleccionadas",
+    "noMatch": "Ninguna tarea coincide.",
+    "colWhere": "Proyecto / subproyecto",
+    "updated": "{{n}} tareas actualizadas",
+    "error": "No se pudo aplicar — revisa el valor.",
+    "archiveConfirm": "¿Archivar {{n}} tareas?"
   }
 }

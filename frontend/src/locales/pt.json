@@ -140,5 +140,24 @@
     "system": "Sistema",
     "light": "Claro",
     "dark": "Escuro"
+  },
+  "bulk": {
+    "title": "Migração em massa",
+    "intro": "Filtre, marque as tarefas a alterar e aplique uma transição por vez. Apenas administradores; as alterações são imediatas.",
+    "counts": "{{sel}} selecionadas · {{shown}} exibidas",
+    "moveTo": "Mover para",
+    "subprojectPh": "Subprojeto…",
+    "setStatus": "Definir status",
+    "statusPh": "Status…",
+    "setDeadline": "Definir prazo",
+    "reassignTo": "Reatribuir a",
+    "personPh": "Pessoa…",
+    "apply": "Aplicar",
+    "archiveSelected": "Arquivar selecionadas",
+    "noMatch": "Nenhuma tarefa corresponde.",
+    "colWhere": "Projeto / subprojeto",
+    "updated": "{{n}} tarefas atualizadas",
+    "error": "Não foi possível aplicar — verifique o valor.",
+    "archiveConfirm": "Arquivar {{n}} tarefas?"
   }
 }

@@ -140,5 +140,24 @@
     "system": "Système",
     "light": "Clair",
     "dark": "Sombre"
+  },
+  "bulk": {
+    "title": "Migration groupée",
+    "intro": "Filtrez, cochez les tâches à modifier, puis appliquez une transition à la fois. Réservé aux admins ; les changements sont immédiats.",
+    "counts": "{{sel}} sélectionnées · {{shown}} affichées",
+    "moveTo": "Déplacer vers",
+    "subprojectPh": "Sous-projet…",
+    "setStatus": "Définir le statut",
+    "statusPh": "Statut…",
+    "setDeadline": "Définir l'échéance",
+    "reassignTo": "Réaffecter à",
+    "personPh": "Personne…",
+    "apply": "Appliquer",
+    "archiveSelected": "Archiver la sélection",
+    "noMatch": "Aucune tâche ne correspond.",
+    "colWhere": "Projet / sous-projet",
+    "updated": "{{n}} tâches mises à jour",
+    "error": "Impossible d'appliquer — vérifiez la valeur.",
+    "archiveConfirm": "Archiver {{n}} tâches ?"
   }
 }

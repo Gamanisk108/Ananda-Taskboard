@@ -140,5 +140,24 @@
     "system": "System",
     "light": "Light",
     "dark": "Dark"
+  },
+  "bulk": {
+    "title": "Bulk migrate tasks",
+    "intro": "Filter, tick the tasks to change, then apply one transition at a time. Admin-only; changes are immediate.",
+    "counts": "{{sel}} selected · {{shown}} shown",
+    "moveTo": "Move to",
+    "subprojectPh": "Sub-project…",
+    "setStatus": "Set status",
+    "statusPh": "Status…",
+    "setDeadline": "Set deadline",
+    "reassignTo": "Reassign to",
+    "personPh": "Person…",
+    "apply": "Apply",
+    "archiveSelected": "Archive selected",
+    "noMatch": "No tasks match.",
+    "colWhere": "Project / sub-project",
+    "updated": "{{n}} task(s) updated",
+    "error": "Could not apply — check the value.",
+    "archiveConfirm": "Archive {{n}} task(s)?"
   }
 }

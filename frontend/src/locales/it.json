@@ -140,5 +140,24 @@
     "system": "Sistema",
     "light": "Chiaro",
     "dark": "Scuro"
+  },
+  "bulk": {
+    "title": "Migrazione di massa",
+    "intro": "Filtra, seleziona le attività da cambiare, poi applica una transizione alla volta. Solo admin; le modifiche sono immediate.",
+    "counts": "{{sel}} selezionate · {{shown}} mostrate",
+    "moveTo": "Sposta in",
+    "subprojectPh": "Sotto-progetto…",
+    "setStatus": "Imposta stato",
+    "statusPh": "Stato…",
+    "setDeadline": "Imposta scadenza",
+    "reassignTo": "Riassegna a",
+    "personPh": "Persona…",
+    "apply": "Applica",
+    "archiveSelected": "Archivia selezionate",
+    "noMatch": "Nessuna attività corrisponde.",
+    "colWhere": "Progetto / sotto-progetto",
+    "updated": "{{n}} attività aggiornate",
+    "error": "Impossibile applicare — controlla il valore.",
+    "archiveConfirm": "Archiviare {{n}} attività?"
   }
 }

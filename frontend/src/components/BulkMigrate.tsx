@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useUsers, userName } from "../users";
 import { useStatuses } from "../statuses";
@@ -9,6 +10,7 @@ import { PRIORITY_META, type Me, type Task } from "../types";
 /** Admin bulk-migration tool: a filterable/sortable checklist of tasks; bulk-set
  *  their sub-project, assignees, status, or deadline in one go. */
 export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () => void; onChanged: () => void }) {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
   const [q, setQ] = useState("");
@@ -47,14 +49,14 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
     setSel(allShown ? new Set() : new Set(filtered.map((t) => t.id)));
   }
 
-  async function applyBulk(action: string, value: unknown, label: string) {
+  async function applyBulk(action: string, value: unknown) {
     if (sel.size === 0) return;
     setBusy(true); setMsg("");
     try {
       const r = await api.post("/api/tasks/bulk", { ids: [...sel], action, value }) as { updated: number };
-      setMsg(`${label}: ${r.updated} task(s) updated.`);
+      setMsg(t("bulk.updated", { n: r.updated }));
       onChanged(); load();
-    } catch { setMsg("Could not apply — check the value."); }
+    } catch { setMsg(t("bulk.error")); }
     finally { setBusy(false); }
   }
 
@@ -65,70 +67,68 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
   const [assignee, setAssignee] = useState(0);
 
   return (
-    <Modal title="Bulk migrate tasks" onClose={onClose} wide>
-      <div className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-        Filter, tick the tasks to change, then apply one transition at a time. Admin-only; changes are immediate.
-      </div>
+    <Modal title={t("bulk.title")} onClose={onClose} wide>
+      <div className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("bulk.intro")}</div>
 
       <div className="filters" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0" }}>
-        <input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 200 }} />
+        <input placeholder={t("common.search")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 200 }} />
         <select value={fProject} onChange={(e) => setFProject(Number(e.target.value))} style={{ width: "auto" }}>
-          <option value={0}>All projects</option>
+          <option value={0}>{t("list.allProjects")}</option>
           {me.tree.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={{ width: "auto" }}>
-          <option value="">Any status</option>
+          <option value="">{t("list.anyStatus")}</option>
           {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
-        <span className="muted" style={{ alignSelf: "center", fontSize: 12 }}>{sel.size} selected · {filtered.length} shown</span>
+        <span className="muted" style={{ alignSelf: "center", fontSize: 12 }}>{t("bulk.counts", { sel: sel.size, shown: filtered.length })}</span>
       </div>
 
       {/* bulk action bar */}
       <div className="card" style={{ padding: 10, marginBottom: 12, background: "var(--surface-sunk)", display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end", opacity: sel.size ? 1 : 0.55 }}>
-        <div className="field" style={{ margin: 0 }}><label>Move to</label>
+        <div className="field" style={{ margin: 0 }}><label>{t("bulk.moveTo")}</label>
           <div style={{ display: "flex", gap: 6 }}>
             <select value={moveTo} onChange={(e) => setMoveTo(Number(e.target.value))} style={{ width: "auto" }}>
-              <option value={0}>Sub-project…</option>{subOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+              <option value={0}>{t("bulk.subprojectPh")}</option>{subOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
-            <button className="btn-secondary" disabled={busy || !sel.size || !moveTo} onClick={() => applyBulk("move", moveTo, "Moved")}>Apply</button>
+            <button className="btn-secondary" disabled={busy || !sel.size || !moveTo} onClick={() => applyBulk("move", moveTo)}>{t("bulk.apply")}</button>
           </div>
         </div>
-        <div className="field" style={{ margin: 0 }}><label>Set status</label>
+        <div className="field" style={{ margin: 0 }}><label>{t("bulk.setStatus")}</label>
           <div style={{ display: "flex", gap: 6 }}>
             <select value={setTo} onChange={(e) => setSetTo(e.target.value)} style={{ width: "auto" }}>
-              <option value="">Status…</option>{statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+              <option value="">{t("bulk.statusPh")}</option>{statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
             </select>
-            <button className="btn-secondary" disabled={busy || !sel.size || !setTo} onClick={() => applyBulk("status", setTo, "Status set")}>Apply</button>
+            <button className="btn-secondary" disabled={busy || !sel.size || !setTo} onClick={() => applyBulk("status", setTo)}>{t("bulk.apply")}</button>
           </div>
         </div>
-        <div className="field" style={{ margin: 0 }}><label>Set deadline</label>
+        <div className="field" style={{ margin: 0 }}><label>{t("bulk.setDeadline")}</label>
           <div style={{ display: "flex", gap: 6 }}>
             <input type="date" value={due} onChange={(e) => setDue(e.target.value)} style={{ width: "auto" }} />
-            <button className="btn-secondary" disabled={busy || !sel.size} onClick={() => applyBulk("deadline", due, "Deadline set")}>Apply</button>
+            <button className="btn-secondary" disabled={busy || !sel.size} onClick={() => applyBulk("deadline", due)}>{t("bulk.apply")}</button>
           </div>
         </div>
-        <div className="field" style={{ margin: 0 }}><label>Reassign to</label>
+        <div className="field" style={{ margin: 0 }}><label>{t("bulk.reassignTo")}</label>
           <div style={{ display: "flex", gap: 6 }}>
             <select value={assignee} onChange={(e) => setAssignee(Number(e.target.value))} style={{ width: "auto", maxWidth: 150 }}>
-              <option value={0}>Person…</option><option value={-1}>Unassigned</option>
+              <option value={0}>{t("bulk.personPh")}</option><option value={-1}>{t("list.unassigned")}</option>
               {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
             </select>
             <button className="btn-secondary" disabled={busy || !sel.size || !assignee}
-              onClick={() => applyBulk("assign", assignee === -1 ? [] : [assignee], "Reassigned")}>Apply</button>
+              onClick={() => applyBulk("assign", assignee === -1 ? [] : [assignee])}>{t("bulk.apply")}</button>
           </div>
         </div>
         <button className="btn-danger" disabled={busy || !sel.size} style={{ marginLeft: "auto" }}
-          onClick={() => { if (confirm(`Archive ${sel.size} task(s)?`)) applyBulk("archive", null, "Archived"); }}>Archive selected</button>
+          onClick={() => { if (confirm(t("bulk.archiveConfirm", { n: sel.size }))) applyBulk("archive", null); }}>{t("bulk.archiveSelected")}</button>
       </div>
 
       {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 8 }}>{msg}</div>}
 
-      {!tasks ? <Spinner /> : filtered.length === 0 ? <div className="empty">No tasks match.</div> : (
+      {!tasks ? <Spinner /> : filtered.length === 0 ? <div className="empty">{t("bulk.noMatch")}</div> : (
         <div style={{ maxHeight: 380, overflow: "auto", border: "1px solid var(--border)", borderRadius: "var(--r-ctl)" }}>
           <table className="tbl" style={{ border: "none" }}>
             <thead><tr>
               <th style={{ width: 28 }}><input type="checkbox" style={{ width: "auto" }} checked={allShown} onChange={toggleAll} /></th>
-              <th></th><th>Task</th><th>Project / sub-project</th><th>Assignees</th><th>Status</th><th>Deadline</th>
+              <th></th><th>{t("list.colTask")}</th><th>{t("bulk.colWhere")}</th><th>{t("list.colAssignees")}</th><th>{t("list.colStatus")}</th><th>{t("list.colDeadline")}</th>
             </tr></thead>
             <tbody>
               {filtered.map((t) => {

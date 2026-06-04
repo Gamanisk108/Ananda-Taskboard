@@ -140,5 +140,24 @@
     "system": "System",
     "light": "Hell",
     "dark": "Dunkel"
+  },
+  "bulk": {
+    "title": "Massenmigration",
+    "intro": "Filtern, die zu ändernden Aufgaben markieren und eine Änderung nach der anderen anwenden. Nur Admins; Änderungen sind sofort wirksam.",
+    "counts": "{{sel}} ausgewählt · {{shown}} angezeigt",
+    "moveTo": "Verschieben nach",
+    "subprojectPh": "Unterprojekt…",
+    "setStatus": "Status setzen",
+    "statusPh": "Status…",
+    "setDeadline": "Frist setzen",
+    "reassignTo": "Neu zuweisen an",
+    "personPh": "Person…",
+    "apply": "Anwenden",
+    "archiveSelected": "Auswahl archivieren",
+    "noMatch": "Keine Aufgaben gefunden.",
+    "colWhere": "Projekt / Unterprojekt",
+    "updated": "{{n}} Aufgaben aktualisiert",
+    "error": "Konnte nicht angewendet werden — Wert prüfen.",
+    "archiveConfirm": "{{n}} Aufgaben archivieren?"
   }
 }
