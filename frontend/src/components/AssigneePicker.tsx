@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { UserLite } from "../types";
 
 export interface GroupLite {
@@ -21,6 +22,7 @@ interface Props {
 export function AssigneePicker({
   users, groups, assignees, setAssignees, assigneeGroups, setAssigneeGroups, subproject, isAdmin,
 }: Props) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState<number>(0); // 0 = all people
@@ -53,7 +55,7 @@ export function AssigneePicker({
     const none = assignees.length === 0 && groupNames.length === 0;
     return (
       <div className="field">
-        <label>Assignees</label>
+        <label>{t("task.assignees")}</label>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {none ? (
             <span className="muted">None assigned</span>
@@ -63,7 +65,7 @@ export function AssigneePicker({
               {groupNames.map((n) => <span key={n} className="pill" style={{ background: "var(--primary-weak)" }}>👥 {n}</span>)}
             </span>
           )}
-          <button type="button" className="btn-ghost" onClick={() => setEditing(true)}>Edit</button>
+          <button type="button" className="btn-ghost" onClick={() => setEditing(true)}>{t("common.edit")}</button>
         </div>
       </div>
     );
@@ -72,7 +74,7 @@ export function AssigneePicker({
   // Expanded editor
   return (
     <div className="field">
-      <label>Assignees</label>
+      <label>{t("task.assignees")}</label>
       <div className="card" style={{ padding: 10, background: "var(--surface-sunk)" }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <input placeholder="Search by name…" value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { useUsers } from "../users";
@@ -7,6 +8,7 @@ import type { Subtask } from "../types";
 /** Subtasks of a task: a simple list, each with a changeable status dropdown,
  *  plus add / delete. Calls onChanged so the List card's status dots refresh. */
 export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged?: () => void }) {
+  const { t } = useTranslation();
   const [subs, setSubs] = useState<Subtask[]>([]);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -50,7 +52,7 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
 
   return (
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">Subtasks ({subs.length})</h3>
+      <h3 className="section-title">{t("task.subtasks")} ({subs.length})</h3>
       {subs.map((s) => (
         <div key={s.id} data-testid="subtask-row" style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
           <span style={{ flex: 1 }}>{s.title}</span>
@@ -66,10 +68,10 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
         </div>
       ))}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-        <input data-testid="subtask-add-input" placeholder="Add a subtask…" value={title}
+        <input data-testid="subtask-add-input" placeholder={t("task.addSubtask")} value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} />
-        <button type="button" className="btn-secondary" data-testid="subtask-add-button" disabled={busy} onClick={add}>Add</button>
+        <button type="button" className="btn-secondary" data-testid="subtask-add-button" disabled={busy} onClick={add}>{t("common.add")}</button>
       </div>
     </div>
   );

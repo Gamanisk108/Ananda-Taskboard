@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./App.css";
+import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
+import { api } from "./api/client";
 import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
 import { Spinner, ColorDot } from "./components/common";
@@ -24,6 +27,17 @@ type ViewMode = "list" | "board" | "weekly" | "monthly";
 
 export default function App() {
   const { me, loading, logout, refreshMe } = useAuth();
+  const { t } = useTranslation();
+
+  // Apply the user's preferred UI language (falls back to browser locale → English).
+  useEffect(() => {
+    i18n.changeLanguage(resolveLanguage(me?.language));
+  }, [me?.language]);
+
+  async function changeLanguage(lang: string) {
+    await i18n.changeLanguage(lang);
+    try { await api.patch("/api/me", { language: lang }); refreshMe(); } catch { /* keep local change */ }
+  }
   const [topTab, setTopTab] = useState<"global" | number | null>(null);
   const [subTab, setSubTab] = useState<"overview" | number | null>(null);
   const [view, setView] = useState<ViewMode>("list");
@@ -112,23 +126,25 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowApprovals(true)} title="Approvals">✅ Approvals</button>
+            <button className="btn-secondary" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}>✅ {t("nav.approvals")}</button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowTeam(true)} title="Team & permissions">👥 Team</button>
+            <button className="btn-secondary" onClick={() => setShowTeam(true)} title={t("nav.team")}>👥 {t("nav.team")}</button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowTrash(true)} title="Restore deleted items">♻️ Trash</button>
+            <button className="btn-secondary" onClick={() => setShowTrash(true)} title={t("nav.trash")}>♻️ {t("nav.trash")}</button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowManage(true)} title="Manage projects">🗂️ Projects</button>
+            <button className="btn-secondary" onClick={() => setShowManage(true)} title={t("nav.projects")}>🗂️ {t("nav.projects")}</button>
           )}
           {canCreate && (
-            <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title="Create a task">＋ New task</button>
+            <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}>＋ {t("nav.newTask")}</button>
           )}
           <UserMenu
             name={me.name || me.email}
             isAdmin={me.is_admin}
+            language={resolveLanguage(me.language)}
+            onLanguage={changeLanguage}
             onSettings={() => setShowSettings(true)}
             onRestore={() => setShowRestore(true)}
             onHistory={() => setShowHistory(true)}
@@ -140,7 +156,7 @@ export default function App() {
       <nav className="tabs">
         {tree?.show_global_overview && (
           <TabBtn active={isGlobal} onClick={() => { setTopTab("global"); setSubTab(null); }}>
-            Global Overview
+            {t("nav.globalOverview")}
           </TabBtn>
         )}
         {projects.map((p) => (
@@ -148,13 +164,13 @@ export default function App() {
             <ColorDot color={p.color} /> {p.name}
           </TabBtn>
         ))}
-        {projects.length === 0 && <span className="muted" style={{ padding: 10 }}>No projects yet.</span>}
+        {projects.length === 0 && <span className="muted" style={{ padding: 10 }}>{t("nav.noProjects")}</span>}
       </nav>
 
       {currentProject && currentProject.show_project_overview && (
         <nav className="tabs subtabs">
           <TabBtn active={effectiveSub === "overview"} onClick={() => setSubTab("overview")}>
-            Project Overview
+            {t("nav.projectOverview")}
           </TabBtn>
           {currentProject.subprojects.map((s) => (
             <TabBtn key={s.id} active={effectiveSub === s.id} onClick={() => setSubTab(s.id)}>
@@ -168,13 +184,13 @@ export default function App() {
         <div className="seg">
           {(["list", "board", "weekly", "monthly"] as ViewMode[]).map((v) => (
             <button key={v} className={view === v ? "seg-on" : "seg-off"} onClick={() => setView(v)}>
-              {v[0].toUpperCase() + v.slice(1)}
+              {t(`view.${v}`)}
             </button>
           ))}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <ShareViewButton />
-          <button className="btn-secondary" onClick={() => setShowSummary(true)}>Copy summary</button>
+          <button className="btn-secondary" onClick={() => setShowSummary(true)}>{t("view.copySummary")}</button>
           <ExportDialog me={me} />
           {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
           <button
@@ -182,7 +198,7 @@ export default function App() {
             onClick={() => { setView("list"); setShowArchived((a) => !a); }}
             title="Completed tasks auto-archive after 7 days"
           >
-            📖 {showArchived ? "Hide archive" : "Archive"}
+            📖 {showArchived ? t("view.hideArchive") : t("view.archive")}
           </button>
         </div>
       </div>
@@ -237,9 +253,11 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
 }
 
-function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onLogout }: {
-  name: string; isAdmin: boolean; onSettings: () => void; onRestore: () => void; onHistory: () => void; onLogout: () => void;
+function UserMenu({ name, isAdmin, language, onLanguage, onSettings, onRestore, onHistory, onLogout }: {
+  name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
+  onSettings: () => void; onRestore: () => void; onHistory: () => void; onLogout: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -258,32 +276,42 @@ function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onLogout }:
 
   return (
     <div className="usermenu" onClick={(e) => e.stopPropagation()}>
-      <button className="btn-secondary usermenu-btn" onClick={() => setOpen((o) => !o)} title="Account menu">
+      <button className="btn-secondary usermenu-btn" onClick={() => setOpen((o) => !o)} title={t("menu.account")}>
         {name} <span style={{ fontSize: 10 }}>▾</span>
       </button>
       {open && (
         <div className="usermenu-pop">
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
-              <span>⚙️</span> Settings
+              <span>⚙️</span> {t("menu.settings")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onHistory(); }}>
-              <span>🕰️</span> History
+              <span>🕰️</span> {t("menu.history")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onRestore(); }}>
-              <span>↻</span> Restore points
+              <span>↻</span> {t("menu.restorePoints")}
             </button>
           )}
           <button className="usermenu-item" onClick={enableNotifications}>
-            <span>🔔</span> {msg || "Turn on notifications"}
+            <span>🔔</span> {msg || t("menu.notificationsOn")}
           </button>
           <div className="usermenu-sep" />
+          <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
+            <span>🌐</span> {t("menu.language")}
+            <select data-testid="language-select" value={language}
+              onChange={(e) => onLanguage(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "auto", marginLeft: "auto" }}>
+              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          </label>
+          <div className="usermenu-sep" />
           <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
-            <span>🚪</span> Log out
+            <span>🚪</span> {t("menu.logout")}
           </button>
         </div>
       )}
@@ -292,12 +320,13 @@ function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onLogout }:
 }
 
 function ShareViewButton() {
-  const [label, setLabel] = useState("Share view");
+  const { t } = useTranslation();
+  const [label, setLabel] = useState("");
   async function share() {
     const { shareUrl } = await import("./share");
     setLabel(await shareUrl(window.location.href));
-    setTimeout(() => setLabel("Share view"), 2500);
+    setTimeout(() => setLabel(""), 2500);
   }
-  return <button className="btn-secondary" onClick={share} title="Copy a link to this exact view">🔗 {label}</button>;
+  return <button className="btn-secondary" onClick={share} title="Copy a link to this exact view">🔗 {label || t("view.shareView")}</button>;
 }
 

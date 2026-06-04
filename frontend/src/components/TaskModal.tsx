@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
@@ -28,6 +29,7 @@ const WD_TOGGLES = [
 ];
 
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
+  const { t } = useTranslation();
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
@@ -57,7 +59,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const statuses = useStatuses();
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [shareLabel, setShareLabel] = useState("🔗 Share");
+  const [shareLabel, setShareLabel] = useState("");
 
   useEffect(() => {
     if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
@@ -140,39 +142,39 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal title={editing ? `Edit task · #${task!.id}` : "New task"} onClose={onClose} wide>
+    <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide>
       <form onSubmit={save}>
         {editing && task!.approval_state !== "approved" && (
           <div className="field">
             <span className="pill" style={{ background: "#b7791f1a", color: "var(--warn)" }}>
-              {task!.approval_state === "pending" ? "Pending approval" : "Rejected"}
+              {task!.approval_state === "pending" ? t("task.pendingApproval") : t("task.rejected")}
             </span>
           </div>
         )}
         {editing && task!.archived_at && (
           <div className="field" style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <span className="pill" style={{ background: "var(--surface-sunk)" }}>🗄 Archived</span>
+            <span className="pill" style={{ background: "var(--surface-sunk)" }}>🗄 {t("task.archived")}</span>
             <button type="button" className="btn-secondary"
               onClick={async () => { await api.post(`/api/tasks/${task!.id}/unarchive`, {}); onSaved(); }}>
-              Unarchive (put back on board)
+              {t("task.unarchive")}
             </button>
           </div>
         )}
 
         <div className="field">
-          <label>Task name</label>
-          <input data-testid="task-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="e.g. Design spring flyer" />
+          <label>{t("task.name")}</label>
+          <input data-testid="task-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder={t("task.namePlaceholder")} />
         </div>
 
         <div className="row2">
           <div className="field">
-            <label>Project</label>
+            <label>{t("task.project")}</label>
             <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))}>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div className="field">
-            <label>Sub-project</label>
+            <label>{t("task.subproject")}</label>
             <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))}>
               {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -181,23 +183,23 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="row2">
           <div className="field">
-            <label>Status{canChangeStatus ? " (applied immediately)" : ""}</label>
+            <label>{canChangeStatus ? t("task.statusApplied") : t("task.status")}</label>
             {canChangeStatus ? (
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <StatusPill status={curStatus} />
                 <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
-                  <option value="">Change to…</option>
+                  <option value="">{t("task.changeTo")}</option>
                   {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                 </select>
               </div>
             ) : editing ? (
               <StatusPill status={curStatus} />
             ) : (
-              <span className="muted" style={{ fontSize: 13 }}>Set after creating</span>
+              <span className="muted" style={{ fontSize: 13 }}>{t("task.setAfterCreating")}</span>
             )}
           </div>
           <div className="field">
-            <label>Priority</label>
+            <label>{t("task.priority")}</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <PriorityIcon level={priority} size={16} />
               <select data-testid="task-priority-select" value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
@@ -220,11 +222,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="row2">
           <div className="field">
-            <label>Details</label>
+            <label>{t("task.details")}</label>
             <textarea rows={3} value={details} onChange={(e) => setDetails(e.target.value)} />
           </div>
           <div className="field">
-            <label>Requirements</label>
+            <label>{t("task.requirements")}</label>
             <textarea rows={3} value={requirements} onChange={(e) => setRequirements(e.target.value)} />
           </div>
         </div>
@@ -232,13 +234,13 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         <div className="row2">
           <div className="field">
             <label>
-              Start date{" "}
+              {t("task.startDate")}{" "}
               <span className="info" title="If left blank and a deadline is set, the task shows on the calendar from its creation date up to the deadline.">ⓘ</span>
             </label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
           <div className="field">
-            <label>Deadline</label>
+            <label>{t("task.deadline")}</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
           </div>
         </div>
@@ -246,26 +248,26 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         <div className="row2">
           <div className="field">
             <label>
-              Start time{" "}
+              {t("task.startTime")}{" "}
               <span className="info" title="Optional. Set both times for a timed task (e.g. a class 1pm–4pm). Timed tasks sort to the top of a day's list.">ⓘ</span>
             </label>
             <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
           <div className="field">
-            <label>End time</label>
+            <label>{t("task.endTime")}</label>
             <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </div>
         </div>
 
         <div className="field">
-          <label>Links (one URL per line)</label>
+          <label>{t("task.links")}</label>
           <textarea rows={2} value={links} onChange={(e) => setLinks(e.target.value)} placeholder="https://drive.google.com/…" />
         </div>
 
         <div className="field">
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input type="checkbox" style={{ width: "auto" }} checked={repeats} onChange={(e) => setRepeats(e.target.checked)} />
-            Repeats
+            {t("task.repeats")}
           </label>
         </div>
         {repeats && (
@@ -324,11 +326,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         <div className="field">
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input type="checkbox" style={{ width: "auto" }} checked={monitor} onChange={(e) => setMonitor(e.target.checked)} />
-            Monitor — notify admins when this task is moved
+            {t("task.monitor")}
           </label>
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
             <input type="checkbox" style={{ width: "auto" }} checked={autoComplete} onChange={(e) => setAutoComplete(e.target.checked)} />
-            Auto-complete — mark Done automatically after the deadline (mundane one-off tasks)
+            {t("task.autoComplete")}
           </label>
         </div>
 
@@ -337,13 +339,13 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         <div className="modal-foot">
           {editing && (
             <button type="button" className="btn-secondary" style={{ marginRight: "auto" }}
-              onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel("🔗 Share"), 2500); }}>
-              {shareLabel}
+              onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
+              🔗 {shareLabel || t("task.share")}
             </button>
           )}
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-          {editing && <button type="button" className="btn-danger" onClick={del}>Delete</button>}
-          <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? "Saving…" : "Save"}</button>
+          <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
+          {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
+          <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
         </div>
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}

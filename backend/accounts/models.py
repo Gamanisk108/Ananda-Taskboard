@@ -6,6 +6,10 @@ for bulk permission grants — distinct from django.contrib.auth.Group).
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
+# UI languages a user can pick (interface translation). "" = auto-detect/English.
+# Keep in sync with the frontend picker + locale catalogs (frontend/src/locales).
+SUPPORTED_LANGUAGES = ["en", "it", "es", "hi", "bn", "ta", "te", "mr", "gu"]
+
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -43,6 +47,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.MEMBER)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Django admin access
+    # Preferred UI language (interface translation). Blank = auto-detect/English.
+    language = models.CharField(max_length=10, blank=True, default="")
     # Optional permission tier: a reusable template a member inherits grants +
     # default visibility from (admins ignore tiers — they see everything).
     tier = models.ForeignKey(

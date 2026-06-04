@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useUsers } from "../users";
 
@@ -10,6 +11,7 @@ interface Comment {
 }
 
 export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: number; meId: number; meIsAdmin?: boolean }) {
+  const { t } = useTranslation();
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -88,7 +90,7 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
 
   return (
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">Comments ({comments.length})</h3>
+      <h3 className="section-title">{t("task.comments")} ({comments.length})</h3>
       {comments.map((c) => {
         const canManage = c.author === meId || meIsAdmin;
         return (
@@ -133,12 +135,12 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
         <input
           ref={inputRef}
           data-testid="comment-input"
-          placeholder="Add a comment… (type @ to mention)"
+          placeholder={t("task.addComment")}
           value={text}
           onChange={onChange}
           onKeyDown={onKeyDown}
         />
-        <button className="btn-secondary" data-testid="comment-post" disabled={busy}>Post</button>
+        <button className="btn-secondary" data-testid="comment-post" disabled={busy}>{t("common.post")}</button>
       </form>
     </div>
   );

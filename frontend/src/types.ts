@@ -68,6 +68,7 @@ export interface Me {
   role: "admin" | "member";
   is_admin: boolean;
   tier: number | null;
+  language: string;
   tree: Tree;
 }
 

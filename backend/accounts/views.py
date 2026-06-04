@@ -2,13 +2,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from permissions.drf import IsAdmin
 
-from .models import Group, Tier, User
+from .models import SUPPORTED_LANGUAGES, Group, Tier, User
 from .serializers import GroupSerializer, TierSerializer, UserSerializer, UserWriteSerializer
 
 
@@ -34,6 +34,17 @@ class MeView(APIView):
         except (ImportError, ModuleNotFoundError):
             data["tree"] = {"projects": [], "show_global_overview": False}
         return Response(data)
+
+    def patch(self, request):
+        """Self-service: a user updates their own preferences (currently the UI
+        language). Validated against the supported set so only known locales stick."""
+        if "language" in request.data:
+            lang = (request.data.get("language") or "").strip()
+            if lang and lang not in SUPPORTED_LANGUAGES:
+                raise ValidationError({"language": "Unsupported language."})
+            request.user.language = lang
+            request.user.save(update_fields=["language"])
+        return Response(UserSerializer(request.user).data)
 
 
 class UsersView(APIView):

@@ -26,6 +26,38 @@ def auth(api, user, password="pw-strong-123"):
     return res
 
 
+# --- self-service language (PATCH /api/me) ---------------------------------
+
+def test_member_sets_own_language(api, member):
+    auth(api, member)
+    res = api.patch("/api/me", {"language": "hi"}, format="json")
+    assert res.status_code == 200 and res.data["language"] == "hi"
+    member.refresh_from_db()
+    assert member.language == "hi"
+
+
+def test_me_returns_language(api, member):
+    member.language = "it"; member.save()
+    auth(api, member)
+    assert api.get("/api/me").data["language"] == "it"
+
+
+def test_unsupported_language_rejected(api, member):
+    auth(api, member)
+    assert api.patch("/api/me", {"language": "xx"}, format="json").status_code == 400
+
+
+def test_blank_language_clears_preference(api, member):
+    member.language = "it"; member.save()
+    auth(api, member)
+    res = api.patch("/api/me", {"language": ""}, format="json")
+    assert res.status_code == 200 and res.data["language"] == ""
+
+
+def test_language_patch_requires_auth(api):
+    assert api.patch("/api/me", {"language": "hi"}, format="json").status_code in (401, 403)
+
+
 # --- model -----------------------------------------------------------------
 
 def test_email_normalized_lowercase(db):

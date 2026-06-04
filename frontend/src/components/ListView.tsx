@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { useUsers, userName } from "../users";
@@ -18,6 +19,7 @@ interface Props {
 type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "priority" | "assignee" | "created";
 
 export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, showArchived = false }: Props) {
+  const { t: tr } = useTranslation();  // aliased: `t` is used below for the task row
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [q, setQ] = useState("");
   // combinable filters
@@ -113,37 +115,37 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
   return (
     <div className="rise">
       <div className="filters">
-        <input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={fProject} onChange={(e) => { setFProject(Number(e.target.value)); setFSub(0); }}>
-          <option value={0}>All projects</option>
+          <option value={0}>{tr("list.allProjects")}</option>
           {projectOpts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={fSub} onChange={(e) => setFSub(Number(e.target.value))}>
-          <option value={0}>All sub-projects</option>
+          <option value={0}>{tr("list.allSubprojects")}</option>
           {subOpts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <select data-testid="filter-assignee" value={fAssignee} onChange={(e) => setFAssignee(Number(e.target.value))}>
-          <option value={0}>Any assignee</option>
-          <option value={-1}>Unassigned</option>
+          <option value={0}>{tr("list.anyAssignee")}</option>
+          <option value={-1}>{tr("list.unassigned")}</option>
           {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
         </select>
         <select data-testid="filter-priority" value={fPriority} onChange={(e) => setFPriority(Number(e.target.value))}>
-          <option value={0}>Any priority</option>
+          <option value={0}>{tr("list.anyPriority")}</option>
           {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
         </select>
         <select value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
-          <option value="">Any status</option>
+          <option value="">{tr("list.anyStatus")}</option>
           {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
         <select value={fDeadline} onChange={(e) => setFDeadline(e.target.value as "" | "pending" | "overdue")}>
-          <option value="">Deadline: any</option>
-          <option value="pending">Pending (upcoming)</option>
-          <option value="overdue">Overdue</option>
+          <option value="">{tr("list.deadlineAny")}</option>
+          <option value="pending">{tr("list.pendingUpcoming")}</option>
+          <option value="overdue">{tr("list.overdue")}</option>
         </select>
         <select value={fRecur} onChange={(e) => setFRecur(e.target.value as "" | "yes" | "no")}>
-          <option value="">Recurring? any</option>
-          <option value="yes">Recurring only</option>
-          <option value="no">One-off only</option>
+          <option value="">{tr("list.recurringAny")}</option>
+          <option value="yes">{tr("list.recurringOnly")}</option>
+          <option value="no">{tr("list.oneOffOnly")}</option>
         </select>
         {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>Clear ({activeFilters})</button>}
         {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)" }}>📖 Showing archive</span>}
@@ -155,15 +157,15 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
         <table className="tbl">
           <thead>
             <tr>
-              <Th k="priority">Priority</Th>
-              <Th k="title">Task</Th>
-              <Th k="project">Project</Th>
-              <Th k="subproject">Sub-project</Th>
-              <Th k="assignee">Assignees</Th>
-              <Th k="status">Status</Th>
-              <Th k="deadline">Deadline</Th>
-              <Th k="time">Time</Th>
-              <th>Recurs</th>
+              <Th k="priority">{tr("list.colPriority")}</Th>
+              <Th k="title">{tr("list.colTask")}</Th>
+              <Th k="project">{tr("list.colProject")}</Th>
+              <Th k="subproject">{tr("list.colSubproject")}</Th>
+              <Th k="assignee">{tr("list.colAssignees")}</Th>
+              <Th k="status">{tr("list.colStatus")}</Th>
+              <Th k="deadline">{tr("list.colDeadline")}</Th>
+              <Th k="time">{tr("list.colTime")}</Th>
+              <th>{tr("list.colRecurs")}</th>
             </tr>
           </thead>
           <tbody>
@@ -176,8 +178,8 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
                   <td title={PRIORITY_META[t.priority].label} data-testid="task-priority"><PriorityIcon level={t.priority} /></td>
                   <td>
                     <strong>{t.title}</strong>
-                    {ds === "overdue" && <span className="od" title="Missed Deadline"> ❗</span>}
-                    {ds === "soon" && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
+                    {ds === "overdue" && <span className="od" title={tr("list.missedDeadline")}> ❗</span>}
+                    {ds === "soon" && <span className="od-soon" title={tr("list.dueSoon")}> ❗</span>}
                     {Object.keys(t.subtask_counts ?? {}).length > 0 && (
                       <div style={{ marginTop: 3 }} data-testid="subtask-dots"><SubtaskDots counts={t.subtask_counts} /></div>
                     )}
