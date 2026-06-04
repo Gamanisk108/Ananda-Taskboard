@@ -159,5 +159,16 @@
     "updated": "{{n}} tarefas atualizadas",
     "error": "Não foi possível aplicar — verifique o valor.",
     "archiveConfirm": "Arquivar {{n}} tarefas?"
+  },
+  "approvals": {
+    "intro": "Tarefas criadas por membros que precisam da sua aprovação antes de aparecer no quadro. Marque linhas para aprovar em massa, clique Abrir para detalhes, ou aprove/rejeite cada uma.",
+    "approveAll": "Aprovar tudo",
+    "approveN": "Aprovar {{n}}",
+    "rejectAll": "Rejeitar tudo",
+    "rejectN": "Rejeitar {{n}}",
+    "pending": "{{n}} pendentes",
+    "where": "Onde",
+    "createdBy": "Criado por",
+    "open": "Abrir"
   }
 }

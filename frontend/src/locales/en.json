@@ -159,5 +159,16 @@
     "updated": "{{n}} task(s) updated",
     "error": "Could not apply — check the value.",
     "archiveConfirm": "Archive {{n}} task(s)?"
+  },
+  "approvals": {
+    "intro": "Tasks members created that need your OK before they appear on the board. Tick rows to bulk-approve, click Open to see full details, or approve/reject each.",
+    "approveAll": "Approve all",
+    "approveN": "Approve {{n}}",
+    "rejectAll": "Reject all",
+    "rejectN": "Reject {{n}}",
+    "pending": "{{n}} pending",
+    "where": "Where",
+    "createdBy": "Created by",
+    "open": "Open"
   }
 }

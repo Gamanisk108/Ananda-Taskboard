@@ -159,5 +159,16 @@
     "updated": "{{n}} attività aggiornate",
     "error": "Impossibile applicare — controlla il valore.",
     "archiveConfirm": "Archiviare {{n}} attività?"
+  },
+  "approvals": {
+    "intro": "Attività create dai membri che richiedono la tua approvazione prima di apparire sulla bacheca. Seleziona le righe per approvare in blocco, clicca Apri per i dettagli, o approva/rifiuta singolarmente.",
+    "approveAll": "Approva tutto",
+    "approveN": "Approva {{n}}",
+    "rejectAll": "Rifiuta tutto",
+    "rejectN": "Rifiuta {{n}}",
+    "pending": "{{n}} in sospeso",
+    "where": "Dove",
+    "createdBy": "Creato da",
+    "open": "Apri"
   }
 }

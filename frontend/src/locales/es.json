@@ -159,5 +159,16 @@
     "updated": "{{n}} tareas actualizadas",
     "error": "No se pudo aplicar — revisa el valor.",
     "archiveConfirm": "¿Archivar {{n}} tareas?"
+  },
+  "approvals": {
+    "intro": "Tareas creadas por miembros que necesitan tu aprobación antes de aparecer en el tablero. Marca filas para aprobar en bloque, pulsa Abrir para ver detalles, o aprueba/rechaza cada una.",
+    "approveAll": "Aprobar todo",
+    "approveN": "Aprobar {{n}}",
+    "rejectAll": "Rechazar todo",
+    "rejectN": "Rechazar {{n}}",
+    "pending": "{{n}} pendientes",
+    "where": "Dónde",
+    "createdBy": "Creado por",
+    "open": "Abrir"
   }
 }

@@ -159,5 +159,16 @@
     "updated": "{{n}} tâches mises à jour",
     "error": "Impossible d'appliquer — vérifiez la valeur.",
     "archiveConfirm": "Archiver {{n}} tâches ?"
+  },
+  "approvals": {
+    "intro": "Tâches créées par les membres nécessitant votre validation avant d'apparaître sur le tableau. Cochez des lignes pour valider en lot, cliquez Ouvrir pour les détails, ou approuvez/rejetez chacune.",
+    "approveAll": "Tout approuver",
+    "approveN": "Approuver {{n}}",
+    "rejectAll": "Tout rejeter",
+    "rejectN": "Rejeter {{n}}",
+    "pending": "{{n}} en attente",
+    "where": "Où",
+    "createdBy": "Créé par",
+    "open": "Ouvrir"
   }
 }

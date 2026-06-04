@@ -50,10 +50,7 @@ export function Approvals({
 
   return (
     <Modal title={tr("modals.approvals")} onClose={onClose} wide>
-      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-        Tasks members created that need your OK before they appear on the board. Tick rows to
-        bulk-approve, click <strong>Open</strong> to see full details, or approve/reject each.
-      </p>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{tr("approvals.intro")}</p>
       {!pending ? (
         <Spinner />
       ) : pending.length === 0 ? (
@@ -62,16 +59,16 @@ export function Approvals({
         <>
           <div className="bulkbar">
             <button className="btn-primary" onClick={() => bulk("approve")}>
-              {sel.size ? `Approve ${sel.size}` : "Approve all"}
+              {sel.size ? tr("approvals.approveN", { n: sel.size }) : tr("approvals.approveAll")}
             </button>
             <button className="btn-danger" onClick={() => bulk("reject")}>
-              {sel.size ? `Reject ${sel.size}` : "Reject all"}
+              {sel.size ? tr("approvals.rejectN", { n: sel.size }) : tr("approvals.rejectAll")}
             </button>
-            <span className="muted">{pending.length} pending</span>
+            <span className="muted">{tr("approvals.pending", { n: pending.length })}</span>
           </div>
           <table className="tbl">
             <thead>
-              <tr><th></th><th>Task</th><th>Where</th><th>Created by</th><th>Deadline</th><th></th></tr>
+              <tr><th></th><th>{tr("list.colTask")}</th><th>{tr("approvals.where")}</th><th>{tr("approvals.createdBy")}</th><th>{tr("list.colDeadline")}</th><th></th></tr>
             </thead>
             <tbody>
               {pending.map((t) => {
@@ -93,7 +90,7 @@ export function Approvals({
                     <td className="muted" style={{ fontSize: 12 }}>{t.created_by ? userName(users, t.created_by) : "—"}</td>
                     <td className="mono" style={{ fontSize: 12 }}>{t.deadline ?? "—"}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
-                      <button className="btn-ghost" onClick={() => onOpen(t)}>Open</button>
+                      <button className="btn-ghost" onClick={() => onOpen(t)}>{tr("approvals.open")}</button>
                       <button className="btn-ghost" style={{ color: "var(--success)" }} onClick={() => act(t.id, "approve")}>✓</button>
                       <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => act(t.id, "reject")}>✕</button>
                     </td>

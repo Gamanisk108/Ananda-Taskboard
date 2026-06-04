@@ -159,5 +159,16 @@
     "updated": "{{n}} Aufgaben aktualisiert",
     "error": "Konnte nicht angewendet werden — Wert prüfen.",
     "archiveConfirm": "{{n}} Aufgaben archivieren?"
+  },
+  "approvals": {
+    "intro": "Von Mitgliedern erstellte Aufgaben, die Ihre Freigabe brauchen, bevor sie auf dem Board erscheinen. Zeilen ankreuzen zum Sammel-Freigeben, Öffnen für Details, oder einzeln freigeben/ablehnen.",
+    "approveAll": "Alle genehmigen",
+    "approveN": "{{n}} genehmigen",
+    "rejectAll": "Alle ablehnen",
+    "rejectN": "{{n}} ablehnen",
+    "pending": "{{n}} ausstehend",
+    "where": "Wo",
+    "createdBy": "Erstellt von",
+    "open": "Öffnen"
   }
 }

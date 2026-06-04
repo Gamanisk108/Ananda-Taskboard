@@ -159,5 +159,16 @@
     "updated": "已更新 {{n}} 个任务",
     "error": "无法应用 — 请检查值。",
     "archiveConfirm": "归档 {{n}} 个任务？"
+  },
+  "approvals": {
+    "intro": "成员创建的、需要你批准后才会出现在看板上的任务。勾选行可批量批准，点击“打开”查看详情，或逐个批准/拒绝。",
+    "approveAll": "全部批准",
+    "approveN": "批准 {{n}}",
+    "rejectAll": "全部拒绝",
+    "rejectN": "拒绝 {{n}}",
+    "pending": "{{n}} 个待处理",
+    "where": "位置",
+    "createdBy": "创建者",
+    "open": "打开"
   }
 }
