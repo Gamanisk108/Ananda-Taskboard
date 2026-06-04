@@ -13,11 +13,19 @@ import ta from "./locales/ta.json";
 import te from "./locales/te.json";
 import mr from "./locales/mr.json";
 import gu from "./locales/gu.json";
+import de from "./locales/de.json";
+import fr from "./locales/fr.json";
+import pt from "./locales/pt.json";
+import zh from "./locales/zh.json";
 
 export const LANGUAGES: { code: string; label: string }[] = [
   { code: "en", label: "English" },
   { code: "it", label: "Italiano" },
   { code: "es", label: "Español (México)" },
+  { code: "fr", label: "Français" },
+  { code: "de", label: "Deutsch" },
+  { code: "pt", label: "Português" },
+  { code: "zh", label: "中文 (简体)" },
   { code: "hi", label: "हिन्दी" },
   { code: "bn", label: "বাংলা" },
   { code: "ta", label: "தமிழ்" },
@@ -40,6 +48,8 @@ i18n.use(initReactI18next).init({
     en: { translation: en }, it: { translation: it }, es: { translation: es },
     hi: { translation: hi }, bn: { translation: bn }, ta: { translation: ta },
     te: { translation: te }, mr: { translation: mr }, gu: { translation: gu },
+    de: { translation: de }, fr: { translation: fr }, pt: { translation: pt },
+    zh: { translation: zh },
   },
   lng: "en",
   fallbackLng: "en",          // untranslated/Pass-2 keys show English, never blank

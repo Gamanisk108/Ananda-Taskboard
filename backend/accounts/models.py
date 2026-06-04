@@ -8,7 +8,7 @@ from django.db import models
 
 # UI languages a user can pick (interface translation). "" = auto-detect/English.
 # Keep in sync with the frontend picker + locale catalogs (frontend/src/locales).
-SUPPORTED_LANGUAGES = ["en", "it", "es", "hi", "bn", "ta", "te", "mr", "gu"]
+SUPPORTED_LANGUAGES = ["en", "it", "es", "fr", "de", "pt", "zh", "hi", "bn", "ta", "te", "mr", "gu"]
 
 
 class UserManager(BaseUserManager):
