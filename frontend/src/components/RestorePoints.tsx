@@ -38,29 +38,26 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
 
   return (
     <Modal title={t("modals.restore")} onClose={onClose} wide>
-      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-        Full snapshots of the whole board. Restoring auto-saves the current state first (so it's
-        undoable). Auto-saves happen daily (last 10 kept); manual saves stay forever.
-      </p>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("restore.intro")}</p>
       <div className="bulkbar">
-        <button className="btn-primary" onClick={save} disabled={busy}>＋ Save restore point now</button>
+        <button className="btn-primary" onClick={save} disabled={busy}>{t("restore.saveNow")}</button>
       </div>
       {!points ? <Spinner /> : points.length === 0 ? (
-        <div className="empty">No restore points yet.</div>
+        <div className="empty">{t("empty.noRestorePoints", "No restore points yet.")}</div>
       ) : (
         <table className="tbl">
-          <thead><tr><th>When</th><th>Name</th><th>Contents</th><th></th></tr></thead>
+          <thead><tr><th>{t("restore.colWhen")}</th><th>{t("restore.colName")}</th><th>{t("restore.colContents")}</th><th></th></tr></thead>
           <tbody>
             {points.map((p) => (
               <tr key={p.id}>
                 <td className="mono" style={{ fontSize: 12 }}>{p.created_at.slice(0, 16).replace("T", " ")}</td>
                 <td>
                   <strong>{p.label}</strong>
-                  {" "}<span className="pill" style={{ background: p.auto ? "var(--surface-sunk)" : "var(--primary-weak)", fontSize: 11 }}>{p.auto ? "auto" : "manual"}</span>
+                  {" "}<span className="pill" style={{ background: p.auto ? "var(--surface-sunk)" : "var(--primary-weak)", fontSize: 11 }}>{p.auto ? t("restore.auto") : t("restore.manual")}</span>
                 </td>
                 <td className="muted" style={{ fontSize: 12 }}>{summary(p.stats)}</td>
                 <td style={{ whiteSpace: "nowrap" }}>
-                  <button className="btn-secondary" onClick={() => restore(p)} disabled={busy}>Restore</button>
+                  <button className="btn-secondary" onClick={() => restore(p)} disabled={busy}>{t("restore.restore")}</button>
                   <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(p)}>✕</button>
                 </td>
               </tr>

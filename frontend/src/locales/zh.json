@@ -170,5 +170,24 @@
     "where": "位置",
     "createdBy": "创建者",
     "open": "打开"
+  },
+  "trash": {
+    "intro": "已删除的项目保留 7 天，然后自动移除。还原会恢复一个项目（及随其一起删除的内容）。",
+    "restore": "还原",
+    "deleteForever": "永久删除",
+    "daysLeft": "剩 {{n}} 天",
+    "projects": "项目",
+    "subprojects": "子项目",
+    "tasks": "任务"
+  },
+  "restore": {
+    "intro": "整个看板的完整快照。还原前会先自动保存当前状态（可撤销）。自动保存每天进行（保留最近 10 个）；手动保存永久保留。",
+    "saveNow": "＋ 立即保存还原点",
+    "restore": "还原",
+    "colWhen": "时间",
+    "colName": "名称",
+    "colContents": "内容",
+    "auto": "自动",
+    "manual": "手动"
   }
 }

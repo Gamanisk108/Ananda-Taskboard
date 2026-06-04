@@ -30,10 +30,10 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
         <h3 className="section-title">{title}</h3>
         {rows.map((r) => (
           <div key={`${type}-${r.id}`} className="assignee-row" style={{ justifyContent: "space-between" }}>
-            <span>{r.label} <span className="muted" style={{ fontSize: 12 }}>· {r.days_left}d left</span></span>
+            <span>{r.label} <span className="muted" style={{ fontSize: 12 }}>· {t("trash.daysLeft", { n: r.days_left })}</span></span>
             <span style={{ display: "flex", gap: 6 }}>
-              <button type="button" className="btn-secondary" onClick={() => restore(type, r.id)}>Restore</button>
-              <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => purge(type, r.id)}>Delete forever</button>
+              <button type="button" className="btn-secondary" onClick={() => restore(type, r.id)}>{t("trash.restore")}</button>
+              <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => purge(type, r.id)}>{t("trash.deleteForever")}</button>
             </span>
           </div>
         ))}
@@ -45,17 +45,14 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
 
   return (
     <Modal title={t("modals.trash")} onClose={onClose} wide>
-      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-        Deleted items are kept for 7 days, then removed automatically. Restore brings an item
-        (and anything deleted with it) back.
-      </p>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("trash.intro")}</p>
       {!data ? <Spinner /> : empty ? (
         <div className="empty">{t("empty.trash")} 🧹</div>
       ) : (
         <>
-          {section("Projects", "project", data.projects)}
-          {section("Sub-projects", "subproject", data.subprojects)}
-          {section("Tasks", "task", data.tasks)}
+          {section(t("trash.projects"), "project", data.projects)}
+          {section(t("trash.subprojects"), "subproject", data.subprojects)}
+          {section(t("trash.tasks"), "task", data.tasks)}
         </>
       )}
     </Modal>

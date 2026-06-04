@@ -170,5 +170,24 @@
     "where": "Wo",
     "createdBy": "Erstellt von",
     "open": "Öffnen"
+  },
+  "trash": {
+    "intro": "Gelöschte Elemente werden 7 Tage aufbewahrt und dann automatisch entfernt. Wiederherstellen holt ein Element (und alles damit Gelöschte) zurück.",
+    "restore": "Wiederherstellen",
+    "deleteForever": "Endgültig löschen",
+    "daysLeft": "noch {{n}}T",
+    "projects": "Projekte",
+    "subprojects": "Unterprojekte",
+    "tasks": "Aufgaben"
+  },
+  "restore": {
+    "intro": "Vollständige Schnappschüsse des gesamten Boards. Beim Wiederherstellen wird zuerst der aktuelle Stand gespeichert (rückgängig machbar). Auto-Speicherungen täglich (letzte 10); manuelle bleiben.",
+    "saveNow": "＋ Wiederherstellungspunkt speichern",
+    "restore": "Wiederherstellen",
+    "colWhen": "Wann",
+    "colName": "Name",
+    "colContents": "Inhalt",
+    "auto": "auto",
+    "manual": "manuell"
   }
 }

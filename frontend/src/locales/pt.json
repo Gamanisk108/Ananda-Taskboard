@@ -170,5 +170,24 @@
     "where": "Onde",
     "createdBy": "Criado por",
     "open": "Abrir"
+  },
+  "trash": {
+    "intro": "Itens excluídos são mantidos por 7 dias e depois removidos automaticamente. Restaurar traz um item (e tudo excluído com ele) de volta.",
+    "restore": "Restaurar",
+    "deleteForever": "Excluir permanentemente",
+    "daysLeft": "{{n}}d restantes",
+    "projects": "Projetos",
+    "subprojects": "Subprojetos",
+    "tasks": "Tarefas"
+  },
+  "restore": {
+    "intro": "Capturas completas de todo o quadro. Restaurar salva primeiro o estado atual (reversível). Salvamentos automáticos são diários (10 mantidos); os manuais permanecem.",
+    "saveNow": "＋ Salvar ponto de restauração",
+    "restore": "Restaurar",
+    "colWhen": "Quando",
+    "colName": "Nome",
+    "colContents": "Conteúdo",
+    "auto": "auto",
+    "manual": "manual"
   }
 }

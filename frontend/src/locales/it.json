@@ -170,5 +170,24 @@
     "where": "Dove",
     "createdBy": "Creato da",
     "open": "Apri"
+  },
+  "trash": {
+    "intro": "Gli elementi eliminati vengono conservati per 7 giorni, poi rimossi automaticamente. Il ripristino riporta un elemento (e tutto ciò che è stato eliminato con esso).",
+    "restore": "Ripristina",
+    "deleteForever": "Elimina definitivamente",
+    "daysLeft": "{{n}}g rimasti",
+    "projects": "Progetti",
+    "subprojects": "Sotto-progetti",
+    "tasks": "Attività"
+  },
+  "restore": {
+    "intro": "Istantanee complete dell'intera bacheca. Il ripristino salva prima lo stato attuale (così è annullabile). I salvataggi automatici avvengono ogni giorno (ultimi 10); quelli manuali restano per sempre.",
+    "saveNow": "＋ Salva punto di ripristino",
+    "restore": "Ripristina",
+    "colWhen": "Quando",
+    "colName": "Nome",
+    "colContents": "Contenuto",
+    "auto": "auto",
+    "manual": "manuale"
   }
 }

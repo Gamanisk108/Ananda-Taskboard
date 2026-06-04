@@ -170,5 +170,24 @@
     "where": "Où",
     "createdBy": "Créé par",
     "open": "Ouvrir"
+  },
+  "trash": {
+    "intro": "Les éléments supprimés sont conservés 7 jours puis supprimés automatiquement. La restauration ramène un élément (et tout ce qui a été supprimé avec lui).",
+    "restore": "Restaurer",
+    "deleteForever": "Supprimer définitivement",
+    "daysLeft": "{{n}}j restants",
+    "projects": "Projets",
+    "subprojects": "Sous-projets",
+    "tasks": "Tâches"
+  },
+  "restore": {
+    "intro": "Instantanés complets de tout le tableau. La restauration sauvegarde d'abord l'état actuel (donc réversible). Les sauvegardes auto sont quotidiennes (10 conservées) ; les manuelles restent.",
+    "saveNow": "＋ Enregistrer un point de restauration",
+    "restore": "Restaurer",
+    "colWhen": "Quand",
+    "colName": "Nom",
+    "colContents": "Contenu",
+    "auto": "auto",
+    "manual": "manuel"
   }
 }

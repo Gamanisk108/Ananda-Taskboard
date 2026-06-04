@@ -170,5 +170,24 @@
     "where": "Where",
     "createdBy": "Created by",
     "open": "Open"
+  },
+  "trash": {
+    "intro": "Deleted items are kept for 7 days, then removed automatically. Restore brings an item (and anything deleted with it) back.",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "daysLeft": "{{n}}d left",
+    "projects": "Projects",
+    "subprojects": "Sub-projects",
+    "tasks": "Tasks"
+  },
+  "restore": {
+    "intro": "Full snapshots of the whole board. Restoring auto-saves the current state first (so it's undoable). Auto-saves happen daily (last 10 kept); manual saves stay forever.",
+    "saveNow": "＋ Save restore point now",
+    "restore": "Restore",
+    "colWhen": "When",
+    "colName": "Name",
+    "colContents": "Contents",
+    "auto": "auto",
+    "manual": "manual"
   }
 }

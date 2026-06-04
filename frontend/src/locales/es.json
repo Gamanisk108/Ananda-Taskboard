@@ -170,5 +170,24 @@
     "where": "Dónde",
     "createdBy": "Creado por",
     "open": "Abrir"
+  },
+  "trash": {
+    "intro": "Los elementos eliminados se guardan 7 días y luego se eliminan automáticamente. Restaurar devuelve un elemento (y todo lo eliminado con él).",
+    "restore": "Restaurar",
+    "deleteForever": "Eliminar permanentemente",
+    "daysLeft": "{{n}}d restantes",
+    "projects": "Proyectos",
+    "subprojects": "Subproyectos",
+    "tasks": "Tareas"
+  },
+  "restore": {
+    "intro": "Capturas completas de todo el tablero. Al restaurar se guarda primero el estado actual (es reversible). Los guardados automáticos son diarios (se conservan 10); los manuales permanecen.",
+    "saveNow": "＋ Guardar punto de restauración",
+    "restore": "Restaurar",
+    "colWhen": "Cuándo",
+    "colName": "Nombre",
+    "colContents": "Contenido",
+    "auto": "auto",
+    "manual": "manual"
   }
 }
