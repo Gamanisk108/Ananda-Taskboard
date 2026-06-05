@@ -51,7 +51,30 @@
     "password": "Senha",
     "signIn": "Entrar",
     "signingIn": "Entrando…",
-    "error": "E-mail ou senha incorretos."
+    "error": "E-mail ou senha incorretos.",
+    "forgot": "Esqueceu a senha?",
+    "forgotHelp": "Entre em contato com o administrador da sua equipe para redefini-la."
+  },
+  "reset": {
+    "requestTitle": "Redefinir sua senha",
+    "requestSubtitle": "Digite o e-mail da sua conta e enviaremos um link para criar uma nova senha.",
+    "send": "Enviar link",
+    "sending": "Enviando…",
+    "backToSignIn": "← Voltar para entrar",
+    "sentTitle": "Verifique seu e-mail",
+    "sentBody": "Se existir uma conta para {{email}}, enviamos um link para redefinir sua senha. Ele expira em 1 hora.",
+    "newTitle": "Escolha uma nova senha",
+    "newPassword": "Nova senha",
+    "confirmPassword": "Confirmar nova senha",
+    "update": "Atualizar senha",
+    "updating": "Atualizando…",
+    "mismatch": "As duas senhas não coincidem.",
+    "tooShort": "Use pelo menos 8 caracteres.",
+    "successTitle": "Senha atualizada",
+    "successBody": "Agora você pode entrar com sua nova senha.",
+    "expiredTitle": "Este link expirou",
+    "expiredBody": "Os links de redefinição são válidos por 1 hora. Solicite um novo.",
+    "genericError": "Algo deu errado. Solicite um novo link."
   },
   "task": {
     "edit": "Editar tarefa",

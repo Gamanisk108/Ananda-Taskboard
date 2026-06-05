@@ -5,7 +5,7 @@ import { invalidateUsers } from "../users";
 import { Modal, Spinner } from "./common";
 import { SEES_LABEL, type Sees } from "../types";
 
-type Tab = "members" | "groups" | "access" | "tiers" | "activity";
+type Tab = "members" | "groups" | "access" | "activity";
 
 interface UserRow { id: number; name: string; email: string; role: string; is_active: boolean; is_admin: boolean; tier: number | null; }
 interface GroupRow { id: number; name: string; member_ids: number[]; }
@@ -49,13 +49,13 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
 
   const labels: Record<Tab, string> = {
     members: tr("tabs.members"), groups: tr("tabs.groups"), access: tr("tabs.access"),
-    tiers: tr("tabs.tiers"), activity: tr("tabs.activity"),
+    activity: tr("tabs.activity"),
   };
 
   return (
     <Modal title={tr("modals.team")} onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
-        {(["members", "groups", "access", "tiers", "activity"] as Tab[]).map((t) => (
+        {(["members", "groups", "access", "activity"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>
         ))}
       </div>
@@ -67,7 +67,6 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
             <Access grants={grants} exclusions={exclusions} users={users} groups={groups}
               tiers={tiers} projects={projects} reload={loadAll} />
           )}
-          {tab === "tiers" && <Tiers tiers={tiers} reload={loadAll} onEditAccess={() => setTab("access")} />}
           {tab === "activity" && <Activity rows={audit} />}
         </>
       )}
@@ -189,61 +188,6 @@ function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[
         </div>
       ))}
       {groups.length === 0 && <div className="empty">{tr("empty.noGroups")}</div>}
-    </>
-  );
-}
-
-function Tiers({ tiers, reload, onEditAccess }: { tiers: TierRow[]; reload: () => void; onEditAccess: () => void }) {
-  const { t: tr } = useTranslation();
-  const [name, setName] = useState("");
-  const [sees, setSees] = useState<Sees>("subproject");
-
-  async function add() {
-    if (!name.trim()) return;
-    await api.post("/api/tiers", { name: name.trim(), default_sees: sees });
-    setName(""); setSees("subproject"); reload();
-  }
-  async function patch(t: TierRow, changes: Partial<TierRow>) { await api.patch(`/api/tiers/${t.id}`, changes); reload(); }
-  async function del(t: TierRow) {
-    if (!confirm(tr("ta.confirmDeleteTier", { name: t.name }))) return;
-    await api.del(`/api/tiers/${t.id}`); reload();
-  }
-
-  return (
-    <>
-      <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        {tr("ta.tiersHelp")}
-      </div>
-      <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)", display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
-        <div className="field" style={{ marginBottom: 0, flex: 1 }}><label>{tr("ta.newTierName")}</label>
-          <input data-testid="tier-name" placeholder={tr("ta.tierNamePh")} value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="field" style={{ marginBottom: 0 }}><label>{tr("ta.defaultVisibility")}</label>
-          <select data-testid="tier-sees" value={sees} onChange={(e) => setSees(e.target.value as Sees)}>
-            {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
-          </select>
-        </div>
-        <button className="btn-primary" data-testid="tier-add" onClick={add}>{tr("ta.addTier")}</button>
-      </div>
-
-      {tiers.map((t) => (
-        <div key={t.id} className="card" style={{ padding: 12, marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <input defaultValue={t.name} onBlur={(e) => e.target.value.trim() && e.target.value !== t.name && patch(t, { name: e.target.value.trim() })} style={{ maxWidth: 220, fontWeight: 600 }} />
-            <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <span className="pill" style={{ background: "var(--surface-sunk)" }}>{tr("ta.memberCount", { count: t.member_count })}</span>
-              <button className="btn-secondary" onClick={onEditAccess}>{tr("ta.editAccess")}</button>
-              <button className="btn-danger" onClick={() => del(t)}>{tr("common.delete")}</button>
-            </span>
-          </div>
-          <div className="field" style={{ marginTop: 8, marginBottom: 0, maxWidth: 280 }}>
-            <label>{tr("ta.defaultVisibility")}</label>
-            <select value={t.default_sees} onChange={(e) => patch(t, { default_sees: e.target.value as Sees })}>
-              {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
-            </select>
-          </div>
-        </div>
-      ))}
-      {tiers.length === 0 && <div className="empty">{tr("empty.noTiers")}</div>}
     </>
   );
 }

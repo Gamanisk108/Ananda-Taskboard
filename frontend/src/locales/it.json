@@ -51,7 +51,30 @@
     "password": "Password",
     "signIn": "Accedi",
     "signingIn": "Accesso in corso…",
-    "error": "Email o password non corretti."
+    "error": "Email o password non corretti.",
+    "forgot": "Password dimenticata?",
+    "forgotHelp": "Contatta l'amministratore del tuo team per reimpostarla."
+  },
+  "reset": {
+    "requestTitle": "Reimposta la password",
+    "requestSubtitle": "Inserisci l'email del tuo account e ti invieremo un link per impostare una nuova password.",
+    "send": "Invia il link",
+    "sending": "Invio…",
+    "backToSignIn": "← Torna all'accesso",
+    "sentTitle": "Controlla la tua email",
+    "sentBody": "Se esiste un account per {{email}}, abbiamo inviato un link per reimpostare la password. Scade tra 1 ora.",
+    "newTitle": "Scegli una nuova password",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma nuova password",
+    "update": "Aggiorna password",
+    "updating": "Aggiornamento…",
+    "mismatch": "Le due password non coincidono.",
+    "tooShort": "Usa almeno 8 caratteri.",
+    "successTitle": "Password aggiornata",
+    "successBody": "Ora puoi accedere con la tua nuova password.",
+    "expiredTitle": "Questo link è scaduto",
+    "expiredBody": "I link di reimpostazione sono validi per 1 ora. Richiedine uno nuovo.",
+    "genericError": "Qualcosa è andato storto. Richiedi un nuovo link."
   },
   "task": {
     "edit": "Modifica attività",

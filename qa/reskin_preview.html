@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- the REAL compiled stylesheets -->
+  <link rel="stylesheet" href="../frontend/src/index.css" />
+  <link rel="stylesheet" href="../frontend/src/App.css" />
+  <title>Reskin preview</title>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="../frontend/public/logo.png" alt="Ananda" />
+        <div class="brand-txt">
+          <div class="name">Ananda <b>Taskboard</b></div>
+          <div class="tagline">Love &amp; Blessings from Ananda Los Angeles</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-secondary">✅ Approvals</button>
+        <button class="btn-secondary">👥 Team</button>
+        <button class="btn-secondary">♻️ Trash</button>
+        <button class="btn-secondary">🗂️ Projects</button>
+        <button class="btn-primary">＋ New Task</button>
+        <div class="usermenu"><button class="btn-secondary usermenu-btn">Gordon ▾</button></div>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab tab-on"><span class="dot" style="background:#2c5499"></span> Global Overview</button>
+      <button class="tab"><span class="dot" style="background:#c8762f"></span> Sunday Service</button>
+      <button class="tab"><span class="dot" style="background:#3f7d54"></span> Outreach</button>
+      <button class="tab"><span class="dot" style="background:#7a5c22"></span> Facilities</button>
+    </nav>
+    <nav class="tabs subtabs">
+      <button class="tab tab-on">Project Overview</button>
+      <button class="tab">Music</button>
+      <button class="tab">Hospitality</button>
+    </nav>
+
+    <div class="viewbar">
+      <div class="seg">
+        <button class="seg-on">List</button>
+        <button class="seg-off">Board</button>
+        <button class="seg-off">Weekly</button>
+        <button class="seg-off">Monthly</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn-secondary">🔗 Share</button>
+        <button class="btn-secondary">Copy Summary</button>
+        <button class="btn-secondary">📖 Archive</button>
+      </div>
+    </div>
+
+    <main class="content">
+      <div class="filters">
+        <input placeholder="Search tasks…" style="min-width:200px" />
+        <select><option>All assignees</option></select>
+        <select><option>All statuses</option></select>
+      </div>
+
+      <table class="tbl">
+        <thead><tr>
+          <th class="sortable">Task ▾</th><th>Project</th><th>Status</th><th>Assignees</th><th class="sortable">Deadline</th><th>Recurs</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Prepare altar flowers</td><td><span class="dot" style="background:#c8762f"></span> Sunday Service</td>
+            <td><span class="pill" style="background:color-mix(in srgb,var(--doing) 16%,var(--surface));color:var(--doing)">In Progress</span></td>
+            <td><span class="who"><span class="pill">GM</span><span class="pill">RS</span></span></td>
+            <td class="mono">Jun 8</td><td class="muted">Weekly</td></tr>
+          <tr><td>Confirm guest speaker</td><td><span class="dot" style="background:#3f7d54"></span> Outreach</td>
+            <td><span class="pill" style="background:color-mix(in srgb,var(--todo) 16%,var(--surface));color:var(--todo)">To Do</span></td>
+            <td><span class="who"><span class="pill">AV</span></span></td>
+            <td class="mono">Jun 12</td><td class="muted">—</td></tr>
+          <tr class="overdue"><td>Submit insurance waiver</td><td><span class="dot" style="background:#7a5c22"></span> Facilities</td>
+            <td><span class="pill" style="background:color-mix(in srgb,var(--delayed) 16%,var(--surface));color:var(--delayed)">Delayed</span></td>
+            <td><span class="who"><span class="pill">GM</span></span></td>
+            <td class="mono deadline">Jun 1 <span class="od">❗</span></td><td class="muted">—</td></tr>
+          <tr class="due-soon"><td>Order sound equipment</td><td><span class="dot" style="background:#c8762f"></span> Sunday Service</td>
+            <td><span class="pill" style="background:color-mix(in srgb,var(--doing) 16%,var(--surface));color:var(--doing)">In Progress</span></td>
+            <td><span class="who"><span class="pill">RS</span><span class="pill">AV</span></span></td>
+            <td class="mono">Jun 5 <span class="od-soon">❗</span></td><td class="muted">Monthly</td></tr>
+          <tr><td>Update member directory</td><td><span class="dot" style="background:#3f7d54"></span> Outreach</td>
+            <td><span class="pill" style="background:color-mix(in srgb,var(--done) 16%,var(--surface));color:var(--done)">Done</span></td>
+            <td><span class="who"><span class="pill">GM</span></span></td>
+            <td class="mono">Jun 3</td><td class="muted">—</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:var(--f-ui);margin:24px 0 10px">Board</h3>
+      <div class="kanban">
+        <div class="kan-col">
+          <div class="kan-head" style="border-top-color:#6b7280"><span><span class="dot" style="background:#6b7280"></span> To Do</span><span class="mono muted">2</span></div>
+          <div class="kan-body">
+            <div class="kan-card">Confirm guest speaker<div style="margin-top:7px" class="muted">Outreach</div></div>
+            <div class="kan-card soon">Order sound equipment<div style="margin-top:7px" class="muted">Sunday Service</div></div>
+          </div>
+        </div>
+        <div class="kan-col">
+          <div class="kan-head" style="border-top-color:#2c64a8"><span><span class="dot" style="background:#2c64a8"></span> In Progress</span><span class="mono muted">1</span></div>
+          <div class="kan-body">
+            <div class="kan-card">Prepare altar flowers<div style="margin-top:7px" class="muted">Sunday Service</div></div>
+          </div>
+        </div>
+        <div class="kan-col">
+          <div class="kan-head" style="border-top-color:#bb3b28"><span><span class="dot" style="background:#bb3b28"></span> Delayed</span><span class="mono muted">1</span></div>
+          <div class="kan-body">
+            <div class="kan-card overdue">Submit insurance waiver<div style="margin-top:7px" class="muted">Facilities</div></div>
+          </div>
+        </div>
+        <div class="kan-col">
+          <div class="kan-head" style="border-top-color:#3f7d54"><span><span class="dot" style="background:#3f7d54"></span> Done</span><span class="mono muted">1</span></div>
+          <div class="kan-body">
+            <div class="kan-card">Update member directory<div style="margin-top:7px" class="muted">Outreach</div></div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-family:var(--f-ui);margin:24px 0 10px">Weekly</h3>
+      <div class="wk">
+        <div class="wk-head">
+          <div class="wk-hcell past">Sun <span class="day-num">Jun 1</span></div>
+          <div class="wk-hcell past">Mon <span class="day-num">Jun 2</span></div>
+          <div class="wk-hcell past">Tue <span class="day-num">Jun 3</span></div>
+          <div class="wk-hcell past">Wed <span class="day-num">Jun 4</span></div>
+          <div class="wk-hcell today">Thu <span class="day-num">Jun 5</span></div>
+          <div class="wk-hcell future">Fri <span class="day-num">Jun 6</span></div>
+          <div class="wk-hcell future">Sat <span class="day-num">Jun 7</span></div>
+        </div>
+        <div class="wk-body" style="grid-template-rows:repeat(2,30px)">
+          <div class="wk-bar" style="grid-column:1/4;grid-row:1;background:#c8762f"><span class="wk-bar-title">🌸 Prepare altar flowers</span><span class="chip-initials">GM</span></div>
+          <div class="wk-bar soon" style="grid-column:5/6;grid-row:1;background:#c8762f"><span class="wk-bar-title">🔊 Order sound equipment</span></div>
+          <div class="wk-bar" style="grid-column:2/6;grid-row:2;background:#3f7d54"><span class="wk-bar-title">📇 Update directory</span><span class="chip-initials">AV</span></div>
+        </div>
+        <div class="wk-today-hl" style="left:calc(100% / 7 * 4);width:calc(100% / 7)"></div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

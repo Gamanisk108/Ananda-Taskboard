@@ -51,7 +51,30 @@
     "password": "Contraseña",
     "signIn": "Iniciar sesión",
     "signingIn": "Iniciando sesión…",
-    "error": "Correo o contraseña incorrectos."
+    "error": "Correo o contraseña incorrectos.",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "forgotHelp": "Contacta al administrador de tu equipo para restablecerla."
+  },
+  "reset": {
+    "requestTitle": "Restablecer tu contraseña",
+    "requestSubtitle": "Introduce el correo de tu cuenta y te enviaremos un enlace para crear una nueva contraseña.",
+    "send": "Enviar enlace",
+    "sending": "Enviando…",
+    "backToSignIn": "← Volver a iniciar sesión",
+    "sentTitle": "Revisa tu correo",
+    "sentBody": "Si existe una cuenta para {{email}}, te enviamos un enlace para restablecer tu contraseña. Caduca en 1 hora.",
+    "newTitle": "Elige una nueva contraseña",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar nueva contraseña",
+    "update": "Actualizar contraseña",
+    "updating": "Actualizando…",
+    "mismatch": "Las dos contraseñas no coinciden.",
+    "tooShort": "Usa al menos 8 caracteres.",
+    "successTitle": "Contraseña actualizada",
+    "successBody": "Ya puedes iniciar sesión con tu nueva contraseña.",
+    "expiredTitle": "Este enlace ha caducado",
+    "expiredBody": "Los enlaces de restablecimiento son válidos durante 1 hora. Solicita uno nuevo.",
+    "genericError": "Algo salió mal. Solicita un nuevo enlace."
   },
   "task": {
     "edit": "Editar tarea",

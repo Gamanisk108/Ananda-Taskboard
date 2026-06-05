@@ -1,133 +1,184 @@
-/* Ananda Taskboard — "Temple of Light" theme (from Ananda Connects design brief):
-   Nayaswami blue (workhorse), ivory cream canvas, temple gold as sacred accent. */
+/* Ananda Taskboard — "Temple of Light" theme.
+   Ported from the Claude Design "Ananda Taskboard - Web" reference: refined
+   token system (warm ivory canvas, nayaswami blue, temple gold), light + dark.
+   Legacy token names are kept as aliases (bottom of :root) so every existing
+   component that uses var(--surface-sunk)/var(--text-muted)/var(--accent)/… keeps
+   working and picks up the new palette automatically. */
+
+/* ============================================================= TOKENS */
 :root {
-  --bg: #fbf6ea;            /* ivory — page canvas, never pure white */
-  --surface: #fffdf8;       /* near-white warm — cards/tables (kept light for density) */
-  --surface-sunk: #efe5cc;  /* parchment — table headers, hovers, sunk panels */
-  --border: #e3d6b8;        /* sand — dividers */
-  --text: #23262b;          /* ink (not pure black) */
-  --text-muted: #4a5568;    /* slate — secondary text */
-  --primary: #1e3a6e;       /* nayaswami blue — buttons, key actions */
-  --primary-weak: #eaf0f8;  /* blue-wash — selected rows, tints */
-  --accent: #2c5499;        /* temple dome — links, active */
-  --gold: #c9a24b;          /* temple gold — sacred accent (icons/badges only) */
-  --success: #3f7d54;       /* calm green — done */
-  --warn: #7a5c22;          /* deep gold — delayed (AA on cream) */
-  --danger: #b4452f;        /* terracotta — overdue / destructive */
-
-  --r-card: 10px;
-  --r-ctl: 7px;
-  --r-pill: 999px;
-
-  --sh-1: 0 1px 2px rgba(30, 58, 110, 0.07);
-  --sh-2: 0 4px 14px rgba(30, 58, 110, 0.10);
-
-  --font-display: "Fraunces", Georgia, serif;
-  --font-ui: "Instrument Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Temple of Light — light theme */
+  --bg:#f6efde; --canvas:#fbf6ea; --surface:#fffdf8; --surface-2:#faf5e8;
+  --sunk:#efe5cc; --border:#e4d8bb; --border-strong:#d8c89e;
+  --text:#23262b; --muted:#5a6172; --faint:#8a8270;
+  --primary:#1e3a6e; --primary-ink:#fbf6ea; --dome:#2c5499; --azure:#7fa8d9;
+  --primary-weak:#e9f0f9;
+  --gold:#c9a24b; --gold-deep:#7a5c22; --wood:#a9824e;
+  --todo:#6b7280; --doing:#2c64a8; --delayed:#bb3b28; --done:#3f7d54;
+  --danger:#b4452f; --warn:#7a5c22; --ring-soon:#d99a1f; --bar-soon:#ffd21e;
+  /* derived row backgrounds */
+  --row:var(--surface); --hover:#f2ead6;
+  --overdue-bg:#b4452f2e; --soon-bg:#e0a72e38;
+  --wk-today:#ffffff; --wk-today-line:var(--dome);
+  --wk-past:color-mix(in srgb,#5e6675 42%,transparent);
+  --wk-future:color-mix(in srgb,#d8bf86 52%,transparent);
+  --mo-today:#ffffff; --mo-soon:color-mix(in srgb,var(--ring-soon) 30%,var(--surface));
+  --wk-divider:rgba(35,38,43,.11);
+  --shadow-1:0 1px 2px rgba(30,58,110,.07);
+  --shadow-2:0 6px 22px rgba(30,58,110,.13);
+  --shadow-pop:0 12px 34px rgba(20,30,55,.18);
+  --frozen-shadow:8px 0 14px -10px rgba(30,40,60,.28);
+  --r-card:11px; --r-ctl:8px; --r-pill:999px;
+  --f-display:"Fraunces",Georgia,serif;
+  --f-ui:"Instrument Sans",system-ui,sans-serif;
+  --f-mono:"Red Hat Mono",ui-monospace,monospace;
+  color-scheme:light;
 }
 
-/* Dark theme — Claude Design palette, mapped onto the same token names so every
-   component that uses var(--…) switches automatically. Toggled via the account
-   menu (sets <html data-theme="dark">, persisted in localStorage "at-theme"). */
 html[data-theme="dark"] {
-  --bg: #0f1b30;            /* deep navy canvas */
-  --surface: #15223b;       /* cards/tables */
-  --surface-sunk: #1c2c49;  /* headers, hovers, sunk panels */
-  --border: #27395b;
-  --text: #eaf0fb;
-  --text-muted: #9fb0cc;
-  --primary: #2c5499;
-  --primary-weak: #1d3358;
-  --accent: #7fa8d9;        /* azure — links/active read better on dark */
-  --gold: #e0be6a;
-  --success: #5fb27a;
-  --warn: #e0be6a;
-  --danger: #e07a63;
-  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.30);
-  --sh-2: 0 6px 22px rgba(0, 0, 0, 0.45);
-  color-scheme: dark;       /* native form controls/scrollbars follow */
+  --bg:#0c1526; --canvas:#0f1b30; --surface:#15223b; --surface-2:#172642;
+  --sunk:#1c2c49; --border:#27395b; --border-strong:#32466b;
+  --text:#eaf0fb; --muted:#9fb0cc; --faint:#7e8ca6;
+  --primary:#2c5499; --primary-ink:#f3eedd; --dome:#7fa8d9; --azure:#a9c6ec;
+  --primary-weak:#1d3358;
+  --gold:#e0be6a; --gold-deep:#e0be6a; --wood:#c79f63;
+  --todo:#9aa3b2; --doing:#6aa2e0; --delayed:#e3705a; --done:#5fb27a;
+  --danger:#e07a63; --warn:#e0be6a; --ring-soon:#e0be6a; --bar-soon:#ffd21e;
+  --row:var(--surface); --hover:#1b2d4d;
+  --overdue-bg:#e0634a33; --soon-bg:#e0b04a2e;
+  --wk-today:#ffffff; --wk-today-line:var(--azure);
+  --wk-past:color-mix(in srgb,#6f7c93 40%,transparent);
+  --wk-future:color-mix(in srgb,#cbb06a 26%,transparent);
+  --mo-today:#ffffff; --mo-soon:color-mix(in srgb,var(--bar-soon) 26%,var(--surface));
+  --wk-divider:rgba(255,255,255,.05);
+  --shadow-1:0 1px 2px rgba(0,0,0,.3);
+  --shadow-2:0 6px 22px rgba(0,0,0,.45);
+  --shadow-pop:0 14px 38px rgba(0,0,0,.55);
+  --frozen-shadow:10px 0 16px -10px rgba(0,0,0,.5);
+  color-scheme:dark;
 }
 
-* { box-sizing: border-box; }
+/* Back-compat aliases: legacy token names → new palette (theme-aware via var
+   indirection), so existing components keep rendering with the refined look. */
+:root {
+  --text-muted:var(--muted);
+  --surface-sunk:var(--sunk);
+  --accent:var(--dome);
+  --success:var(--done);
+  --sh-1:var(--shadow-1);
+  --sh-2:var(--shadow-2);
+  --font-display:var(--f-display);
+  --font-ui:var(--f-ui);
+  --font-mono:var(--f-mono);
+}
 
+/* ============================================================= BASE */
+* { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 
 body {
   margin: 0;
-  font-family: var(--font-ui);
-  font-size: 14px;
+  font-family: var(--f-ui);
+  font-size: 13.5px;
   line-height: 1.45;
   color: var(--text);
-  background: var(--bg);
+  background: var(--canvas);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Display serif headings: slightly tighter tracking, optical sizing */
-h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
+/* Display serif for top-level headings; UI sans elsewhere is set per-component. */
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
 h1 { font-size: 1.6rem; }
 h2 { font-size: 1.2rem; }
 h3 { font-size: 1rem; }
 
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.muted { color: var(--muted); }
+
+::selection { background: var(--gold); color: #23262b; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; border: 2px solid var(--canvas); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- buttons ---- */
 button {
-  font-family: var(--font-ui);
+  font-family: var(--f-ui);
   font-weight: 500;
   border: 1px solid transparent;
   border-radius: var(--r-ctl);
-  padding: 7px 12px;
+  padding: 6px 11px;
   cursor: pointer;
   font-size: 13px;
-  transition: background 120ms, border-color 120ms, transform 80ms;
+  color: var(--text);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background .14s, border-color .14s, color .14s, box-shadow .14s, transform 80ms;
 }
 button:active { transform: translateY(1px); }
-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:focus-visible { outline: 2px solid var(--dome); outline-offset: 2px; }
+button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none !important; filter: none !important; }
+html.theme-switching * { transition: none !important; }
 
-.btn-primary { background: var(--primary); color: var(--surface); }
-.btn-primary:hover { background: #16294f; }
+.btn-primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); font-weight: 600; }
+.btn-primary:hover { box-shadow: 0 3px 12px rgba(30,58,110,.32); filter: saturate(1.05) brightness(1.04); }
 .btn-secondary { background: var(--surface); border-color: var(--border); color: var(--text); }
-.btn-secondary:hover { background: var(--surface-sunk); }
-.btn-danger { background: var(--surface); border-color: var(--danger); color: var(--danger); }
-.btn-ghost { background: transparent; color: var(--text-muted); }
-.btn-ghost:hover { background: var(--surface-sunk); color: var(--text); }
+.btn-secondary:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.btn-danger { background: var(--surface); border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
+.btn-ghost { background: transparent; color: var(--muted); }
+.btn-ghost:hover { background: var(--sunk); color: var(--text); }
+.icon-btn { padding: 6px 9px; font-size: 14px; line-height: 1; }
 
+/* ---- form controls (global; modals/sheets refine further in App.css) ---- */
 input, select, textarea {
-  font-family: var(--font-ui);
+  font-family: var(--f-ui);
   font-size: 13px;
   color: var(--text);
-  background: var(--surface);
+  background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-ctl);
   padding: 7px 10px;
   width: 100%;
 }
 input:focus, select:focus, textarea:focus {
-  outline: 2px solid var(--primary);
-  outline-offset: 1px;
-  border-color: var(--primary);
+  outline: none;
+  border-color: var(--dome);
+  box-shadow: 0 0 0 3px var(--primary-weak);
 }
-label { font-size: 12px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 4px; }
+textarea { resize: vertical; line-height: 1.45; }
+input:disabled { opacity: .6; cursor: not-allowed; }
+label { font-size: 12px; color: var(--muted); font-weight: 500; display: block; margin-bottom: 4px; }
 
-.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.muted { color: var(--text-muted); }
+/* custom select chevron */
+select {
+  cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8478' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; background-size: 12px;
+}
+html[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239fb0cc' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
 
+/* ---- shared primitives ---- */
 .pill {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 6px;
   border-radius: var(--r-pill);
-  padding: 2px 9px; font-size: 12px; font-weight: 500;
+  padding: 2px 10px; font-size: 12px; font-weight: 600;
+  border: 1px solid transparent;
 }
-.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 0 1px rgba(0,0,0,.04); }
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-card);
-  box-shadow: var(--sh-1);
+  box-shadow: var(--shadow-1);
 }
 
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease both; }
-
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }

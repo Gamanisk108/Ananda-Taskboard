@@ -1,8 +1,16 @@
-from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -133,3 +141,79 @@ class TierViewSet(viewsets.ModelViewSet):
         from permissions.models import audit
         audit(self.request.user, "tier.delete", f"Deleted tier '{instance.name}'")
         instance.delete()
+
+
+# ── Self-service password reset ────────────────────────────────────────────────
+# Two public (unauthenticated) endpoints. They use Django's signed-token
+# machinery (default_token_generator) — no extra DB table — and never reveal
+# whether an email belongs to a real account (no enumeration).
+
+def _send_reset_email(user):
+    """Email a one-hour reset link pointing at the SPA's ?reset deep-link."""
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    link = f"{settings.FRONTEND_URL}/?reset&uid={uid}&token={token}"
+    greeting = f"Hello {user.name}," if user.name else "Hello,"
+    body = (
+        f"{greeting}\n\n"
+        "We received a request to reset your Ananda Taskboard password.\n"
+        "Use the link below to choose a new one (it expires in 1 hour):\n\n"
+        f"{link}\n\n"
+        "If you didn't request this, you can safely ignore this email — "
+        "your password won't change.\n"
+    )
+    send_mail(
+        "Reset your Ananda Taskboard password",
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=True,
+    )
+
+
+class PasswordResetRequestView(APIView):
+    """POST {email}: start a reset. Always 200 with the same body whether or not
+    the email matches an account, so it can't be used to probe for users."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_reset"
+
+    def post(self, request):
+        email = (request.data.get("email") or "").strip().lower()
+        if email:
+            user = User.objects.filter(email=email, is_active=True).first()
+            if user:
+                _send_reset_email(user)
+        return Response({"detail": "If that account exists, a reset link is on its way."})
+
+
+class PasswordResetConfirmView(APIView):
+    """POST {uid, token, password}: finish a reset. 400 'invalid' for a bad or
+    expired link; 400 {password: [...]} if the new password fails validation."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        user = self._user_from_uid(request.data.get("uid") or "")
+        token = request.data.get("token") or ""
+        if user is None or not default_token_generator.check_token(user, token):
+            return Response({"detail": "invalid"}, status=400)
+        password = request.data.get("password") or ""
+        try:
+            validate_password(password, user)
+        except DjangoValidationError as exc:
+            return Response({"password": list(exc.messages)}, status=400)
+        user.set_password(password)
+        user.save(update_fields=["password"])
+        return Response({"detail": "ok"})
+
+    @staticmethod
+    def _user_from_uid(uid):
+        try:
+            pk = force_str(urlsafe_base64_decode(uid))
+            return User.objects.filter(pk=pk, is_active=True).first()
+        except (TypeError, ValueError, OverflowError):
+            return None

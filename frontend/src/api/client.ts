@@ -90,6 +90,26 @@ export const api = {
   logout() {
     setTokens(null, null);
   },
+  /** Start a password reset. Always resolves — the server never reveals whether
+   *  the email belongs to a real account. */
+  async requestPasswordReset(email: string) {
+    await fetch("/api/auth/password/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  },
+  /** Finish a password reset with the uid+token from the email link. Throws an
+   *  ApiError (status 400) for an expired link or a rejected password. */
+  async confirmPasswordReset(uid: string, token: string, password: string) {
+    const res = await fetch("/api/auth/password/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, token, password }),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    return res.json().catch(() => null);
+  },
   /** Download a file from an authenticated endpoint via a blob URL. */
   async download(path: string, filename: string) {
     const res = await raw("GET", path);

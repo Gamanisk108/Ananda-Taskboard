@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../state/auth";
+import { ForgotPassword } from "./ForgotPassword";
 
 export function Login() {
   const { t } = useTranslation();
@@ -9,6 +10,7 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,6 +24,8 @@ export function Login() {
       setBusy(false);
     }
   }
+
+  if (forgot) return <ForgotPassword onBack={() => setForgot(false)} />;
 
   return (
     <div className="login-wrap">
@@ -43,6 +47,22 @@ export function Login() {
         <button className="btn-primary" style={{ width: "100%" }} disabled={busy}>
           {busy ? t("login.signingIn") : t("login.signIn")}
         </button>
+        <div style={{ marginTop: 14, textAlign: "center" }}>
+          <button
+            type="button"
+            onClick={() => setForgot(true)}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              color: "var(--primary)",
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            {t("login.forgot")}
+          </button>
+        </div>
       </form>
     </div>
   );

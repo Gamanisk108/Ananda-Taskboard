@@ -166,6 +166,10 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
     ),
+    # Per-view ScopedRateThrottle scopes (only applied where set on the view).
+    "DEFAULT_THROTTLE_RATES": {
+        "password_reset": env("PASSWORD_RESET_RATE", "10/hour"),
+    },
 }
 
 SIMPLE_JWT = {
@@ -178,6 +182,23 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     o for o in env("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if o
 ]
+
+# --- Email (password reset, notifications) ----------------------------------
+# Dev default: print emails to the server console — no service or secret needed,
+# so the reset link is visible in the backend terminal. To go live, set
+# EMAIL_BACKEND to the SMTP backend and EMAIL_HOST_PASSWORD to a Resend API key
+# (smtp.resend.com / user "resend"); no code change required.
+EMAIL_BACKEND = env("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", "smtp.resend.com")
+EMAIL_PORT = int(env("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", "resend")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")  # Resend API key in production
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Ananda Taskboard <onboarding@resend.dev>")
+# Public base URL of the SPA — used to build password-reset links in emails.
+FRONTEND_URL = env("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+# Password-reset links are valid for 1 hour (matches the UI + email copy).
+PASSWORD_RESET_TIMEOUT = int(env("PASSWORD_RESET_TIMEOUT", "3600"))
 
 # --- Web Push (VAPID) -------------------------------------------------------
 VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY", "")

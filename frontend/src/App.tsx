@@ -5,6 +5,7 @@ import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
 import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
+import { ResetPassword } from "./components/ResetPassword";
 import { Spinner, ColorDot } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
@@ -121,6 +122,9 @@ export default function App() {
     window.history.replaceState(null, "", `?${q.toString()}`);
   }, [effectiveTop, effectiveSub, view, me?.id]);
 
+  // Password-reset deep-link from the email (?reset&uid=…&token=…) — shown
+  // standalone, before the auth gate, since the user is logged out here.
+  if (new URLSearchParams(window.location.search).has("reset")) return <ResetPassword />;
   if (loading) return <Spinner />;
   if (!me) return <Login />;
 
@@ -137,8 +141,11 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <img src="/logo.png" alt="" width={30} height={30} style={{ objectFit: "contain", display: "block", flex: "none" }} />
-          <strong>Ananda Taskboard</strong>
+          <img src="/logo.png" alt="Ananda" />
+          <div className="brand-txt">
+            <div className="name">Ananda <b>Taskboard</b></div>
+            <div className="tagline">Love &amp; Blessings from Ananda Los Angeles</div>
+          </div>
         </div>
         <div className="topbar-actions">
           {me.is_admin && (

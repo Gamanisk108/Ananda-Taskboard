@@ -51,7 +51,30 @@
     "password": "Password",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
-    "error": "Incorrect email or password."
+    "error": "Incorrect email or password.",
+    "forgot": "Forgot password?",
+    "forgotHelp": "Contact your team admin to reset your password."
+  },
+  "reset": {
+    "requestTitle": "Reset your password",
+    "requestSubtitle": "Enter your account email and we'll send you a link to set a new password.",
+    "send": "Send reset link",
+    "sending": "Sending…",
+    "backToSignIn": "← Back to sign in",
+    "sentTitle": "Check your email",
+    "sentBody": "If an account exists for {{email}}, we've sent a link to reset your password. It expires in 1 hour.",
+    "newTitle": "Choose a new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "update": "Update password",
+    "updating": "Updating…",
+    "mismatch": "The two passwords don't match.",
+    "tooShort": "Use at least 8 characters.",
+    "successTitle": "Password updated",
+    "successBody": "You can now sign in with your new password.",
+    "expiredTitle": "This link has expired",
+    "expiredBody": "Password reset links are valid for 1 hour. Please request a new one.",
+    "genericError": "Something went wrong. Please request a new link."
   },
   "task": {
     "edit": "Edit task",
