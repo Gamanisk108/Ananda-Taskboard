@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
-import { useStatuses } from "../statuses";
+import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, PriorityIcon } from "./common";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
@@ -27,6 +27,163 @@ const WD_TOGGLES = [
   { n: 6, label: "S" }, { n: 0, label: "M" }, { n: 1, label: "T" }, { n: 2, label: "W" },
   { n: 3, label: "T" }, { n: 4, label: "F" }, { n: 5, label: "S" },
 ];
+
+// The pending/rejected and archived banners shown at the top when editing.
+function ApprovalBanners({ task, onSaved }: { task: Task; onSaved: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {task.approval_state !== "approved" && (
+        <div className="field">
+          <span className="pill" style={{ background: "#b7791f1a", color: "var(--warn)" }}>
+            {task.approval_state === "pending" ? t("task.pendingApproval") : t("task.rejected")}
+          </span>
+        </div>
+      )}
+      {task.archived_at && (
+        <div className="field" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <span className="pill" style={{ background: "var(--surface-sunk)" }}>🗄 {t("task.archived")}</span>
+          <button type="button" className="btn-secondary"
+            onClick={async () => { await api.post(`/api/tasks/${task.id}/unarchive`, {}); onSaved(); }}>
+            {t("task.unarchive")}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Status field: an inline status picker for those who may change it, a read-only
+// pill when editing without permission, or a hint before the task exists.
+function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStatus }: {
+  canChangeStatus: boolean;
+  editing: boolean;
+  curStatus: string;
+  statuses: TaskStatus[];
+  changeStatus: (s: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="field">
+      <label>{canChangeStatus ? t("task.statusApplied") : t("task.status")}</label>
+      {canChangeStatus ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <StatusPill status={curStatus} />
+          <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
+            <option value="">{t("task.changeTo")}</option>
+            {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </div>
+      ) : editing ? (
+        <StatusPill status={curStatus} />
+      ) : (
+        <span className="muted" style={{ fontSize: 13 }}>{t("task.setAfterCreating")}</span>
+      )}
+    </div>
+  );
+}
+
+interface RecurrenceFieldsProps {
+  freq: Recurrence["freq"];
+  setFreq: Dispatch<SetStateAction<Recurrence["freq"]>>;
+  interval: number;
+  setInterval: Dispatch<SetStateAction<number>>;
+  weekdays: number[];
+  setWeekdays: Dispatch<SetStateAction<number[]>>;
+  anchor: string;
+  setAnchor: Dispatch<SetStateAction<string>>;
+  endMode: EndMode;
+  setEndMode: Dispatch<SetStateAction<EndMode>>;
+  endDate: string;
+  setEndDate: Dispatch<SetStateAction<string>>;
+  count: number;
+  setCount: Dispatch<SetStateAction<number>>;
+}
+
+// The recurrence editor card, shown when "repeats" is on.
+function RecurrenceFields(p: RecurrenceFieldsProps) {
+  const { t } = useTranslation();
+  return (
+    <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
+      <div className="row2">
+        <div className="field">
+          <label>{t("tm.frequency")}</label>
+          <select value={p.freq} onChange={(e) => p.setFreq(e.target.value as Recurrence["freq"])}>
+            {(["daily", "weekly", "monthly", "yearly"] as const).map((f) => (
+              <option key={f} value={f}>{t(`tm.freq${f.charAt(0).toUpperCase()}${f.slice(1)}`)}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label>{t("tm.everyInterval")}</label>
+          <input type="number" min={1} value={p.interval} onChange={(e) => p.setInterval(Number(e.target.value))} />
+        </div>
+      </div>
+      {p.freq === "weekly" && (
+        <div className="field">
+          <label>{t("tm.onDays")} <span className="muted" style={{ fontWeight: 400 }}>{t("tm.onDaysHint")}</span></label>
+          <div style={{ display: "flex", gap: 4 }}>
+            {WD_TOGGLES.map((w, i) => (
+              <button key={i} type="button"
+                className={p.weekdays.includes(w.n) ? "btn-primary" : "btn-secondary"}
+                style={{ width: 34, padding: "6px 0" }}
+                onClick={() => p.setWeekdays((d) => d.includes(w.n) ? d.filter((x) => x !== w.n) : [...d, w.n])}>
+                {w.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="row2">
+        <div className="field">
+          <label>{t("tm.startsAnchor")}</label>
+          <input type="date" value={p.anchor} onChange={(e) => p.setAnchor(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>{t("settings.ends")}</label>
+          <select value={p.endMode} onChange={(e) => p.setEndMode(e.target.value as EndMode)}>
+            <option value="none">{t("settings.endsNever")}</option>
+            <option value="date">{t("tm.endOnDate")}</option>
+            <option value="count">{t("tm.endAfterN")}</option>
+          </select>
+        </div>
+      </div>
+      {p.endMode === "date" && (
+        <div className="field"><label>{t("settings.endDate")}</label>
+          <input type="date" value={p.endDate} onChange={(e) => p.setEndDate(e.target.value)} /></div>
+      )}
+      {p.endMode === "count" && (
+        <div className="field"><label>{t("tm.occurrences")}</label>
+          <input type="number" min={1} value={p.count} onChange={(e) => p.setCount(Number(e.target.value))} /></div>
+      )}
+    </div>
+  );
+}
+
+// Cancel / Delete / Save row, plus the share-link button when editing.
+function ModalFooter({ editing, task, busy, shareLabel, setShareLabel, onClose, del }: {
+  editing: boolean;
+  task: Task | null;
+  busy: boolean;
+  shareLabel: string;
+  setShareLabel: Dispatch<SetStateAction<string>>;
+  onClose: () => void;
+  del: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="modal-foot">
+      {editing && (
+        <button type="button" className="btn-secondary" style={{ marginRight: "auto" }}
+          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
+          🔗 {shareLabel || t("task.share")}
+        </button>
+      )}
+      <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
+      {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
+      <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
+    </div>
+  );
+}
 
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const { t } = useTranslation();
@@ -144,22 +301,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   return (
     <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide>
       <form onSubmit={save}>
-        {editing && task!.approval_state !== "approved" && (
-          <div className="field">
-            <span className="pill" style={{ background: "#b7791f1a", color: "var(--warn)" }}>
-              {task!.approval_state === "pending" ? t("task.pendingApproval") : t("task.rejected")}
-            </span>
-          </div>
-        )}
-        {editing && task!.archived_at && (
-          <div className="field" style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <span className="pill" style={{ background: "var(--surface-sunk)" }}>🗄 {t("task.archived")}</span>
-            <button type="button" className="btn-secondary"
-              onClick={async () => { await api.post(`/api/tasks/${task!.id}/unarchive`, {}); onSaved(); }}>
-              {t("task.unarchive")}
-            </button>
-          </div>
-        )}
+        {editing && <ApprovalBanners task={task!} onSaved={onSaved} />}
 
         <div className="field">
           <label>{t("task.name")}</label>
@@ -182,22 +324,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         </div>
 
         <div className="row2">
-          <div className="field">
-            <label>{canChangeStatus ? t("task.statusApplied") : t("task.status")}</label>
-            {canChangeStatus ? (
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <StatusPill status={curStatus} />
-                <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
-                  <option value="">{t("task.changeTo")}</option>
-                  {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                </select>
-              </div>
-            ) : editing ? (
-              <StatusPill status={curStatus} />
-            ) : (
-              <span className="muted" style={{ fontSize: 13 }}>{t("task.setAfterCreating")}</span>
-            )}
-          </div>
+          <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} />
           <div className="field">
             <label>{t("task.priority")}</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -271,58 +398,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           </label>
         </div>
         {repeats && (
-          <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
-            <div className="row2">
-              <div className="field">
-                <label>{t("tm.frequency")}</label>
-                <select value={freq} onChange={(e) => setFreq(e.target.value as Recurrence["freq"])}>
-                  {(["daily", "weekly", "monthly", "yearly"] as const).map((f) => (
-                    <option key={f} value={f}>{t(`tm.freq${f.charAt(0).toUpperCase()}${f.slice(1)}`)}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label>{t("tm.everyInterval")}</label>
-                <input type="number" min={1} value={interval} onChange={(e) => setInterval(Number(e.target.value))} />
-              </div>
-            </div>
-            {freq === "weekly" && (
-              <div className="field">
-                <label>{t("tm.onDays")} <span className="muted" style={{ fontWeight: 400 }}>{t("tm.onDaysHint")}</span></label>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {WD_TOGGLES.map((w, i) => (
-                    <button key={i} type="button"
-                      className={weekdays.includes(w.n) ? "btn-primary" : "btn-secondary"}
-                      style={{ width: 34, padding: "6px 0" }}
-                      onClick={() => setWeekdays((d) => d.includes(w.n) ? d.filter((x) => x !== w.n) : [...d, w.n])}>
-                      {w.label}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="row2">
-              <div className="field">
-                <label>{t("tm.startsAnchor")}</label>
-                <input type="date" value={anchor} onChange={(e) => setAnchor(e.target.value)} />
-              </div>
-              <div className="field">
-                <label>{t("settings.ends")}</label>
-                <select value={endMode} onChange={(e) => setEndMode(e.target.value as EndMode)}>
-                  <option value="none">{t("settings.endsNever")}</option>
-                  <option value="date">{t("tm.endOnDate")}</option>
-                  <option value="count">{t("tm.endAfterN")}</option>
-                </select>
-              </div>
-            </div>
-            {endMode === "date" && (
-              <div className="field"><label>{t("settings.endDate")}</label>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
-            )}
-            {endMode === "count" && (
-              <div className="field"><label>{t("tm.occurrences")}</label>
-                <input type="number" min={1} value={count} onChange={(e) => setCount(Number(e.target.value))} /></div>
-            )}
-          </div>
+          <RecurrenceFields
+            freq={freq} setFreq={setFreq}
+            interval={interval} setInterval={setInterval}
+            weekdays={weekdays} setWeekdays={setWeekdays}
+            anchor={anchor} setAnchor={setAnchor}
+            endMode={endMode} setEndMode={setEndMode}
+            endDate={endDate} setEndDate={setEndDate}
+            count={count} setCount={setCount}
+          />
         )}
 
         <div className="field">
@@ -338,17 +422,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 
-        <div className="modal-foot">
-          {editing && (
-            <button type="button" className="btn-secondary" style={{ marginRight: "auto" }}
-              onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
-              🔗 {shareLabel || t("task.share")}
-            </button>
-          )}
-          <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
-          {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
-          <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
-        </div>
+        <ModalFooter editing={editing} task={task} busy={busy} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}
