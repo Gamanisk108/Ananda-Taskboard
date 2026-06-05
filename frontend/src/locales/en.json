@@ -136,7 +136,8 @@
     "noTiers": "No tiers yet.",
     "noGroups": "No groups yet.",
     "noActivity": "No activity yet.",
-    "noProjects": "No projects yet."
+    "noProjects": "No projects yet.",
+    "noRestorePoints": "No restore points yet."
   },
   "theme": {
     "system": "System",
@@ -190,7 +191,14 @@
     "colName": "Name",
     "colContents": "Contents",
     "auto": "auto",
-    "manual": "manual"
+    "manual": "manual",
+    "restored": "Restored.",
+    "confirmRestore": "Restore to \"{{name}}\"?\n\nThis first auto-saves the current board, then replaces ALL data with this snapshot.",
+    "confirmDelete": "Delete restore point \"{{name}}\"? (The board itself is unaffected.)",
+    "promptName": "Name this restore point:",
+    "manualDefault": "Manual save",
+    "manualPrefill": "Manual save — {{date}}",
+    "summary": "{{projects}} projects · {{subprojects}} sub-projects · {{tasks}} tasks · {{events}} events · {{groups}} groups"
   },
   "history": {
     "intro": "An accurate snapshot of who was assigned to what on a given day (recorded daily). History builds up from today forward.",

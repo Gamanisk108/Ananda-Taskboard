@@ -136,7 +136,8 @@
     "noTiers": "Aucun niveau pour l'instant.",
     "noGroups": "Aucun groupe pour l'instant.",
     "noActivity": "Aucune activité pour l'instant.",
-    "noProjects": "Aucun projet pour l'instant."
+    "noProjects": "Aucun projet pour l'instant.",
+    "noRestorePoints": "Aucun point de restauration."
   },
   "theme": {
     "system": "Système",
@@ -190,7 +191,14 @@
     "colName": "Nom",
     "colContents": "Contenu",
     "auto": "auto",
-    "manual": "manuel"
+    "manual": "manuel",
+    "restored": "Restauré.",
+    "confirmRestore": "Restaurer vers « {{name}} » ?\n\nCela enregistre d'abord automatiquement le tableau actuel, puis remplace TOUTES les données par cet instantané.",
+    "confirmDelete": "Supprimer le point de restauration « {{name}} » ? (Le tableau lui-même n'est pas affecté.)",
+    "promptName": "Nommez ce point de restauration :",
+    "manualDefault": "Sauvegarde manuelle",
+    "manualPrefill": "Sauvegarde manuelle — {{date}}",
+    "summary": "{{projects}} projets · {{subprojects}} sous-projets · {{tasks}} tâches · {{events}} événements · {{groups}} groupes"
   },
   "history": {
     "intro": "Un instantané précis de qui était affecté à quoi un jour donné (enregistré quotidiennement). L'historique s'accumule à partir d'aujourd'hui.",

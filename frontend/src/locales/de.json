@@ -136,7 +136,8 @@
     "noTiers": "Noch keine Stufen.",
     "noGroups": "Noch keine Gruppen.",
     "noActivity": "Noch keine Aktivität.",
-    "noProjects": "Noch keine Projekte."
+    "noProjects": "Noch keine Projekte.",
+    "noRestorePoints": "Noch keine Wiederherstellungspunkte."
   },
   "theme": {
     "system": "System",
@@ -190,7 +191,14 @@
     "colName": "Name",
     "colContents": "Inhalt",
     "auto": "auto",
-    "manual": "manuell"
+    "manual": "manuell",
+    "restored": "Wiederhergestellt.",
+    "confirmRestore": "Auf \"{{name}}\" wiederherstellen?\n\nDies speichert zuerst automatisch das aktuelle Board und ersetzt dann ALLE Daten durch diesen Snapshot.",
+    "confirmDelete": "Wiederherstellungspunkt \"{{name}}\" löschen? (Das Board selbst bleibt unverändert.)",
+    "promptName": "Diesen Wiederherstellungspunkt benennen:",
+    "manualDefault": "Manuelle Speicherung",
+    "manualPrefill": "Manuelle Speicherung — {{date}}",
+    "summary": "{{projects}} Projekte · {{subprojects}} Unterprojekte · {{tasks}} Aufgaben · {{events}} Ereignisse · {{groups}} Gruppen"
   },
   "history": {
     "intro": "Eine genaue Momentaufnahme, wer an einem bestimmten Tag was zugewiesen hatte (täglich erfasst). Der Verlauf baut sich ab heute auf.",

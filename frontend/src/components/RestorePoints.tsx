@@ -15,25 +15,28 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
   useEffect(load, []);
 
   async function save() {
-    const label = prompt("Name this restore point:", `Manual save — ${new Date().toLocaleString()}`);
+    const label = prompt(t("restore.promptName"), t("restore.manualPrefill", { date: new Date().toLocaleString() }));
     if (label === null) return;
     setBusy(true);
-    try { await api.post("/api/restore-points", { label: label || "Manual save" }); load(); }
+    try { await api.post("/api/restore-points", { label: label || t("restore.manualDefault") }); load(); }
     finally { setBusy(false); }
   }
   async function restore(p: Point) {
-    if (!confirm(`Restore to "${p.label}"?\n\nThis first auto-saves the current board, then replaces ALL data with this snapshot.`)) return;
+    if (!confirm(t("restore.confirmRestore", { name: p.label }))) return;
     setBusy(true);
-    try { await api.post(`/api/restore-points/${p.id}/restore`, {}); onChanged(); load(); alert("Restored."); }
+    try { await api.post(`/api/restore-points/${p.id}/restore`, {}); onChanged(); load(); alert(t("restore.restored")); }
     finally { setBusy(false); }
   }
   async function remove(p: Point) {
-    if (!confirm(`Delete restore point "${p.label}"? (The board itself is unaffected.)`)) return;
+    if (!confirm(t("restore.confirmDelete", { name: p.label }))) return;
     await api.del(`/api/restore-points/${p.id}`); load();
   }
 
   function summary(s: Stats) {
-    return `${s.projects ?? 0} projects · ${s.subprojects ?? 0} sub-projects · ${s.tasks ?? 0} tasks · ${s.events ?? 0} events · ${s.groups ?? 0} groups`;
+    return t("restore.summary", {
+      projects: s.projects ?? 0, subprojects: s.subprojects ?? 0,
+      tasks: s.tasks ?? 0, events: s.events ?? 0, groups: s.groups ?? 0,
+    });
   }
 
   return (
@@ -43,7 +46,7 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
         <button className="btn-primary" onClick={save} disabled={busy}>{t("restore.saveNow")}</button>
       </div>
       {!points ? <Spinner /> : points.length === 0 ? (
-        <div className="empty">{t("empty.noRestorePoints", "No restore points yet.")}</div>
+        <div className="empty">{t("empty.noRestorePoints")}</div>
       ) : (
         <table className="tbl">
           <thead><tr><th>{t("restore.colWhen")}</th><th>{t("restore.colName")}</th><th>{t("restore.colContents")}</th><th></th></tr></thead>

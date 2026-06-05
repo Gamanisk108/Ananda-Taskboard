@@ -136,7 +136,8 @@
     "noTiers": "还没有层级。",
     "noGroups": "还没有群组。",
     "noActivity": "还没有活动。",
-    "noProjects": "还没有项目。"
+    "noProjects": "还没有项目。",
+    "noRestorePoints": "还没有恢复点。"
   },
   "theme": {
     "system": "跟随系统",
@@ -190,7 +191,14 @@
     "colName": "名称",
     "colContents": "内容",
     "auto": "自动",
-    "manual": "手动"
+    "manual": "手动",
+    "restored": "已恢复。",
+    "confirmRestore": "恢复到“{{name}}”？\n\n这会先自动保存当前看板，然后用此快照替换所有数据。",
+    "confirmDelete": "删除恢复点“{{name}}”？（看板本身不受影响。）",
+    "promptName": "为此恢复点命名：",
+    "manualDefault": "手动保存",
+    "manualPrefill": "手动保存 — {{date}}",
+    "summary": "{{projects}} 个项目 · {{subprojects}} 个子项目 · {{tasks}} 个任务 · {{events}} 个事件 · {{groups}} 个组"
   },
   "history": {
     "intro": "某一天谁负责什么的准确快照（每日记录）。历史从今天起逐日累积。",

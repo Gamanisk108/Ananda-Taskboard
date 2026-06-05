@@ -136,7 +136,8 @@
     "noTiers": "Ainda não há níveis.",
     "noGroups": "Ainda não há grupos.",
     "noActivity": "Ainda não há atividade.",
-    "noProjects": "Ainda não há projetos."
+    "noProjects": "Ainda não há projetos.",
+    "noRestorePoints": "Ainda não há pontos de restauração."
   },
   "theme": {
     "system": "Sistema",
@@ -190,7 +191,14 @@
     "colName": "Nome",
     "colContents": "Conteúdo",
     "auto": "auto",
-    "manual": "manual"
+    "manual": "manual",
+    "restored": "Restaurado.",
+    "confirmRestore": "Restaurar para \"{{name}}\"?\n\nIsto primeiro salva automaticamente o quadro atual e depois substitui TODOS os dados por este instantâneo.",
+    "confirmDelete": "Excluir o ponto de restauração \"{{name}}\"? (O quadro em si não é afetado.)",
+    "promptName": "Nomeie este ponto de restauração:",
+    "manualDefault": "Salvamento manual",
+    "manualPrefill": "Salvamento manual — {{date}}",
+    "summary": "{{projects}} projetos · {{subprojects}} subprojetos · {{tasks}} tarefas · {{events}} eventos · {{groups}} grupos"
   },
   "history": {
     "intro": "Uma captura precisa de quem estava atribuído a quê em um dia (registrada diariamente). O histórico acumula a partir de hoje.",

@@ -136,7 +136,8 @@
     "noTiers": "Ancora nessun livello.",
     "noGroups": "Ancora nessun gruppo.",
     "noActivity": "Ancora nessuna attività.",
-    "noProjects": "Ancora nessun progetto."
+    "noProjects": "Ancora nessun progetto.",
+    "noRestorePoints": "Nessun punto di ripristino."
   },
   "theme": {
     "system": "Sistema",
@@ -190,7 +191,14 @@
     "colName": "Nome",
     "colContents": "Contenuto",
     "auto": "auto",
-    "manual": "manuale"
+    "manual": "manuale",
+    "restored": "Ripristinato.",
+    "confirmRestore": "Ripristinare a \"{{name}}\"?\n\nQuesto salva prima automaticamente la bacheca attuale, poi sostituisce TUTTI i dati con questa istantanea.",
+    "confirmDelete": "Eliminare il punto di ripristino \"{{name}}\"? (La bacheca stessa non viene modificata.)",
+    "promptName": "Assegna un nome a questo punto di ripristino:",
+    "manualDefault": "Salvataggio manuale",
+    "manualPrefill": "Salvataggio manuale — {{date}}",
+    "summary": "{{projects}} progetti · {{subprojects}} sottoprogetti · {{tasks}} attività · {{events}} eventi · {{groups}} gruppi"
   },
   "history": {
     "intro": "Un'istantanea accurata di chi era assegnato a cosa in un dato giorno (registrata ogni giorno). La cronologia si accumula da oggi in poi.",

@@ -136,7 +136,8 @@
     "noTiers": "Aún no hay niveles.",
     "noGroups": "Aún no hay grupos.",
     "noActivity": "Aún no hay actividad.",
-    "noProjects": "Aún no hay proyectos."
+    "noProjects": "Aún no hay proyectos.",
+    "noRestorePoints": "Aún no hay puntos de restauración."
   },
   "theme": {
     "system": "Sistema",
@@ -190,7 +191,14 @@
     "colName": "Nombre",
     "colContents": "Contenido",
     "auto": "auto",
-    "manual": "manual"
+    "manual": "manual",
+    "restored": "Restaurado.",
+    "confirmRestore": "¿Restaurar a \"{{name}}\"?\n\nEsto primero guarda automáticamente el tablero actual y luego reemplaza TODOS los datos con esta instantánea.",
+    "confirmDelete": "¿Eliminar el punto de restauración \"{{name}}\"? (El tablero en sí no se ve afectado.)",
+    "promptName": "Nombra este punto de restauración:",
+    "manualDefault": "Guardado manual",
+    "manualPrefill": "Guardado manual — {{date}}",
+    "summary": "{{projects}} proyectos · {{subprojects}} subproyectos · {{tasks}} tareas · {{events}} eventos · {{groups}} grupos"
   },
   "history": {
     "intro": "Una instantánea precisa de quién estaba asignado a qué en un día dado (registrada a diario). El historial se acumula desde hoy en adelante.",
