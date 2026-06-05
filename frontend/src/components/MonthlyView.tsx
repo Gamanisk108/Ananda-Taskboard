@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addDays, addMonths, format, getDay, getDaysInMonth, startOfMonth, startOfWeek } from "date-fns";
-import { ChevronLeft, ChevronRight, AlertTriangle, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { useCalendarRange, type CalendarViewProps } from "../calendar";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, DueFlag } from "./common";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type EventSpan, type Task } from "../types";
 
@@ -104,8 +104,8 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
                   <div className="dh">
                     <span className="day-num">{dayNum}</span>
                     {isToday && <span className="today-tag">{t("cal.today", "Today")}</span>}
-                    {hasOverdue && <AlertTriangle size={12} style={{ color: "var(--danger)", flex: "none" }} />}
-                    {!hasOverdue && hasSoon && <Clock size={12} style={{ color: "var(--warn)", flex: "none" }} />}
+                    {hasOverdue && <DueFlag kind="overdue" size={13} title={t("list.missedDeadline")} />}
+                    {!hasOverdue && hasSoon && <DueFlag kind="soon" size={13} title={t("list.dueSoon")} />}
                   </div>
                   {dayEvents.map((e, k) => (
                     <div key={`ev-${k}`} className="mev" title={e.title}>{EVENT_ICON[e.kind]} {e.title}</div>

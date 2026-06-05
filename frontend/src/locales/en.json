@@ -101,6 +101,24 @@
   "org": {
     "switch": "Switch organization"
   },
+  "platform": {
+    "nav": "Platform",
+    "title": "Platform overview",
+    "subtitle": "Metadata only — task contents stay private to each organization.",
+    "empty": "No organizations yet.",
+    "pending": "pending verification",
+    "projects": "projects",
+    "subprojects": "sub-projects",
+    "tasks": "tasks",
+    "members": "members",
+    "admins": "Admins",
+    "member": "Member",
+    "email": "Email",
+    "role": "Role",
+    "tier": "Tier",
+    "role_admin": "Admin",
+    "role_member": "Member"
+  },
   "task": {
     "edit": "Edit task",
     "new": "New task",

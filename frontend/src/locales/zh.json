@@ -101,6 +101,24 @@
   "org": {
     "switch": "切换组织"
   },
+  "platform": {
+    "nav": "平台",
+    "title": "平台概览",
+    "subtitle": "仅元数据——任务内容对每个组织保密。",
+    "empty": "暂无组织。",
+    "pending": "待验证",
+    "projects": "项目",
+    "subprojects": "子项目",
+    "tasks": "任务",
+    "members": "成员",
+    "admins": "管理员",
+    "member": "成员",
+    "email": "电子邮箱",
+    "role": "角色",
+    "tier": "层级",
+    "role_admin": "管理员",
+    "role_member": "成员"
+  },
   "task": {
     "edit": "编辑任务",
     "new": "新建任务",

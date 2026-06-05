@@ -15,6 +15,7 @@ function makeMe(over: Partial<Me> = {}): Me {
     tree: { projects: [], show_global_overview: false },
     memberships: [],
     active_org: null,
+    is_superuser: false,
     ...over,
   };
 }

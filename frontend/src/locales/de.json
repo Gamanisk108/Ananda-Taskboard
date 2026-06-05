@@ -101,6 +101,24 @@
   "org": {
     "switch": "Organisation wechseln"
   },
+  "platform": {
+    "nav": "Plattform",
+    "title": "Plattformübersicht",
+    "subtitle": "Nur Metadaten — Aufgabeninhalte bleiben für jede Organisation privat.",
+    "empty": "Noch keine Organisationen.",
+    "pending": "Bestätigung ausstehend",
+    "projects": "Projekte",
+    "subprojects": "Unterprojekte",
+    "tasks": "Aufgaben",
+    "members": "Mitglieder",
+    "admins": "Administratoren",
+    "member": "Mitglied",
+    "email": "E-Mail",
+    "role": "Rolle",
+    "tier": "Stufe",
+    "role_admin": "Administrator",
+    "role_member": "Mitglied"
+  },
   "task": {
     "edit": "Aufgabe bearbeiten",
     "new": "Neue Aufgabe",

@@ -6,7 +6,7 @@ import { api } from "../api/client";
 import { useStatuses, isComplete } from "../statuses";
 import { buildSubLookup, deadlineState } from "../lookup";
 import { useUsers } from "../users";
-import { AvatarStack, PriorityIcon, Spinner, SubtaskBar } from "./common";
+import { AvatarStack, PriorityIcon, Spinner, SubtaskBar, DueFlag } from "./common";
 import type { Me, Task } from "../types";
 
 interface Props {
@@ -87,8 +87,8 @@ export function KanbanView({ projectId, subprojectId, refreshKey, onEdit, me }: 
                     <div className="kt">
                       <PriorityIcon level={t.priority} />
                       <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</span>
-                      {ds === "overdue" && <span className="flag od" title={tr("list.missedDeadline")}>❗</span>}
-                      {ds === "soon" && <span className="flag soon" title={tr("list.dueSoon")}>❗</span>}
+                      {ds === "overdue" && <DueFlag kind="overdue" title={tr("list.missedDeadline")} />}
+                      {ds === "soon" && <DueFlag kind="soon" title={tr("list.dueSoon")} />}
                     </div>
                     <div className="meta">
                       <span className="left">

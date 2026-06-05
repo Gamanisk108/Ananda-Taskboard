@@ -101,6 +101,24 @@
   "org": {
     "switch": "Cambia organizzazione"
   },
+  "platform": {
+    "nav": "Piattaforma",
+    "title": "Panoramica della piattaforma",
+    "subtitle": "Solo metadati — i contenuti delle attività restano privati per ogni organizzazione.",
+    "empty": "Ancora nessuna organizzazione.",
+    "pending": "verifica in sospeso",
+    "projects": "progetti",
+    "subprojects": "sottoprogetti",
+    "tasks": "attività",
+    "members": "membri",
+    "admins": "Amministratori",
+    "member": "Membro",
+    "email": "Email",
+    "role": "Ruolo",
+    "tier": "Livello",
+    "role_admin": "Amministratore",
+    "role_member": "Membro"
+  },
   "task": {
     "edit": "Modifica attività",
     "new": "Nuova attività",

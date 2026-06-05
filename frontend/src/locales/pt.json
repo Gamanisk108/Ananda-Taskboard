@@ -101,6 +101,24 @@
   "org": {
     "switch": "Trocar de organização"
   },
+  "platform": {
+    "nav": "Plataforma",
+    "title": "Visão da plataforma",
+    "subtitle": "Apenas metadados — o conteúdo das tarefas permanece privado de cada organização.",
+    "empty": "Ainda não há organizações.",
+    "pending": "verificação pendente",
+    "projects": "projetos",
+    "subprojects": "subprojetos",
+    "tasks": "tarefas",
+    "members": "membros",
+    "admins": "Administradores",
+    "member": "Membro",
+    "email": "E-mail",
+    "role": "Função",
+    "tier": "Nível",
+    "role_admin": "Administrador",
+    "role_member": "Membro"
+  },
   "task": {
     "edit": "Editar tarefa",
     "new": "Nova tarefa",

@@ -29,6 +29,30 @@ export function PriorityIcon({ level, size = 14, color }: { level: number; size?
   );
 }
 
+/** Deadline flag badge, identical on every page (design WARN_W / CLK_W):
+ *  overdue = red circle + white exclamation; soon = yellow circle + clock. */
+export function DueFlag({ kind, size = 14, title }: { kind: "overdue" | "soon"; size?: number; title?: string }) {
+  const style: CSSProperties = { flex: "none", filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,.4))", verticalAlign: "-2px", cursor: title ? "help" : undefined };
+  if (kind === "overdue") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" style={style} role="img" aria-label={title}>
+        {title && <title>{title}</title>}
+        <circle cx="12" cy="12" r="10" fill="var(--danger)" />
+        <path d="M12 6.3v7.3" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx="12" cy="17.7" r="1.5" fill="#fff" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={style} role="img" aria-label={title}>
+      {title && <title>{title}</title>}
+      <circle cx="12" cy="12" r="10" fill="var(--bar-soon)" />
+      <circle cx="12" cy="12.3" r="5.1" fill="none" stroke="#3a2a00" strokeWidth="1.7" />
+      <path d="M12 9.4v3l1.9 1.2" fill="none" stroke="#3a2a00" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function StatusPill({ status, editable }: { status: string; editable?: boolean }) {
   const c = statusColor(status);
   return (

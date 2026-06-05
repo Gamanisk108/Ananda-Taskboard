@@ -7,7 +7,7 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -219,8 +219,8 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
                     <div className="task-cell">
                       <span title={PRIORITY_META[t.priority].label} data-testid="task-priority"><PriorityIcon level={t.priority} /></span>
                       <span className="task-name">{t.title}</span>
-                      {ds === "overdue" && <span className="flag od" title={tr("list.missedDeadline")}>❗</span>}
-                      {ds === "soon" && <span className="flag soon" title={tr("list.dueSoon")}>❗</span>}
+                      {ds === "overdue" && <DueFlag kind="overdue" title={tr("list.missedDeadline")} />}
+                      {ds === "soon" && <DueFlag kind="soon" title={tr("list.dueSoon")} />}
                       {Object.keys(t.subtask_counts ?? {}).length > 0 && (
                         <span data-testid="subtask-dots" style={{ marginLeft: 2 }}><SubtaskDots counts={t.subtask_counts} /></span>
                       )}

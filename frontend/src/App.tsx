@@ -8,6 +8,7 @@ import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
 import { ResetPassword } from "./components/ResetPassword";
 import { VerifyEmail } from "./components/VerifyEmail";
+import { PlatformStats } from "./components/PlatformStats";
 import { Spinner, ColorDot } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
@@ -70,6 +71,7 @@ export default function App() {
   const [showArchived, setShowArchived] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
+  const [showPlatform, setShowPlatform] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const bump = () => setRefreshKey((k) => k + 1);
 
@@ -188,6 +190,9 @@ export default function App() {
                 <option key={o.org_id} value={o.org_id}>{o.name}</option>
               ))}
             </select>
+          )}
+          {me.is_superuser && (
+            <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}>🌐<span className="lbl">{t("platform.nav")}</span></button>
           )}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}><CircleCheck /><span className="lbl">{t("nav.approvals")}</span></button>
@@ -318,6 +323,7 @@ export default function App() {
       {showRestore && <RestorePoints onClose={() => setShowRestore(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showHistory && <History onClose={() => setShowHistory(false)} />}
       {showBulk && <BulkMigrate me={me} onClose={() => setShowBulk(false)} onChanged={() => { refreshMe(); bump(); }} />}
+      {showPlatform && <PlatformStats onClose={() => setShowPlatform(false)} />}
     </div>
   );
 }

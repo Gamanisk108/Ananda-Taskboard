@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
-import { ChevronLeft, ChevronRight, AlertTriangle, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
 import { isComplete } from "../statuses";
 import { useUsers, userInitials, userName, avatarColor } from "../users";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, DueFlag } from "./common";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
 
@@ -81,8 +81,8 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
   }, [events, dayIso]);
 
   function warnIcon(b: Bar) {
-    if (b.overdue) return <AlertTriangle size={12} style={{ flex: "none" }} />;
-    if (b.dueSoon) return <Clock size={12} style={{ flex: "none" }} />;
+    if (b.overdue) return <DueFlag kind="overdue" size={13} />;
+    if (b.dueSoon) return <DueFlag kind="soon" size={13} />;
     return null;
   }
   function miniFor(b: Bar) {

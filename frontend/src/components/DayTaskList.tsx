@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useStatuses } from "../statuses";
 import { useUsers, userName } from "../users";
 import { timeRange } from "../lookup";
-import { StatusPill, PriorityIcon } from "./common";
+import { StatusPill, PriorityIcon, DueFlag } from "./common";
 import type { CalendarInstance } from "../types";
 
 type DaySort = "time" | "title" | "status";
@@ -48,7 +48,7 @@ export function DayTaskList({
           {tr ? <span className="mono" style={{ fontSize: 12, color: "var(--accent)" }}>{tr}</span>
               : <span className="muted" style={{ fontSize: 12 }}>{t("day.allDay")}</span>}
           {i.title}
-          {i.overdue && <span className="od" title={t("list.missedDeadline")}>❗</span>}
+          {i.overdue && <DueFlag kind="overdue" title={t("list.missedDeadline")} />}
           {i.assignee_ids.length > 0 && (
             <span className="muted" style={{ fontSize: 12 }}>
               · {i.assignee_ids.map((id) => userName(users, id)).join(", ")}
