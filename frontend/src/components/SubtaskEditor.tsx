@@ -57,8 +57,8 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
         <div key={s.id} data-testid="subtask-row" style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
           <span style={{ flex: 1 }}>{s.title}</span>
           <select data-testid="subtask-assignee" value={s.assignee ?? ""} onChange={(e) => setAssignee(s.id, e.target.value ? Number(e.target.value) : null)}
-            style={{ width: "auto", maxWidth: 130 }} title="Assignee">
-            <option value="">Unassigned</option>
+            style={{ width: "auto", maxWidth: 130 }} title={t("subtask.assignee")}>
+            <option value="">{t("list.unassigned")}</option>
             {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
           </select>
           <select data-testid="subtask-status" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto" }}>

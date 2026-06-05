@@ -310,5 +310,8 @@
     "noAccessTitle": "Kein Zugriff auf das ausgewählte Unterprojekt",
     "noAccessTag": "kein Zugriff",
     "done": "Fertig"
+  },
+  "subtask": {
+    "assignee": "Zuständig"
   }
 }

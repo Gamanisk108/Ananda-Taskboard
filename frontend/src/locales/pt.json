@@ -310,5 +310,8 @@
     "noAccessTitle": "Sem acesso ao subprojeto selecionado",
     "noAccessTag": "sem acesso",
     "done": "Concluído"
+  },
+  "subtask": {
+    "assignee": "Responsável"
   }
 }

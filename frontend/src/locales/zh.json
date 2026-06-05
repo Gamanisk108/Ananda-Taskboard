@@ -310,5 +310,8 @@
     "noAccessTitle": "无权访问所选子项目",
     "noAccessTag": "无权限",
     "done": "完成"
+  },
+  "subtask": {
+    "assignee": "负责人"
   }
 }

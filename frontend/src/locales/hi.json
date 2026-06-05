@@ -310,5 +310,8 @@
     "noAccessTitle": "चयनित उप-परियोजना तक पहुँच नहीं",
     "noAccessTag": "पहुँच नहीं",
     "done": "हो गया"
+  },
+  "subtask": {
+    "assignee": "जिम्मेदार"
   }
 }

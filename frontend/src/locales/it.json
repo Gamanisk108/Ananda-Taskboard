@@ -310,5 +310,8 @@
     "noAccessTitle": "Nessun accesso al sottoprogetto selezionato",
     "noAccessTag": "nessun accesso",
     "done": "Fatto"
+  },
+  "subtask": {
+    "assignee": "Assegnatario"
   }
 }
