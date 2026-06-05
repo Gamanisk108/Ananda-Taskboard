@@ -256,7 +256,9 @@
     "addSub": "+ Unterprojekt hinzufügen",
     "trusted": "vertraut",
     "trustedTitle": "Mitglieder können hier ohne Admin-Freigabe Aufgaben erstellen",
-    "markDoneConfirm": "ALLE Aufgaben in \"{{name}}\" als Erledigt markieren und archivieren? Nicht automatisch rückgängig zu machen."
+    "markDoneConfirm": "ALLE Aufgaben in \"{{name}}\" als Erledigt markieren und archivieren? Nicht automatisch rückgängig zu machen.",
+    "cantDeleteDefault": "Das Standard-Unterprojekt 'General' kann nicht gelöscht werden.",
+    "markDoneResult": "{{count}} Aufgabe(n) als Erledigt markiert und archiviert."
   },
   "kanban": {
     "moveErr": "Du kannst nur dir zugewiesene Aufgaben verschieben (oder Administrator sein)."

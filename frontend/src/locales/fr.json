@@ -256,7 +256,9 @@
     "addSub": "+ Ajouter un sous-projet",
     "trusted": "de confiance",
     "trustedTitle": "Les membres peuvent publier des tâches ici sans validation admin",
-    "markDoneConfirm": "Marquer TOUTES les tâches de \"{{name}}\" comme Terminées et les archiver ? Non annulable automatiquement."
+    "markDoneConfirm": "Marquer TOUTES les tâches de \"{{name}}\" comme Terminées et les archiver ? Non annulable automatiquement.",
+    "cantDeleteDefault": "Le sous-projet par défaut « General » ne peut pas être supprimé.",
+    "markDoneResult": "{{count}} tâche(s) marquées comme Terminé et archivées."
   },
   "kanban": {
     "moveErr": "Vous ne pouvez déplacer que les tâches qui vous sont assignées (ou être administrateur)."

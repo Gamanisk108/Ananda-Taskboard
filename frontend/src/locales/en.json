@@ -256,7 +256,9 @@
     "addSub": "+ Add sub-project",
     "trusted": "trusted",
     "trustedTitle": "Members can post tasks here without admin approval",
-    "markDoneConfirm": "Mark ALL tasks in \"{{name}}\" as Done and archive them? This can't be auto-undone."
+    "markDoneConfirm": "Mark ALL tasks in \"{{name}}\" as Done and archive them? This can't be auto-undone.",
+    "cantDeleteDefault": "The default 'General' sub-project can't be deleted.",
+    "markDoneResult": "{{count}} task(s) marked Done + archived."
   },
   "kanban": {
     "moveErr": "You can only move tasks assigned to you (or be an admin)."

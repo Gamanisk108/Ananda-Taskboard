@@ -72,14 +72,14 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   function deleteSub(s: Sub) {
-    if (s.is_default) { alert("The default 'General' sub-project can't be deleted."); return; }
+    if (s.is_default) { alert(t("mp.cantDeleteDefault")); return; }
     setDeleting({ kind: "subproject", id: s.id, name: s.name });
   }
 
   async function markDone(kind: "project" | "subproject", id: number, name: string) {
     if (!confirm(t("mp.markDoneConfirm", { name }))) return;
     const r = await api.post(`/api/${kind}/${id}/mark-done`, {}) as { updated: number };
-    alert(`${r.updated} task(s) marked Done + archived.`);
+    alert(t("mp.markDoneResult", { count: r.updated }));
     load(); onChanged();
   }
 

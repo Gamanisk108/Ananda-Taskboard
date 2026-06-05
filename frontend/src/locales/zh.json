@@ -256,7 +256,9 @@
     "addSub": "+ 添加子项目",
     "trusted": "受信任",
     "trustedTitle": "成员无需管理员批准即可在此发布任务",
-    "markDoneConfirm": "将“{{name}}”中的所有任务标记为完成并归档？无法自动撤销。"
+    "markDoneConfirm": "将“{{name}}”中的所有任务标记为完成并归档？无法自动撤销。",
+    "cantDeleteDefault": "无法删除默认的“General”子项目。",
+    "markDoneResult": "已将 {{count}} 个任务标记为完成并归档。"
   },
   "kanban": {
     "moveErr": "您只能移动分配给您的任务（或需为管理员）。"

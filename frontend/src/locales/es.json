@@ -256,7 +256,9 @@
     "addSub": "+ Añadir subproyecto",
     "trusted": "de confianza",
     "trustedTitle": "Los miembros pueden publicar tareas aquí sin aprobación del admin",
-    "markDoneConfirm": "¿Marcar TODAS las tareas en \"{{name}}\" como Hechas y archivarlas? No se puede deshacer automáticamente."
+    "markDoneConfirm": "¿Marcar TODAS las tareas en \"{{name}}\" como Hechas y archivarlas? No se puede deshacer automáticamente.",
+    "cantDeleteDefault": "El subproyecto predeterminado 'General' no se puede eliminar.",
+    "markDoneResult": "{{count}} tarea(s) marcadas como Hecho y archivadas."
   },
   "kanban": {
     "moveErr": "Solo puedes mover tareas asignadas a ti (o ser administrador)."
