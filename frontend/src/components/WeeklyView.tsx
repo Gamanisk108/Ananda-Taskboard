@@ -1,20 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
+import { packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
 import { useUsers, userInitials, userName } from "../users";
 import { Modal, Spinner, PriorityIcon } from "./common";
 import { DayTaskList } from "./DayTaskList";
-import { EVENT_ICON, type CalendarInstance, type EventSpan, type Me, type Task } from "../types";
-
-interface Props {
-  projectId?: number;
-  subprojectId?: number;
-  refreshKey: number;
-  onEdit: (t: Task) => void;
-  me: Me;
-}
+import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
 
 interface Bar {
   task_id: number;
@@ -31,11 +24,9 @@ interface Bar {
 
 interface EventBar { id: number; title: string; icon: string; startCol: number; endCol: number; lane: number; }
 
-export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
+export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
-  const [items, setItems] = useState<CalendarInstance[] | null>(null);
-  const [events, setEvents] = useState<EventSpan[]>([]);
   const users = useUsers();
   const colorByProject = !projectId;
 
@@ -45,16 +36,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
   const [dayOpen, setDayOpen] = useState<string | null>(null);
 
-  useEffect(() => {
-    const from = dayIso[0];
-    const to = dayIso[6];
-    const p = new URLSearchParams({ from, to });
-    if (subprojectId) p.set("subproject", String(subprojectId));
-    else if (projectId) p.set("project", String(projectId));
-    setItems(null);
-    api.get(`/api/calendar?${p}`).then(setItems).catch(() => setItems([]));
-    api.get(`/api/events/range?from=${from}&to=${to}`).then(setEvents).catch(() => setEvents([]));
-  }, [weekStart, projectId, subprojectId, refreshKey]);
+  const { items, events } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId, refreshKey);
 
   async function open(id: number) {
     const t = (await api.get(`/api/tasks/${id}`)) as Task;
@@ -87,15 +69,8 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
         assignee_ids: first.assignee_ids,
       });
     }
-    raw.sort((a, b) => a.startCol - b.startCol || a.endCol - b.endCol);
-    const laneEnds: number[] = [];
-    const packed: Bar[] = raw.map((b) => {
-      let lane = laneEnds.findIndex((end) => end < b.startCol);
-      if (lane === -1) { lane = laneEnds.length; laneEnds.push(b.endCol); }
-      else laneEnds[lane] = b.endCol;
-      return { ...b, lane };
-    });
-    return { bars: packed, laneCount: Math.max(1, laneEnds.length) };
+    const { packed, laneCount } = packLanes(raw);
+    return { bars: packed, laneCount: Math.max(1, laneCount) };
   }, [items, dayIso, colorByProject, today, tomorrow]);
 
   // Event spans clipped to this week, then lane-packed (same algorithm as tasks).
@@ -111,15 +86,8 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
       if (startCol > endCol) continue;
       raw.push({ id: e.id, title: e.title, icon: EVENT_ICON[e.kind], startCol, endCol });
     }
-    raw.sort((a, b) => a.startCol - b.startCol || a.endCol - b.endCol);
-    const laneEnds: number[] = [];
-    const packed: EventBar[] = raw.map((b) => {
-      let lane = laneEnds.findIndex((end) => end < b.startCol);
-      if (lane === -1) { lane = laneEnds.length; laneEnds.push(b.endCol); }
-      else laneEnds[lane] = b.endCol;
-      return { ...b, lane };
-    });
-    return { eventBars: packed, eventLaneCount: Math.max(0, laneEnds.length) };
+    const { packed, laneCount } = packLanes(raw);
+    return { eventBars: packed, eventLaneCount: laneCount };
   }, [events, dayIso]);
 
   return (
@@ -135,12 +103,16 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
       ) : (
         <div className="wk">
           <div className="wk-head">
-            {days.map((d, idx) => (
-              <div className="wk-hcell wk-hcell-click" key={idx}
-                title={t("cal.openDay")} onClick={() => setDayOpen(dayIso[idx])}>
-                <div>{format(d, "EEE", { locale: dfLocale() })} <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}</span></div>
-              </div>
-            ))}
+            {days.map((d, idx) => {
+              const iso = dayIso[idx];
+              const when = iso === today ? "today" : iso < today ? "past" : "future";
+              return (
+                <div className={`wk-hcell wk-hcell-click ${when}`} key={idx}
+                  title={t("cal.openDay")} onClick={() => setDayOpen(iso)}>
+                  <div>{format(d, "EEE", { locale: dfLocale() })} <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}</span></div>
+                </div>
+              );
+            })}
           </div>
           {eventLaneCount > 0 && (
             <div className="wk-body wk-events" style={{ gridTemplateRows: `repeat(${eventLaneCount}, 26px)` }}>
@@ -181,6 +153,10 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
               </button>
             ))}
           </div>
+          {dayIso.indexOf(today) >= 0 && (
+            <div className="wk-today-hl" aria-hidden
+              style={{ left: `calc(100% / 7 * ${dayIso.indexOf(today)})`, width: "calc(100% / 7)" }} />
+          )}
         </div>
       )}
       {dayOpen && (

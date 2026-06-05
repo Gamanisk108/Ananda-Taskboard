@@ -1,54 +1,37 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   addDays, addMonths, format, isSameMonth, startOfMonth, startOfWeek,
 } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
+import { useCalendarRange, type CalendarViewProps } from "../calendar";
 import { Modal, Spinner } from "./common";
 import { DayTaskList } from "./DayTaskList";
-import { EVENT_ICON, type CalendarInstance, type EventSpan, type Me, type Task } from "../types";
+import { EVENT_ICON, type CalendarInstance, type EventSpan, type Task } from "../types";
 
-interface Props {
-  projectId?: number;
-  subprojectId?: number;
-  refreshKey: number;
-  onEdit: (t: Task) => void;
-  me: Me;
-}
-
-export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
+export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
-  const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
-  const [events, setEvents] = useState<EventSpan[]>([]);
   const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
   const colorByProject = !projectId;
 
-  useEffect(() => {
-    const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
-    const from = format(gridStart, "yyyy-MM-dd");
-    const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
-    const p = new URLSearchParams({ from, to });
-    if (subprojectId) p.set("subproject", String(subprojectId));
-    else if (projectId) p.set("project", String(projectId));
-    setItems(null);
-    api.get(`/api/calendar?${p}`).then(setItems).catch(() => setItems([]));
-    api.get(`/api/events/range?from=${from}&to=${to}`).then(setEvents).catch(() => setEvents([]));
-  }, [month, projectId, subprojectId, refreshKey]);
+  // The visible grid always spans 6 weeks (42 days) from the Sunday on/before
+  // the 1st; the same [from, to] drives the fetch and the event expansion.
+  const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
+  const from = format(gridStart, "yyyy-MM-dd");
+  const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
+  const { items, events } = useCalendarRange(from, to, projectId, subprojectId, refreshKey);
 
   // Expand each span into the days it covers within the visible grid, so a
   // multi-day range shows a bar on each of its days and a series on each date.
   const eventsByDate = useMemo(() => {
-    const grid0 = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
-    const lo = format(grid0, "yyyy-MM-dd");
-    const hi = format(addDays(grid0, 41), "yyyy-MM-dd");
     const m = new Map<string, EventSpan[]>();
     for (const e of events) {
-      let cur = e.start < lo ? lo : e.start;
-      const last = e.end > hi ? hi : e.end;
+      let cur = e.start < from ? from : e.start;
+      const last = e.end > to ? to : e.end;
       while (cur <= last) {
         if (!m.has(cur)) m.set(cur, []);
         m.get(cur)!.push(e);
@@ -56,7 +39,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
       }
     }
     return m;
-  }, [events, month]);
+  }, [events, from, to]);
 
   const byDate = useMemo(() => {
     const m = new Map<string, CalendarInstance[]>();
@@ -67,7 +50,6 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
     return m;
   }, [items]);
 
-  const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
   // 6 weeks max, but drop any whole week with no day in the current month
   const allCells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
   const cells = Array.from({ length: 6 }, (_, w) => allCells.slice(w * 7, w * 7 + 7))
@@ -115,7 +97,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
               return (
                 <button
                   key={iso}
-                  className={`mcell ${inMonth ? "" : "dim"} ${hasOverdue ? "has-overdue" : hasSoon ? "has-soon" : ""}`}
+                  className={`mcell ${inMonth ? "" : "dim"} ${iso === today ? "today" : ""} ${hasOverdue ? "has-overdue" : hasSoon ? "has-soon" : ""}`}
                   onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
                 >
                   <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}

@@ -18,6 +18,54 @@ interface Props {
 
 type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "priority" | "assignee" | "created";
 
+// The combinable client-side filters. Tab scope (project/subproject) and the
+// group filter are applied server-side; everything here narrows the result.
+interface TaskFilters {
+  q: string;
+  fProject: number;
+  fSub: number;
+  fAssignee: number; // person id; -1 = unassigned; 0 = any
+  fStatus: string;
+  fPriority: number;
+  fRecur: "" | "yes" | "no";
+  fDeadline: "" | "pending" | "overdue";
+}
+
+type SubInfo = ReturnType<typeof buildSubLookup>;
+
+// Text/project/subproject scope.
+function matchesScope(t: Task, f: TaskFilters, info: ReturnType<SubInfo["get"]>): boolean {
+  if (f.q && !t.title.toLowerCase().includes(f.q.toLowerCase())) return false;
+  if (f.fProject && info?.projectId !== f.fProject) return false;
+  if (f.fSub && t.subproject !== f.fSub) return false;
+  return true;
+}
+
+// Assignee / status / priority / recurrence attributes.
+function matchesAttributes(t: Task, f: TaskFilters): boolean {
+  if (f.fAssignee === -1 ? t.assignees.length !== 0 : f.fAssignee && !t.assignees.includes(f.fAssignee)) return false;
+  if (f.fStatus && t.status !== f.fStatus) return false;
+  if (f.fPriority && t.priority !== f.fPriority) return false;
+  if (f.fRecur === "yes" && !t.recurrence) return false;
+  if (f.fRecur === "no" && t.recurrence) return false;
+  return true;
+}
+
+// Deadline state: overdue, or 'pending' = open with a current/upcoming deadline.
+function matchesDeadline(t: Task, fDeadline: TaskFilters["fDeadline"]): boolean {
+  if (!fDeadline) return true;
+  const ds = deadlineState(t.deadline, isComplete(t.status));
+  if (fDeadline === "overdue") return ds === "overdue";
+  return !!(t.deadline && !isComplete(t.status) && ds !== "overdue");
+}
+
+// Pure predicate: does a task pass every active filter? Composed from the
+// themed predicates above so each stays small and unit-testable.
+function matchesFilters(t: Task, f: TaskFilters, subs: SubInfo): boolean {
+  const info = subs.get(t.subproject);
+  return matchesScope(t, f, info) && matchesAttributes(t, f) && matchesDeadline(t, f.fDeadline);
+}
+
 export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, showArchived = false }: Props) {
   const { t: tr } = useTranslation();  // aliased: `t` is used below for the task row
   const [tasks, setTasks] = useState<Task[] | null>(null);
@@ -84,25 +132,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
 
   if (!tasks) return <Spinner />;
 
+  const filters: TaskFilters = { q, fProject, fSub, fAssignee, fStatus, fPriority, fRecur, fDeadline };
   const filtered = tasks
-    .filter((t) => {
-      const info = subs.get(t.subproject);
-      if (q && !t.title.toLowerCase().includes(q.toLowerCase())) return false;
-      if (fProject && info?.projectId !== fProject) return false;
-      if (fSub && t.subproject !== fSub) return false;
-      if (fAssignee === -1 ? t.assignees.length !== 0 : fAssignee && !t.assignees.includes(fAssignee)) return false;
-      if (fStatus && t.status !== fStatus) return false;
-      if (fPriority && t.priority !== fPriority) return false;
-      if (fRecur === "yes" && !t.recurrence) return false;
-      if (fRecur === "no" && t.recurrence) return false;
-      if (fDeadline) {
-        const ds = deadlineState(t.deadline, isComplete(t.status));
-        if (fDeadline === "overdue" && ds !== "overdue") return false;
-        // 'pending' = an open task with a current/upcoming deadline (not overdue)
-        if (fDeadline === "pending" && !(t.deadline && !isComplete(t.status) && ds !== "overdue")) return false;
-      }
-      return true;
-    })
+    .filter((t) => matchesFilters(t, filters, subs))
     .sort((a, b) => {
       const va = sortVal(a), vb = sortVal(b);
       if (va < vb) return -1 * sortDir;
