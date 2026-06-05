@@ -7,7 +7,9 @@
     "edit": "Modifier",
     "post": "Publier",
     "search": "Rechercher…",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "loading": "Chargement…",
+    "subtasksByStatus": "Sous-tâches par statut"
   },
   "nav": {
     "approvals": "Approbations",

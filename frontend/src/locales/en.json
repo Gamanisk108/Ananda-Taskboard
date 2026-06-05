@@ -7,7 +7,9 @@
     "edit": "Edit",
     "post": "Post",
     "search": "Search…",
-    "add": "Add"
+    "add": "Add",
+    "loading": "Loading…",
+    "subtasksByStatus": "Subtasks by status"
   },
   "nav": {
     "approvals": "Approvals",

@@ -7,7 +7,9 @@
     "edit": "Modifica",
     "post": "Pubblica",
     "search": "Cerca…",
-    "add": "Aggiungi"
+    "add": "Aggiungi",
+    "loading": "Caricamento…",
+    "subtasksByStatus": "Sottoattività per stato"
   },
   "nav": {
     "approvals": "Approvazioni",

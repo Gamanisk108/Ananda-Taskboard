@@ -7,7 +7,9 @@
     "edit": "Bearbeiten",
     "post": "Senden",
     "search": "Suchen…",
-    "add": "Hinzufügen"
+    "add": "Hinzufügen",
+    "loading": "Wird geladen…",
+    "subtasksByStatus": "Unteraufgaben nach Status"
   },
   "nav": {
     "approvals": "Genehmigungen",

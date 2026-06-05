@@ -7,7 +7,9 @@
     "edit": "编辑",
     "post": "发布",
     "search": "搜索…",
-    "add": "添加"
+    "add": "添加",
+    "loading": "加载中…",
+    "subtasksByStatus": "按状态分类的子任务"
   },
   "nav": {
     "approvals": "审批",

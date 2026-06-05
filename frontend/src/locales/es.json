@@ -7,7 +7,9 @@
     "edit": "Editar",
     "post": "Publicar",
     "search": "Buscar…",
-    "add": "Agregar"
+    "add": "Agregar",
+    "loading": "Cargando…",
+    "subtasksByStatus": "Subtareas por estado"
   },
   "nav": {
     "approvals": "Aprobaciones",

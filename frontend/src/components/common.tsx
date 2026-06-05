@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { statusColor, statusLabel } from "../statuses";
 import { PRIORITY_META } from "../types";
 
@@ -48,6 +49,7 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -57,7 +59,7 @@ export function Modal({
       >
         <div className="modal-head">
           <h2 style={{ fontSize: 18 }}>{title}</h2>
-          <button className="btn-ghost" onClick={onClose} aria-label="Close">✕</button>
+          <button className="btn-ghost" onClick={onClose} aria-label={t("common.close")}>✕</button>
         </div>
         <div className="modal-body">{children}</div>
       </div>
@@ -67,10 +69,11 @@ export function Modal({
 
 /** Colored status dots with counts, summarizing a task's subtasks. */
 export function SubtaskDots({ counts }: { counts: Record<string, number> }) {
+  const { t } = useTranslation();
   const entries = Object.entries(counts).filter(([, n]) => n > 0);
   if (entries.length === 0) return null;
   return (
-    <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }} title="Subtasks by status">
+    <span style={{ display: "inline-flex", gap: 7, alignItems: "center" }} title={t("common.subtasksByStatus")}>
       {entries.map(([key, n]) => (
         <span key={key} title={`${statusLabel(key)}: ${n}`}
           style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--text-muted)" }}>
@@ -82,5 +85,6 @@ export function SubtaskDots({ counts }: { counts: Record<string, number> }) {
 }
 
 export function Spinner({ label }: { label?: string }) {
-  return <div className="muted" style={{ padding: 24 }}>{label ?? "Loading…"}</div>;
+  const { t } = useTranslation();
+  return <div className="muted" style={{ padding: 24 }}>{label ?? t("common.loading")}</div>;
 }
