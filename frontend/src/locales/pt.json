@@ -260,5 +260,8 @@
   },
   "kanban": {
     "moveErr": "Você só pode mover tarefas atribuídas a você (ou ser administrador)."
+  },
+  "emoji": {
+    "pick": "Escolher um emoji"
   }
 }

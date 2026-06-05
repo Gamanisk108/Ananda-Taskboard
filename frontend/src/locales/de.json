@@ -260,5 +260,8 @@
   },
   "kanban": {
     "moveErr": "Du kannst nur dir zugewiesene Aufgaben verschieben (oder Administrator sein)."
+  },
+  "emoji": {
+    "pick": "Emoji auswählen"
   }
 }

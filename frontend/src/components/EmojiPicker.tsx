@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 /** Emoji button + popover backed by emoji-mart in NATIVE mode (the picked value
  *  is a real Unicode character, so it pastes cleanly into WhatsApp/Slack/email).
  *  emoji-mart + its data are dynamically imported only when first opened, so they
  *  stay out of the initial bundle. Theme follows the app's light/dark mode. */
 export function EmojiPicker({ value, onPick, title }: { value: string; onPick: (emoji: string) => void; title?: string }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mod, setMod] = useState<{ Picker: any; data: any } | null>(null);
@@ -32,8 +34,8 @@ export function EmojiPicker({ value, onPick, title }: { value: string; onPick: (
 
   return (
     <div ref={wrapRef} style={{ position: "relative", display: "inline-block" }}>
-      <button type="button" className="btn-secondary" onClick={toggle} title={title ?? "Pick an emoji"}
-        aria-label={title ?? "Pick an emoji"} style={{ width: 52, fontSize: 18, lineHeight: 1, padding: "4px 0", textAlign: "center" }}>
+      <button type="button" className="btn-secondary" onClick={toggle} title={title ?? t("emoji.pick")}
+        aria-label={title ?? t("emoji.pick")} style={{ width: 52, fontSize: 18, lineHeight: 1, padding: "4px 0", textAlign: "center" }}>
         {value || "🙂"}
       </button>
       {open && Picker && (
