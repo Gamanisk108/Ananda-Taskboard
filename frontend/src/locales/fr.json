@@ -300,5 +300,15 @@
     "working": "Traitement…",
     "moveDelete": "Déplacer {{count}} et supprimer",
     "deleteAll": "Tout supprimer (sans déplacer)"
+  },
+  "ap": {
+    "none": "Personne d'assigné",
+    "searchByName": "Rechercher par nom…",
+    "filterGroup": "Filtre : n'importe quel groupe",
+    "assignGroup": "Assigner un groupe ENTIER :",
+    "noMatches": "Aucun résultat.",
+    "noAccessTitle": "Aucun accès au sous-projet sélectionné",
+    "noAccessTag": "aucun accès",
+    "done": "Terminé"
   }
 }

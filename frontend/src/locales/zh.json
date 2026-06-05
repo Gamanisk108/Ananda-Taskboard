@@ -300,5 +300,15 @@
     "working": "处理中…",
     "moveDelete": "移动 {{count}} 个并删除",
     "deleteAll": "全部删除（不移动）"
+  },
+  "ap": {
+    "none": "未分配",
+    "searchByName": "按名称搜索…",
+    "filterGroup": "筛选：任意组",
+    "assignGroup": "分配整个组：",
+    "noMatches": "无匹配项。",
+    "noAccessTitle": "无权访问所选子项目",
+    "noAccessTag": "无权限",
+    "done": "完成"
   }
 }

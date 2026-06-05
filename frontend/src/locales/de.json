@@ -300,5 +300,15 @@
     "working": "Wird ausgeführt…",
     "moveDelete": "{{count}} verschieben & löschen",
     "deleteAll": "Alle löschen (nicht verschieben)"
+  },
+  "ap": {
+    "none": "Niemand zugewiesen",
+    "searchByName": "Nach Name suchen…",
+    "filterGroup": "Filter: beliebige Gruppe",
+    "assignGroup": "Eine GANZE Gruppe zuweisen:",
+    "noMatches": "Keine Treffer.",
+    "noAccessTitle": "Kein Zugriff auf das ausgewählte Unterprojekt",
+    "noAccessTag": "kein Zugriff",
+    "done": "Fertig"
   }
 }

@@ -300,5 +300,15 @@
     "working": "Working…",
     "moveDelete": "Move {{count}} & delete",
     "deleteAll": "Delete all (no move)"
+  },
+  "ap": {
+    "none": "None assigned",
+    "searchByName": "Search by name…",
+    "filterGroup": "Filter: any group",
+    "assignGroup": "Assign a WHOLE group:",
+    "noMatches": "No matches.",
+    "noAccessTitle": "No access to the selected sub-project",
+    "noAccessTag": "no access",
+    "done": "Done"
   }
 }

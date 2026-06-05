@@ -58,7 +58,7 @@ export function AssigneePicker({
         <label>{t("task.assignees")}</label>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {none ? (
-            <span className="muted">None assigned</span>
+            <span className="muted">{t("ap.none")}</span>
           ) : (
             <span className="who">
               {assignees.map((id) => <span key={id} className="pill">{name(id)}</span>)}
@@ -77,10 +77,10 @@ export function AssigneePicker({
       <label>{t("task.assignees")}</label>
       <div className="card" style={{ padding: 10, background: "var(--surface-sunk)" }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <input placeholder="Search by name…" value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
+          <input placeholder={t("ap.searchByName")} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
           {isAdmin && groups.length > 0 && (
             <select value={groupFilter} onChange={(e) => setGroupFilter(Number(e.target.value))} style={{ maxWidth: 170 }}>
-              <option value={0}>Filter: any group</option>
+              <option value={0}>{t("ap.filterGroup")}</option>
               {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           )}
@@ -88,7 +88,7 @@ export function AssigneePicker({
 
         {isAdmin && groups.length > 0 && (
           <div style={{ marginBottom: 8 }}>
-            <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>Assign a WHOLE group:</div>
+            <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>{t("ap.assignGroup")}</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {groups.map((g) => (
                 <button key={g.id} type="button"
@@ -103,21 +103,21 @@ export function AssigneePicker({
         )}
 
         <div className="assignee-list">
-          {filtered.length === 0 && <span className="muted">No matches.</span>}
+          {filtered.length === 0 && <span className="muted">{t("ap.noMatches")}</span>}
           {filtered.map((u) => {
             const access = hasAccess(u);
             return (
               <label key={u.id} className={`assignee-row ${access ? "" : "no-access"}`}
-                title={access ? "" : "No access to the selected sub-project"}>
+                title={access ? "" : t("ap.noAccessTitle")}>
                 <input type="checkbox" style={{ width: "auto" }} checked={assignees.includes(u.id)} onChange={() => toggle(u.id)} />
                 <span>{u.name || u.email}</span>
-                {!access && <span className="noaccess-tag">no access</span>}
+                {!access && <span className="noaccess-tag">{t("ap.noAccessTag")}</span>}
               </label>
             );
           })}
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-          <button type="button" className="btn-secondary" onClick={() => setEditing(false)}>Done</button>
+          <button type="button" className="btn-secondary" onClick={() => setEditing(false)}>{t("ap.done")}</button>
         </div>
       </div>
     </div>

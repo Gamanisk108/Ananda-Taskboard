@@ -300,5 +300,15 @@
     "working": "Processando…",
     "moveDelete": "Mover {{count}} e excluir",
     "deleteAll": "Excluir tudo (sem mover)"
+  },
+  "ap": {
+    "none": "Ninguém atribuído",
+    "searchByName": "Pesquisar por nome…",
+    "filterGroup": "Filtro: qualquer grupo",
+    "assignGroup": "Atribuir um grupo INTEIRO:",
+    "noMatches": "Sem correspondências.",
+    "noAccessTitle": "Sem acesso ao subprojeto selecionado",
+    "noAccessTag": "sem acesso",
+    "done": "Concluído"
   }
 }

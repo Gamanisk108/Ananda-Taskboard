@@ -300,5 +300,15 @@
     "working": "Elaborazione…",
     "moveDelete": "Sposta {{count}} ed elimina",
     "deleteAll": "Elimina tutto (senza spostare)"
+  },
+  "ap": {
+    "none": "Nessuno assegnato",
+    "searchByName": "Cerca per nome…",
+    "filterGroup": "Filtro: qualsiasi gruppo",
+    "assignGroup": "Assegna un INTERO gruppo:",
+    "noMatches": "Nessun risultato.",
+    "noAccessTitle": "Nessun accesso al sottoprogetto selezionato",
+    "noAccessTag": "nessun accesso",
+    "done": "Fatto"
   }
 }
