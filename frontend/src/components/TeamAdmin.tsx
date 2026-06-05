@@ -76,6 +76,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
 }
 
 function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[]; reload: () => void }) {
+  const { t: tr } = useTranslation();
   const [name, setName] = useState(""); const [email, setEmail] = useState("");
   const [password, setPassword] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState<string>("");
@@ -87,46 +88,46 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
       await api.post("/api/users", { name, email, password, role, tier: tier ? Number(tier) : null });
       setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
       reload();
-    } catch { setErr("Could not add — check email is unique and password ≥ 8 chars."); }
+    } catch { setErr(tr("ta.errAddMember")); }
   }
   async function setMemberRole(u: UserRow, r: string) { await api.patch(`/api/users/${u.id}`, { role: r }); reload(); }
   async function setMemberTier(u: UserRow, t: string) { await api.patch(`/api/users/${u.id}`, { tier: t ? Number(t) : null }); reload(); }
   async function toggleActive(u: UserRow) { await api.patch(`/api/users/${u.id}`, { is_active: !u.is_active }); reload(); }
   async function resetPw(u: UserRow) {
-    const pw = prompt(`New password for ${u.name || u.email} (≥ 8 chars):`);
-    if (pw) { await api.patch(`/api/users/${u.id}`, { password: pw }); alert("Password updated."); }
+    const pw = prompt(tr("ta.promptNewPw", { name: u.name || u.email }));
+    if (pw) { await api.patch(`/api/users/${u.id}`, { password: pw }); alert(tr("ta.pwUpdated")); }
   }
 
   return (
     <>
       <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
-        <h3 className="section-title">Add team member</h3>
+        <h3 className="section-title">{tr("ta.addMemberTitle")}</h3>
         <div className="row2">
-          <div className="field"><label>Name</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="field"><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+          <div className="field"><label>{tr("ta.name")}</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="field"><label>{tr("login.email")}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
         </div>
         <div className="row2">
-          <div className="field"><label>Starting password</label><input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="≥ 8 characters" /></div>
-          <div className="field"><label>Role</label>
+          <div className="field"><label>{tr("ta.startingPw")}</label><input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={tr("ta.min8")} /></div>
+          <div className="field"><label>{tr("ta.role")}</label>
             <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="member">Member</option><option value="admin">Admin</option>
+              <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
             </select>
           </div>
         </div>
         <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-          <label>Tier <span className="muted" style={{ fontWeight: 400 }}>(new member inherits its access)</span></label>
+          <label>{tr("ta.tier")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.tierHint")}</span></label>
           <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
-            <option value="">No tier (blank slate)</option>
+            <option value="">{tr("ta.noTierBlank")}</option>
             {tiers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
-        <button className="btn-primary" onClick={add}>Add member</button>
-        <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Share the email + password with them directly. Admins ignore tiers — they see everything.</div>
+        <button className="btn-primary" onClick={add}>{tr("ta.addMember")}</button>
+        <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{tr("ta.shareHint")}</div>
       </div>
 
       <table className="tbl">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tier</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.tier")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
         <tbody>
           {users.map((u) => (
             <tr key={u.id}>
@@ -134,19 +135,19 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
               <td className="muted">{u.email}</td>
               <td>
                 <select value={u.role} onChange={(e) => setMemberRole(u, e.target.value)} style={{ width: "auto" }}>
-                  <option value="member">Member</option><option value="admin">Admin</option>
+                  <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
                 </select>
               </td>
               <td>
-                {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>— (admin)</span> : (
+                {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
                   <select value={u.tier ?? ""} onChange={(e) => setMemberTier(u, e.target.value)} style={{ width: "auto" }}>
-                    <option value="">No tier</option>
+                    <option value="">{tr("ta.noTier")}</option>
                     {tiers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 )}
               </td>
-              <td><button className="btn-ghost" onClick={() => toggleActive(u)}>{u.is_active ? "Active" : "Disabled"}</button></td>
-              <td><button className="btn-ghost" onClick={() => resetPw(u)}>Reset pw</button></td>
+              <td><button className="btn-ghost" onClick={() => toggleActive(u)}>{u.is_active ? tr("ta.active") : tr("ta.disabled")}</button></td>
+              <td><button className="btn-ghost" onClick={() => resetPw(u)}>{tr("ta.resetPw")}</button></td>
             </tr>
           ))}
         </tbody>
@@ -159,7 +160,7 @@ function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[
   const { t: tr } = useTranslation();
   const [name, setName] = useState("");
   async function add() { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }
-  async function del(g: GroupRow) { if (confirm(`Delete group "${g.name}"?`)) { await api.del(`/api/groups/${g.id}`); reload(); } }
+  async function del(g: GroupRow) { if (confirm(tr("ta.confirmDeleteGroup", { name: g.name }))) { await api.del(`/api/groups/${g.id}`); reload(); } }
   async function toggleMember(g: GroupRow, uid: number) {
     const ids = g.member_ids.includes(uid) ? g.member_ids.filter((x) => x !== uid) : [...g.member_ids, uid];
     await api.patch(`/api/groups/${g.id}`, { member_ids: ids });
@@ -168,14 +169,14 @@ function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[
   return (
     <>
       <div className="field" style={{ display: "flex", gap: 8 }}>
-        <input placeholder="New group name…" value={name} onChange={(e) => setName(e.target.value)} />
-        <button className="btn-primary" onClick={add}>Add group</button>
+        <input placeholder={tr("ta.newGroupPh")} value={name} onChange={(e) => setName(e.target.value)} />
+        <button className="btn-primary" onClick={add}>{tr("ta.addGroup")}</button>
       </div>
       {groups.map((g) => (
         <div key={g.id} className="card" style={{ padding: 12, marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <strong>{g.name}</strong>
-            <button className="btn-danger" onClick={() => del(g)}>Delete</button>
+            <button className="btn-danger" onClick={() => del(g)}>{tr("common.delete")}</button>
           </div>
           <div className="assignee-list">
             {users.map((u) => (
@@ -204,25 +205,24 @@ function Tiers({ tiers, reload, onEditAccess }: { tiers: TierRow[]; reload: () =
   }
   async function patch(t: TierRow, changes: Partial<TierRow>) { await api.patch(`/api/tiers/${t.id}`, changes); reload(); }
   async function del(t: TierRow) {
-    if (!confirm(`Delete tier "${t.name}"? Members on it keep their own grants but lose the tier's.`)) return;
+    if (!confirm(tr("ta.confirmDeleteTier", { name: t.name }))) return;
     await api.del(`/api/tiers/${t.id}`); reload();
   }
 
   return (
     <>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        Reusable permission templates. A member assigned to a tier inherits its grants + exclusions
-        live. Set a tier's grants and exclusions in the <strong>Access</strong> tab (subject = Tier).
+        {tr("ta.tiersHelp")}
       </div>
       <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)", display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
-        <div className="field" style={{ marginBottom: 0, flex: 1 }}><label>New tier name</label>
-          <input data-testid="tier-name" placeholder="e.g. Volunteer" value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="field" style={{ marginBottom: 0 }}><label>Default visibility</label>
+        <div className="field" style={{ marginBottom: 0, flex: 1 }}><label>{tr("ta.newTierName")}</label>
+          <input data-testid="tier-name" placeholder={tr("ta.tierNamePh")} value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="field" style={{ marginBottom: 0 }}><label>{tr("ta.defaultVisibility")}</label>
           <select data-testid="tier-sees" value={sees} onChange={(e) => setSees(e.target.value as Sees)}>
             {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
           </select>
         </div>
-        <button className="btn-primary" data-testid="tier-add" onClick={add}>Add tier</button>
+        <button className="btn-primary" data-testid="tier-add" onClick={add}>{tr("ta.addTier")}</button>
       </div>
 
       {tiers.map((t) => (
@@ -230,13 +230,13 @@ function Tiers({ tiers, reload, onEditAccess }: { tiers: TierRow[]; reload: () =
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <input defaultValue={t.name} onBlur={(e) => e.target.value.trim() && e.target.value !== t.name && patch(t, { name: e.target.value.trim() })} style={{ maxWidth: 220, fontWeight: 600 }} />
             <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <span className="pill" style={{ background: "var(--surface-sunk)" }}>{t.member_count} member{t.member_count === 1 ? "" : "s"}</span>
-              <button className="btn-secondary" onClick={onEditAccess}>Edit access →</button>
-              <button className="btn-danger" onClick={() => del(t)}>Delete</button>
+              <span className="pill" style={{ background: "var(--surface-sunk)" }}>{tr("ta.memberCount", { count: t.member_count })}</span>
+              <button className="btn-secondary" onClick={onEditAccess}>{tr("ta.editAccess")}</button>
+              <button className="btn-danger" onClick={() => del(t)}>{tr("common.delete")}</button>
             </span>
           </div>
           <div className="field" style={{ marginTop: 8, marginBottom: 0, maxWidth: 280 }}>
-            <label>Default visibility</label>
+            <label>{tr("ta.defaultVisibility")}</label>
             <select value={t.default_sees} onChange={(e) => patch(t, { default_sees: e.target.value as Sees })}>
               {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
             </select>
@@ -253,11 +253,11 @@ function Activity({ rows }: { rows: AuditRow[] }) {
   return (
     <>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        Recent permission &amp; visibility changes — who changed what, and when. Read-only.
+        {tr("ta.activityHelp")}
       </div>
       {rows.length === 0 ? <div className="empty">{tr("empty.noActivity")}</div> : (
         <table className="tbl">
-          <thead><tr><th>When</th><th>Who</th><th>Change</th></tr></thead>
+          <thead><tr><th>{tr("restore.colWhen")}</th><th>{tr("ta.who")}</th><th>{tr("ta.change")}</th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
@@ -286,6 +286,7 @@ function Access({
   grants: Grant[]; exclusions: Exclusion[]; users: UserRow[]; groups: GroupRow[];
   tiers: TierRow[]; projects: Proj[]; reload: () => void;
 }) {
+  const { t: tr } = useTranslation();
   const [subjectType, setSubjectType] = useState<SubjectType>("user");
   const [subjectId, setSubjectId] = useState<number>(0);
 
@@ -318,35 +319,35 @@ function Access({
 
   async function addGrant() {
     setErr("");
-    if (!subjectId || !scopeId) { setErr("Pick a subject and a scope."); return; }
+    if (!subjectId || !scopeId) { setErr(tr("ta.errPickSubjectScope")); return; }
     const body: Record<string, unknown> = { level, sees };
     body[subjectType] = subjectId;
     body[scopeType] = scopeId;
     try { await api.post("/api/grants", body); setScopeId(0); reload(); }
-    catch { setErr("Could not add grant (maybe it already exists)."); }
+    catch { setErr(tr("ta.errAddGrant")); }
   }
   async function revokeGrant(id: number) { await api.del(`/api/grants/${id}`); reload(); }
   async function changeSees(g: Grant, s: Sees) { await api.patch(`/api/grants/${g.id}`, { sees: s }); reload(); }
 
   async function addExclusion() {
     setErr("");
-    if (!subjectId) { setErr("Pick a subject first."); return; }
+    if (!subjectId) { setErr(tr("ta.errPickSubject")); return; }
     const id = Number(excId);
-    if (!id) { setErr("Pick or enter what to exclude."); return; }
+    if (!id) { setErr(tr("ta.errPickExclude")); return; }
     const body: Record<string, unknown> = {};
     body[subjectType] = subjectId;
     body[EXC_FIELD[excType]] = id;
     try { await api.post("/api/exclusions", body); setExcId(""); reload(); }
-    catch { setErr("Could not add exclusion (maybe it already exists)."); }
+    catch { setErr(tr("ta.errAddExclusion")); }
   }
   async function removeExclusion(id: number) { await api.del(`/api/exclusions/${id}`); reload(); }
 
   function excLabel(e: Exclusion): string {
-    if (e.excluded_task) return `Task · #${e.excluded_task}`;
-    if (e.excluded_user) return `Person · ${userName(e.excluded_user)}`;
+    if (e.excluded_task) return tr("ta.excTask", { id: e.excluded_task });
+    if (e.excluded_user) return tr("ta.excPerson", { name: userName(e.excluded_user) });
     if (e.excluded_group) return `👥 ${groupName(e.excluded_group)}`;
-    if (e.excluded_project) return `Project · ${projName(e.excluded_project)}`;
-    if (e.excluded_subproject) return `Sub-project · ${subName(e.excluded_subproject)}`;
+    if (e.excluded_project) return tr("ta.excProject", { name: projName(e.excluded_project) });
+    if (e.excluded_subproject) return tr("ta.excSub", { name: subName(e.excluded_subproject) });
     return "?";
   }
 
@@ -359,86 +360,83 @@ function Access({
   return (
     <>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        Pick a subject; grants + exclusions work the same for a Person, Group, or Tier. Effective
-        access stacks <strong>tier → group → individual</strong>, then exclusions remove.{" "}
-        <strong>Deny &gt; assignment &gt; allow.</strong>
+        {tr("ta.accessHelp")}
       </div>
 
       <div className="field" style={{ maxWidth: 360 }}>
-        <label>Define access for</label>
+        <label>{tr("ta.defineAccessFor")}</label>
         <div style={{ display: "flex", gap: 6 }}>
           <select data-testid="access-subject-type" value={subjectType} onChange={(e) => { setSubjectType(e.target.value as SubjectType); setSubjectId(0); }} style={{ width: 110 }}>
-            <option value="user">Person</option><option value="group">Group</option><option value="tier">Tier</option>
+            <option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option><option value="tier">{tr("ta.tier")}</option>
           </select>
           <select data-testid="access-subject-id" value={subjectId} onChange={(e) => setSubjectId(Number(e.target.value))}>
-            <option value={0}>Select…</option>
+            <option value={0}>{tr("ta.select")}</option>
             {subjects.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
         </div>
       </div>
 
       {subjectId === 0 ? (
-        <div className="empty">Select a person, group, or tier to manage their access.</div>
+        <div className="empty">{tr("ta.selectSubjectEmpty")}</div>
       ) : (
         <>
           {/* ── Grants ─────────────────────────────────────────────── */}
           <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
-            <h3 className="section-title">Grant access</h3>
+            <h3 className="section-title">{tr("ta.grantAccess")}</h3>
             <div className="row2">
-              <div className="field"><label>To</label>
+              <div className="field"><label>{tr("ta.to")}</label>
                 <div style={{ display: "flex", gap: 6 }}>
                   <select data-testid="grant-scope-type" value={scopeType} onChange={(e) => { setScopeType(e.target.value as "subproject" | "project"); setScopeId(0); }} style={{ width: 140 }}>
-                    <option value="subproject">Sub-project</option><option value="project">Whole project</option>
+                    <option value="subproject">{tr("task.subproject")}</option><option value="project">{tr("ta.scopeWholeProject")}</option>
                   </select>
                   <select data-testid="grant-scope-id" value={scopeId} onChange={(e) => setScopeId(Number(e.target.value))}>
-                    <option value={0}>Select…</option>
+                    <option value={0}>{tr("ta.select")}</option>
                     {(scopeType === "subproject" ? subOptions : projects.map((p) => ({ id: p.id, label: p.name }))).map((o) => (
                       <option key={o.id} value={o.id}>{o.label}</option>
                     ))}
                   </select>
                 </div>
               </div>
-              <div className="field"><label>Level</label>
+              <div className="field"><label>{tr("ta.level")}</label>
                 <select data-testid="grant-level" value={level} onChange={(e) => setLevel(e.target.value)}>
-                  <option value="member">Member (can edit)</option><option value="viewer">Viewer (read + comment)</option>
+                  <option value="member">{tr("ta.levelMember")}</option><option value="viewer">{tr("ta.levelViewer")}</option>
                 </select>
               </div>
             </div>
             <div className="field" style={{ maxWidth: 280, marginBottom: 0 }}>
-              <label>Sees <span className="muted" style={{ fontWeight: 400 }}>(which tasks in scope)</span></label>
+              <label>{tr("ta.sees")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.seesHint")}</span></label>
               <select data-testid="grant-sees" value={sees} onChange={(e) => setSees(e.target.value as Sees)}>
                 {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
               </select>
             </div>
-            <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>"Own" = the member is an assignee, or one of their groups is.</div>
-            <button className="btn-primary" data-testid="grant-add" onClick={addGrant}>Grant access</button>
+            <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>{tr("ta.ownHint")}</div>
+            <button className="btn-primary" data-testid="grant-add" onClick={addGrant}>{tr("ta.grantAccess")}</button>
           </div>
 
           <table className="tbl">
-            <thead><tr><th>Grant (to)</th><th>Level</th><th>Sees</th><th></th></tr></thead>
+            <thead><tr><th>{tr("ta.colGrantTo")}</th><th>{tr("ta.level")}</th><th>{tr("ta.sees")}</th><th></th></tr></thead>
             <tbody>
               {myGrants.map((g) => (
                 <tr key={g.id}>
-                  <td>{g.subproject ? subName(g.subproject) : `${projName(g.project!)} (whole)`}</td>
+                  <td>{g.subproject ? subName(g.subproject) : tr("ta.wholeProject", { name: projName(g.project!) })}</td>
                   <td><span className="pill" style={{ background: "var(--surface-sunk)" }}>{g.level}</span></td>
                   <td>
                     <select value={g.sees} onChange={(e) => changeSees(g, e.target.value as Sees)} style={{ width: "auto", fontSize: 12 }}>
                       {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
                     </select>
                   </td>
-                  <td><button className="btn-ghost" onClick={() => revokeGrant(g.id)}>Revoke</button></td>
+                  <td><button className="btn-ghost" onClick={() => revokeGrant(g.id)}>{tr("ta.revoke")}</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {myGrants.length === 0 && <div className="empty">No grants yet for this subject.</div>}
+          {myGrants.length === 0 && <div className="empty">{tr("ta.noGrants")}</div>}
 
           {/* ── Exclusions ─────────────────────────────────────────── */}
           <div style={{ borderTop: "1px solid var(--border)", marginTop: 16, paddingTop: 14 }}>
-            <h3 className="section-title">Exclusions — hide specific things from this subject</h3>
+            <h3 className="section-title">{tr("ta.exclusionsTitle")}</h3>
             <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-              A deny always wins, even over a task the member is assigned to (deny &gt; assignment &gt; allow).
-              Use sparingly.
+              {tr("ta.exclusionsHelp")}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
               {myExclusions.map((e) => (
@@ -447,18 +445,18 @@ function Access({
                   <button className="btn-ghost" style={{ padding: "0 4px", color: "var(--danger)" }} onClick={() => removeExclusion(e.id)}>✕</button>
                 </span>
               ))}
-              {myExclusions.length === 0 && <span className="muted" style={{ fontSize: 12 }}>No exclusions.</span>}
+              {myExclusions.length === 0 && <span className="muted" style={{ fontSize: 12 }}>{tr("ta.noExclusions")}</span>}
             </div>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               <select data-testid="exc-type" value={excType} onChange={(e) => { setExcType(e.target.value as ExcType); setExcId(""); }} style={{ width: 140 }}>
-                <option value="task">Task</option><option value="user">Person</option><option value="group">Group</option>
-                <option value="project">Project</option><option value="subproject">Sub-project</option>
+                <option value="task">{tr("list.colTask")}</option><option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option>
+                <option value="project">{tr("task.project")}</option><option value="subproject">{tr("task.subproject")}</option>
               </select>
               {excType === "task" ? (
-                <input data-testid="exc-task-id" type="number" min={1} placeholder="Task ID (e.g. 318)" value={excId} onChange={(e) => setExcId(e.target.value)} style={{ maxWidth: 200 }} />
+                <input data-testid="exc-task-id" type="number" min={1} placeholder={tr("ta.taskIdPh")} value={excId} onChange={(e) => setExcId(e.target.value)} style={{ maxWidth: 200 }} />
               ) : (
                 <select data-testid="exc-target" value={excId} onChange={(e) => setExcId(e.target.value)}>
-                  <option value="">Select what to hide…</option>
+                  <option value="">{tr("ta.selectHide")}</option>
                   {excOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
               )}
