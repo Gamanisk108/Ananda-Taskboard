@@ -37,7 +37,7 @@ export function DueFlag({ kind, size = 14, title }: { kind: "overdue" | "soon"; 
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" style={style} role="img" aria-label={title}>
         {title && <title>{title}</title>}
-        <circle cx="12" cy="12" r="10" fill="var(--danger)" />
+        <circle cx="12" cy="12" r="10" fill="var(--flag-od)" />
         <path d="M12 6.3v7.3" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
         <circle cx="12" cy="17.7" r="1.5" fill="#fff" />
       </svg>
