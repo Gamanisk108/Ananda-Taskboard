@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
-import { useUsers } from "../users";
+import { peopleInMyScope, useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { Modal } from "./common";
 import { PRIORITY_META, type Me } from "../types";
@@ -44,7 +44,10 @@ export function ExportDialog({ me }: { me: Me }) {
     Object.fromEntries(COLUMNS.map((c) => [c.key, true])),
   );
   const statuses = useStatuses();
-  const users = useUsers();
+  const allUsers = useUsers();
+  // Reduced-access users only see people who share a sub-project they can reach
+  // in the assignee filter — never the whole roster. Admins see everyone.
+  const users = useMemo(() => peopleInMyScope(me, allUsers), [me, allUsers]);
   const groups = useAdminGroups(me, open);
 
   const projects = me.tree.projects;
@@ -53,7 +56,7 @@ export function ExportDialog({ me }: { me: Me }) {
 
   function toggle(set: Set<number>, id: number, setter: (s: Set<number>) => void) {
     const next = new Set(set);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id); else next.add(id);
     setter(next);
   }
 

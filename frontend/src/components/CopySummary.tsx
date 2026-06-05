@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { useUsers } from "../users";
+import { peopleInMyScope, useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { Modal } from "./common";
 import { todayISO } from "../lookup";
@@ -9,7 +9,10 @@ import type { Me } from "../types";
 
 export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
   const { t } = useTranslation();
-  const users = useUsers();
+  const allUsers = useUsers();
+  // Reduced-access users only filter by people who share a sub-project they can
+  // reach — never the whole roster. Admins see everyone.
+  const users = useMemo(() => peopleInMyScope(me, allUsers), [me, allUsers]);
   const groups = useAdminGroups(me);
   const [date, setDate] = useState(todayISO());
   const [projects, setProjects] = useState<number[]>([]);

@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { Search, RefreshCw } from "lucide-react";
+import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
-import { useUsers, userName } from "../users";
+import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { ColorDot, StatusPill, Spinner, PriorityIcon, SubtaskDots } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
+
+function fmtDeadline(d: string): string {
+  const dt = new Date(`${d}T00:00:00`);
+  return Number.isNaN(dt.getTime()) ? d : format(dt, "MMM d", { locale: dfLocale() });
+}
 
 interface Props {
   projectId?: number;
@@ -37,6 +45,9 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
 
   const subs = useMemo(() => buildSubLookup(me.tree), [me.tree]);
   const users = useUsers();
+  // Display uses the full list (a visible task may be assigned to someone outside
+  // my scope); the assignee *filter* only offers people I share a sub-project with.
+  const filterPeople = useMemo(() => peopleInMyScope(me, users), [me, users]);
   const statuses = useStatuses();
   const statusOrder = useMemo(() => Object.fromEntries(statuses.map((s, i) => [s.key, i])), [statuses]);
 
@@ -95,6 +106,16 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
       return 0;
     });
 
+  // Summary-strip tallies, computed off the filtered set (matches the design).
+  let overdueCount = 0, soonCount = 0;
+  const byStatus: Record<string, number> = {};
+  for (const t of filtered) {
+    const ds = deadlineState(t.deadline, isComplete(t.status));
+    if (ds === "overdue") overdueCount++;
+    else if (ds === "soon") soonCount++;
+    byStatus[t.status] = (byStatus[t.status] ?? 0) + 1;
+  }
+
   const arrow = (key: SortKey) => (sortKey === key ? <span className="sort-arrow">{sortDir === 1 ? "▲" : "▼"}</span> : null);
   const Th = ({ k, children }: { k: SortKey; children: React.ReactNode }) => (
     <th className="sortable" onClick={() => clickSort(k)}>{children}{arrow(k)}</th>
@@ -103,7 +124,10 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
   return (
     <div className="rise">
       <div className="filters">
-        <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <label className={`search${q ? " has-text" : ""}`}>
+          <Search />
+          <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
         <select value={fProject} onChange={(e) => { setFProject(Number(e.target.value)); setFSub(0); }}>
           <option value={0}>{tr("list.allProjects")}</option>
           {projectOpts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -122,7 +146,7 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
           <option value="">{tr("list.anyAssignee")}</option>
           <option value="unassigned">{tr("list.unassigned")}</option>
           <optgroup label={tr("list.people")}>
-            {users.map((u) => <option key={u.id} value={`u:${u.id}`}>{u.name || u.email}</option>)}
+            {filterPeople.map((u) => <option key={u.id} value={`u:${u.id}`}>{u.name || u.email}</option>)}
           </optgroup>
           {me.groups.length > 0 && (
             <optgroup label={tr("list.groups")}>
@@ -152,20 +176,33 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
         {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)" }}>📖 Showing archive</span>}
       </div>
 
+      <div className="summary" style={{ margin: "0 -18px 14px" }}>
+        <div className="sm-item"><span className="sm-num">{filtered.length}</span><span className="sm-lab">{tr("summary.tasks", "Tasks")}</span></div>
+        <div className="sm-item alert"><span className="sm-num">{overdueCount}</span><span className="sm-lab">{tr("summary.overdue", "Overdue")}</span></div>
+        <div className="sm-item soon"><span className="sm-num">{soonCount}</span><span className="sm-lab">{tr("summary.dueSoon", "Due soon")}</span></div>
+        <div className="sm-item" style={{ gap: 14 }}>
+          {statuses.map((s) => (
+            <span key={s.key} className="sm-stat" title={s.label}>
+              <span className="dot" style={{ background: s.color }} />
+              <span className="sm-num">{byStatus[s.key] ?? 0}</span>
+              <span className="sm-lab">{s.label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
       {filtered.length === 0 ? (
-        <div className="empty">{activeFilters ? "No tasks match these filters." : "No tasks here yet."}</div>
+        <div className="empty">{activeFilters ? tr("list.noMatch", "No tasks match these filters.") : tr("list.noneYet", "No tasks here yet.")}</div>
       ) : (
         <table className="tbl">
           <thead>
             <tr>
-              <Th k="priority">{tr("list.colPriority")}</Th>
               <Th k="title">{tr("list.colTask")}</Th>
               <Th k="project">{tr("list.colProject")}</Th>
               <Th k="subproject">{tr("list.colSubproject")}</Th>
-              <Th k="assignee">{tr("list.colAssignees")}</Th>
+              <th>{tr("list.colAssignees")}</th>
               <Th k="status">{tr("list.colStatus")}</Th>
               <Th k="deadline">{tr("list.colDeadline")}</Th>
-              <Th k="time">{tr("list.colTime")}</Th>
               <th>{tr("list.colRecurs")}</th>
             </tr>
           </thead>
@@ -173,29 +210,36 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
             {filtered.map((t) => {
               const info = subs.get(t.subproject);
               const ds = deadlineState(t.deadline, isComplete(t.status));
-              const names = assigneeNames(t);
+              const dcls = ds === "overdue" ? "od" : ds === "soon" ? "soon" : t.deadline ? "" : "none";
+              const tm = timeRange(t.start_time, t.end_time);
+              const rowCls = [ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : "", isComplete(t.status) ? "done" : ""].filter(Boolean).join(" ");
               return (
-                <tr key={t.id} data-testid="task-row" className={ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : ""} onClick={() => onEdit(t)}>
-                  <td title={PRIORITY_META[t.priority].label} data-testid="task-priority"><PriorityIcon level={t.priority} /></td>
-                  <td>
-                    <strong>{t.title}</strong>
-                    {ds === "overdue" && <span className="od" title={tr("list.missedDeadline")}> ❗</span>}
-                    {ds === "soon" && <span className="od-soon" title={tr("list.dueSoon")}> ❗</span>}
-                    {Object.keys(t.subtask_counts ?? {}).length > 0 && (
-                      <div style={{ marginTop: 3 }} data-testid="subtask-dots"><SubtaskDots counts={t.subtask_counts} /></div>
-                    )}
+                <tr key={t.id} data-testid="task-row" className={rowCls} onClick={() => onEdit(t)}>
+                  <td className="c-task">
+                    <div className="task-cell">
+                      <span title={PRIORITY_META[t.priority].label} data-testid="task-priority"><PriorityIcon level={t.priority} /></span>
+                      <span className="task-name">{t.title}</span>
+                      {ds === "overdue" && <span className="flag od" title={tr("list.missedDeadline")}>❗</span>}
+                      {ds === "soon" && <span className="flag soon" title={tr("list.dueSoon")}>❗</span>}
+                      {Object.keys(t.subtask_counts ?? {}).length > 0 && (
+                        <span data-testid="subtask-dots" style={{ marginLeft: 2 }}><SubtaskDots counts={t.subtask_counts} /></span>
+                      )}
+                    </div>
                   </td>
-                  <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.projectColor} /> {info.projectName}</span>}</td>
-                  <td>{info && <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><ColorDot color={info.color} /> {info.name}</span>}</td>
+                  <td>{info && <span className="cell-proj"><span className="dot" style={{ background: info.projectColor }} /><span className="nm">{info.projectName}</span></span>}</td>
+                  <td>{info && <span className="cell-proj"><span className="dot" style={{ background: info.color }} /><span className="nm">{info.name}</span></span>}</td>
+                  <td><div className="who"><AvatarStack ids={t.assignees} users={users} /></div></td>
+                  <td><StatusPill status={t.status} editable /></td>
                   <td>
-                    {names.length === 0 ? <span className="muted">—</span> : (
-                      <span className="who">{names.map((n, i) => <span key={i} className="pill">{n}</span>)}</span>
-                    )}
+                    {t.deadline ? (
+                      <span className={`cell-date ${dcls}`}>{fmtDeadline(t.deadline)}{tm && <span className="tm">{tm}</span>}</span>
+                    ) : <span className="cell-date none">—</span>}
                   </td>
-                  <td><StatusPill status={t.status} /></td>
-                  <td className="deadline mono">{t.deadline ?? "—"}</td>
-                  <td className="mono" style={{ whiteSpace: "nowrap" }}>{timeRange(t.start_time, t.end_time) || <span className="muted">—</span>}</td>
-                  <td className="muted">{t.recurrence ? t.recurrence.freq : "—"}</td>
+                  <td>
+                    {t.recurrence
+                      ? <span className="recurs"><RefreshCw />{t.recurrence.freq}</span>
+                      : <span className="recurs none">—</span>}
+                  </td>
                 </tr>
               );
             })}

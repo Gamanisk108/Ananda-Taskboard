@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -136,6 +137,7 @@ export default function App() {
     me.is_admin || projects.some((p) => p.subprojects.some((s) => s.level === "member"));
 
   const viewProps = { projectId, subprojectId, refreshKey, onEdit: (t: Task) => setEditing(t), me };
+  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   return (
     <div className="app">
@@ -146,22 +148,27 @@ export default function App() {
             <div className="name">Ananda <b>Taskboard</b></div>
             <div className="tagline">Love &amp; Blessings from Ananda Los Angeles</div>
           </div>
+          <button className="icon-btn btn-secondary" style={{ marginLeft: 4 }} title={t("menu.theme")}
+            onClick={() => changeTheme(isDark ? "light" : "dark")}>
+            {isDark ? <Sun /> : <Moon />}
+          </button>
         </div>
         <div className="topbar-actions">
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}>✅ {t("nav.approvals")}</button>
+            <button className="btn-ghost" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}><CircleCheck /><span className="lbl">{t("nav.approvals")}</span></button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" data-testid="open-team" onClick={() => setShowTeam(true)} title={t("nav.team")}>👥 {t("nav.team")}</button>
+            <button className="btn-ghost" data-testid="open-team" onClick={() => setShowTeam(true)} title={t("nav.team")}><UsersIcon /><span className="lbl">{t("nav.team")}</span></button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowTrash(true)} title={t("nav.trash")}>♻️ {t("nav.trash")}</button>
+            <button className="btn-ghost" onClick={() => setShowTrash(true)} title={t("nav.trash")}><Trash2 /><span className="lbl">{t("nav.trash")}</span></button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowManage(true)} title={t("nav.projects")}>🗂️ {t("nav.projects")}</button>
+            <button className="btn-ghost" onClick={() => setShowManage(true)} title={t("nav.projects")}><LayoutGrid /><span className="lbl">{t("nav.projects")}</span></button>
           )}
+          <span className="sep" />
           {canCreate && (
-            <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}>＋ {t("nav.newTask")}</button>
+            <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
           )}
           <UserMenu
             name={me.name || me.email}
@@ -179,29 +186,33 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="tabs">
-        {tree?.show_global_overview && (
-          <TabBtn active={isGlobal} onClick={() => { setTopTab("global"); setSubTab(null); }}>
-            {t("nav.globalOverview")}
-          </TabBtn>
-        )}
-        {projects.map((p) => (
-          <TabBtn key={p.id} active={effectiveTop === p.id} onClick={() => { setTopTab(p.id); setSubTab(null); }}>
-            <ColorDot color={p.color} /> {p.name}
-          </TabBtn>
-        ))}
-        {projects.length === 0 && <span className="muted" style={{ padding: 10 }}>{t("nav.noProjects")}</span>}
-      </nav>
+      <div className="tabrail">
+        <nav className="tabs">
+          {tree?.show_global_overview && (
+            <button className={`ptab ${isGlobal ? "on" : ""}`} style={{ "--pc": "var(--muted)" } as React.CSSProperties}
+              onClick={() => { setTopTab("global"); setSubTab(null); }}>
+              <span className="pemoji">🌐</span>{t("nav.globalOverview")}
+            </button>
+          )}
+          {projects.map((p) => (
+            <button key={p.id} className={`ptab ${effectiveTop === p.id ? "on" : ""}`} style={{ "--pc": p.color } as React.CSSProperties}
+              onClick={() => { setTopTab(p.id); setSubTab(null); }}>
+              <span className="pemoji"><ColorDot color={p.color} /></span>{p.name}
+            </button>
+          ))}
+          {projects.length === 0 && <span className="muted" style={{ padding: 10 }}>{t("nav.noProjects")}</span>}
+        </nav>
+      </div>
 
       {currentProject && currentProject.show_project_overview && (
-        <nav className="tabs subtabs">
-          <TabBtn active={effectiveSub === "overview"} onClick={() => setSubTab("overview")}>
+        <nav className="subtabs">
+          <button className={`subtab ${effectiveSub === "overview" ? "on" : ""}`} onClick={() => setSubTab("overview")}>
             {t("nav.projectOverview")}
-          </TabBtn>
+          </button>
           {currentProject.subprojects.map((s) => (
-            <TabBtn key={s.id} active={effectiveSub === s.id} onClick={() => setSubTab(s.id)}>
+            <button key={s.id} className={`subtab ${effectiveSub === s.id ? "on" : ""}`} onClick={() => setSubTab(s.id)}>
               <ColorDot color={s.color} /> {s.name}
-            </TabBtn>
+            </button>
           ))}
         </nav>
       )}
@@ -214,9 +225,9 @@ export default function App() {
             </button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div className="right">
           <ShareViewButton />
-          <button className="btn-secondary" onClick={() => setShowSummary(true)}>{t("view.copySummary")}</button>
+          <button className="btn-secondary" onClick={() => setShowSummary(true)}><Copy /><span className="lbl">{t("view.copySummary")}</span></button>
           <ExportDialog me={me} />
           {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
           <button
@@ -224,7 +235,7 @@ export default function App() {
             onClick={() => { setView("list"); setShowArchived((a) => !a); }}
             title={t("view.archiveHint")}
           >
-            📖 {showArchived ? t("view.hideArchive") : t("view.archive")}
+            <BookOpen /><span className="lbl">{showArchived ? t("view.hideArchive") : t("view.archive")}</span>
           </button>
         </div>
       </div>
@@ -276,10 +287,6 @@ export default function App() {
   );
 }
 
-function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button className={`tab ${active ? "tab-on" : ""}`} onClick={onClick}>{children}</button>;
-}
-
 function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSettings, onRestore, onHistory, onBulk, onLogout }: {
   name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
   theme: string; onTheme: (v: string) => void;
@@ -304,9 +311,11 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSetti
 
   return (
     <div className="usermenu" onClick={(e) => e.stopPropagation()}>
-      <button className="btn-secondary usermenu-btn" onClick={() => setOpen((o) => !o)} title={t("menu.account")}>
-        {name} <span style={{ fontSize: 10 }}>▾</span>
-      </button>
+      <div className="user usermenu-btn" role="button" tabIndex={0} onClick={() => setOpen((o) => !o)} title={t("menu.account")}>
+        <span className="avatar">{initials(name)}</span>
+        <span className="lbl">{name}</span>
+        <ChevronDown size={14} className="muted" />
+      </div>
       {open && (
         <div className="usermenu-pop">
           {isAdmin && (
@@ -371,6 +380,14 @@ function ShareViewButton() {
     setLabel(await shareUrl(window.location.href));
     setTimeout(() => setLabel(""), 2500);
   }
-  return <button className="btn-secondary" onClick={share} title={t("view.shareHint")}>🔗 {label || t("view.shareView")}</button>;
+  return <button className="btn-secondary" onClick={share} title={t("view.shareHint")}><Share2 /><span className="lbl">{label || t("view.shareView")}</span></button>;
+}
+
+/** 1–2 char initials from a display name or email, for the user-pill avatar. */
+function initials(name: string): string {
+  const n = (name || "").trim();
+  const parts = n.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return n.slice(0, 2).toUpperCase();
 }
 

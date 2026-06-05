@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { statusColor, statusLabel } from "../statuses";
-import { PRIORITY_META } from "../types";
+import { isComplete, statusColor, statusLabel } from "../statuses";
+import { avatarColor, userInitials, userName } from "../users";
+import { PRIORITY_META, type UserLite } from "../types";
 
 export function ColorDot({ color }: { color: string }) {
   return <span className="dot" style={{ background: color }} />;
@@ -28,12 +29,32 @@ export function PriorityIcon({ level, size = 14, color }: { level: number; size?
   );
 }
 
-export function StatusPill({ status }: { status: string }) {
+export function StatusPill({ status, editable }: { status: string; editable?: boolean }) {
   const c = statusColor(status);
   return (
-    <span className="pill" style={{ background: `${c}1a`, color: c }}>
+    <span className={`pill status-pill${editable ? "" : " static"}`}
+      style={{ "--sc": c } as CSSProperties}>
       <span className="dot" style={{ background: c }} />
       {statusLabel(status)}
+      {editable && <span className="caret">▾</span>}
+    </span>
+  );
+}
+
+/** Overlapping colored circles of assignee initials (design avatar stack),
+ *  each with a full-name tooltip. Shows up to `max`, then a +N chip. */
+export function AvatarStack({ ids, users, max = 3 }: { ids: number[]; users: UserLite[]; max?: number }) {
+  if (ids.length === 0) return <span className="muted">—</span>;
+  const shown = ids.slice(0, max);
+  const extra = ids.length - shown.length;
+  return (
+    <span className="avstack">
+      {shown.map((id) => (
+        <span key={id} className="av" title={userName(users, id)} style={{ background: avatarColor(id) }}>
+          {userInitials(users, id)}
+        </span>
+      ))}
+      {extra > 0 && <span className="av" title={ids.slice(max).map((id) => userName(users, id)).join(", ")} style={{ background: "var(--faint)" }}>+{extra}</span>}
     </span>
   );
 }
@@ -81,6 +102,25 @@ export function SubtaskDots({ counts }: { counts: Record<string, number> }) {
         </span>
       ))}
     </span>
+  );
+}
+
+/** Proportional subtask-progress bar (design's segbar): one colored segment per
+ *  status, sized by share, with an "done/total" tally. */
+export function SubtaskBar({ counts }: { counts: Record<string, number> }) {
+  const entries = Object.entries(counts).filter(([, n]) => n > 0);
+  const total = entries.reduce((s, [, n]) => s + n, 0);
+  if (total === 0) return null;
+  const done = entries.filter(([k]) => isComplete(k)).reduce((s, [, n]) => s + n, 0);
+  return (
+    <div className="segbar" title={`${done} / ${total}`}>
+      <div className="segbar-track">
+        {entries.map(([k, n]) => (
+          <span key={k} style={{ width: `${(n / total) * 100}%`, background: statusColor(k) }} />
+        ))}
+      </div>
+      <span className="segbar-n mono">{done}/{total}</span>
+    </div>
   );
 }
 
