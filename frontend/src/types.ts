@@ -48,6 +48,20 @@ export interface Me {
   tree: Tree;
   memberships: OrgMembership[];
   active_org: number | null;
+  is_superuser: boolean;       // platform owner → metadata-only stats view
+}
+
+/** Platform-owner directory entry: metadata only, never an org's task content. */
+export interface PlatformOrg {
+  id: number;
+  name: string;
+  city: string;
+  country: string;
+  is_active: boolean;
+  created_at: string;
+  admins: { name: string; email: string }[];
+  counts: { projects: number; subprojects: number; tasks: number; members: number };
+  members: { name: string; email: string; role: "admin" | "member"; tier: string | null; active: boolean }[];
 }
 
 export interface Recurrence {

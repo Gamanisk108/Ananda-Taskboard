@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { avatarColor, userInitials } from "../users";
 import type { UserLite } from "../types";
 
 export interface GroupLite {
@@ -60,9 +61,16 @@ export function AssigneePicker({
           {none ? (
             <span className="muted">{t("ap.none")}</span>
           ) : (
-            <span className="who">
-              {assignees.map((id) => <span key={id} className="pill">{name(id)}</span>)}
-              {groupNames.map((n) => <span key={n} className="pill" style={{ background: "var(--primary-weak)" }}>👥 {n}</span>)}
+            <span className="m-chips">
+              {assignees.map((id) => (
+                <span key={id} className="m-chip" title={name(id)}>
+                  <span className="av" style={{ background: avatarColor(id) }}>{userInitials(users, id)}</span>
+                  {name(id)}
+                </span>
+              ))}
+              {groupNames.map((n) => (
+                <span key={n} className="m-chip" style={{ background: "var(--primary-weak)", color: "var(--dome)" }}>◇ {n}</span>
+              ))}
             </span>
           )}
           <button type="button" className="btn-ghost" onClick={() => setEditing(true)}>{t("common.edit")}</button>

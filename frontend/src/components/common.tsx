@@ -74,8 +74,8 @@ export function Modal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="card modal rise"
-        style={{ maxWidth: wide ? 720 : 520 }}
+        className="card modal sheet rise"
+        style={{ maxWidth: wide ? 760 : 520 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-head">
