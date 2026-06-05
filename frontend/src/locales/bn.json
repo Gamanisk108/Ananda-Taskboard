@@ -378,5 +378,28 @@
     "importMore": "আরও আমদানি করুন",
     "errRead": "সেই ইনপুট পড়া যায়নি।",
     "errFailed": "আমদানি ব্যর্থ হয়েছে।"
+  },
+  "export": {
+    "button": "রপ্তানি ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "অন্তর্ভুক্ত করুন",
+    "archivedTasks": "আর্কাইভ করা কাজ",
+    "whatToExport": "কী রপ্তানি করবেন",
+    "whatToExportHint": "(সব আনচেক রাখুন = আপনি যা দেখতে পান সব)",
+    "groups": "গ্রুপ",
+    "groupsHint": "(কেবল এই গ্রুপগুলিতে বরাদ্দ করা কাজ)",
+    "columns": "কলাম",
+    "copyTitle": "TSV হিসেবে কপি করুন — সরাসরি Google Sheet-এ পেস্ট করুন",
+    "copySheets": "📋 Google Sheets-এর জন্য কপি করুন",
+    "download": "ডাউনলোড"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "শিরোনাম",
+    "approval": "অনুমোদন",
+    "recurrence": "পুনরাবৃত্তি",
+    "links": "লিঙ্ক"
   }
 }

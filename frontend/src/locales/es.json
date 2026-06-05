@@ -378,5 +378,28 @@
     "importMore": "Importar más",
     "errRead": "No se pudo leer esa entrada.",
     "errFailed": "La importación falló."
+  },
+  "export": {
+    "button": "Exportar ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "Incluir",
+    "archivedTasks": "Tareas archivadas",
+    "whatToExport": "Qué exportar",
+    "whatToExportHint": "(deja todo sin marcar = todo lo que puedes ver)",
+    "groups": "Grupo(s)",
+    "groupsHint": "(solo tareas asignadas a estos grupos)",
+    "columns": "Columnas",
+    "copyTitle": "Copiar como TSV — pega directamente en una Hoja de Google",
+    "copySheets": "📋 Copiar para Hojas de Google",
+    "download": "Descargar"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "Título",
+    "approval": "Aprobación",
+    "recurrence": "Recurrencia",
+    "links": "Enlaces"
   }
 }

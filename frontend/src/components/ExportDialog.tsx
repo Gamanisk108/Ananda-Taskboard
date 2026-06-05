@@ -6,23 +6,24 @@ import { useUsers } from "../users";
 import { Modal } from "./common";
 import { PRIORITY_META, type Me } from "../types";
 
-// keys MUST match the backend COLUMNS registry in exporting/export.py
-const COLUMNS: { key: string; label: string }[] = [
-  { key: "id", label: "ID" },  // include for round-trip: re-import matches on it
-  { key: "project", label: "Project" },
-  { key: "subproject", label: "Sub-project" },
-  { key: "title", label: "Title" },
-  { key: "status", label: "Status" },
-  { key: "priority", label: "Priority" },
-  { key: "approval", label: "Approval" },
-  { key: "deadline", label: "Deadline" },
-  { key: "start_time", label: "Start time" },
-  { key: "end_time", label: "End time" },
-  { key: "recurrence", label: "Recurrence" },
-  { key: "assignees", label: "Assignees" },
-  { key: "details", label: "Details" },
-  { key: "requirements", label: "Requirements" },
-  { key: "links", label: "Links" },
+// `key` MUST match the backend COLUMNS registry in exporting/export.py.
+// `i18nKey` is display-only (the checkbox label); not sent to the server.
+const COLUMNS: { key: string; i18nKey: string }[] = [
+  { key: "id", i18nKey: "expcol.id" },  // include for round-trip: re-import matches on it
+  { key: "project", i18nKey: "task.project" },
+  { key: "subproject", i18nKey: "task.subproject" },
+  { key: "title", i18nKey: "expcol.title" },
+  { key: "status", i18nKey: "task.status" },
+  { key: "priority", i18nKey: "task.priority" },
+  { key: "approval", i18nKey: "expcol.approval" },
+  { key: "deadline", i18nKey: "task.deadline" },
+  { key: "start_time", i18nKey: "task.startTime" },
+  { key: "end_time", i18nKey: "task.endTime" },
+  { key: "recurrence", i18nKey: "expcol.recurrence" },
+  { key: "assignees", i18nKey: "task.assignees" },
+  { key: "details", i18nKey: "task.details" },
+  { key: "requirements", i18nKey: "task.requirements" },
+  { key: "links", i18nKey: "expcol.links" },
 ];
 
 interface GroupLite { id: number; name: string }
@@ -94,29 +95,29 @@ export function ExportDialog({ me }: { me: Me }) {
 
   return (
     <>
-      <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>Export ▾</button>
+      <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>{t("export.button")}</button>
       {open && (
         <Modal title={t("modals.exportTasks")} onClose={() => setOpen(false)} wide>
           <div className="row2">
             <div className="field">
-              <label>Format</label>
+              <label>{t("import.formatLabel")}</label>
               <select data-testid="export-format" value={fmt} onChange={(e) => setFmt(e.target.value as Fmt)}>
-                <option value="xlsx">Excel (.xlsx)</option>
-                <option value="csv">CSV (.csv)</option>
-                <option value="json">JSON (.json)</option>
+                <option value="xlsx">{t("export.fmtXlsx")}</option>
+                <option value="csv">{t("export.fmtCsv")}</option>
+                <option value="json">{t("export.fmtJson")}</option>
               </select>
             </div>
             <div className="field">
-              <label>Include</label>
+              <label>{t("export.include")}</label>
               <label className="muted" style={{ display: "flex", gap: 8, alignItems: "center", margin: "7px 0 0" }}>
                 <input type="checkbox" style={{ width: "auto" }} checked={archived} onChange={(e) => setArchived(e.target.checked)} />
-                Archived tasks
+                {t("export.archivedTasks")}
               </label>
             </div>
           </div>
 
           <div className="field">
-            <label>What to export <span className="muted" style={{ fontWeight: 400 }}>(leave all unchecked = everything you can see)</span></label>
+            <label>{t("export.whatToExport")} <span className="muted" style={{ fontWeight: 400 }}>{t("export.whatToExportHint")}</span></label>
             <div className="export-scope" data-testid="export-scope">
               {projects.map((pr) => {
                 const projChecked = selProjects.has(pr.id);
@@ -145,7 +146,7 @@ export function ExportDialog({ me }: { me: Me }) {
 
           {me.is_admin && groups.length > 0 && (
             <div className="field">
-              <label>Group(s) <span className="muted" style={{ fontWeight: 400 }}>(only tasks assigned to these groups)</span></label>
+              <label>{t("export.groups")} <span className="muted" style={{ fontWeight: 400 }}>{t("export.groupsHint")}</span></label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px" }} data-testid="export-groups">
                 {groups.map((g) => (
                   <label key={g.id} className="muted" style={{ display: "flex", gap: 6, alignItems: "center", margin: 0, fontSize: 13 }}>
@@ -160,38 +161,38 @@ export function ExportDialog({ me }: { me: Me }) {
 
           <div className="row2">
             <div className="field">
-              <label>Status</label>
+              <label>{t("task.status")}</label>
               <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="">Any status</option>
+                <option value="">{t("list.anyStatus")}</option>
                 {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
             <div className="field">
-              <label>Priority</label>
+              <label>{t("task.priority")}</label>
               <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-                <option value="">Any priority</option>
+                <option value="">{t("list.anyPriority")}</option>
                 {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
               </select>
             </div>
           </div>
 
           <div className="field">
-            <label>Assignee</label>
+            <label>{t("subtask.assignee")}</label>
             <select value={assignee} onChange={(e) => setAssignee(e.target.value)} style={{ maxWidth: 260 }}>
-              <option value="">Any assignee</option>
-              <option value="unassigned">Unassigned</option>
+              <option value="">{t("list.anyAssignee")}</option>
+              <option value="unassigned">{t("list.unassigned")}</option>
               {users.map((u) => <option key={u.id} value={String(u.id)}>{u.name || u.email}</option>)}
             </select>
           </div>
 
           <div className="field">
-            <label>Columns</label>
+            <label>{t("export.columns")}</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px" }}>
               {COLUMNS.map((c) => (
                 <label key={c.key} className="muted" style={{ display: "flex", gap: 5, alignItems: "center", margin: 0, fontSize: 13 }}>
                   <input type="checkbox" style={{ width: "auto" }} checked={cols[c.key]}
                     onChange={(e) => setCols((s) => ({ ...s, [c.key]: e.target.checked }))} />
-                  {c.label}
+                  {t(c.i18nKey)}
                 </label>
               ))}
             </div>
@@ -199,11 +200,11 @@ export function ExportDialog({ me }: { me: Me }) {
 
           <div className="modal-foot">
             <button className="btn-secondary" style={{ marginRight: "auto" }} disabled={selected.length === 0}
-              onClick={copyForSheets} data-testid="export-copy-sheets" title="Copy as TSV — paste straight into a Google Sheet">
-              {copied ? "Copied!" : "📋 Copy for Google Sheets"}
+              onClick={copyForSheets} data-testid="export-copy-sheets" title={t("export.copyTitle")}>
+              {copied ? t("copy.copied") : t("export.copySheets")}
             </button>
-            <button className="btn-secondary" onClick={() => setOpen(false)}>Cancel</button>
-            <button className="btn-primary" data-testid="export-download" disabled={selected.length === 0} onClick={run}>Download</button>
+            <button className="btn-secondary" onClick={() => setOpen(false)}>{t("common.cancel")}</button>
+            <button className="btn-primary" data-testid="export-download" disabled={selected.length === 0} onClick={run}>{t("export.download")}</button>
           </div>
         </Modal>
       )}

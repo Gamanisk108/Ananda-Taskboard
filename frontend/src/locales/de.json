@@ -378,5 +378,28 @@
     "importMore": "Mehr importieren",
     "errRead": "Diese Eingabe konnte nicht gelesen werden.",
     "errFailed": "Import fehlgeschlagen."
+  },
+  "export": {
+    "button": "Exportieren ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "Einschließen",
+    "archivedTasks": "Archivierte Aufgaben",
+    "whatToExport": "Was exportieren",
+    "whatToExportHint": "(alles unmarkiert lassen = alles, was du sehen kannst)",
+    "groups": "Gruppe(n)",
+    "groupsHint": "(nur Aufgaben, die diesen Gruppen zugewiesen sind)",
+    "columns": "Spalten",
+    "copyTitle": "Als TSV kopieren — direkt in ein Google Sheet einfügen",
+    "copySheets": "📋 Für Google Sheets kopieren",
+    "download": "Herunterladen"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "Titel",
+    "approval": "Genehmigung",
+    "recurrence": "Wiederholung",
+    "links": "Links"
   }
 }

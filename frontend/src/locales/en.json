@@ -378,5 +378,28 @@
     "importMore": "Import more",
     "errRead": "Could not read that input.",
     "errFailed": "Import failed."
+  },
+  "export": {
+    "button": "Export ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "Include",
+    "archivedTasks": "Archived tasks",
+    "whatToExport": "What to export",
+    "whatToExportHint": "(leave all unchecked = everything you can see)",
+    "groups": "Group(s)",
+    "groupsHint": "(only tasks assigned to these groups)",
+    "columns": "Columns",
+    "copyTitle": "Copy as TSV — paste straight into a Google Sheet",
+    "copySheets": "📋 Copy for Google Sheets",
+    "download": "Download"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "Title",
+    "approval": "Approval",
+    "recurrence": "Recurrence",
+    "links": "Links"
   }
 }

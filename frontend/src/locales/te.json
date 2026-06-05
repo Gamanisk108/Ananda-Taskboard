@@ -378,5 +378,28 @@
     "importMore": "మరిన్ని దిగుమతి చేయి",
     "errRead": "ఆ ఇన్‌పుట్‌ను చదవలేకపోయాం.",
     "errFailed": "దిగుమతి విఫలమైంది."
+  },
+  "export": {
+    "button": "ఎగుమతి ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "చేర్చు",
+    "archivedTasks": "ఆర్కైవ్ చేసిన పనులు",
+    "whatToExport": "ఏమి ఎగుమతి చేయాలి",
+    "whatToExportHint": "(అన్నీ ఎంపిక తీసివేయండి = మీరు చూడగలిగే ప్రతిదీ)",
+    "groups": "సమూహం(లు)",
+    "groupsHint": "(ఈ సమూహాలకు కేటాయించిన పనులు మాత్రమే)",
+    "columns": "నిలువు వరుసలు",
+    "copyTitle": "TSV గా కాపీ చేయండి — నేరుగా Google Sheet లో అతికించండి",
+    "copySheets": "📋 Google Sheets కోసం కాపీ చేయి",
+    "download": "డౌన్‌లోడ్"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "శీర్షిక",
+    "approval": "ఆమోదం",
+    "recurrence": "పునరావృతం",
+    "links": "లింక్‌లు"
   }
 }

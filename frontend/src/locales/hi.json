@@ -378,5 +378,28 @@
     "importMore": "और आयात करें",
     "errRead": "वह इनपुट पढ़ा नहीं जा सका।",
     "errFailed": "आयात विफल रहा।"
+  },
+  "export": {
+    "button": "निर्यात ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "शामिल करें",
+    "archivedTasks": "संग्रहीत कार्य",
+    "whatToExport": "क्या निर्यात करें",
+    "whatToExportHint": "(सब अनचेक छोड़ें = वह सब जो आप देख सकते हैं)",
+    "groups": "समूह",
+    "groupsHint": "(केवल इन समूहों को सौंपे गए कार्य)",
+    "columns": "स्तंभ",
+    "copyTitle": "TSV के रूप में कॉपी करें — सीधे Google Sheet में पेस्ट करें",
+    "copySheets": "📋 Google Sheets के लिए कॉपी करें",
+    "download": "डाउनलोड"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "शीर्षक",
+    "approval": "अनुमोदन",
+    "recurrence": "पुनरावृत्ति",
+    "links": "लिंक"
   }
 }

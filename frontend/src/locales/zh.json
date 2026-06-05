@@ -378,5 +378,28 @@
     "importMore": "导入更多",
     "errRead": "无法读取该输入。",
     "errFailed": "导入失败。"
+  },
+  "export": {
+    "button": "导出 ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "包含",
+    "archivedTasks": "已归档任务",
+    "whatToExport": "导出内容",
+    "whatToExportHint": "（全部不勾选 = 你能看到的所有内容）",
+    "groups": "组",
+    "groupsHint": "（仅分配给这些组的任务）",
+    "columns": "列",
+    "copyTitle": "复制为 TSV — 直接粘贴到 Google 表格",
+    "copySheets": "📋 复制到 Google 表格",
+    "download": "下载"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "标题",
+    "approval": "审批",
+    "recurrence": "重复",
+    "links": "链接"
   }
 }

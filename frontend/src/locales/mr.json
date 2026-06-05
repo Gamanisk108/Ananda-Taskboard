@@ -378,5 +378,28 @@
     "importMore": "आणखी आयात करा",
     "errRead": "ते इनपुट वाचता आले नाही.",
     "errFailed": "आयात अयशस्वी झाले."
+  },
+  "export": {
+    "button": "निर्यात ▾",
+    "fmtXlsx": "Excel (.xlsx)",
+    "fmtCsv": "CSV (.csv)",
+    "fmtJson": "JSON (.json)",
+    "include": "समाविष्ट करा",
+    "archivedTasks": "संग्रहित कार्ये",
+    "whatToExport": "काय निर्यात करायचे",
+    "whatToExportHint": "(सर्व अनचेक ठेवा = तुम्ही पाहू शकता ते सर्व)",
+    "groups": "गट",
+    "groupsHint": "(फक्त या गटांना नेमलेली कार्ये)",
+    "columns": "स्तंभ",
+    "copyTitle": "TSV म्हणून कॉपी करा — थेट Google Sheet मध्ये पेस्ट करा",
+    "copySheets": "📋 Google Sheets साठी कॉपी करा",
+    "download": "डाउनलोड"
+  },
+  "expcol": {
+    "id": "ID",
+    "title": "शीर्षक",
+    "approval": "मंजुरी",
+    "recurrence": "पुनरावृत्ती",
+    "links": "दुवे"
   }
 }
