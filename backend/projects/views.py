@@ -34,7 +34,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         from trashbin import soft_delete_project
 
-        soft_delete_project(instance)  # cascade soft-delete (restorable for 7 days)
+        soft_delete_project(instance, by=self.request.user)  # cascade soft-delete (restorable for 7 days)
 
 
 class SubProjectViewSet(viewsets.ModelViewSet):
@@ -52,4 +52,4 @@ class SubProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         from trashbin import soft_delete_subproject
 
-        soft_delete_subproject(instance)  # cascade soft-delete its tasks too
+        soft_delete_subproject(instance, by=self.request.user)  # cascade soft-delete its tasks too

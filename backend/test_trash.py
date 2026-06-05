@@ -112,8 +112,14 @@ def test_trash_api_purge_one(admin, db):
     assert not Task.all_objects.filter(pk=t.pk).exists()  # hard-deleted
 
 
-def test_member_cannot_access_trash(member):
-    assert login(member).get("/api/trash").status_code == 403
+def test_member_trash_is_scoped_not_blocked(member):
+    # Members now have self-service Trash for their OWN deletions (full coverage in
+    # test_reduced_access.py). Access is allowed, but the admin-only project/
+    # sub-project scopes stay empty and they see only tasks they deleted.
+    r = login(member).get("/api/trash")
+    assert r.status_code == 200
+    assert r.data["projects"] == [] and r.data["subprojects"] == []
+    assert r.data["tasks"] == []  # this member deleted nothing
 
 
 def test_delete_task_via_api_is_soft(admin, db):

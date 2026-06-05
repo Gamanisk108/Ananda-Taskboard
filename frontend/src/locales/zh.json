@@ -40,6 +40,7 @@
     "history": "历史",
     "restorePoints": "还原点",
     "notificationsOn": "开启通知",
+    "dailyPush": "每日提醒",
     "logout": "退出登录",
     "language": "语言",
     "theme": "主题",
@@ -229,6 +230,7 @@
     "noMatch": "没有匹配的任务。",
     "colWhere": "项目 / 子项目",
     "updated": "已更新 {{n}} 个任务",
+    "updatedSkipped": "已更新 {{n}} 个 · 跳过 {{skipped}} 个（无编辑权限）",
     "error": "无法应用 — 请检查值。",
     "archiveConfirm": "归档 {{n}} 个任务？"
   },

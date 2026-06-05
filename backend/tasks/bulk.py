@@ -1,17 +1,27 @@
-"""Admin bulk operations: transition many tasks at once (move / assign / status /
-deadline / archive), and mark a whole Project or Sub-project Done + archived."""
+"""Bulk operations: transition many tasks at once (move / assign / status /
+deadline / archive), and mark a whole Project or Sub-project Done + archived.
+
+Org-admins may run every action on any task in their active org. Members may run
+the SAFE SUBSET (status / deadline) and only on tasks they have member-level
+(edit) access to; tasks they can't edit are silently skipped and reported back as
+`skipped`. Move / assign / archive and MarkDone stay admin-only."""
 
 from django.db import transaction
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from permissions.drf import IsAdmin
+from permissions.engine import can_act_as_member, is_org_admin, visible_tasks_q
 from permissions.models import audit
 from projects.models import SubProject
 
 from .models import Status, Task
+
+# Actions a non-admin Member is allowed to bulk-apply (safe, in-place edits only).
+MEMBER_ACTIONS = {"status", "deadline"}
 
 
 def _complete_status_key():
@@ -20,19 +30,30 @@ def _complete_status_key():
 
 class BulkTasksView(APIView):
     """POST {ids:[...], action, value}. action ∈ move|assign|status|deadline|archive.
-    Admin-only; applied in one transaction."""
+    Members are limited to status/deadline on tasks they can edit; applied in one
+    transaction. Returns {updated, skipped}."""
 
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        from permissions.engine import visible_tasks_q
-
         ids = request.data.get("ids") or []
         action = request.data.get("action")
         value = request.data.get("value")
+        user = request.user
         org = getattr(request, "org", None)
-        # Org-scoped: an admin can only bulk-edit tasks within their active org.
-        qs = Task.objects.filter(id__in=ids).filter(visible_tasks_q(request.user, org))
+        skipped = 0
+        if is_org_admin(user, org):
+            # Org-scoped: an admin can only bulk-edit tasks within their active org.
+            qs = Task.objects.filter(id__in=ids).filter(visible_tasks_q(user, org))
+        else:
+            if action not in MEMBER_ACTIONS:
+                raise PermissionDenied("Members can only bulk-change status or deadline.")
+            # Scope to tasks the member may edit (member-level on the sub-project);
+            # silently skip the rest (can't see / view-only / other org).
+            requested = list(Task.objects.filter(id__in=ids).values_list("id", "subproject_id"))
+            allowed_ids = [tid for tid, sp_id in requested if can_act_as_member(user, sp_id, org)]
+            skipped = len(requested) - len(allowed_ids)
+            qs = Task.objects.filter(id__in=allowed_ids)
         now = timezone.now()
         n = 0
         with transaction.atomic():
@@ -63,7 +84,7 @@ class BulkTasksView(APIView):
             else:
                 raise ValidationError({"action": "Unknown bulk action."})
         audit(request.user, f"bulk.{action}", f"Bulk: {summary}")
-        return Response({"updated": n})
+        return Response({"updated": n, "skipped": skipped})
 
 
 class MarkDoneView(APIView):

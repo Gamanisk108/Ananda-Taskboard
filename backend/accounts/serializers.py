@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "role", "is_admin", "is_active", "tier", "language"]
+        fields = ["id", "email", "name", "role", "is_admin", "is_active", "tier", "language", "theme", "daily_push_enabled"]
 
 
 class UserWriteSerializer(serializers.ModelSerializer):

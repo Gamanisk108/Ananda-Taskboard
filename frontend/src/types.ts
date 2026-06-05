@@ -44,6 +44,8 @@ export interface Me {
   is_admin: boolean;          // admin OF THE ACTIVE ORG (per-org)
   tier: number | null;
   language: string;
+  theme: string;                 // personal UI theme ("" = follow app default)
+  daily_push_enabled: boolean;   // personal opt-in to the daily push
   groups: { id: number; name: string }[];
   tree: Tree;
   memberships: OrgMembership[];
