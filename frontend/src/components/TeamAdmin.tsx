@@ -38,7 +38,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadAll() {
+  async function loadAll(signal = false) {
     const [u, g, t, p, gr, ex, au] = await Promise.all([
       api.get("/api/users"), api.get("/api/groups"), api.get("/api/tiers"),
       api.get("/api/projects"), api.get("/api/grants"), api.get("/api/exclusions"),
@@ -49,7 +49,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
     setAudit(au as AuditRow[]);
     setLoading(false);
     invalidateUsers();
-    onChanged();
+    if (signal) onChanged();
   }
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
 
@@ -67,11 +67,11 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
       </div>
       {loading ? <Spinner /> : (
         <>
-          {tab === "members" && <Members users={users} tiers={tiers} reload={loadAll} />}
-          {tab === "groups" && <Groups groups={groups} users={users} reload={loadAll} />}
+          {tab === "members" && <Members users={users} tiers={tiers} reload={() => loadAll(true)} />}
+          {tab === "groups" && <Groups groups={groups} users={users} reload={() => loadAll(true)} />}
           {tab === "access" && (
             <Access grants={grants} exclusions={exclusions} users={users} groups={groups}
-              tiers={tiers} projects={projects} reload={loadAll} />
+              tiers={tiers} projects={projects} reload={() => loadAll(true)} />
           )}
           {tab === "activity" && <Activity rows={audit} />}
         </>
