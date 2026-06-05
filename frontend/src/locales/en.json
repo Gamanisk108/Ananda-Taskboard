@@ -288,5 +288,17 @@
       "fri": "Fri",
       "sat": "Sat"
     }
+  },
+  "del": {
+    "kindProject": "project",
+    "kindSub": "sub-project",
+    "title": "Delete {{kind}}: {{name}}",
+    "noTasks": "This {{kind}} has no tasks. Deleting moves it to Trash (restorable for 7 days).",
+    "hasTasks": "This {{kind}} has {{count}} task(s). Tick the ones to move to another sub-project; un-ticked tasks go to Trash with the {{kind}} (restorable 7 days).",
+    "moveLabel": "Move ticked tasks to",
+    "selectSub": "Select a sub-project…",
+    "working": "Working…",
+    "moveDelete": "Move {{count}} & delete",
+    "deleteAll": "Delete all (no move)"
   }
 }

@@ -288,5 +288,17 @@
       "fri": "Fr",
       "sat": "Sa"
     }
+  },
+  "del": {
+    "kindProject": "Projekt",
+    "kindSub": "Unterprojekt",
+    "title": "{{kind}} löschen: {{name}}",
+    "noTasks": "Dieses {{kind}} hat keine Aufgaben. Beim Löschen wird es in den Papierkorb verschoben (7 Tage wiederherstellbar).",
+    "hasTasks": "Dieses {{kind}} hat {{count}} Aufgabe(n). Wähle die aus, die in ein anderes Unterprojekt verschoben werden sollen; nicht ausgewählte Aufgaben kommen mit dem {{kind}} in den Papierkorb (7 Tage wiederherstellbar).",
+    "moveLabel": "Markierte Aufgaben verschieben nach",
+    "selectSub": "Unterprojekt auswählen…",
+    "working": "Wird ausgeführt…",
+    "moveDelete": "{{count}} verschieben & löschen",
+    "deleteAll": "Alle löschen (nicht verschieben)"
   }
 }

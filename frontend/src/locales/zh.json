@@ -288,5 +288,17 @@
       "fri": "五",
       "sat": "六"
     }
+  },
+  "del": {
+    "kindProject": "项目",
+    "kindSub": "子项目",
+    "title": "删除{{kind}}：{{name}}",
+    "noTasks": "此{{kind}}没有任务。删除会将其移至回收站（7 天内可恢复）。",
+    "hasTasks": "此{{kind}}有 {{count}} 个任务。勾选要移动到其他子项目的任务；未勾选的任务将随{{kind}}一起进入回收站（7 天内可恢复）。",
+    "moveLabel": "将勾选的任务移动到",
+    "selectSub": "选择一个子项目…",
+    "working": "处理中…",
+    "moveDelete": "移动 {{count}} 个并删除",
+    "deleteAll": "全部删除（不移动）"
   }
 }

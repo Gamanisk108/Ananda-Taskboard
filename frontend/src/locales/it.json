@@ -288,5 +288,17 @@
       "fri": "Ven",
       "sat": "Sab"
     }
+  },
+  "del": {
+    "kindProject": "progetto",
+    "kindSub": "sottoprogetto",
+    "title": "Elimina {{kind}}: {{name}}",
+    "noTasks": "Questo {{kind}} non ha attività. L'eliminazione lo sposta nel Cestino (ripristinabile per 7 giorni).",
+    "hasTasks": "Questo {{kind}} ha {{count}} attività. Seleziona quelle da spostare in un altro sottoprogetto; le attività non selezionate vanno nel Cestino con il {{kind}} (ripristinabili per 7 giorni).",
+    "moveLabel": "Sposta le attività selezionate in",
+    "selectSub": "Seleziona un sottoprogetto…",
+    "working": "Elaborazione…",
+    "moveDelete": "Sposta {{count}} ed elimina",
+    "deleteAll": "Elimina tutto (senza spostare)"
   }
 }

@@ -288,5 +288,17 @@
       "fri": "Ven",
       "sat": "Sam"
     }
+  },
+  "del": {
+    "kindProject": "projet",
+    "kindSub": "sous-projet",
+    "title": "Supprimer {{kind}} : {{name}}",
+    "noTasks": "Ce {{kind}} n'a aucune tâche. La suppression le déplace vers la Corbeille (récupérable pendant 7 jours).",
+    "hasTasks": "Ce {{kind}} a {{count}} tâche(s). Cochez celles à déplacer vers un autre sous-projet ; les tâches non cochées vont à la Corbeille avec le {{kind}} (récupérables 7 jours).",
+    "moveLabel": "Déplacer les tâches cochées vers",
+    "selectSub": "Sélectionner un sous-projet…",
+    "working": "Traitement…",
+    "moveDelete": "Déplacer {{count}} et supprimer",
+    "deleteAll": "Tout supprimer (sans déplacer)"
   }
 }

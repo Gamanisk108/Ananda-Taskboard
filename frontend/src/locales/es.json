@@ -288,5 +288,17 @@
       "fri": "Vie",
       "sat": "Sáb"
     }
+  },
+  "del": {
+    "kindProject": "proyecto",
+    "kindSub": "subproyecto",
+    "title": "Eliminar {{kind}}: {{name}}",
+    "noTasks": "Este {{kind}} no tiene tareas. Al eliminarlo se mueve a la Papelera (recuperable durante 7 días).",
+    "hasTasks": "Este {{kind}} tiene {{count}} tarea(s). Marca las que quieras mover a otro subproyecto; las no marcadas van a la Papelera con el {{kind}} (recuperables 7 días).",
+    "moveLabel": "Mover las tareas marcadas a",
+    "selectSub": "Selecciona un subproyecto…",
+    "working": "Procesando…",
+    "moveDelete": "Mover {{count}} y eliminar",
+    "deleteAll": "Eliminar todo (sin mover)"
   }
 }

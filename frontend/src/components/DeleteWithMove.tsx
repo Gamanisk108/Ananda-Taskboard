@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 import type { Task } from "../types";
@@ -15,6 +16,8 @@ interface Props {
 }
 
 export function DeleteWithMove({ kind, id, name, projects, onClose, onDone }: Props) {
+  const { t } = useTranslation();
+  const kindWord = kind === "project" ? t("del.kindProject") : t("del.kindSub");
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [keep, setKeep] = useState<Set<number>>(new Set()); // task ids to move (keep)
   const [target, setTarget] = useState<number>(0);
@@ -67,21 +70,20 @@ export function DeleteWithMove({ kind, id, name, projects, onClose, onDone }: Pr
   const moveCount = keep.size;
 
   return (
-    <Modal title={`Delete ${kind === "project" ? "project" : "sub-project"}: ${name}`} onClose={onClose} wide>
+    <Modal title={t("del.title", { kind: kindWord, name })} onClose={onClose} wide>
       {!tasks ? <Spinner /> : (
         <>
           {tasks.length === 0 ? (
-            <p>This {kind} has no tasks. Deleting moves it to Trash (restorable for 7 days).</p>
+            <p>{t("del.noTasks", { kind: kindWord })}</p>
           ) : (
             <>
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-                This {kind} has {tasks.length} task(s). Tick the ones to <strong>move</strong> to another
-                sub-project; un-ticked tasks go to Trash with the {kind} (restorable 7 days).
+                {t("del.hasTasks", { kind: kindWord, count: tasks.length })}
               </p>
               <div className="field">
-                <label>Move ticked tasks to</label>
+                <label>{t("del.moveLabel")}</label>
                 <select value={target} onChange={(e) => setTarget(Number(e.target.value))}>
-                  <option value={0}>Select a sub-project…</option>
+                  <option value={0}>{t("del.selectSub")}</option>
                   {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
               </div>
@@ -96,15 +98,15 @@ export function DeleteWithMove({ kind, id, name, projects, onClose, onDone }: Pr
             </>
           )}
           <div className="modal-foot" style={{ marginTop: 14 }}>
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
             {tasks.length > 0 && (
               <button type="button" className="btn-primary" disabled={busy || !target || moveCount === 0}
                 onClick={() => run(true)}>
-                {busy ? "Working…" : `Move ${moveCount} & delete`}
+                {busy ? t("del.working") : t("del.moveDelete", { count: moveCount })}
               </button>
             )}
             <button type="button" className="btn-danger" disabled={busy} onClick={() => run(false)}>
-              {tasks.length > 0 ? "Delete all (no move)" : "Delete"}
+              {tasks.length > 0 ? t("del.deleteAll") : t("common.delete")}
             </button>
           </div>
         </>

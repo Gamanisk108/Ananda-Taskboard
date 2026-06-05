@@ -288,5 +288,17 @@
       "fri": "Sex",
       "sat": "Sáb"
     }
+  },
+  "del": {
+    "kindProject": "projeto",
+    "kindSub": "subprojeto",
+    "title": "Excluir {{kind}}: {{name}}",
+    "noTasks": "Este {{kind}} não tem tarefas. Excluí-lo o move para a Lixeira (recuperável por 7 dias).",
+    "hasTasks": "Este {{kind}} tem {{count}} tarefa(s). Marque as que deseja mover para outro subprojeto; as não marcadas vão para a Lixeira com o {{kind}} (recuperáveis por 7 dias).",
+    "moveLabel": "Mover as tarefas marcadas para",
+    "selectSub": "Selecione um subprojeto…",
+    "working": "Processando…",
+    "moveDelete": "Mover {{count}} e excluir",
+    "deleteAll": "Excluir tudo (sem mover)"
   }
 }
