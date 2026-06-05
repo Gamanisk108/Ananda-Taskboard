@@ -145,7 +145,7 @@ export default function App() {
             <button className="btn-secondary" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}>✅ {t("nav.approvals")}</button>
           )}
           {me.is_admin && (
-            <button className="btn-secondary" onClick={() => setShowTeam(true)} title={t("nav.team")}>👥 {t("nav.team")}</button>
+            <button className="btn-secondary" data-testid="open-team" onClick={() => setShowTeam(true)} title={t("nav.team")}>👥 {t("nav.team")}</button>
           )}
           {me.is_admin && (
             <button className="btn-secondary" onClick={() => setShowTrash(true)} title={t("nav.trash")}>♻️ {t("nav.trash")}</button>
@@ -207,7 +207,7 @@ export default function App() {
             </button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <ShareViewButton />
           <button className="btn-secondary" onClick={() => setShowSummary(true)}>{t("view.copySummary")}</button>
           <ExportDialog me={me} />

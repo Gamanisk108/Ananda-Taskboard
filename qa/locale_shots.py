@@ -12,9 +12,22 @@ LANGS = ["en", "it", "es", "fr", "de", "pt", "zh", "hi", "bn", "ta", "te", "mr",
 MODAL_LANGS = {"de", "ta"}  # German (long words) + Tamil (complex script)
 
 
+def close_modal(page):
+    """The shared Modal closes on backdrop-click (not Escape), so click a
+    top-left corner of the backdrop, outside the centred card."""
+    bd = page.locator(".modal-backdrop")
+    if bd.count():
+        try:
+            bd.first.click(position={"x": 6, "y": 6}, timeout=2000)
+            page.wait_for_timeout(250)
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def set_language(page, code):
     """Open the account menu and pick a language; retry, since the menu
     re-renders (and can close) when the language PATCH refreshes `me`."""
+    close_modal(page)
     for _ in range(3):
         page.locator("button.usermenu-btn").first.click()
         sel = page.locator("select[data-testid=language-select]")
@@ -54,16 +67,21 @@ def main():
             results.append(f"board: locale_{code}.png" + ("" if ok else "  [switch FAILED]"))
 
             if code in MODAL_LANGS:
-                try:
-                    page.click("text=/New task/i", timeout=2500)
-                    page.wait_for_selector("[data-testid=task-save]", timeout=4000)
-                    page.wait_for_timeout(400)
-                    page.screenshot(path=f"{SHOTS}/locale_{code}_modal.png")
-                    results.append(f"modal: locale_{code}_modal.png")
-                    page.keyboard.press("Escape")
-                    page.wait_for_timeout(300)
-                except Exception as e:  # noqa: BLE001
-                    results.append(f"modal {code}: SKIPPED ({type(e).__name__})")
+                # dense forms are where overflow is most likely — capture both
+                for trigger, ready, shot in [
+                    ("[data-testid=new-task]", "[data-testid=task-save]", "task"),
+                    ("[data-testid=open-team]", "[data-testid=tier-add],[data-testid=access-subject-type],table", "team"),
+                ]:
+                    try:
+                        page.click(trigger, timeout=3000)
+                        page.wait_for_selector(ready, timeout=5000)
+                        page.wait_for_timeout(500)
+                        page.screenshot(path=f"{SHOTS}/locale_{code}_{shot}.png")
+                        results.append(f"modal: locale_{code}_{shot}.png")
+                    except Exception as e:  # noqa: BLE001
+                        results.append(f"modal {code}/{shot}: SKIPPED ({type(e).__name__})")
+                    finally:
+                        close_modal(page)
 
         browser.close()
         print("\n".join(results))
