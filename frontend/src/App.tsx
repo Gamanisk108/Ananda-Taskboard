@@ -42,8 +42,15 @@ export default function App() {
     try { await api.patch("/api/me", { language: lang }); refreshMe(); } catch { /* keep local change */ }
   }
 
-  // Theme (light/dark/system). Persisted in localStorage "at-theme"; "system" follows OS.
+  // Theme (light/dark/system). Cached in localStorage "at-theme" for instant paint;
+  // also persisted per-user server-side so it follows the user across devices.
   const [theme, setTheme] = useState<string>(() => localStorage.getItem("at-theme") || "system");
+  useEffect(() => {
+    // Adopt the server-stored personal theme once the user loads (syncing state
+    // from an external system — the authenticated profile).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (me?.theme) { setTheme(me.theme); localStorage.setItem("at-theme", me.theme); }
+  }, [me?.theme]);
   useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
@@ -53,7 +60,16 @@ export default function App() {
     apply();
     if (theme === "system") { mql.addEventListener("change", apply); return () => mql.removeEventListener("change", apply); }
   }, [theme]);
-  function changeTheme(v: string) { setTheme(v); localStorage.setItem("at-theme", v); }
+  function changeTheme(v: string) {
+    setTheme(v);
+    localStorage.setItem("at-theme", v);
+    api.patch("/api/me", { theme: v }).catch(() => { /* keep local change */ });
+  }
+
+  // Personal opt-in/out of the daily push (the app-wide schedule stays admin-set).
+  async function toggleDailyPush(enabled: boolean) {
+    try { await api.patch("/api/me", { daily_push_enabled: enabled }); refreshMe(); } catch { /* ignore */ }
+  }
 
   const [topTab, setTopTab] = useState<"global" | number | null>(null);
   const [subTab, setSubTab] = useState<"overview" | number | null>(null);
@@ -160,9 +176,9 @@ export default function App() {
           {me.is_admin && (
             <button className="btn-ghost" data-testid="open-team" onClick={() => setShowTeam(true)} title={t("nav.team")}><UsersIcon /><span className="lbl">{t("nav.team")}</span></button>
           )}
-          {me.is_admin && (
-            <button className="btn-ghost" onClick={() => setShowTrash(true)} title={t("nav.trash")}><Trash2 /><span className="lbl">{t("nav.trash")}</span></button>
-          )}
+          {/* Trash is open to everyone — non-admins see only the tasks they
+              themselves deleted (server-enforced); admins see all trash. */}
+          <button className="btn-ghost" onClick={() => setShowTrash(true)} title={t("nav.trash")}><Trash2 /><span className="lbl">{t("nav.trash")}</span></button>
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowManage(true)} title={t("nav.projects")}><LayoutGrid /><span className="lbl">{t("nav.projects")}</span></button>
           )}
@@ -177,6 +193,8 @@ export default function App() {
             onLanguage={changeLanguage}
             theme={theme}
             onTheme={changeTheme}
+            dailyPushEnabled={me.daily_push_enabled}
+            onToggleDailyPush={toggleDailyPush}
             onSettings={() => setShowSettings(true)}
             onRestore={() => setShowRestore(true)}
             onHistory={() => setShowHistory(true)}
@@ -287,9 +305,10 @@ export default function App() {
   );
 }
 
-function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSettings, onRestore, onHistory, onBulk, onLogout }: {
+function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPushEnabled, onToggleDailyPush, onSettings, onRestore, onHistory, onBulk, onLogout }: {
   name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
   theme: string; onTheme: (v: string) => void;
+  dailyPushEnabled: boolean; onToggleDailyPush: (enabled: boolean) => void;
   onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void; onLogout: () => void;
 }) {
   const { t } = useTranslation();
@@ -333,14 +352,21 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSetti
               <span>↻</span> {t("menu.restorePoints")}
             </button>
           )}
-          {isAdmin && (
-            <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
-              <span>↔</span> {t("menu.bulkMigrate")}
-            </button>
-          )}
+          {/* Bulk actions are open to everyone; members are limited to status/
+              deadline on tasks they can edit (enforced server-side). */}
+          <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
+            <span>↔</span> {t("menu.bulkMigrate")}
+          </button>
           <button className="usermenu-item" onClick={enableNotifications}>
             <span>🔔</span> {msg || t("menu.notificationsOn")}
           </button>
+          <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
+            <span>📨</span> {t("menu.dailyPush")}
+            <input type="checkbox" style={{ width: "auto", marginLeft: "auto" }}
+              checked={dailyPushEnabled}
+              onChange={(e) => onToggleDailyPush(e.target.checked)}
+              onClick={(e) => e.stopPropagation()} />
+          </label>
           <div className="usermenu-sep" />
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
             <span>🌐</span> {t("menu.language")}

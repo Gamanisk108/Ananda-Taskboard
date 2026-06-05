@@ -7,12 +7,11 @@ together. Items older than RETENTION_DAYS are purged for good.
 from datetime import timedelta
 
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from permissions.drf import IsAdmin
 from projects.models import Project, SubProject
 from tasks.models import Task
 
@@ -21,19 +20,21 @@ RETENTION_DAYS = 7
 
 # --- cascade soft-delete ----------------------------------------------------
 
-def soft_delete_task(task):
+def soft_delete_task(task, by=None):
+    if by is not None:
+        task.deleted_by = by
     task.delete()  # soft
 
 
-def soft_delete_subproject(subproject, ts=None):
+def soft_delete_subproject(subproject, ts=None, by=None):
     ts = ts or timezone.now()
-    Task.objects.filter(subproject=subproject).update(deleted_at=ts)  # live tasks → trashed
+    Task.objects.filter(subproject=subproject).update(deleted_at=ts, deleted_by=by)  # live tasks → trashed
     SubProject.all_objects.filter(pk=subproject.pk).update(deleted_at=ts)
 
 
-def soft_delete_project(project, ts=None):
+def soft_delete_project(project, ts=None, by=None):
     ts = ts or timezone.now()
-    Task.objects.filter(subproject__project=project).update(deleted_at=ts)
+    Task.objects.filter(subproject__project=project).update(deleted_at=ts, deleted_by=by)
     SubProject.objects.filter(project=project).update(deleted_at=ts)
     Project.all_objects.filter(pk=project.pk).update(deleted_at=ts)
 
@@ -48,7 +49,7 @@ def restore_subproject(subproject):
     ts = subproject.deleted_at
     SubProject.all_objects.filter(pk=subproject.pk).update(deleted_at=None)
     if ts:
-        Task.all_objects.filter(subproject=subproject, deleted_at=ts).update(deleted_at=None)
+        Task.all_objects.filter(subproject=subproject, deleted_at=ts).update(deleted_at=None, deleted_by=None)
 
 
 def restore_project(project):
@@ -56,7 +57,7 @@ def restore_project(project):
     Project.all_objects.filter(pk=project.pk).update(deleted_at=None)
     if ts:
         SubProject.all_objects.filter(project=project, deleted_at=ts).update(deleted_at=None)
-        Task.all_objects.filter(subproject__project=project, deleted_at=ts).update(deleted_at=None)
+        Task.all_objects.filter(subproject__project=project, deleted_at=ts).update(deleted_at=None, deleted_by=None)
 
 
 # --- purge ------------------------------------------------------------------
@@ -72,7 +73,10 @@ def purge_expired():
     return counts
 
 
-# --- API (admin) ------------------------------------------------------------
+# --- API ---------------------------------------------------------------------
+# Admins manage all trash. Non-admins only ever delete Tasks (project/sub-project
+# deletion is admin-only), so they see and restore ONLY the tasks they themselves
+# deleted — never another user's, and never projects/sub-projects.
 
 def _days_left(deleted_at):
     if not deleted_at:
@@ -85,39 +89,51 @@ def _days_left(deleted_at):
 
 
 class TrashView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         def row(obj, label):
             return {"id": obj.id, "label": label, "deleted_at": obj.deleted_at, "days_left": _days_left(obj.deleted_at)}
 
+        if request.user.is_admin:
+            return Response({
+                "projects": [row(p, p.name) for p in Project.all_objects.dead()],
+                "subprojects": [row(s, f"{s.project.name} / {s.name}") for s in SubProject.all_objects.dead().select_related("project")],
+                "tasks": [row(t, t.title) for t in Task.all_objects.dead()],
+            })
+        own_tasks = Task.all_objects.dead().filter(deleted_by=request.user)
         return Response({
-            "projects": [row(p, p.name) for p in Project.all_objects.dead()],
-            "subprojects": [row(s, f"{s.project.name} / {s.name}") for s in SubProject.all_objects.dead().select_related("project")],
-            "tasks": [row(t, t.title) for t in Task.all_objects.dead()],
+            "projects": [],
+            "subprojects": [],
+            "tasks": [row(t, t.title) for t in own_tasks],
         })
 
 
 class TrashActionView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated]
 
     MODELS = {"project": Project, "subproject": SubProject, "task": Task}
 
-    def _get(self, kind, pk):
+    def _get(self, request, kind, pk):
         model = self.MODELS.get(kind)
         if not model:
             raise ValidationError({"type": "Must be project, subproject, or task."})
         obj = model.all_objects.filter(pk=pk).first()
         if not obj:
             raise ValidationError({"id": "Not found."})
+        # Non-admins may only act on a Task they personally deleted.
+        if not request.user.is_admin and (
+            kind != "task" or getattr(obj, "deleted_by_id", None) != request.user.id
+        ):
+            raise PermissionDenied("You can only restore items you deleted.")
         return obj
 
     def post(self, request):  # restore
-        obj = self._get(request.data.get("type"), request.data.get("id"))
+        obj = self._get(request, request.data.get("type"), request.data.get("id"))
         {"project": restore_project, "subproject": restore_subproject, "task": restore_task}[request.data["type"]](obj)
         return Response({"restored": request.data["type"], "id": obj.id})
 
     def delete(self, request):  # purge one forever
-        obj = self._get(request.data.get("type"), request.data.get("id"))
+        obj = self._get(request, request.data.get("type"), request.data.get("id"))
         obj.hard_delete()
         return Response(status=204)

@@ -154,6 +154,7 @@ class TaskViewSet(ModelViewSet):
     def perform_destroy(self, instance):
         if not (self.request.user.is_admin or can_act_as_member(self.request.user, instance.subproject_id)):
             raise PermissionDenied("Not allowed.")
+        instance.deleted_by = self.request.user  # for self-service Trash restore
         instance.delete()
 
     @action(detail=True, methods=["post"])

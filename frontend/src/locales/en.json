@@ -40,6 +40,7 @@
     "history": "History",
     "restorePoints": "Restore points",
     "notificationsOn": "Turn on notifications",
+    "dailyPush": "Daily reminder",
     "logout": "Log out",
     "language": "Language",
     "theme": "Theme",
@@ -186,6 +187,7 @@
     "noMatch": "No tasks match.",
     "colWhere": "Project / sub-project",
     "updated": "{{n}} task(s) updated",
+    "updatedSkipped": "{{n}} updated · {{skipped}} skipped (no edit access)",
     "error": "Could not apply — check the value.",
     "archiveConfirm": "Archive {{n}} task(s)?"
   },

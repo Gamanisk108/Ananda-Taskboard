@@ -87,7 +87,7 @@ def run_daily_push(send=True):
     today = local_today()
     recipients = 0
     sent = 0
-    for user in User.objects.filter(is_active=True):
+    for user in User.objects.filter(is_active=True, daily_push_enabled=True):
         if user.last_daily_push == today:
             continue  # already pushed today
         due_today, overdue = tasks_for_user(user, today)

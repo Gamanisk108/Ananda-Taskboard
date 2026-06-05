@@ -47,15 +47,29 @@ class MeView(APIView):
         return Response(data)
 
     def patch(self, request):
-        """Self-service: a user updates their own preferences (currently the UI
-        language). Validated against the supported set so only known locales stick."""
+        """Self-service: a user updates THEIR OWN preferences — UI language, theme,
+        and whether they personally receive the daily push. (App-wide settings like
+        the push schedule/timezone stay admin-only on AppSettingsView.)"""
+        user = request.user
+        updates = []
         if "language" in request.data:
             lang = (request.data.get("language") or "").strip()
             if lang and lang not in SUPPORTED_LANGUAGES:
                 raise ValidationError({"language": "Unsupported language."})
-            request.user.language = lang
-            request.user.save(update_fields=["language"])
-        return Response(UserSerializer(request.user).data)
+            user.language = lang
+            updates.append("language")
+        if "theme" in request.data:
+            theme = (request.data.get("theme") or "").strip()
+            if len(theme) > 20:
+                raise ValidationError({"theme": "Invalid theme."})
+            user.theme = theme
+            updates.append("theme")
+        if "daily_push_enabled" in request.data:
+            user.daily_push_enabled = bool(request.data.get("daily_push_enabled"))
+            updates.append("daily_push_enabled")
+        if updates:
+            user.save(update_fields=updates)
+        return Response(UserSerializer(user).data)
 
 
 class UsersView(APIView):

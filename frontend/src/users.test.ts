@@ -11,6 +11,8 @@ function makeMe(over: Partial<Me> = {}): Me {
     is_admin: false,
     tier: null,
     language: "en",
+    theme: "",
+    daily_push_enabled: true,
     groups: [],
     tree: { projects: [], show_global_overview: false },
     ...over,
