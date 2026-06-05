@@ -271,5 +271,12 @@
     "allDay": "Toute la journée",
     "untimed": "Sans horaire",
     "noTasks": "Aucune tâche ce jour."
+  },
+  "cal": {
+    "prev": "← Préc.",
+    "next": "Suiv. →",
+    "thisWeek": "Cette semaine",
+    "openDay": "Ouvrir les tâches de ce jour",
+    "noTasksWeek": "Aucune tâche cette semaine."
   }
 }

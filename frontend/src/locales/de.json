@@ -271,5 +271,12 @@
     "allDay": "Ganztägig",
     "untimed": "Ohne Uhrzeit",
     "noTasks": "Keine Aufgaben an diesem Tag."
+  },
+  "cal": {
+    "prev": "← Zurück",
+    "next": "Weiter →",
+    "thisWeek": "Diese Woche",
+    "openDay": "Aufgaben dieses Tages öffnen",
+    "noTasksWeek": "Keine Aufgaben in dieser Woche."
   }
 }

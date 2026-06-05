@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { api } from "../api/client";
 import { useUsers, userInitials, userName } from "../users";
@@ -30,6 +31,7 @@ interface Bar {
 interface EventBar { id: number; title: string; icon: string; startCol: number; endCol: number; lane: number; }
 
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
+  const { t } = useTranslation();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [events, setEvents] = useState<EventSpan[]>([]);
@@ -122,9 +124,9 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
   return (
     <div className="rise">
       <div className="bulkbar">
-        <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>← Prev</button>
-        <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>This week</button>
-        <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>Next →</button>
+        <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>{t("cal.prev")}</button>
+        <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>{t("cal.thisWeek")}</button>
+        <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>{t("cal.next")}</button>
         <span className="muted mono">{format(weekStart, "MMM d")} – {format(addDays(weekStart, 6), "MMM d, yyyy")}</span>
       </div>
       {!items ? (
@@ -134,7 +136,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
           <div className="wk-head">
             {days.map((d, idx) => (
               <div className="wk-hcell wk-hcell-click" key={idx}
-                title="Open this day's tasks" onClick={() => setDayOpen(dayIso[idx])}>
+                title={t("cal.openDay")} onClick={() => setDayOpen(dayIso[idx])}>
                 <div>{format(d, "EEE")} <span className="day-num">{format(d, "MMM d")}</span></div>
               </div>
             ))}
@@ -154,7 +156,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
             </div>
           )}
           <div className="wk-body" style={{ gridTemplateRows: `repeat(${laneCount}, 30px)` }}>
-            {bars.length === 0 && <div className="wk-empty muted">No tasks this week.</div>}
+            {bars.length === 0 && <div className="wk-empty muted">{t("cal.noTasksWeek")}</div>}
             {bars.map((b) => (
               <button
                 key={b.task_id}
@@ -167,8 +169,8 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
                 <span className="wk-bar-title" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                   <PriorityIcon level={b.priority} size={12} color="rgba(255,255,255,.92)" />
                   {b.title}
-                  {b.overdue && <span title="Missed Deadline"> ❗</span>}
-                  {b.dueSoon && <span title="Due today or tomorrow"> ❗</span>}
+                  {b.overdue && <span title={t("list.missedDeadline")}> ❗</span>}
+                  {b.dueSoon && <span title={t("list.dueSoon")}> ❗</span>}
                 </span>
                 {b.assignee_ids.length > 0 && (
                   <span className="chip-initials" title={b.assignee_ids.map((id) => userName(users, id)).join(", ")}>

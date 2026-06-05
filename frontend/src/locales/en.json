@@ -271,5 +271,12 @@
     "allDay": "All day",
     "untimed": "Untimed",
     "noTasks": "No tasks this day."
+  },
+  "cal": {
+    "prev": "← Prev",
+    "next": "Next →",
+    "thisWeek": "This week",
+    "openDay": "Open this day's tasks",
+    "noTasksWeek": "No tasks this week."
   }
 }
