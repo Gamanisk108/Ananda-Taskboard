@@ -6,7 +6,7 @@ import type { UserLite } from "./types";
 let cache: UserLite[] | null = null;
 let inflight: Promise<UserLite[]> | null = null;
 
-export function fetchUsers(): Promise<UserLite[]> {
+function fetchUsers(): Promise<UserLite[]> {
   if (cache) return Promise.resolve(cache);
   if (!inflight) {
     inflight = api.get("/api/users").then((d) => {

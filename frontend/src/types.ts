@@ -1,5 +1,4 @@
 export type Level = "member" | "viewer";
-export type Status = "todo" | "in_progress" | "done" | "delayed";
 export type Approval = "pending" | "approved" | "rejected";
 
 /** How many tasks in an accessible scope a grant lets the holder SEE. */
@@ -9,39 +8,6 @@ export const SEES_LABEL: Record<Sees, string> = {
   subproject: "All tasks in the sub-project",
   project: "All tasks in the project",
 };
-
-export interface Tier {
-  id: number;
-  name: string;
-  default_sees: Sees;
-  member_count?: number;
-}
-
-/** An access grant targets exactly one of user/group/tier, scoped to a
- *  subproject XOR project, at a level + sees breadth. */
-export interface Grant {
-  id: number;
-  user: number | null;
-  group: number | null;
-  tier: number | null;
-  subproject: number | null;
-  project: number | null;
-  level: Level;
-  sees: Sees;
-}
-
-/** A deny rule: one subject (user/group/tier) ⊘ one excluded target. */
-export interface Exclusion {
-  id: number;
-  user: number | null;
-  group: number | null;
-  tier: number | null;
-  excluded_user: number | null;
-  excluded_group: number | null;
-  excluded_project: number | null;
-  excluded_subproject: number | null;
-  excluded_task: number | null;
-}
 
 export interface SubProjectNode {
   id: number;
@@ -175,17 +141,4 @@ export interface EventSpan {
 
 export const EVENT_ICON: Record<EventKind, string> = {
   single: "📍", yearly: "🎂", range: "📌", repeating: "🔁",
-};
-
-export const STATUS_LABEL: Record<Status, string> = {
-  todo: "To Do",
-  in_progress: "In Progress",
-  done: "Done",
-  delayed: "Delayed",
-};
-export const STATUS_COLOR: Record<Status, string> = {
-  todo: "#6b7280",
-  in_progress: "#2c64a8",  // Claude Design azure (was teal)
-  done: "#3f7d54",
-  delayed: "#bb3b28",      // terracotta (was gold)
 };

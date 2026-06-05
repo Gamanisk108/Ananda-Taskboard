@@ -44,10 +44,7 @@ export function invalidateStatuses() {
   fetchStatuses(true);
 }
 
-export function allStatuses(): TaskStatus[] {
-  return cache;
-}
-export function statusByKey(key: string): TaskStatus | undefined {
+function statusByKey(key: string): TaskStatus | undefined {
   return cache.find((s) => s.key === key);
 }
 export function statusLabel(key: string): string {

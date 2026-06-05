@@ -4,14 +4,14 @@
 let accessToken: string | null = null;
 const REFRESH_KEY = "atb_refresh";
 
-export function setTokens(access: string | null, refresh?: string | null) {
+function setTokens(access: string | null, refresh?: string | null) {
   accessToken = access;
   if (refresh !== undefined) {
     if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
     else localStorage.removeItem(REFRESH_KEY);
   }
 }
-export function getRefresh(): string | null {
+function getRefresh(): string | null {
   return localStorage.getItem(REFRESH_KEY);
 }
 export function isLoggedIn(): boolean {

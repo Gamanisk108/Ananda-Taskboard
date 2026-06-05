@@ -54,7 +54,7 @@ export function todayISO(): string {
 }
 
 /** "13:00" -> "1:00 PM"; "" for null/empty. */
-export function fmtTime(hhmm: string | null): string {
+function fmtTime(hhmm: string | null): string {
   if (!hhmm) return "";
   const [h, m] = hhmm.split(":").map(Number);
   const h12 = h % 12 === 0 ? 12 : h % 12;
@@ -66,7 +66,7 @@ export function timeRange(start: string | null, end: string | null): string {
   return start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : "";
 }
 
-export function tomorrowISO(): string {
+function tomorrowISO(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return localISO(d);
