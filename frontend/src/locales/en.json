@@ -257,5 +257,8 @@
     "trusted": "trusted",
     "trustedTitle": "Members can post tasks here without admin approval",
     "markDoneConfirm": "Mark ALL tasks in \"{{name}}\" as Done and archive them? This can't be auto-undone."
+  },
+  "kanban": {
+    "moveErr": "You can only move tasks assigned to you (or be an admin)."
   }
 }

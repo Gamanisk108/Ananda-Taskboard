@@ -257,5 +257,8 @@
     "trusted": "de confiance",
     "trustedTitle": "Les membres peuvent publier des tâches ici sans validation admin",
     "markDoneConfirm": "Marquer TOUTES les tâches de \"{{name}}\" comme Terminées et les archiver ? Non annulable automatiquement."
+  },
+  "kanban": {
+    "moveErr": "Vous ne pouvez déplacer que les tâches qui vous sont assignées (ou être administrateur)."
   }
 }

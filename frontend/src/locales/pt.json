@@ -257,5 +257,8 @@
     "trusted": "confiável",
     "trustedTitle": "Membros podem publicar tarefas aqui sem aprovação do admin",
     "markDoneConfirm": "Marcar TODAS as tarefas em \"{{name}}\" como Concluídas e arquivá-las? Não pode ser desfeito automaticamente."
+  },
+  "kanban": {
+    "moveErr": "Você só pode mover tarefas atribuídas a você (ou ser administrador)."
   }
 }

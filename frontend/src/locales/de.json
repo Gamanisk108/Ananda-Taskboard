@@ -257,5 +257,8 @@
     "trusted": "vertraut",
     "trustedTitle": "Mitglieder können hier ohne Admin-Freigabe Aufgaben erstellen",
     "markDoneConfirm": "ALLE Aufgaben in \"{{name}}\" als Erledigt markieren und archivieren? Nicht automatisch rückgängig zu machen."
+  },
+  "kanban": {
+    "moveErr": "Du kannst nur dir zugewiesene Aufgaben verschieben (oder Administrator sein)."
   }
 }

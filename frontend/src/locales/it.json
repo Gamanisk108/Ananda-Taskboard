@@ -257,5 +257,8 @@
     "trusted": "fidato",
     "trustedTitle": "I membri possono pubblicare attività qui senza approvazione admin",
     "markDoneConfirm": "Segnare TUTTE le attività in \"{{name}}\" come Fatte e archiviarle? Non è annullabile automaticamente."
+  },
+  "kanban": {
+    "moveErr": "Puoi spostare solo le attività assegnate a te (o essere un amministratore)."
   }
 }

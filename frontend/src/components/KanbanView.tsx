@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function KanbanView({ projectId, subprojectId, refreshKey, onEdit, me }: Props) {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
   const statuses = useStatuses();
@@ -37,7 +39,7 @@ export function KanbanView({ projectId, subprojectId, refreshKey, onEdit, me }: 
       await api.post(`/api/tasks/${taskId}/status`, { status: statusKey });
     } catch {
       setTasks(prev ?? []); // revert (e.g. not your task → 403)
-      alert("You can only move tasks assigned to you (or be an admin).");
+      alert(t("kanban.moveErr"));
     }
   }
 
