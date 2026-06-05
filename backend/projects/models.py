@@ -30,6 +30,11 @@ def _next_color(used):
 
 
 class Project(SoftDeleteModel):
+    # The owning tenant. Nullable transitional (the data migration backfills every
+    # existing project); all app code sets it on create, so new rows are never null.
+    organization = models.ForeignKey(
+        "accounts.Organization", null=True, blank=True, on_delete=models.CASCADE, related_name="projects"
+    )
     name = models.CharField(max_length=160)
     color = models.CharField(max_length=9, blank=True)
     emoji = models.CharField(max_length=8, blank=True)  # shown in chat summaries

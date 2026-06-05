@@ -9,8 +9,8 @@ from projects.models import Project, SubProject
 from .engine import visible_subprojects
 
 
-def visible_tree(user):
-    levels = visible_subprojects(user)  # {subproject_id: level}
+def visible_tree(user, org=None):
+    levels = visible_subprojects(user, org)  # {subproject_id: level}
     if not levels:
         return {"projects": [], "show_global_overview": False}
 

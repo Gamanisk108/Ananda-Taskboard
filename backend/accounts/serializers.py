@@ -1,3 +1,4 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from .models import Group, Tier, User
@@ -58,6 +59,30 @@ class UserWriteSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+
+class SignupSerializer(serializers.Serializer):
+    """Self-serve signup: a person creates their own account + a new org (which
+    they'll admin). Account/org stay inactive until they verify their email."""
+
+    organization = serializers.CharField(max_length=200)
+    name = serializers.CharField(max_length=200)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+    city = serializers.CharField(max_length=120, required=False, allow_blank=True)
+    country = serializers.CharField(max_length=120, required=False, allow_blank=True)
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        if User.objects.filter(email=value).exists():
+            # Inviting an existing account into a new org is Phase 2; for now, ask
+            # them to log in rather than silently colliding.
+            raise serializers.ValidationError("An account with this email already exists. Please log in.")
+        return value
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
 
 
 class GroupSerializer(serializers.ModelSerializer):

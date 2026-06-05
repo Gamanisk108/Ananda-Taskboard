@@ -16,7 +16,20 @@
 | Approve / reject tasks | ✓ | ✗ | ✗ |
 | Comment | ✓ | ✓ (visible tasks) | ✓ (visible tasks) |
 | Export (current view) | ✓ | ✓ (own visibility) | ✓ (own visibility) |
+| Copy Summary | ✓ | ✓ (own visibility) | ✓ (own visibility) |
 | Receive daily push | ✓ | ✓ | ✓ |
+
+Export & Copy Summary scope-pickers (projects / sub-projects) come from the
+user's permission-filtered tree, and every **person *filter*** (Export, Copy
+Summary, and the List view assignee dropdown) is scoped to people sharing a
+visible sub-project (`peopleInMyScope`) — reduced-access users never see the
+whole roster in a filter.
+
+The **assignment** picker (Task / Subtask editors) is deliberately *not* scoped:
+it still lists everyone, greying out and tagging people who lack access to the
+target sub-project, so an admin/member can knowingly assign across boundaries.
+Assignment never widens what the assignee can see — visibility is governed
+solely by grants (`permissions/engine.py`).
 
 \* *Pending* unless the Sub-project has `members_post_without_approval = ON`, in
 which case Member-created/edited tasks go live immediately.

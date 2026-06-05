@@ -62,6 +62,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "permissions.middleware.OrgContextMiddleware",  # sets request.org from X-Org-Id
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -195,6 +196,9 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", "resend")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")  # Resend API key in production
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Ananda Taskboard <onboarding@resend.dev>")
+# Only used by the file-based email backend (handy for local/E2E: emails are
+# written to this directory instead of sent). Ignored by console/SMTP backends.
+EMAIL_FILE_PATH = env("EMAIL_FILE_PATH", str(BASE_DIR / "sent_emails"))
 # Public base URL of the SPA — used to build password-reset links in emails.
 FRONTEND_URL = env("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 # Password-reset links are valid for 1 hour (matches the UI + email copy).

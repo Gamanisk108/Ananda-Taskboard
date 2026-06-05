@@ -1,30 +1,35 @@
 from rest_framework import viewsets
 
 from permissions.drf import IsAdminOrReadOnly
+from permissions.engine import is_org_admin, visible_project_ids, visible_subproject_ids
 
 from .models import Project, SubProject
 from .serializers import ProjectSerializer, SubProjectSerializer
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
-    """Admin write; read filtered to the caller's visible sub-projects.
+def _org(request):
+    """Active organization for this request (set by OrgContextMiddleware)."""
+    return getattr(request, "org", None)
 
-    Step 4 fills in the permission engine. Until then admins see all and the
-    engine import is optional, so the app runs at each step boundary."""
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    """Admin write; read filtered to the caller's visible sub-projects. All
+    queries are scoped to the active org (admins see their org's projects only;
+    a superuser scopes to whichever org they're viewing)."""
 
     serializer_class = ProjectSerializer
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_admin:
-            return Project.objects.all()
-        try:
-            from permissions.engine import visible_project_ids
+        org = _org(self.request)
+        if is_org_admin(user, org):
+            qs = Project.objects.all()
+            return qs.filter(organization=org) if org is not None else qs
+        return Project.objects.filter(id__in=visible_project_ids(user, org))
 
-            return Project.objects.filter(id__in=visible_project_ids(user))
-        except (ImportError, ModuleNotFoundError):
-            return Project.objects.none()
+    def perform_create(self, serializer):
+        serializer.save(organization=_org(self.request))
 
     def perform_destroy(self, instance):
         from trashbin import soft_delete_project
@@ -38,14 +43,11 @@ class SubProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_admin:
-            return SubProject.objects.all()
-        try:
-            from permissions.engine import visible_subproject_ids
-
-            return SubProject.objects.filter(id__in=visible_subproject_ids(user))
-        except (ImportError, ModuleNotFoundError):
-            return SubProject.objects.none()
+        org = _org(self.request)
+        if is_org_admin(user, org):
+            qs = SubProject.objects.all()
+            return qs.filter(project__organization=org) if org is not None else qs
+        return SubProject.objects.filter(id__in=visible_subproject_ids(user, org))
 
     def perform_destroy(self, instance):
         from trashbin import soft_delete_subproject

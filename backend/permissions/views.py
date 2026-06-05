@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,13 +9,21 @@ from .serializers import AccessGrantSerializer, ExclusionSerializer
 
 
 class AccessGrantViewSet(viewsets.ModelViewSet):
-    """Admin-only management of access grants (the visibility gate)."""
+    """Admin-only management of access grants (the visibility gate), scoped to
+    the active org via the grant's target sub-project/project."""
 
     queryset = AccessGrant.objects.select_related(
         "user", "group", "tier", "subproject", "project"
     ).all()
     serializer_class = AccessGrantSerializer
     permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        org = getattr(self.request, "org", None)
+        qs = AccessGrant.objects.select_related("user", "group", "tier", "subproject", "project")
+        if org is not None:
+            qs = qs.filter(Q(subproject__project__organization=org) | Q(project__organization=org))
+        return qs
 
     def perform_create(self, serializer):
         grant = serializer.save()
@@ -34,6 +43,24 @@ class ExclusionViewSet(viewsets.ModelViewSet):
     ).all()
     serializer_class = ExclusionSerializer
     permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        org = getattr(self.request, "org", None)
+        qs = Exclusion.objects.select_related(
+            "user", "group", "tier",
+            "excluded_user", "excluded_group", "excluded_project", "excluded_subproject", "excluded_task",
+        )
+        if org is not None:
+            qs = qs.filter(
+                Q(group__organization=org) | Q(tier__organization=org)
+                | Q(excluded_subproject__project__organization=org)
+                | Q(excluded_project__organization=org)
+                | Q(excluded_group__organization=org)
+                | Q(excluded_task__subproject__project__organization=org)
+                | Q(user__memberships__organization=org)
+                | Q(excluded_user__memberships__organization=org)
+            ).distinct()
+        return qs
 
     def perform_create(self, serializer):
         exc = serializer.save()

@@ -7,13 +7,12 @@ same way a real user would (from the email)."""
 
 import glob
 import os
-import quopri
 import re
 import sys
 
 from playwright.sync_api import sync_playwright
 
-EMAIL_DIR = r"C:\AI\Ananda Taskboard\backend\e2e_emails"
+EMAIL_DIR = r"C:\AI\Ananda Taskboard\backend\sent_emails"
 SHOTS = r"C:\AI\Ananda Taskboard\qa\e2e_shots"
 BASE = "http://localhost:5173"
 
@@ -40,13 +39,24 @@ def shot(page, name):
 
 
 def read_verify_link():
+    import email
+    from email import policy
+
     files = sorted(glob.glob(os.path.join(EMAIL_DIR, "*")), key=os.path.getmtime)
     if not files:
         return None
-    raw = open(files[-1], "rb").read()
-    text = quopri.decodestring(raw).decode("utf-8", "replace")
-    m = re.search(r"http://localhost:5173/\?verify\S*", text)
+    msg = email.message_from_bytes(open(files[-1], "rb").read(), policy=policy.default)
+    body = msg.get_content()  # decodes transfer-encoding properly (quopri mangled it)
+    m = re.search(r"http://localhost:5173/\?verify\S*", body)
     return m.group(0) if m else None
+
+
+def wait_count(page, selector, timeout=10000):
+    try:
+        page.wait_for_selector(selector, timeout=timeout)
+        return True
+    except Exception:
+        return False
 
 
 def login(page, email, password):
@@ -64,6 +74,25 @@ def run():
         page = browser.new_page()
         sig = {}
         page.on("response", lambda r: sig.__setitem__("signup", r.status) if "/api/auth/signup" in r.url else None)
+        taskreqs = []
+        me_seen = []
+
+        def _on_api(r):
+            if r.request.method != "GET" or r.status != 200:
+                return
+            if "/api/tasks" in r.url:
+                try:
+                    taskreqs.append((r.request.headers.get("x-org-id"), len(r.json())))
+                except Exception:
+                    taskreqs.append((r.request.headers.get("x-org-id"), "?"))
+            elif r.url.rstrip("/").endswith("/api/me"):
+                try:
+                    d = r.json()
+                    me_seen.append((d.get("email"), d.get("is_admin"), d.get("active_org")))
+                except Exception:
+                    pass
+
+        page.on("response", _on_api)
 
         # 1. Login screen + go to signup ------------------------------------
         page.goto(BASE)
@@ -111,10 +140,16 @@ def run():
 
         # 6. Log in as the new founder (admin of the new org) ---------------
         login(page, FOUNDER["email"], FOUNDER["password"])
+        team_ok = wait_count(page, '[data-testid="open-team"]')
+        page.wait_for_timeout(1000)
         shot(page, "05-app-as-founder.png")
         # Admin of their org → the Team admin button is present.
-        check("founder lands in the app as org admin (Team button visible)",
-              page.locator('[data-testid="open-team"]').count() > 0)
+        check("founder lands in the app as org admin (Team button visible)", team_ok)
+        print("FOUNDER /api/me (email,is_admin,active_org):", me_seen[-3:])
+        print("FOUNDER /api/tasks (x-org-id, body_len):", taskreqs[-6:])
+        # The leak check: the founder's empty-org board must show NONE of LA's tasks.
+        check("founder board shows NO other-org tasks (no 'QA smoke task')",
+              "QA smoke task" not in page.content())
         # Founder must NOT see the platform button (not a superuser).
         check("founder does NOT see the Platform button",
               page.locator('button[title="Platform"]').count() == 0)
@@ -122,8 +157,9 @@ def run():
         # 7. Switch to the platform superuser -------------------------------
         page.evaluate("() => localStorage.clear()")
         login(page, SUPERUSER["email"], SUPERUSER["password"])
+        plat_ok = wait_count(page, 'button[title="Platform"]')
         shot(page, "06-app-as-superuser.png")
-        check("superuser sees the Platform button", page.locator('button[title="Platform"]').count() > 0)
+        check("superuser sees the Platform button", plat_ok)
 
         # 8. Open the Platform stats modal ----------------------------------
         page.locator('button[title="Platform"]').click()

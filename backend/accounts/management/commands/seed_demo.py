@@ -21,6 +21,13 @@ class Command(BaseCommand):
     help = "Seed demo data"
 
     def handle(self, *args, **opts):
+        # Always make sure every org has the standard tiers (idempotent), even on
+        # re-runs where the rest of the seed is skipped — the tier-customization UI
+        # is gone, so these must exist for members to be assignable to a tier.
+        from accounts.models import Organization, ensure_default_tiers
+        for org in Organization.objects.all():
+            ensure_default_tiers(org)
+
         # Idempotent guard: if any project exists, assume already seeded and skip
         # (so re-running on every deploy doesn't duplicate or crash on unique names).
         if Project.objects.exists():

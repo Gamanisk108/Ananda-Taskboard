@@ -80,14 +80,14 @@ def _selected_columns(params):
     return picked or list(COLUMNS.keys())
 
 
-def _queryset(user, params):
+def _queryset(user, params, org=None):
     qs = (
         Task.objects.filter(approval_state=Task.Approval.APPROVED)
         .select_related("subproject__project", "recurrence_rule")
         .prefetch_related("assignees")
     )
-    if not user.is_admin:
-        qs = qs.filter(visible_tasks_q(user))
+    # Always through the engine — org-scopes admins too (no cross-org leak).
+    qs = qs.filter(visible_tasks_q(user, org))
     if params.get("archived") not in ("1", "true", "True"):
         qs = qs.filter(archived_at__isnull=True)
     # Scope: any mix of whole projects and individual sub-projects (union).
@@ -136,7 +136,7 @@ class ExportView(APIView):
         cols = _selected_columns(request.query_params)
         headers = [COLUMNS[k][0] for k in cols]
         getters = [COLUMNS[k][1] for k in cols]
-        tasks = list(_queryset(request.user, request.query_params))
+        tasks = list(_queryset(request.user, request.query_params, getattr(request, "org", None)))
         if fmt == "json":
             # machine-friendly: keyed by column key, raw (un-sanitized) values.
             data = [{k: COLUMNS[k][1](t) for k in cols} for t in tasks]

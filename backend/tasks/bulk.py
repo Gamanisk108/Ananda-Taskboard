@@ -25,10 +25,14 @@ class BulkTasksView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request):
+        from permissions.engine import visible_tasks_q
+
         ids = request.data.get("ids") or []
         action = request.data.get("action")
         value = request.data.get("value")
-        qs = Task.objects.filter(id__in=ids)
+        org = getattr(request, "org", None)
+        # Org-scoped: an admin can only bulk-edit tasks within their active org.
+        qs = Task.objects.filter(id__in=ids).filter(visible_tasks_q(request.user, org))
         now = timezone.now()
         n = 0
         with transaction.atomic():
@@ -70,10 +74,14 @@ class MarkDoneView(APIView):
     def post(self, request, kind, pk):
         if kind not in ("project", "subproject"):
             raise ValidationError({"kind": "Must be project or subproject."})
+        from permissions.engine import visible_tasks_q
+
         done = _complete_status_key()
         now = timezone.now()
+        org = getattr(request, "org", None)
         flt = {"subproject__project_id": pk} if kind == "project" else {"subproject_id": pk}
-        qs = Task.objects.filter(archived_at__isnull=True, **flt)
+        # Org-scoped: only tasks the admin can see in their active org.
+        qs = Task.objects.filter(archived_at__isnull=True, **flt).filter(visible_tasks_q(request.user, org))
         n = qs.update(status=done, archived_at=now, updated_at=now)
         audit(request.user, "bulk.markDone", f"Marked {kind} #{pk} Done + archived {n} task(s)")
         return Response({"updated": n})

@@ -39,7 +39,7 @@ serving, launcher scripts.
 | `GroupViewSet`, `/api/settings` | ✅ | Admin-only; settings validate hour/minute range + timezone via ZoneInfo (no injection). |
 | **Daily push visibility leak** | 🔧 **FIXED** | `tasks_for_user` filtered by assignment but NOT visibility — an assignee lacking access to the sub-project could see a task title in their push. Now filtered through `visible_subproject_ids`. Regression test added (`test_assigned_but_no_access_excluded_from_push`). |
 | SPA file serving | ✅ | Path-traversal guarded (`resolve()` + must stay within `frontend/dist`, `is_file()` only). Serves only built assets. |
-| `GET /api/users` info exposure | ⚠️ low | Returns all users' name/email + accessible sub-project ids to any authenticated user (needed for assignee picker). Acceptable in-house; restrict to admins + task-creators if the org grows. |
+| `GET /api/users` info exposure | ⚠️ low | Endpoint still returns all users' name/email + accessible sub-project ids to any authenticated user (needed for the assignee picker; data itself stays gated). The **Export** and **Copy Summary** person-filter lists are now scoped client-side (`peopleInMyScope`) so reduced-access users only see people sharing a sub-project they can reach. Broader server-side scoping of the endpoint is the pending "scope #2" work; do it if the org grows. |
 | Launcher `.bat` | ✅ | Local only; no user input interpolated; runs the venv interpreter. |
 | Automated `/security-review` | ℹ️ | Requires a GitHub remote (origin) to diff; run it on PRs once the repo is pushed for deploy. |
 

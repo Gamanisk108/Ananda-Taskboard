@@ -108,11 +108,15 @@ def test_duplicate_project_names_allowed(admin, db):
 
 
 def test_duplicate_group_name_rejected(db):
-    Group.objects.create(name="Alliance")
+    # Group names are unique per organization (multi-tenant): a duplicate within
+    # the same org is rejected; the same name in another org is fine.
+    from accounts.models import Organization
+    org = Organization.objects.create(name="Org A")
+    Group.objects.create(organization=org, name="Alliance")
     from django.db import IntegrityError, transaction
     with pytest.raises(IntegrityError):
         with transaction.atomic():
-            Group.objects.create(name="Alliance")
+            Group.objects.create(organization=org, name="Alliance")
 
 
 def test_color_exhaustion_cycles_without_crash(db):

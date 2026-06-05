@@ -13,10 +13,16 @@ from permissions.drf import IsAdmin
 from permissions.engine import (
     can_act_as_member,
     can_see_task,
+    is_org_admin,
     visible_subproject_ids,
     visible_tasks_q,
 )
 from projects.models import SubProject
+
+
+def _org(request):
+    """The active organization for this request (set by OrgContextMiddleware)."""
+    return getattr(request, "org", None)
 
 from .models import Comment, Subtask, Task
 from .serializers import CommentSerializer, SubtaskSerializer, TaskSerializer
@@ -25,7 +31,7 @@ from .serializers import CommentSerializer, SubtaskSerializer, TaskSerializer
 def _notify_admins_moved(task, new_status, mover):
     """Push to all admins that a monitored task was moved (best-effort, never raises)."""
     try:
-        from accounts.models import User
+        from accounts.models import Membership
         from notifications.models import PushSubscription
         from notifications.push import send_web_push
 
@@ -33,7 +39,11 @@ def _notify_admins_moved(task, new_status, mover):
             "title": "Task moved",
             "body": f"{mover.name or mover.email} moved “{task.title}” → {new_status}",
         }
-        admin_ids = User.objects.filter(role=User.Role.ADMIN, is_active=True).values_list("id", flat=True)
+        # Notify admins of the task's own org only (tenant-scoped).
+        admin_ids = Membership.objects.filter(
+            organization_id=task.subproject.project.organization_id,
+            role=Membership.Role.ADMIN, is_active=True,
+        ).values_list("user_id", flat=True)
         for sub in PushSubscription.objects.filter(user_id__in=admin_ids):
             send_web_push(sub, payload)
     except Exception:
@@ -59,10 +69,10 @@ def _notify_mentioned(task, author, user_ids):
         pass
 
 
-def _approval_for(user, subproject):
+def _approval_for(user, subproject, org):
     """Decide a Member's task approval state. Admin or a trusted sub-project →
     live (approved); otherwise pending."""
-    if user.is_admin or subproject.members_post_without_approval:
+    if is_org_admin(user, org) or subproject.members_post_without_approval:
         return Task.Approval.APPROVED
     return Task.Approval.PENDING
 
@@ -79,15 +89,15 @@ class TaskViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        org = _org(self.request)
         qs = (
             Task.objects.select_related("subproject", "recurrence_rule")
             .prefetch_related("assignees", "subtasks")
             .annotate(comment_count_anno=Count("comments", distinct=True))
         )
-        if not user.is_admin:
-            # Task-level visibility: sub-project access + "own tasks only" narrowing
-            # + exclusions (deny > assignment > allow). .distinct() applied below.
-            qs = qs.filter(visible_tasks_q(user))
+        # Always go through the engine — it scopes admins to their org and members
+        # to their grants. (Skipping it for admins leaked every org's tasks.)
+        qs = qs.filter(visible_tasks_q(user, org))
         # The live board shows only approved tasks; pending/rejected live in the
         # approvals inbox. Admins/creators can opt in via ?approval=.
         approval = self.request.query_params.get("approval")
@@ -124,35 +134,41 @@ class TaskViewSet(ModelViewSet):
         if sp is None:
             raise ValidationError({"subproject": "Sub-project does not exist."})
         user = self.request.user
-        if not user.is_admin and sp.id not in visible_subproject_ids(user):
+        org = _org(self.request)
+        # visible_subproject_ids is org-scoped for admins too, so this also stops an
+        # admin from reaching another org's sub-project by id.
+        if sp.id not in visible_subproject_ids(user, org):
             raise PermissionDenied("You do not have access to that sub-project.")
         return sp
 
     def perform_create(self, serializer):
+        org = _org(self.request)
         sp = self._require_visible_subproject(serializer.validated_data["subproject"].id)
-        if not can_act_as_member(self.request.user, sp.id):
+        if not can_act_as_member(self.request.user, sp.id, org):
             raise PermissionDenied("Viewers cannot create tasks.")
-        approval = _approval_for(self.request.user, sp)
+        approval = _approval_for(self.request.user, sp, org)
         task = serializer.save(created_by=self.request.user, approval_state=approval)
         emit.emit(emit.TASK_CREATED, {"task": task.id, "approval": approval})
 
     def perform_update(self, serializer):
         instance = serializer.instance
         user = self.request.user
+        org = _org(self.request)
         target_sp_id = serializer.validated_data.get("subproject", instance.subproject).id
         sp = self._require_visible_subproject(target_sp_id)
-        if not can_act_as_member(user, sp.id):
+        if not can_act_as_member(user, sp.id, org):
             raise PermissionDenied("Viewers cannot edit tasks.")
         task = serializer.save()
         # A Member's content edit re-enters approval unless the sub-project is
         # trusted; Admin edits stay live.
-        if not user.is_admin and not sp.members_post_without_approval:
+        if not is_org_admin(user, org) and not sp.members_post_without_approval:
             Task.objects.filter(pk=task.pk).update(approval_state=Task.Approval.PENDING)
             task.refresh_from_db()
         emit.emit(emit.TASK_UPDATED, {"task": task.id})
 
     def perform_destroy(self, instance):
-        if not (self.request.user.is_admin or can_act_as_member(self.request.user, instance.subproject_id)):
+        org = _org(self.request)
+        if not (is_org_admin(self.request.user, org) or can_act_as_member(self.request.user, instance.subproject_id, org)):
             raise PermissionDenied("Not allowed.")
         instance.delete()
 
@@ -161,7 +177,7 @@ class TaskViewSet(ModelViewSet):
         """Change status. Assignees of the task or Admins only — direct, no approval."""
         task = self.get_object()  # 404 if not visible
         user = request.user
-        if not (user.is_admin or task.assignees.filter(pk=user.pk).exists()):
+        if not (is_org_admin(user, _org(request)) or task.assignees.filter(pk=user.pk).exists()):
             raise PermissionDenied("Only assignees or admins can change status.")
         from .models import Status
 
@@ -183,7 +199,8 @@ class TaskViewSet(ModelViewSet):
     def unarchive(self, request, pk=None):
         """Recover an archived task back onto the board."""
         task = self.get_object()
-        if not (request.user.is_admin or can_act_as_member(request.user, task.subproject_id)):
+        org = _org(request)
+        if not (is_org_admin(request.user, org) or can_act_as_member(request.user, task.subproject_id, org)):
             raise PermissionDenied("Not allowed.")
         Task.objects.filter(pk=task.pk).update(archived_at=None)
         return Response({"id": task.id, "archived_at": None})
@@ -206,7 +223,7 @@ class TaskViewSet(ModelViewSet):
         # via a push to someone without access — respects "own" + exclusions).
         mention_ids = [
             u.id for u in User.objects.filter(id__in=raw)
-            if can_see_task(u, task)
+            if can_see_task(u, task, _org(request))
         ]
         if mention_ids:
             comment.mentions.set(mention_ids)
@@ -247,13 +264,12 @@ class CommentViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        org = _org(self.request)
         qs = Comment.objects.select_related("task__subproject", "author")
-        if not user.is_admin:
-            qs = qs.filter(visible_tasks_q(user, prefix="task__")).distinct()
-        return qs
+        return qs.filter(visible_tasks_q(user, org, prefix="task__")).distinct()
 
     def _check(self, comment):
-        if not (self.request.user.is_admin or comment.author_id == self.request.user.id):
+        if not (is_org_admin(self.request.user, _org(self.request)) or comment.author_id == self.request.user.id):
             raise PermissionDenied("Only the comment's author or an admin can do that.")
 
     def perform_update(self, serializer):
@@ -274,16 +290,17 @@ class SubtaskViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        org = _org(self.request)
         qs = Subtask.objects.select_related("task__subproject")
-        if not user.is_admin:
-            qs = qs.filter(visible_tasks_q(user, prefix="task__")).distinct()
+        qs = qs.filter(visible_tasks_q(user, org, prefix="task__")).distinct()
         task = self.request.query_params.get("task")
         if task:
             qs = qs.filter(task_id=task)
         return qs
 
     def _check(self, task):
-        if not (self.request.user.is_admin or can_act_as_member(self.request.user, task.subproject_id)):
+        org = _org(self.request)
+        if not (is_org_admin(self.request.user, org) or can_act_as_member(self.request.user, task.subproject_id, org)):
             raise PermissionDenied("Not allowed.")
 
     def perform_create(self, serializer):
@@ -312,11 +329,14 @@ class ApprovalsView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
+        org = _org(request)
         pending = (
             Task.objects.filter(approval_state=Task.Approval.PENDING)
+            .filter(visible_tasks_q(request.user, org))  # org-scoped (no cross-org leak)
             .select_related("subproject", "created_by")
             .prefetch_related("assignees", "subtasks")
             .order_by("created_at")
+            .distinct()
         )
         return Response(TaskSerializer(pending, many=True).data)
 
@@ -327,9 +347,15 @@ class ApprovalsView(APIView):
             raise ValidationError({"action": "Must be 'approve' or 'reject'."})
         target = Task.Approval.APPROVED if act == "approve" else Task.Approval.REJECTED
         event = emit.TASK_APPROVED if act == "approve" else emit.TASK_REJECTED
+        # Restrict the targets to tasks visible in the active org — an admin can't
+        # approve another org's task by passing its id.
+        scoped_ids = set(
+            Task.objects.filter(pk__in=ids).filter(visible_tasks_q(request.user, _org(request)))
+            .values_list("pk", flat=True)
+        )
         updated = []
         with transaction.atomic():
-            for task in Task.objects.select_for_update().filter(pk__in=ids):
+            for task in Task.objects.select_for_update().filter(pk__in=scoped_ids):
                 if task.approval_state != target:
                     task.approval_state = target
                     task.save(update_fields=["approval_state", "updated_at"])

@@ -61,14 +61,15 @@ class CalendarView(APIView):
         from .models import complete_status_keys
 
         user = request.user
+        org = getattr(request, "org", None)
         qs = (
             Task.objects.filter(approval_state=Task.Approval.APPROVED, archived_at__isnull=True)
             .exclude(status__in=complete_status_keys())  # completed tasks drop off the calendar
             .select_related("subproject__project", "recurrence_rule")
             .prefetch_related("assignees")
         )
-        if not user.is_admin:
-            qs = qs.filter(visible_tasks_q(user)).distinct()
+        # Always through the engine — it org-scopes admins too (no cross-org leak).
+        qs = qs.filter(visible_tasks_q(user, org)).distinct()
 
         for key, field in (("project", "subproject__project_id"), ("subproject", "subproject_id")):
             if request.query_params.get(key):

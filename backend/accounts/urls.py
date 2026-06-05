@@ -8,9 +8,12 @@ from .views import (
     MeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
+    PlatformStatsView,
+    SignupView,
     TierViewSet,
     UserDetailView,
     UsersView,
+    VerifyEmailView,
 )
 
 router = DefaultRouter(trailing_slash=False)
@@ -22,7 +25,10 @@ urlpatterns = [
     path("auth/refresh", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/password/request", PasswordResetRequestView.as_view(), name="password-reset-request"),
     path("auth/password/confirm", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
+    path("auth/signup", SignupView.as_view(), name="signup"),
+    path("auth/verify", VerifyEmailView.as_view(), name="verify-email"),
     path("me", MeView.as_view(), name="me"),
+    path("platform/orgs", PlatformStatsView.as_view(), name="platform-orgs"),
     path("users", UsersView.as_view(), name="users"),
     path("users/<int:pk>", UserDetailView.as_view(), name="user-detail"),
 ] + router.urls

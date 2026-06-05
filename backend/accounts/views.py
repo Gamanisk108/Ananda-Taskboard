@@ -14,10 +14,17 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from permissions.drf import IsAdmin
+from permissions.drf import IsAdmin, IsSuperUser
 
-from .models import SUPPORTED_LANGUAGES, Group, Tier, User
-from .serializers import GroupSerializer, TierSerializer, UserSerializer, UserWriteSerializer
+from .models import SUPPORTED_LANGUAGES, Group, Membership, Organization, Tier, User, ensure_default_tiers
+from .serializers import (
+    GroupSerializer,
+    SignupSerializer,
+    TierSerializer,
+    UserSerializer,
+    UserWriteSerializer,
+)
+from .tokens import email_verification_token
 
 
 class EmailTokenObtainSerializer(TokenObtainPairSerializer):
@@ -34,17 +41,42 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from permissions.engine import is_org_admin
+
+        org = getattr(request, "org", None)
         data = UserSerializer(request.user).data
+        # Admin status is per active org (a signup admin is role=member globally).
+        data["is_admin"] = is_org_admin(request.user, org)
+        # Platform owner: gates the metadata-only stats view (NOT org data access).
+        data["is_superuser"] = request.user.is_superuser
+        data["memberships"] = self._memberships(request.user)
+        data["active_org"] = org.id if org else None
         try:
             from permissions.tree import visible_tree
 
-            data["tree"] = visible_tree(request.user)
+            data["tree"] = visible_tree(request.user, org)
         except (ImportError, ModuleNotFoundError):
             data["tree"] = {"projects": [], "show_global_overview": False}
-        # Group NAMES (not membership) so any user can filter by group; the
-        # member-expansion happens server-side (task list ?assignee_group=).
-        data["groups"] = list(Group.objects.values("id", "name"))
+        # Group NAMES (not membership) so any user can filter by group; scoped to
+        # the active org. Member-expansion happens server-side (task list).
+        groups = Group.objects.all()
+        if org is not None:
+            groups = groups.filter(organization=org)
+        data["groups"] = list(groups.values("id", "name"))
         return Response(data)
+
+    @staticmethod
+    def _memberships(user):
+        """The orgs this user actually belongs to. The platform owner gets NO
+        special cross-org access here — only their real memberships (org data
+        stays private); platform-wide metadata lives at /api/platform/orgs."""
+        rows = Membership.objects.filter(user=user, is_active=True).select_related("organization")
+        return [
+            {"org_id": m.organization_id, "name": m.organization.name,
+             "city": m.organization.city, "country": m.organization.country,
+             "role": m.role, "tier": m.tier_id}
+            for m in rows
+        ]
 
     def patch(self, request):
         """Self-service: a user updates their own preferences (currently the UI
@@ -68,12 +100,21 @@ class UsersView(APIView):
     def get(self, request):
         from permissions.engine import visible_subproject_ids
 
+        org = getattr(request, "org", None)
+        if org is not None:
+            members = {m.user_id: m for m in Membership.objects.filter(organization=org)}
+            users = User.objects.filter(id__in=members.keys(), is_active=True)
+        else:
+            members = {}
+            users = User.objects.filter(is_active=True)
         out = []
-        for u in User.objects.filter(is_active=True):
+        for u in users:
+            m = members.get(u.id)
+            role = m.role if m else u.role
             out.append({
-                "id": u.id, "name": u.name, "email": u.email, "is_admin": u.is_admin,
-                "role": u.role, "is_active": u.is_active, "tier": u.tier_id,
-                "subproject_ids": visible_subproject_ids(u),
+                "id": u.id, "name": u.name, "email": u.email, "is_admin": role == "admin",
+                "role": role, "is_active": u.is_active, "tier": (m.tier_id if m else u.tier_id),
+                "subproject_ids": visible_subproject_ids(u, org),
             })
         return Response(out)
 
@@ -81,6 +122,13 @@ class UsersView(APIView):
         ser = UserWriteSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         user = ser.save()
+        # Attach the new member to the active org (their per-org role/tier).
+        org = getattr(request, "org", None)
+        if org is not None:
+            Membership.objects.get_or_create(
+                user=user, organization=org,
+                defaults={"role": user.role, "tier_id": user.tier_id, "is_active": True},
+            )
         return Response(UserSerializer(user).data, status=201)
 
 
@@ -100,6 +148,18 @@ class UserDetailView(APIView):
         ser = UserWriteSerializer(user, data=request.data, partial=True)
         ser.is_valid(raise_exception=True)
         ser.save()
+        # Mirror per-org role/tier/active onto the membership for the active org.
+        org = getattr(request, "org", None)
+        if org is not None:
+            m = Membership.objects.filter(user=user, organization=org).first()
+            if m:
+                if "role" in request.data:
+                    m.role = user.role
+                if "tier" in request.data:
+                    m.tier_id = user.tier_id
+                if "is_active" in request.data:
+                    m.is_active = user.is_active
+                m.save()
         # Audit role/tier/active changes (permission-relevant); ignore name/password.
         from permissions.models import audit
         who = user.name or user.email
@@ -113,23 +173,37 @@ class UserDetailView(APIView):
 
 
 class GroupViewSet(viewsets.ModelViewSet):
-    """Admin management of Groups (named user collections for bulk grants)."""
+    """Admin management of Groups (named user collections for bulk grants),
+    scoped to the active org."""
 
     queryset = Group.objects.prefetch_related("members").all()
     serializer_class = GroupSerializer
     permission_classes = [IsAdmin]
 
+    def get_queryset(self):
+        org = getattr(self.request, "org", None)
+        qs = Group.objects.prefetch_related("members")
+        return qs.filter(organization=org) if org is not None else qs
+
+    def perform_create(self, serializer):
+        serializer.save(organization=getattr(self.request, "org", None))
+
 
 class TierViewSet(viewsets.ModelViewSet):
-    """Admin management of permission Tiers (reusable templates for members)."""
+    """Admin management of permission Tiers (reusable templates for members),
+    scoped to the active org."""
 
     queryset = Tier.objects.all()
     serializer_class = TierSerializer
     permission_classes = [IsAdmin]
 
+    def get_queryset(self):
+        org = getattr(self.request, "org", None)
+        return Tier.objects.filter(organization=org) if org is not None else Tier.objects.all()
+
     def perform_create(self, serializer):
         from permissions.models import audit
-        tier = serializer.save()
+        tier = serializer.save(organization=getattr(self.request, "org", None))
         audit(self.request.user, "tier.create", f"Created tier '{tier.name}'")
 
     def perform_update(self, serializer):
@@ -147,6 +221,19 @@ class TierViewSet(viewsets.ModelViewSet):
 # Two public (unauthenticated) endpoints. They use Django's signed-token
 # machinery (default_token_generator) — no extra DB table — and never reveal
 # whether an email belongs to a real account (no enumeration).
+
+def _user_from_uid(uid, *, active_only=True):
+    """Decode a urlsafe-base64 user id from a reset/verify link → User or None.
+    `active_only=False` is used during signup verification (account still inactive)."""
+    try:
+        pk = force_str(urlsafe_base64_decode(uid))
+        qs = User.objects.filter(pk=pk)
+        if active_only:
+            qs = qs.filter(is_active=True)
+        return qs.first()  # inside try: a non-numeric pk raises ValueError here
+    except (TypeError, ValueError, OverflowError):
+        return None
+
 
 def _send_reset_email(user):
     """Email a one-hour reset link pointing at the SPA's ?reset deep-link."""
@@ -197,7 +284,7 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        user = self._user_from_uid(request.data.get("uid") or "")
+        user = _user_from_uid(request.data.get("uid") or "")
         token = request.data.get("token") or ""
         if user is None or not default_token_generator.check_token(user, token):
             return Response({"detail": "invalid"}, status=400)
@@ -210,10 +297,130 @@ class PasswordResetConfirmView(APIView):
         user.save(update_fields=["password"])
         return Response({"detail": "ok"})
 
-    @staticmethod
-    def _user_from_uid(uid):
-        try:
-            pk = force_str(urlsafe_base64_decode(uid))
-            return User.objects.filter(pk=pk, is_active=True).first()
-        except (TypeError, ValueError, OverflowError):
-            return None
+
+# ── Self-serve signup + email verification ─────────────────────────────────────
+# A person creates their own account AND a new organization (which they admin).
+# Both stay inactive until they click the verification link; an inactive user
+# can't log in (SimpleJWT rejects inactive), which is the spam/abuse gate.
+
+def _send_verification_email(user):
+    """Email a verification link pointing at the SPA's ?verify deep-link."""
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = email_verification_token.make_token(user)
+    link = f"{settings.FRONTEND_URL}/?verify&uid={uid}&token={token}"
+    greeting = f"Hello {user.name}," if user.name else "Hello,"
+    body = (
+        f"{greeting}\n\n"
+        "Welcome to Ananda Taskboard! Confirm your email to activate your account "
+        "and team (the link expires in 1 hour):\n\n"
+        f"{link}\n\n"
+        "If you didn't sign up, you can safely ignore this email.\n"
+    )
+    send_mail(
+        "Verify your Ananda Taskboard account",
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=True,
+    )
+
+
+class SignupView(APIView):
+    """POST {organization, name, email, password, city, country}: create an
+    inactive User + inactive Organization + an admin Membership, then email a
+    verification link. 201 regardless of delivery."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_reset"
+
+    def post(self, request):
+        ser = SignupSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        d = ser.validated_data
+        user = User.objects.create_user(
+            email=d["email"], name=d["name"], password=d["password"], is_active=False
+        )
+        org = Organization.objects.create(
+            name=d["organization"], city=d.get("city", ""), country=d.get("country", ""),
+            created_by=user, is_active=False,
+        )
+        ensure_default_tiers(org)
+        Membership.objects.create(
+            user=user, organization=org, role=Membership.Role.ADMIN, is_active=True
+        )
+        _send_verification_email(user)
+        return Response(
+            {"detail": "Account created. Check your email to verify and activate it."},
+            status=201,
+        )
+
+
+class PlatformStatsView(APIView):
+    """Platform owner only: a metadata-only directory of every org — NEVER the
+    contents of an org's tasks. Surfaces org name/location, admin contacts,
+    project/sub-project/task counts, and the member roster with role + tier. This
+    is the ONLY cross-org visibility the superuser has; org data stays private."""
+
+    permission_classes = [IsSuperUser]
+
+    def get(self, request):
+        from projects.models import Project, SubProject
+        from tasks.models import Task
+
+        out = []
+        for org in Organization.objects.all().order_by("name"):
+            memberships = (
+                Membership.objects.filter(organization=org)
+                .select_related("user", "tier")
+                .order_by("role", "user__name")  # admins first (a < m)
+            )
+            members = [
+                {
+                    "name": m.user.name or m.user.email,
+                    "email": m.user.email,
+                    "role": m.role,
+                    "tier": (m.tier.name if m.tier else None),
+                    "active": m.is_active,
+                }
+                for m in memberships
+            ]
+            admins = [{"name": x["name"], "email": x["email"]} for x in members if x["role"] == "admin"]
+            out.append({
+                "id": org.id,
+                "name": org.name,
+                "city": org.city,
+                "country": org.country,
+                "is_active": org.is_active,
+                "created_at": org.created_at.isoformat(),
+                "admins": admins,
+                "counts": {
+                    "projects": Project.objects.filter(organization=org).count(),
+                    "subprojects": SubProject.objects.filter(project__organization=org).count(),
+                    "tasks": Task.objects.filter(subproject__project__organization=org).count(),
+                    "members": len(members),
+                },
+                "members": members,
+            })
+        return Response(out)
+
+
+class VerifyEmailView(APIView):
+    """POST {uid, token}: activate the account + the org(s) it created. 400
+    'invalid' for a bad or expired link."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        user = _user_from_uid(request.data.get("uid") or "", active_only=False)
+        token = request.data.get("token") or ""
+        if user is None or not email_verification_token.check_token(user, token):
+            return Response({"detail": "invalid"}, status=400)
+        if not user.is_active:
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+        # Activate any org this user created during signup.
+        Organization.objects.filter(created_by=user, is_active=False).update(is_active=True)
+        return Response({"detail": "ok"})
