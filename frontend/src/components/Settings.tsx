@@ -48,8 +48,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div className="muted" style={{ fontSize: 12, marginBottom: 12 }}>
-            Determines the "today" boundary for the morning push. Exact send time is set by the
-            daily scheduler (see deploy runbook); set the scheduler to match this hour.
+            {t("settings.pushTimeHelp")}
           </div>
           {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 10 }}>{msg}</div>}
           <div className="modal-foot" style={{ marginBottom: 8 }}>
@@ -92,8 +91,8 @@ function StatusManager() {
   }
   async function patch(s: St, changes: Partial<St>) { await api.patch(`/api/statuses/${s.id}`, changes); load(); }
   async function remove(s: St) {
-    if (list.length <= 1) { alert("Keep at least one status."); return; }
-    if (!confirm(`Delete status "${s.label}"? Tasks in it will keep the value but show greyed.`)) return;
+    if (list.length <= 1) { alert(t("settings.keepOneStatus")); return; }
+    if (!confirm(t("settings.confirmDeleteStatus", { name: s.label }))) return;
     await api.del(`/api/statuses/${s.id}`); load();
   }
 
@@ -101,14 +100,13 @@ function StatusManager() {
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
       <h3 className="section-title">{t("settings.statusesTitle")}</h3>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        Rename, recolor, reorder, or add columns. Tick "complete" for the Done state
-        (drives auto-archiving + hiding from calendars).
+        {t("settings.statusesHelp")}
       </div>
       {list.map((s, idx) => (
         <div key={s.id} className="assignee-row" style={{ gap: 8 }}>
           <input type="color" value={s.color || "#6b7280"} onChange={(e) => patch(s, { color: e.target.value })} style={{ width: 38, padding: 2 }} />
           <input defaultValue={s.label} onBlur={(e) => e.target.value !== s.label && patch(s, { label: e.target.value })} style={{ flex: 1 }} />
-          <input type="number" value={s.order} onChange={(e) => patch(s, { order: Number(e.target.value) })} style={{ width: 56 }} title="order" />
+          <input type="number" value={s.order} onChange={(e) => patch(s, { order: Number(e.target.value) })} style={{ width: 56 }} title={t("settings.orderTitle")} />
           <label className="muted" style={{ display: "flex", gap: 4, alignItems: "center", margin: 0, whiteSpace: "nowrap" }}>
             <input type="checkbox" style={{ width: "auto" }} checked={s.is_complete} onChange={(e) => patch(s, { is_complete: e.target.checked })} /> {t("settings.complete")}
           </label>
@@ -141,7 +139,8 @@ const WD_TOGGLES = [
   { n: 6, label: "S" }, { n: 0, label: "M" }, { n: 1, label: "T" }, { n: 2, label: "W" },
   { n: 3, label: "T" }, { n: 4, label: "F" }, { n: 5, label: "S" },
 ];
-const WD_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// date-fns weekday() order Mon=0..Sun=6 → catalog day-of-week keys.
+const WD_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const KIND_ICON: Record<EvKind, string> = { single: "📍", yearly: "🎂", range: "📌", repeating: "🔁" };
 
 type EndMode = "never" | "weeks" | "until";
@@ -163,20 +162,22 @@ const EMPTY_DRAFT: Draft = {
   endMode: "weeks", count: 4, title: "",
 };
 
-function summarize(e: Ev): string {
-  if (e.kind === "yearly") return `Every year on ${e.date.slice(5)}`;
-  if (e.kind === "range") return `${e.date} → ${e.end_date ?? "?"}`;
-  if (e.kind === "repeating") {
-    const days = [...e.weekdays].sort((a, b) => a - b).map((d) => WD_NAMES[d]).join(" & ") || "—";
-    const every = e.interval > 1 ? `every ${e.interval} wks` : "weekly";
-    const end = e.count ? `, ${e.count} wks` : e.end_date ? `, until ${e.end_date}` : "";
-    return `${days} (${every}) from ${e.date}${end}`;
-  }
-  return e.date;
-}
-
 function EventsManager() {
   const { t } = useTranslation();
+
+  function summarize(e: Ev): string {
+    if (e.kind === "yearly") return t("settings.evSumYearly", { date: e.date.slice(5) });
+    if (e.kind === "range") return t("settings.evSumRange", { start: e.date, end: e.end_date ?? "?" });
+    if (e.kind === "repeating") {
+      const days = [...e.weekdays].sort((a, b) => a - b).map((d) => t(`cal.dow.${WD_KEYS[d]}`)).join(" & ") || "—";
+      const every = e.interval > 1 ? t("settings.evEveryN", { n: e.interval }) : t("settings.evEveryWeekly");
+      const end = e.count ? t("settings.evEndWeeks", { n: e.count })
+        : e.end_date ? t("settings.evEndUntil", { date: e.end_date }) : "";
+      return t("settings.evSumRepeating", { days, every, date: e.date, end });
+    }
+    return e.date;
+  }
+
   const [list, setList] = useState<Ev[]>([]);
   const [d, setD] = useState<Draft>(EMPTY_DRAFT);
   const [err, setErr] = useState("");
@@ -202,21 +203,21 @@ function EventsManager() {
 
   async function save() {
     setErr("");
-    if (!d.date || !d.title.trim()) { setErr("A date and a title are required."); return; }
+    if (!d.date || !d.title.trim()) { setErr(t("settings.errDateTitle")); return; }
     const payload: Record<string, unknown> = {
       kind: d.kind, date: d.date, title: d.title.trim(),
       end_date: null, weekdays: [], interval: 1, count: null,
     };
     if (d.kind === "range") {
-      if (!d.end_date) { setErr("Pick an end date for the range."); return; }
+      if (!d.end_date) { setErr(t("settings.errEndDate")); return; }
       payload.end_date = d.end_date;
     } else if (d.kind === "repeating") {
-      if (d.weekdays.length === 0) { setErr("Pick at least one weekday."); return; }
+      if (d.weekdays.length === 0) { setErr(t("settings.errWeekday")); return; }
       payload.weekdays = d.weekdays;
       payload.interval = d.interval;
       if (d.endMode === "weeks") payload.count = d.count;
       else if (d.endMode === "until") {
-        if (!d.end_date) { setErr("Pick an until-date, or choose a different end option."); return; }
+        if (!d.end_date) { setErr(t("settings.errUntil")); return; }
         payload.end_date = d.end_date;
       }
     }
@@ -224,7 +225,7 @@ function EventsManager() {
       if (d.id) await api.patch(`/api/events/${d.id}`, payload);
       else await api.post("/api/events", payload);
       reset(); load();
-    } catch { setErr("Could not save — check the fields."); }
+    } catch { setErr(t("settings.errSave")); }
   }
 
   async function remove(id: number) { await api.del(`/api/events/${id}`); load(); }
@@ -236,8 +237,7 @@ function EventsManager() {
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
       <h3 className="section-title">{t("settings.eventsTitle")}</h3>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        Shown as bars on the Weekly &amp; Monthly calendars. Use a date range for a multi-day
-        event, or Repeating for a weekly series (e.g. every Sat &amp; Sun for 4 weeks).
+        {t("settings.eventsHelp")}
       </div>
 
       {list.map((e) => (
