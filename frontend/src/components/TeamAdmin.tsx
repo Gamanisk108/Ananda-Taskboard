@@ -20,6 +20,12 @@ interface Exclusion {
 }
 interface AuditRow { id: number; actor: string; action: string; summary: string; created_at: string; }
 
+const TIER_DESC: Record<Sees, string> = {
+  own: "View assigned tasks only",
+  subproject: "View all tasks in assigned Sub-Project",
+  project: "View all tasks in assigned Project",
+};
+
 export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t: tr } = useTranslation();  // `t` is used below as the tab loop var
   const [tab, setTab] = useState<Tab>("members");
@@ -80,6 +86,11 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
   const [password, setPassword] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState<string>("");
   const [err, setErr] = useState("");
+  // optimistic local copy so role/tier/active changes show instantly (the full
+  // reload runs in the background and re-syncs via the effect below).
+  const [rows, setRows] = useState(users);
+  useEffect(() => setRows(users), [users]);
+  const patch = (id: number, p: Partial<UserRow>) => setRows((rs) => rs.map((u) => (u.id === id ? { ...u, ...p } : u)));
 
   async function add() {
     setErr("");
@@ -89,9 +100,9 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
       reload();
     } catch { setErr(tr("ta.errAddMember")); }
   }
-  async function setMemberRole(u: UserRow, r: string) { await api.patch(`/api/users/${u.id}`, { role: r }); reload(); }
-  async function setMemberTier(u: UserRow, t: string) { await api.patch(`/api/users/${u.id}`, { tier: t ? Number(t) : null }); reload(); }
-  async function toggleActive(u: UserRow) { await api.patch(`/api/users/${u.id}`, { is_active: !u.is_active }); reload(); }
+  async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r }); try { await api.patch(`/api/users/${u.id}`, { role: r }); reload(); } catch { patch(u.id, { role: u.role }); } }
+  async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); reload(); } catch { patch(u.id, { tier: u.tier }); } }
+  async function toggleActive(u: UserRow) { const next = !u.is_active; patch(u.id, { is_active: next }); try { await api.patch(`/api/users/${u.id}`, { is_active: next }); reload(); } catch { patch(u.id, { is_active: u.is_active }); } }
   async function resetPw(u: UserRow) {
     const pw = prompt(tr("ta.promptNewPw", { name: u.name || u.email }));
     if (pw) { await api.patch(`/api/users/${u.id}`, { password: pw }); alert(tr("ta.pwUpdated")); }
@@ -117,7 +128,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
           <label>{tr("ta.tier")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.tierHint")}</span></label>
           <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
             <option value="">{tr("ta.noTierBlank")}</option>
-            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
           </select>
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
@@ -128,7 +139,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
       <table className="tbl">
         <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.tier")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
         <tbody>
-          {users.map((u) => (
+          {rows.map((u) => (
             <tr key={u.id}>
               <td>{u.name || "—"}</td>
               <td className="muted">{u.email}</td>
@@ -139,9 +150,9 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
               </td>
               <td>
                 {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
-                  <select value={u.tier ?? ""} onChange={(e) => setMemberTier(u, e.target.value)} style={{ width: "auto" }}>
+                  <select value={u.tier ?? ""} onChange={(e) => setMemberTier(u, e.target.value)} style={{ width: "auto", maxWidth: 210 }}>
                     <option value="">{tr("ta.noTier")}</option>
-                    {tiers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
                   </select>
                 )}
               </td>

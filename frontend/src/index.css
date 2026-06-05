@@ -16,6 +16,7 @@
   --gold:#c9a24b; --gold-deep:#7a5c22; --wood:#a9824e;
   --todo:#6b7280; --doing:#2c64a8; --delayed:#bb3b28; --done:#3f7d54;
   --danger:#b4452f; --warn:#7a5c22; --ring-soon:#d99a1f; --bar-soon:#ffd21e;
+  --flag-od:#e11d1d;  /* vivid warning red for the overdue badge (brighter than terracotta --danger) */
   /* derived row backgrounds */
   --row:var(--surface); --hover:#f2ead6;
   --overdue-bg:#b4452f2e; --soon-bg:#e0a72e38;
@@ -44,6 +45,7 @@ html[data-theme="dark"] {
   --gold:#e0be6a; --gold-deep:#e0be6a; --wood:#c79f63;
   --todo:#9aa3b2; --doing:#6aa2e0; --delayed:#e3705a; --done:#5fb27a;
   --danger:#e07a63; --warn:#e0be6a; --ring-soon:#e0be6a; --bar-soon:#ffd21e;
+  --flag-od:#ff4d45;  /* vivid warning red (brighter for contrast on the navy canvas) */
   --row:var(--surface); --hover:#1b2d4d;
   --overdue-bg:#e0634a33; --soon-bg:#e0b04a2e;
   --wk-today:#ffffff; --wk-today-line:var(--azure);
@@ -162,7 +164,11 @@ select {
 }
 html[data-theme="dark"] select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239fb0cc' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  color-scheme: dark; /* render the native option popup dark — no white flash */
 }
+/* keep the native dropdown list dark so it doesn't flash white on open */
+html[data-theme="dark"] select option,
+html[data-theme="dark"] select optgroup { background-color: var(--surface); color: var(--text); }
 
 /* ---- shared primitives ---- */
 .pill {
