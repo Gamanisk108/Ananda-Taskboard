@@ -100,9 +100,9 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
       reload();
     } catch { setErr(tr("ta.errAddMember")); }
   }
-  async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r }); try { await api.patch(`/api/users/${u.id}`, { role: r }); reload(); } catch { patch(u.id, { role: u.role }); } }
-  async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); reload(); } catch { patch(u.id, { tier: u.tier }); } }
-  async function toggleActive(u: UserRow) { const next = !u.is_active; patch(u.id, { is_active: next }); try { await api.patch(`/api/users/${u.id}`, { is_active: next }); reload(); } catch { patch(u.id, { is_active: u.is_active }); } }
+  async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r, is_admin: r === "admin" }); try { await api.patch(`/api/users/${u.id}`, { role: r }); } catch { patch(u.id, { role: u.role }); } }
+  async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); } catch { patch(u.id, { tier: u.tier }); } }
+  async function toggleActive(u: UserRow) { const next = !u.is_active; patch(u.id, { is_active: next }); try { await api.patch(`/api/users/${u.id}`, { is_active: next }); } catch { patch(u.id, { is_active: u.is_active }); } }
   async function resetPw(u: UserRow) {
     const pw = prompt(tr("ta.promptNewPw", { name: u.name || u.email }));
     if (pw) { await api.patch(`/api/users/${u.id}`, { password: pw }); alert(tr("ta.pwUpdated")); }
