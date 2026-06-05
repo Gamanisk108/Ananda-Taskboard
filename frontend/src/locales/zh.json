@@ -263,5 +263,13 @@
   },
   "emoji": {
     "pick": "选择一个表情符号"
+  },
+  "day": {
+    "sort": "排序",
+    "sortTime": "时间（定时优先）",
+    "sortAZ": "按名称 (A–Z)",
+    "allDay": "全天",
+    "untimed": "未定时",
+    "noTasks": "这一天没有任务。"
   }
 }

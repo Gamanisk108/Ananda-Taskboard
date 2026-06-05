@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useStatuses } from "../statuses";
 import { useUsers, userName } from "../users";
 import { timeRange } from "../lookup";
@@ -18,6 +19,7 @@ export function DayTaskList({
   colorByProject: boolean;
   onOpen: (taskId: number) => void;
 }) {
+  const { t } = useTranslation();
   const [sort, setSort] = useState<DaySort>("time");
   const users = useUsers();
   const statuses = useStatuses();
@@ -44,9 +46,9 @@ export function DayTaskList({
           <PriorityIcon level={i.priority} />
           <span className="dot" style={{ background: colorByProject ? i.project_color : i.subproject_color }} />
           {tr ? <span className="mono" style={{ fontSize: 12, color: "var(--accent)" }}>{tr}</span>
-              : <span className="muted" style={{ fontSize: 12 }}>All day</span>}
+              : <span className="muted" style={{ fontSize: 12 }}>{t("day.allDay")}</span>}
           {i.title}
-          {i.overdue && <span className="od" title="Missed Deadline">❗</span>}
+          {i.overdue && <span className="od" title={t("list.missedDeadline")}>❗</span>}
           {i.assignee_ids.length > 0 && (
             <span className="muted" style={{ fontSize: 12 }}>
               · {i.assignee_ids.map((id) => userName(users, id)).join(", ")}
@@ -67,7 +69,7 @@ export function DayTaskList({
       <>
         {timed.map(row)}
         {timed.length > 0 && untimed.length > 0 && (
-          <div className="day-divider"><span>Untimed</span></div>
+          <div className="day-divider"><span>{t("day.untimed")}</span></div>
         )}
         {untimed.map(row)}
       </>
@@ -84,14 +86,14 @@ export function DayTaskList({
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
-        <label className="muted" style={{ margin: 0, fontSize: 12 }}>Sort</label>
+        <label className="muted" style={{ margin: 0, fontSize: 12 }}>{t("day.sort")}</label>
         <select value={sort} onChange={(e) => setSort(e.target.value as DaySort)} style={{ width: "auto" }}>
-          <option value="time">Time (timed first)</option>
-          <option value="title">A–Z</option>
-          <option value="status">Status</option>
+          <option value="time">{t("day.sortTime")}</option>
+          <option value="title">{t("day.sortAZ")}</option>
+          <option value="status">{t("task.status")}</option>
         </select>
       </div>
-      {items.length === 0 ? <div className="muted" style={{ fontSize: 13 }}>No tasks this day.</div> : body}
+      {items.length === 0 ? <div className="muted" style={{ fontSize: 13 }}>{t("day.noTasks")}</div> : body}
     </div>
   );
 }

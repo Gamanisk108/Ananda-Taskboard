@@ -263,5 +263,13 @@
   },
   "emoji": {
     "pick": "Scegli un emoji"
+  },
+  "day": {
+    "sort": "Ordina",
+    "sortTime": "Ora (con orario prima)",
+    "sortAZ": "A–Z",
+    "allDay": "Tutto il giorno",
+    "untimed": "Senza orario",
+    "noTasks": "Nessuna attività in questo giorno."
   }
 }

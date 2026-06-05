@@ -263,5 +263,13 @@
   },
   "emoji": {
     "pick": "Pick an emoji"
+  },
+  "day": {
+    "sort": "Sort",
+    "sortTime": "Time (timed first)",
+    "sortAZ": "A–Z",
+    "allDay": "All day",
+    "untimed": "Untimed",
+    "noTasks": "No tasks this day."
   }
 }
