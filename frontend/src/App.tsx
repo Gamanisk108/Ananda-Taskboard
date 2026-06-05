@@ -7,6 +7,7 @@ import { api } from "./api/client";
 import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
 import { ResetPassword } from "./components/ResetPassword";
+import { VerifyEmail } from "./components/VerifyEmail";
 import { Spinner, ColorDot } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
@@ -29,7 +30,7 @@ import type { ProjectNode, Task } from "./types";
 type ViewMode = "list" | "board" | "weekly" | "monthly";
 
 export default function App() {
-  const { me, loading, logout, refreshMe } = useAuth();
+  const { me, loading, logout, refreshMe, switchOrg } = useAuth();
   const { t } = useTranslation();
 
   // Apply the user's preferred UI language (falls back to browser locale → English).
@@ -96,6 +97,25 @@ export default function App() {
     if (me) import("./statuses").then((m) => m.fetchStatuses(true));
   }, [me?.id]);
 
+  // Per-project task counts for the tab badges (design shows a count per tab).
+  const [counts, setCounts] = useState<{ total: number; byProject: Record<number, number> }>({ total: 0, byProject: {} });
+  useEffect(() => {
+    if (!me) return;
+    let alive = true;
+    api.get("/api/tasks").then((ts) => {
+      if (!alive) return;
+      const sub2proj = new Map<number, number>();
+      for (const p of projects) for (const s of p.subprojects) sub2proj.set(s.id, p.id);
+      const byProject: Record<number, number> = {};
+      for (const tk of ts as Task[]) {
+        const pid = sub2proj.get(tk.subproject);
+        if (pid != null) byProject[pid] = (byProject[pid] ?? 0) + 1;
+      }
+      setCounts({ total: (ts as Task[]).length, byProject });
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [me?.id, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Deep-link IN: on first login, honor ?project / ?sub / ?view / ?task in the URL.
   useEffect(() => {
     if (!me) return;
@@ -126,6 +146,8 @@ export default function App() {
   // Password-reset deep-link from the email (?reset&uid=…&token=…) — shown
   // standalone, before the auth gate, since the user is logged out here.
   if (new URLSearchParams(window.location.search).has("reset")) return <ResetPassword />;
+  // Signup verification deep-link (?verify&uid=…&token=…) — also pre-auth.
+  if (new URLSearchParams(window.location.search).has("verify")) return <VerifyEmail />;
   if (loading) return <Spinner />;
   if (!me) return <Login />;
 
@@ -154,6 +176,19 @@ export default function App() {
           </button>
         </div>
         <div className="topbar-actions">
+          {me.memberships && me.memberships.length > 1 && (
+            <select
+              className="btn-secondary"
+              value={me.active_org ?? ""}
+              onChange={(e) => switchOrg(Number(e.target.value))}
+              title={t("org.switch")}
+              style={{ width: "auto" }}
+            >
+              {me.memberships.map((o) => (
+                <option key={o.org_id} value={o.org_id}>{o.name}</option>
+              ))}
+            </select>
+          )}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}><CircleCheck /><span className="lbl">{t("nav.approvals")}</span></button>
           )}
@@ -191,13 +226,13 @@ export default function App() {
           {tree?.show_global_overview && (
             <button className={`ptab ${isGlobal ? "on" : ""}`} style={{ "--pc": "var(--muted)" } as React.CSSProperties}
               onClick={() => { setTopTab("global"); setSubTab(null); }}>
-              <span className="pemoji">🌐</span>{t("nav.globalOverview")}
+              <span className="pemoji">🌐</span>{t("nav.globalOverview")} <span className="count">{counts.total}</span>
             </button>
           )}
           {projects.map((p) => (
             <button key={p.id} className={`ptab ${effectiveTop === p.id ? "on" : ""}`} style={{ "--pc": p.color } as React.CSSProperties}
               onClick={() => { setTopTab(p.id); setSubTab(null); }}>
-              <span className="pemoji"><ColorDot color={p.color} /></span>{p.name}
+              <span className="pemoji"><ColorDot color={p.color} /></span>{p.name} <span className="count">{counts.byProject[p.id] ?? 0}</span>
             </button>
           ))}
           {projects.length === 0 && <span className="muted" style={{ padding: 10 }}>{t("nav.noProjects")}</span>}

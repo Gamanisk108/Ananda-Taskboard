@@ -76,6 +76,31 @@
     "expiredBody": "Les liens de réinitialisation sont valables 1 heure. Veuillez en demander un nouveau.",
     "genericError": "Une erreur s'est produite. Veuillez demander un nouveau lien."
   },
+  "signup": {
+    "title": "Créez votre compte",
+    "subtitle": "Configurez votre équipe sur Ananda Taskboard.",
+    "organization": "Nom de l'organisation",
+    "name": "Votre nom",
+    "city": "Ville",
+    "country": "Pays",
+    "create": "Créer le compte",
+    "creating": "Création…",
+    "error": "Impossible de créer le compte. Veuillez réessayer.",
+    "checkTitle": "Vérifiez votre e-mail",
+    "checkBody": "Nous avons envoyé un lien de vérification à {{email}}. Cliquez dessus pour activer votre compte et votre équipe.",
+    "prompt": "Nouveau sur Ananda Taskboard ?",
+    "cta": "Créer un compte"
+  },
+  "verify": {
+    "working": "Vérification…",
+    "okTitle": "E-mail vérifié",
+    "okBody": "Votre compte et votre équipe sont actifs. Vous pouvez maintenant vous connecter.",
+    "badTitle": "Échec de la vérification",
+    "badBody": "Ce lien est invalide ou a expiré. Veuillez vous réinscrire ou demander un nouveau lien."
+  },
+  "org": {
+    "switch": "Changer d'organisation"
+  },
   "task": {
     "edit": "Modifier la tâche",
     "new": "Nouvelle tâche",

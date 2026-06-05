@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../state/auth";
 import { ForgotPassword } from "./ForgotPassword";
+import { Signup } from "./Signup";
 
 export function Login() {
   const { t } = useTranslation();
@@ -11,6 +12,7 @@ export function Login() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
+  const [signup, setSignup] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,6 +28,7 @@ export function Login() {
   }
 
   if (forgot) return <ForgotPassword onBack={() => setForgot(false)} />;
+  if (signup) return <Signup onBack={() => setSignup(false)} />;
 
   return (
     <div className="login-wrap">
@@ -61,6 +64,16 @@ export function Login() {
             }}
           >
             {t("login.forgot")}
+          </button>
+        </div>
+        <div style={{ marginTop: 8, textAlign: "center", fontSize: 13 }}>
+          <span className="muted">{t("signup.prompt")} </span>
+          <button
+            type="button"
+            onClick={() => setSignup(true)}
+            style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontSize: 13, cursor: "pointer" }}
+          >
+            {t("signup.cta")}
           </button>
         </div>
       </form>

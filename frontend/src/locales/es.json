@@ -76,6 +76,31 @@
     "expiredBody": "Los enlaces de restablecimiento son válidos durante 1 hora. Solicita uno nuevo.",
     "genericError": "Algo salió mal. Solicita un nuevo enlace."
   },
+  "signup": {
+    "title": "Crea tu cuenta",
+    "subtitle": "Configura tu equipo en Ananda Taskboard.",
+    "organization": "Nombre de la organización",
+    "name": "Tu nombre",
+    "city": "Ciudad",
+    "country": "País",
+    "create": "Crear cuenta",
+    "creating": "Creando…",
+    "error": "No se pudo crear la cuenta. Inténtalo de nuevo.",
+    "checkTitle": "Revisa tu correo",
+    "checkBody": "Enviamos un enlace de verificación a {{email}}. Haz clic para activar tu cuenta y tu equipo.",
+    "prompt": "¿Nuevo en Ananda Taskboard?",
+    "cta": "Crear una cuenta"
+  },
+  "verify": {
+    "working": "Verificando…",
+    "okTitle": "Correo verificado",
+    "okBody": "Tu cuenta y tu equipo están activos. Ya puedes iniciar sesión.",
+    "badTitle": "Verificación fallida",
+    "badBody": "Este enlace no es válido o ha caducado. Regístrate de nuevo o solicita uno nuevo."
+  },
+  "org": {
+    "switch": "Cambiar de organización"
+  },
   "task": {
     "edit": "Editar tarea",
     "new": "Nueva tarea",

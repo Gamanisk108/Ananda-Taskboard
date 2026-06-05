@@ -200,6 +200,9 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .mcell.today .day-num { color: var(--text); }
 .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .badge { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-mono); font-size: 10.5px; color: #fff; border-radius: var(--r-pill); padding: 1px 7px; font-weight: 600; }
+.mcell .dh { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.mcell .dh .today-tag { margin-left: auto; }
+.mev { font-size: 11px; color: var(--dome); font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ============================================================= KANBAN */
 .kanban { display: flex; gap: 13px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; min-height: 100%; }
@@ -376,6 +379,28 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
 .tbl thead th.c-task { z-index: 6; background: var(--sunk); }
 .tbl thead th { position: sticky; top: 0; z-index: 5; }
 .emptyrow td { height: 120px; text-align: center; color: var(--faint); font-style: italic; }
+
+/* ---- WEEKLY: exact design geometry + bar internals ---- */
+.cal-head .nav { display: flex; gap: 5px; }
+.cal-head .nav button { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+.cal-head .nav button svg { width: 15px; height: 15px; display: block; }
+.wk-head { background: var(--sunk); border-bottom: 1px solid var(--wk-divider); }
+.wk-hcell { padding: 7px 11px; border-left: 1px solid var(--wk-divider); }
+.wk-hcell:first-child { border-left: none; }
+.wk-hcell .hrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wk-hcell .dow { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.wk-hcell .dnum { font-family: var(--f-mono); font-size: 12.5px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.wk-hcell .ev { font-size: 11px; color: var(--gold-deep); font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-body { gap: 0; padding: 0; min-height: 0;
+  background: repeating-linear-gradient(to right, transparent, transparent calc(100%/7 - 1px), var(--wk-divider) calc(100%/7 - 1px), var(--wk-divider) calc(100%/7)); }
+.wk-bar { margin: 2.5px 3px; padding: 3px 11px; box-shadow: var(--shadow-1); z-index: 1; }
+.wk-bar .tt { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; }
+.wk-bar .tn { overflow: hidden; text-overflow: ellipsis; }
+.wk-bar .mini { font-family: var(--f-mono); font-size: 10px; color: #fff; background: rgba(255,255,255,.28); border-radius: 99px; padding: 0 5px; flex: none; }
+.wk-col { z-index: 0; }
+.wk-col.past { background: var(--wk-past); }
+.wk-col.today { background: var(--wk-today); }
+.wk-col.future { background: var(--wk-future); }
 
 /* ---------------- Mobile responsiveness ---------------- */
 @media (max-width: 1180px) {

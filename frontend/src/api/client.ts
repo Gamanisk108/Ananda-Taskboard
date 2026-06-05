@@ -3,6 +3,16 @@
 
 let accessToken: string | null = null;
 const REFRESH_KEY = "atb_refresh";
+const ORG_KEY = "atb_org";
+
+/** The org id the SPA is currently scoped to (sent as X-Org-Id on every call). */
+export function getActiveOrg(): string | null {
+  return localStorage.getItem(ORG_KEY);
+}
+export function setActiveOrg(id: number | string | null) {
+  if (id === null || id === undefined) localStorage.removeItem(ORG_KEY);
+  else localStorage.setItem(ORG_KEY, String(id));
+}
 
 function setTokens(access: string | null, refresh?: string | null) {
   accessToken = access;
@@ -50,6 +60,8 @@ async function raw(method: string, path: string, body?: unknown, retry = true): 
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  const org = getActiveOrg();
+  if (org) headers["X-Org-Id"] = org;
   const res = await fetch(path, {
     method,
     headers,
@@ -89,6 +101,29 @@ export const api = {
   },
   logout() {
     setTokens(null, null);
+    setActiveOrg(null);
+  },
+  /** Self-serve signup: creates an account + a new org (inactive until verified). */
+  async signup(payload: {
+    organization: string; name: string; email: string; password: string; city: string; country: string;
+  }) {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    return res.json().catch(() => null);
+  },
+  /** Confirm an email-verification link (uid+token from the signup email). */
+  async verifyEmail(uid: string, token: string) {
+    const res = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, token }),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    return res.json().catch(() => null);
   },
   /** Start a password reset. Always resolves — the server never reveals whether
    *  the email belongs to a real account. */

@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  addDays, addMonths, format, isSameMonth, startOfMonth, startOfWeek,
-} from "date-fns";
+import { addDays, addMonths, format, getDay, getDaysInMonth, startOfMonth, startOfWeek } from "date-fns";
+import { ChevronLeft, ChevronRight, AlertTriangle, Clock } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { useCalendarRange, type CalendarViewProps } from "../calendar";
@@ -18,15 +17,12 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
   const colorByProject = !projectId;
 
-  // The visible grid always spans 6 weeks (42 days) from the Sunday on/before
-  // the 1st; the same [from, to] drives the fetch and the event expansion.
-  const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
+  // Fetch the whole visible block (6 weeks from the Sunday on/before the 1st).
+  const gridStart = startOfWeek(month, { weekStartsOn: 0 });
   const from = format(gridStart, "yyyy-MM-dd");
   const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
   const { items, events } = useCalendarRange(from, to, projectId, subprojectId, refreshKey);
 
-  // Expand each span into the days it covers within the visible grid, so a
-  // multi-day range shows a bar on each of its days and a series on each date.
   const eventsByDate = useMemo(() => {
     const m = new Map<string, EventSpan[]>();
     for (const e of events) {
@@ -50,11 +46,10 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
     return m;
   }, [items]);
 
-  // 6 weeks max, but drop any whole week with no day in the current month
-  const allCells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
-  const cells = Array.from({ length: 6 }, (_, w) => allCells.slice(w * 7, w * 7 + 7))
-    .filter((week) => week.some((d) => isSameMonth(d, month)))
-    .flat();
+  // Month-anchored grid (design): blank cells pad the start/end of the month.
+  const startDay = getDay(month);            // 0 = Sun
+  const dim = getDaysInMonth(month);
+  const total = Math.ceil((startDay + dim) / 7) * 7;
 
   function countsByColor(dayItems: CalendarInstance[]) {
     const m = new Map<string, number>();
@@ -66,18 +61,22 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
   }
 
   async function open(id: number) {
-    const t = (await api.get(`/api/tasks/${id}`)) as Task;
+    const task = (await api.get(`/api/tasks/${id}`)) as Task;
     setDayOpen(null);
-    onEdit(t);
+    onEdit(task);
   }
+
+  const y = month.getFullYear(), m = month.getMonth();
 
   return (
     <div className="rise">
-      <div className="bulkbar">
-        <button className="btn-secondary" onClick={() => setMonth(addMonths(month, -1))}>{t("cal.prev")}</button>
-        <button className="btn-secondary" onClick={() => setMonth(startOfMonth(new Date()))}>{t("cal.thisMonth")}</button>
-        <button className="btn-secondary" onClick={() => setMonth(addMonths(month, 1))}>{t("cal.next")}</button>
-        <span className="muted mono">{format(month, "MMMM yyyy", { locale: dfLocale() })}</span>
+      <div className="cal-head">
+        <div className="nav">
+          <button className="btn-secondary icon-btn" onClick={() => setMonth(addMonths(month, -1))} aria-label={t("cal.prev")}><ChevronLeft /></button>
+          <button className="btn-secondary" onClick={() => setMonth(startOfMonth(new Date()))}>{t("cal.thisMonth")}</button>
+          <button className="btn-secondary icon-btn" onClick={() => setMonth(addMonths(month, 1))} aria-label={t("cal.next")}><ChevronRight /></button>
+        </div>
+        <h2>{format(month, "MMMM yyyy", { locale: dfLocale() })}</h2>
       </div>
       {!items ? (
         <Spinner />
@@ -87,38 +86,44 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
             {(["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const).map((d) => (
               <div className="dow" key={d}>{t(`cal.dow.${d}`)}</div>
             ))}
-            {cells.map((d) => {
-              const iso = format(d, "yyyy-MM-dd");
+            {Array.from({ length: total }, (_, i) => {
+              const dayNum = i - startDay + 1;
+              if (dayNum < 1 || dayNum > dim) return <div key={`b${i}`} className="mcell dim" />;
+              const date = new Date(y, m, dayNum);
+              const iso = format(date, "yyyy-MM-dd");
               const dayItems = byDate.get(iso) ?? [];
               const dayEvents = eventsByDate.get(iso) ?? [];
-              const inMonth = isSameMonth(d, month);
-              const hasOverdue = dayItems.some((i) => i.overdue);
-              const hasSoon = !hasOverdue && dayItems.some((i) => i.is_deadline && (i.date === today || i.date === tomorrow) && !i.overdue);
+              const hasOverdue = dayItems.some((it) => it.overdue);
+              const hasSoon = !hasOverdue && dayItems.some((it) => it.is_deadline && (it.date === today || it.date === tomorrow) && !it.overdue);
+              const isToday = iso === today;
+              // single class, today-first (matches the design's priority order)
+              const cls = isToday ? "today" : hasOverdue ? "has-overdue" : hasSoon ? "has-soon" : iso < today ? "past" : "future";
               return (
-                <button
-                  key={iso}
-                  className={`mcell ${inMonth ? "" : "dim"} ${iso === today ? "today" : ""} ${hasOverdue ? "has-overdue" : hasSoon ? "has-soon" : ""}`}
-                  onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
-                >
-                  <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}
-                    {hasOverdue && <span className="od" title={t("list.missedDeadline")}> ❗</span>}
-                    {hasSoon && <span className="od-soon" title={t("list.dueSoon")}> ❗</span>}
-                  </span>
-                  {dayEvents.map((e, k) => (
-                    <div key={`ev-${k}`} className="ev-bar" title={e.title}>{EVENT_ICON[e.kind]} {e.title}</div>
-                  ))}
-                  <div className="badges">
-                    {countsByColor(dayItems).map(([c, n]) => (
-                      <span key={c} className="badge" style={{ background: c }}>{n}</span>
-                    ))}
+                <button key={iso} className={`mcell ${cls}`} data-date={iso}
+                  onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}>
+                  <div className="dh">
+                    <span className="day-num">{dayNum}</span>
+                    {isToday && <span className="today-tag">{t("cal.today", "Today")}</span>}
+                    {hasOverdue && <AlertTriangle size={12} style={{ color: "var(--danger)", flex: "none" }} />}
+                    {!hasOverdue && hasSoon && <Clock size={12} style={{ color: "var(--warn)", flex: "none" }} />}
                   </div>
+                  {dayEvents.map((e, k) => (
+                    <div key={`ev-${k}`} className="mev" title={e.title}>{EVENT_ICON[e.kind]} {e.title}</div>
+                  ))}
+                  {dayItems.length > 0 && (
+                    <div className="badges">
+                      {countsByColor(dayItems).map(([c, n]) => (
+                        <span key={c} className="badge" style={{ background: c }}>{n}</span>
+                      ))}
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
 
           {dayOpen && (
-            <Modal title={format(new Date(dayOpen), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
+            <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
               {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
                 <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{EVENT_ICON[e.kind]} {e.title}</div>
               ))}

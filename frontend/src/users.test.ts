@@ -13,6 +13,8 @@ function makeMe(over: Partial<Me> = {}): Me {
     language: "en",
     groups: [],
     tree: { projects: [], show_global_overview: false },
+    memberships: [],
+    active_org: null,
     ...over,
   };
 }

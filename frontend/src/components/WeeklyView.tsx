@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
+import { ChevronLeft, ChevronRight, AlertTriangle, Clock } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
-import { useUsers, userInitials, userName } from "../users";
-import { Modal, Spinner, PriorityIcon } from "./common";
+import { isComplete } from "../statuses";
+import { useUsers, userInitials, userName, avatarColor } from "../users";
+import { Modal, Spinner } from "./common";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
 
@@ -17,12 +19,10 @@ interface Bar {
   endCol: number;   // 1..7
   overdue: boolean;
   dueSoon: boolean;
-  priority: number;
+  done: boolean;
   assignee_ids: number[];
   lane: number;
 }
-
-interface EventBar { id: number; title: string; icon: string; startCol: number; endCol: number; lane: number; }
 
 export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
@@ -34,14 +34,15 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
   const dayIso = useMemo(() => days.map((d) => format(d, "yyyy-MM-dd")), [days]);
   const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
+  const todayIdx = dayIso.indexOf(today);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
 
   const { items, events } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId, refreshKey);
 
   async function open(id: number) {
-    const t = (await api.get(`/api/tasks/${id}`)) as Task;
+    const task = (await api.get(`/api/tasks/${id}`)) as Task;
     setDayOpen(null);
-    onEdit(t);
+    onEdit(task);
   }
 
   // Lane-packed spanning bars from per-day instances grouped by task.
@@ -65,38 +66,40 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
         endCol: Math.max(...cols),
         overdue: insts.some((i) => i.overdue),
         dueSoon: !!deadlineInst && (deadlineInst.date === today || deadlineInst.date === tomorrow) && !insts.some((i) => i.overdue),
-        priority: first.priority,
+        done: isComplete(first.status),
         assignee_ids: first.assignee_ids,
       });
     }
     const { packed, laneCount } = packLanes(raw);
-    return { bars: packed, laneCount: Math.max(1, laneCount) };
+    return { bars: packed, laneCount: Math.max(2, laneCount) };
   }, [items, dayIso, colorByProject, today, tomorrow]);
 
-  // Event spans clipped to this week, then lane-packed (same algorithm as tasks).
-  const { eventBars, eventLaneCount } = useMemo(() => {
-    const first = dayIso[0], last = dayIso[6];
-    const raw: Omit<EventBar, "lane">[] = [];
-    for (const e of events) {
-      if (e.start > last || e.end < first) continue; // outside this week
-      const startCol = Math.max(0, dayIso.findIndex((d) => d >= e.start)) + 1;
-      let endIdx = dayIso.length - 1;
-      while (endIdx > 0 && dayIso[endIdx] > e.end) endIdx--;
-      const endCol = endIdx + 1;
-      if (startCol > endCol) continue;
-      raw.push({ id: e.id, title: e.title, icon: EVENT_ICON[e.kind], startCol, endCol });
-    }
-    const { packed, laneCount } = packLanes(raw);
-    return { eventBars: packed, eventLaneCount: laneCount };
+  // Events that cover each day (rendered as a line under the day header, per design).
+  const eventsByDay = useMemo(() => {
+    return dayIso.map((iso) =>
+      events.filter((e) => e.start <= iso && e.end >= iso).map((e) => `${EVENT_ICON[e.kind]} ${e.title}`));
   }, [events, dayIso]);
+
+  function warnIcon(b: Bar) {
+    if (b.overdue) return <AlertTriangle size={12} style={{ flex: "none" }} />;
+    if (b.dueSoon) return <Clock size={12} style={{ flex: "none" }} />;
+    return null;
+  }
+  function miniFor(b: Bar) {
+    const id = b.assignee_ids[0];
+    if (id == null) return null;
+    return { id, label: userInitials(users, id), name: userName(users, id) };
+  }
 
   return (
     <div className="rise">
-      <div className="bulkbar">
-        <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>{t("cal.prev")}</button>
-        <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>{t("cal.thisWeek")}</button>
-        <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>{t("cal.next")}</button>
-        <span className="muted mono">{format(weekStart, "MMM d", { locale: dfLocale() })} – {format(addDays(weekStart, 6), "MMM d, yyyy", { locale: dfLocale() })}</span>
+      <div className="cal-head">
+        <div className="nav">
+          <button className="btn-secondary icon-btn" onClick={() => setWeekStart(addWeeks(weekStart, -1))} aria-label={t("cal.prev")}><ChevronLeft /></button>
+          <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>{t("cal.thisWeek")}</button>
+          <button className="btn-secondary icon-btn" onClick={() => setWeekStart(addWeeks(weekStart, 1))} aria-label={t("cal.next")}><ChevronRight /></button>
+        </div>
+        <h2>{format(weekStart, "MMM d", { locale: dfLocale() })} – {format(addDays(weekStart, 6), "MMM d, yyyy", { locale: dfLocale() })}</h2>
       </div>
       {!items ? (
         <Spinner />
@@ -109,53 +112,59 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
               return (
                 <div className={`wk-hcell wk-hcell-click ${when}`} key={idx}
                   title={t("cal.openDay")} onClick={() => setDayOpen(iso)}>
-                  <div>{format(d, "EEE", { locale: dfLocale() })} <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}</span></div>
+                  <div className="hrow">
+                    <span className="dow">{format(d, "EEE", { locale: dfLocale() })}</span>
+                    {iso === today && <span className="today-tag">{t("cal.today", "Today")}</span>}
+                    <span className="dnum">{format(d, "MMM d", { locale: dfLocale() })}</span>
+                  </div>
+                  {eventsByDay[idx].length > 0 && <div className="ev" title={eventsByDay[idx].join(", ")}>{eventsByDay[idx][0]}</div>}
                 </div>
               );
             })}
           </div>
-          {eventLaneCount > 0 && (
-            <div className="wk-body wk-events" style={{ gridTemplateRows: `repeat(${eventLaneCount}, 26px)` }}>
-              {eventBars.map((b) => (
-                <div
-                  key={b.id}
-                  className="wk-bar ev"
-                  style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1 }}
+          <div className="wk-body" style={{ gridAutoRows: "32px", gridTemplateRows: `repeat(${laneCount}, 32px)` }}>
+            {days.map((_, i) => {
+              const iso = dayIso[i];
+              const cls = iso === today ? "today" : iso < today ? "past" : "future";
+              return <div key={`col${i}`} className={`wk-col ${cls}`} style={{ gridColumn: i + 1, gridRow: "1 / -1" }} />;
+            })}
+            {bars.length === 0 && <div className="kan-empty" style={{ gridColumn: "1 / 8" }}>{t("cal.noTasksWeek")}</div>}
+            {bars.map((b) => {
+              const cs = b.startCol - 1, ce = b.endCol - 1;
+              const ring = b.overdue ? "od" : b.dueSoon ? "soon" : "";
+              const mini = miniFor(b);
+              const spansToday = todayIdx >= 0 && cs < todayIdx && todayIdx <= ce;
+              return (
+                <button
+                  key={b.task_id}
+                  className={`wk-bar ${ring} ${b.done ? "donebar" : ""}`}
+                  style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1, background: b.done ? "var(--todo)" : b.color, position: "relative" }}
+                  onClick={() => open(b.task_id)}
                   title={b.title}
                 >
-                  <span className="wk-bar-title">{b.icon} {b.title}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="wk-body" style={{ gridTemplateRows: `repeat(${laneCount}, 30px)` }}>
-            {bars.length === 0 && <div className="wk-empty muted">{t("cal.noTasksWeek")}</div>}
-            {bars.map((b) => (
-              <button
-                key={b.task_id}
-                className="wk-bar"
-                style={{ gridColumn: `${b.startCol} / ${b.endCol + 1}`, gridRow: b.lane + 1,
-                  background: b.overdue ? "var(--danger)" : b.dueSoon ? "var(--gold)" : b.color }}
-                onClick={() => open(b.task_id)}
-                title={b.title}
-              >
-                <span className="wk-bar-title" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <PriorityIcon level={b.priority} size={12} color="rgba(255,255,255,.92)" />
-                  {b.title}
-                  {b.overdue && <span title={t("list.missedDeadline")}> ❗</span>}
-                  {b.dueSoon && <span title={t("list.dueSoon")}> ❗</span>}
-                </span>
-                {b.assignee_ids.length > 0 && (
-                  <span className="chip-initials" title={b.assignee_ids.map((id) => userName(users, id)).join(", ")}>
-                    {b.assignee_ids.map((id) => userInitials(users, id)).join(" ")}
-                  </span>
-                )}
-              </button>
-            ))}
+                  <span className="tt">{warnIcon(b)}<span className="tn">{b.title}</span></span>
+                  {mini && <span className="mini" title={mini.name}>{mini.label}</span>}
+                  {spansToday && (
+                    <span className="tn-today" style={{
+                      position: "absolute", top: 0, bottom: 0,
+                      left: `${((todayIdx - cs) / (ce - cs + 1)) * 100}%`,
+                      width: `${100 / (ce - cs + 1)}%`,
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
+                      padding: "0 9px", whiteSpace: "nowrap", fontWeight: 600, pointerEvents: "none",
+                    }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 5, pointerEvents: "auto" }}>
+                        {warnIcon(b)}{b.title}
+                      </span>
+                      {mini && <span className="mini" title={mini.name} style={{ flex: "none", background: avatarColor(mini.id), pointerEvents: "auto" }}>{mini.label}</span>}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          {dayIso.indexOf(today) >= 0 && (
+          {todayIdx >= 0 && (
             <div className="wk-today-hl" aria-hidden
-              style={{ left: `calc(100% / 7 * ${dayIso.indexOf(today)})`, width: "calc(100% / 7)" }} />
+              style={{ left: `calc(100% / 7 * ${todayIdx})`, width: "calc(100% / 7)" }} />
           )}
         </div>
       )}

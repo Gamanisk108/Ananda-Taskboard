@@ -76,6 +76,31 @@
     "expiredBody": "Password reset links are valid for 1 hour. Please request a new one.",
     "genericError": "Something went wrong. Please request a new link."
   },
+  "signup": {
+    "title": "Create your account",
+    "subtitle": "Set up your team on Ananda Taskboard.",
+    "organization": "Organization name",
+    "name": "Your name",
+    "city": "City",
+    "country": "Country",
+    "create": "Create account",
+    "creating": "Creating…",
+    "error": "Could not create the account. Please try again.",
+    "checkTitle": "Check your email",
+    "checkBody": "We've sent a verification link to {{email}}. Click it to activate your account and team.",
+    "prompt": "New to Ananda Taskboard?",
+    "cta": "Create an account"
+  },
+  "verify": {
+    "working": "Verifying…",
+    "okTitle": "Email verified",
+    "okBody": "Your account and team are active. You can now sign in.",
+    "badTitle": "Verification failed",
+    "badBody": "This link is invalid or has expired. Please sign up again or request a new link."
+  },
+  "org": {
+    "switch": "Switch organization"
+  },
   "task": {
     "edit": "Edit task",
     "new": "New task",

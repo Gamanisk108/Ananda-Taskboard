@@ -76,6 +76,31 @@
     "expiredBody": "Links zum Zurücksetzen sind 1 Stunde gültig. Bitte fordern Sie einen neuen an.",
     "genericError": "Etwas ist schiefgelaufen. Bitte fordern Sie einen neuen Link an."
   },
+  "signup": {
+    "title": "Konto erstellen",
+    "subtitle": "Richten Sie Ihr Team in Ananda Taskboard ein.",
+    "organization": "Name der Organisation",
+    "name": "Ihr Name",
+    "city": "Stadt",
+    "country": "Land",
+    "create": "Konto erstellen",
+    "creating": "Wird erstellt…",
+    "error": "Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "checkTitle": "Prüfen Sie Ihre E-Mails",
+    "checkBody": "Wir haben einen Bestätigungslink an {{email}} gesendet. Klicken Sie darauf, um Ihr Konto und Team zu aktivieren.",
+    "prompt": "Neu bei Ananda Taskboard?",
+    "cta": "Konto erstellen"
+  },
+  "verify": {
+    "working": "Wird überprüft…",
+    "okTitle": "E-Mail bestätigt",
+    "okBody": "Ihr Konto und Team sind aktiv. Sie können sich jetzt anmelden.",
+    "badTitle": "Bestätigung fehlgeschlagen",
+    "badBody": "Dieser Link ist ungültig oder abgelaufen. Bitte registrieren Sie sich erneut oder fordern Sie einen neuen Link an."
+  },
+  "org": {
+    "switch": "Organisation wechseln"
+  },
   "task": {
     "edit": "Aufgabe bearbeiten",
     "new": "Neue Aufgabe",

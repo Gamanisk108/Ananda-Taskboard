@@ -76,6 +76,31 @@
     "expiredBody": "Os links de redefinição são válidos por 1 hora. Solicite um novo.",
     "genericError": "Algo deu errado. Solicite um novo link."
   },
+  "signup": {
+    "title": "Crie sua conta",
+    "subtitle": "Configure sua equipe no Ananda Taskboard.",
+    "organization": "Nome da organização",
+    "name": "Seu nome",
+    "city": "Cidade",
+    "country": "País",
+    "create": "Criar conta",
+    "creating": "Criando…",
+    "error": "Não foi possível criar a conta. Tente novamente.",
+    "checkTitle": "Verifique seu e-mail",
+    "checkBody": "Enviamos um link de verificação para {{email}}. Clique nele para ativar sua conta e equipe.",
+    "prompt": "Novo no Ananda Taskboard?",
+    "cta": "Criar uma conta"
+  },
+  "verify": {
+    "working": "Verificando…",
+    "okTitle": "E-mail verificado",
+    "okBody": "Sua conta e equipe estão ativas. Agora você pode entrar.",
+    "badTitle": "Falha na verificação",
+    "badBody": "Este link é inválido ou expirou. Cadastre-se novamente ou solicite um novo link."
+  },
+  "org": {
+    "switch": "Trocar de organização"
+  },
   "task": {
     "edit": "Editar tarefa",
     "new": "Nova tarefa",

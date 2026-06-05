@@ -27,16 +27,27 @@ export interface Tree {
   projects: ProjectNode[];
   show_global_overview: boolean;
 }
+/** One organization the signed-in user can act in (their tenant + role there). */
+export interface OrgMembership {
+  org_id: number;
+  name: string;
+  city: string;
+  country: string;
+  role: "admin" | "member";
+  tier: number | null;
+}
 export interface Me {
   id: number;
   email: string;
   name: string;
   role: "admin" | "member";
-  is_admin: boolean;
+  is_admin: boolean;          // admin OF THE ACTIVE ORG (per-org)
   tier: number | null;
   language: string;
   groups: { id: number; name: string }[];
   tree: Tree;
+  memberships: OrgMembership[];
+  active_org: number | null;
 }
 
 export interface Recurrence {

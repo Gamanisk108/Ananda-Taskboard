@@ -76,6 +76,31 @@
     "expiredBody": "密码重置链接有效期为 1 小时。请重新申请。",
     "genericError": "出了点问题。请重新申请链接。"
   },
+  "signup": {
+    "title": "创建你的账户",
+    "subtitle": "在 Ananda Taskboard 上设置你的团队。",
+    "organization": "组织名称",
+    "name": "你的姓名",
+    "city": "城市",
+    "country": "国家/地区",
+    "create": "创建账户",
+    "creating": "创建中…",
+    "error": "无法创建账户。请重试。",
+    "checkTitle": "请查收邮件",
+    "checkBody": "我们已向 {{email}} 发送验证链接。点击它即可激活你的账户和团队。",
+    "prompt": "第一次使用 Ananda Taskboard？",
+    "cta": "创建账户"
+  },
+  "verify": {
+    "working": "正在验证…",
+    "okTitle": "邮箱已验证",
+    "okBody": "你的账户和团队已激活。现在可以登录了。",
+    "badTitle": "验证失败",
+    "badBody": "此链接无效或已过期。请重新注册或申请新链接。"
+  },
+  "org": {
+    "switch": "切换组织"
+  },
   "task": {
     "edit": "编辑任务",
     "new": "新建任务",
