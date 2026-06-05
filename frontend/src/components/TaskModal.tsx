@@ -185,11 +185,16 @@ function ModalFooter({ editing, task, busy, shareLabel, setShareLabel, onClose, 
   );
 }
 
-export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
-  const { t } = useTranslation();
+// All core field state plus the cascading project picker and the save payload
+// builder, kept in a hook so the modal body stays focused on layout.
+function useTaskFields(
+  task: Task | null,
+  me: Me,
+  projects: ReturnType<typeof writableProjects>,
+  defaultProject?: number,
+  defaultSubproject?: number,
+) {
   const editing = !!task;
-  const projects = useMemo(() => writableProjects(me), [me]);
-  const users = useUsers();
 
   // Project + Sub-project (cascading). When editing, fixed to the task's own.
   const initialProject = task?.project ?? defaultProject ?? projects[0]?.id ?? 0;
@@ -212,27 +217,6 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [assigneeGroups, setAssigneeGroups] = useState<number[]>(task?.assignee_groups ?? []);
   const [monitor, setMonitor] = useState<boolean>(task?.monitor ?? false);
   const [autoComplete, setAutoComplete] = useState<boolean>(task?.auto_complete ?? false);
-  const [groups, setGroups] = useState<GroupLite[]>([]);
-  const statuses = useStatuses();
-  const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [shareLabel, setShareLabel] = useState("");
-
-  useEffect(() => {
-    if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
-  }, [me.is_admin]);
-
-  const [repeats, setRepeats] = useState(!!task?.recurrence);
-  const [freq, setFreq] = useState<Recurrence["freq"]>(task?.recurrence?.freq ?? "weekly");
-  const [weekdays, setWeekdays] = useState<number[]>(task?.recurrence?.weekdays ?? []);
-  const [interval, setInterval] = useState(task?.recurrence?.interval ?? 1);
-  const [anchor, setAnchor] = useState(task?.recurrence?.anchor ?? (deadline || todayISO()));
-  const [endMode, setEndMode] = useState<EndMode>(
-    task?.recurrence?.end_date ? "date" : task?.recurrence?.count ? "count" : "none"
-  );
-  const [endDate, setEndDate] = useState(task?.recurrence?.end_date ?? "");
-  const [count, setCount] = useState(task?.recurrence?.count ?? 10);
-
   const [curStatus, setCurStatus] = useState<string>(task?.status ?? "todo");
   const canChangeStatus = editing && (me.is_admin || (task!.assignees ?? []).includes(me.id));
 
@@ -241,6 +225,89 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     const subs = projects.find((p) => p.id === id)?.subprojects ?? [];
     setSubproject(subs[0]?.id ?? 0);
   }
+
+  function buildPayload(recurrence: Recurrence | null) {
+    return {
+      subproject, title, details, requirements,
+      timeline_start: startDate || null,
+      deadline: deadline || null,
+      start_time: startTime || null,
+      end_time: endTime || null,
+      priority,
+      assignees,
+      assignee_groups: assigneeGroups,
+      monitor,
+      auto_complete: autoComplete,
+      links: links.split("\n").map((l) => l.trim()).filter(Boolean),
+      recurrence,
+    };
+  }
+
+  return {
+    projectId, pickProject, subproject, setSubproject, subOptions,
+    title, setTitle, details, setDetails, requirements, setRequirements,
+    startDate, setStartDate, deadline, setDeadline, startTime, setStartTime,
+    endTime, setEndTime, priority, setPriority, links, setLinks,
+    assignees, setAssignees, assigneeGroups, setAssigneeGroups,
+    monitor, setMonitor, autoComplete, setAutoComplete,
+    curStatus, setCurStatus, canChangeStatus, buildPayload,
+  };
+}
+
+// All recurrence-editor state, the props bundle for <RecurrenceFields>, and the
+// recurrence payload builder.
+function useRecurrenceState(task: Task | null) {
+  const [repeats, setRepeats] = useState(!!task?.recurrence);
+  const [freq, setFreq] = useState<Recurrence["freq"]>(task?.recurrence?.freq ?? "weekly");
+  const [weekdays, setWeekdays] = useState<number[]>(task?.recurrence?.weekdays ?? []);
+  const [interval, setInterval] = useState(task?.recurrence?.interval ?? 1);
+  const [anchor, setAnchor] = useState(task?.recurrence?.anchor ?? (task?.deadline || todayISO()));
+  const [endMode, setEndMode] = useState<EndMode>(
+    task?.recurrence?.end_date ? "date" : task?.recurrence?.count ? "count" : "none"
+  );
+  const [endDate, setEndDate] = useState(task?.recurrence?.end_date ?? "");
+  const [count, setCount] = useState(task?.recurrence?.count ?? 10);
+
+  const fields: RecurrenceFieldsProps = {
+    freq, setFreq, interval, setInterval, weekdays, setWeekdays,
+    anchor, setAnchor, endMode, setEndMode, endDate, setEndDate, count, setCount,
+  };
+  const build = (): Recurrence | null =>
+    repeats
+      ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null,
+          count: endMode === "count" ? count : null, weekdays: freq === "weekly" ? weekdays : [] }
+      : null;
+
+  return { repeats, setRepeats, fields, build };
+}
+
+export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
+  const { t } = useTranslation();
+  const editing = !!task;
+  const projects = useMemo(() => writableProjects(me), [me]);
+  const users = useUsers();
+  const statuses = useStatuses();
+  const [groups, setGroups] = useState<GroupLite[]>([]);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [shareLabel, setShareLabel] = useState("");
+
+  const fields = useTaskFields(task, me, projects, defaultProject, defaultSubproject);
+  const rec = useRecurrenceState(task);
+  const {
+    projectId, pickProject, subproject, setSubproject, subOptions,
+    title, setTitle, details, setDetails, requirements, setRequirements,
+    startDate, setStartDate, deadline, setDeadline, startTime, setStartTime,
+    endTime, setEndTime, priority, setPriority, links, setLinks,
+    assignees, setAssignees, assigneeGroups, setAssigneeGroups,
+    monitor, setMonitor, autoComplete, setAutoComplete,
+    curStatus, setCurStatus, canChangeStatus, buildPayload,
+  } = fields;
+
+  useEffect(() => {
+    if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
+  }, [me.is_admin]);
+
   async function changeStatus(s: string) {
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
@@ -257,24 +324,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     if (!subproject) { setErr(t("tm.errPickProject")); return; }
     if (!!startTime !== !!endTime) { setErr(t("tm.errTimes")); return; }
     if (startTime && endTime && endTime <= startTime) { setErr(t("tm.errEndTime")); return; }
-    const recurrence: Recurrence | null = repeats
-      ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null, count: endMode === "count" ? count : null,
-          weekdays: freq === "weekly" ? weekdays : [] }
-      : null;
-    const payload = {
-      subproject, title, details, requirements,
-      timeline_start: startDate || null,
-      deadline: deadline || null,
-      start_time: startTime || null,
-      end_time: endTime || null,
-      priority,
-      assignees,
-      assignee_groups: assigneeGroups,
-      monitor,
-      auto_complete: autoComplete,
-      links: links.split("\n").map((l) => l.trim()).filter(Boolean),
-      recurrence,
-    };
+    const payload = buildPayload(rec.build());
     setBusy(true);
     try {
       if (editing) await api.patch(`/api/tasks/${task!.id}`, payload);
@@ -393,21 +443,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="field">
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input type="checkbox" style={{ width: "auto" }} checked={repeats} onChange={(e) => setRepeats(e.target.checked)} />
+            <input type="checkbox" style={{ width: "auto" }} checked={rec.repeats} onChange={(e) => rec.setRepeats(e.target.checked)} />
             {t("task.repeats")}
           </label>
         </div>
-        {repeats && (
-          <RecurrenceFields
-            freq={freq} setFreq={setFreq}
-            interval={interval} setInterval={setInterval}
-            weekdays={weekdays} setWeekdays={setWeekdays}
-            anchor={anchor} setAnchor={setAnchor}
-            endMode={endMode} setEndMode={setEndMode}
-            endDate={endDate} setEndDate={setEndDate}
-            count={count} setCount={setCount}
-          />
-        )}
+        {rec.repeats && <RecurrenceFields {...rec.fields} />}
 
         <div className="field">
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
