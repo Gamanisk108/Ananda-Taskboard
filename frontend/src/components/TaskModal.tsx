@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
+import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, PriorityIcon } from "./common";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
-import { AssigneePicker, type GroupLite } from "./AssigneePicker";
+import { AssigneePicker } from "./AssigneePicker";
 import { PRIORITY_META, type Me, type Recurrence, type Task } from "../types";
 
 interface Props {
@@ -287,7 +288,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
   const statuses = useStatuses();
-  const [groups, setGroups] = useState<GroupLite[]>([]);
+  const groups = useAdminGroups(me);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [shareLabel, setShareLabel] = useState("");
@@ -303,10 +304,6 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     monitor, setMonitor, autoComplete, setAutoComplete,
     curStatus, setCurStatus, canChangeStatus, buildPayload,
   } = fields;
-
-  useEffect(() => {
-    if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
-  }, [me.is_admin]);
 
   async function changeStatus(s: string) {
     try {

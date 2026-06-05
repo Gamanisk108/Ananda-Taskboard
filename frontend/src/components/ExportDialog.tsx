@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { useUsers } from "../users";
+import { useAdminGroups } from "../groups";
 import { Modal } from "./common";
 import { PRIORITY_META, type Me } from "../types";
 
@@ -26,8 +27,6 @@ const COLUMNS: { key: string; i18nKey: string }[] = [
   { key: "links", i18nKey: "expcol.links" },
 ];
 
-interface GroupLite { id: number; name: string }
-
 type Fmt = "csv" | "xlsx" | "json";
 
 export function ExportDialog({ me }: { me: Me }) {
@@ -41,16 +40,12 @@ export function ExportDialog({ me }: { me: Me }) {
   const [assignee, setAssignee] = useState("");
   const [priority, setPriority] = useState("");
   const [archived, setArchived] = useState(false);
-  const [groups, setGroups] = useState<GroupLite[]>([]);
   const [cols, setCols] = useState<Record<string, boolean>>(
     Object.fromEntries(COLUMNS.map((c) => [c.key, true])),
   );
   const statuses = useStatuses();
   const users = useUsers();
-
-  useEffect(() => {
-    if (open && me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
-  }, [open, me.is_admin]);
+  const groups = useAdminGroups(me, open);
 
   const projects = me.tree.projects;
   const allCols = COLUMNS.map((c) => c.key);

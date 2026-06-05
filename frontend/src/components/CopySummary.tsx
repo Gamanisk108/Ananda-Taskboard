@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useUsers } from "../users";
+import { useAdminGroups } from "../groups";
 import { Modal } from "./common";
 import { todayISO } from "../lookup";
 import type { Me } from "../types";
@@ -9,7 +10,7 @@ import type { Me } from "../types";
 export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
   const { t } = useTranslation();
   const users = useUsers();
-  const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
+  const groups = useAdminGroups(me);
   const [date, setDate] = useState(todayISO());
   const [projects, setProjects] = useState<number[]>([]);
   const [assignees, setAssignees] = useState<number[]>([]);
@@ -18,10 +19,6 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
 
   const projectOpts = me.tree.projects;
-
-  useEffect(() => {
-    if (me.is_admin) api.get("/api/groups").then(setGroups).catch(() => setGroups([]));
-  }, [me.is_admin]);
 
   const query = useMemo(() => {
     const p = new URLSearchParams({ date });
