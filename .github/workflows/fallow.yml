@@ -1,6 +1,6 @@
 name: Fallow Code Health
 
-   on:
+on:
      push:
        branches: [main]
      pull_request:
