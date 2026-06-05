@@ -401,5 +401,28 @@
     "approval": "Approbation",
     "recurrence": "Récurrence",
     "links": "Liens"
+  },
+  "tm": {
+    "errStatus": "Vous ne pouvez pas changer le statut de cette tâche.",
+    "errPickProject": "Choisissez un projet et un sous-projet.",
+    "errTimes": "Définissez une heure de début et de fin, ou aucune.",
+    "errEndTime": "L'heure de fin doit être postérieure à l'heure de début.",
+    "errPerm": "Vous n'avez pas la permission de faire cela.",
+    "confirmDelete": "Supprimer cette tâche ?",
+    "errDelete": "Suppression impossible.",
+    "startDateInfo": "Si laissé vide avec une échéance définie, la tâche apparaît sur le calendrier de sa date de création jusqu'à l'échéance.",
+    "startTimeInfo": "Facultatif. Définissez les deux heures pour une tâche planifiée (p. ex. un cours de 13 h à 16 h). Les tâches planifiées se classent en haut de la liste du jour.",
+    "frequency": "Fréquence",
+    "freqDaily": "quotidienne",
+    "freqWeekly": "hebdomadaire",
+    "freqMonthly": "mensuelle",
+    "freqYearly": "annuelle",
+    "everyInterval": "Tous les (intervalle)",
+    "onDays": "Les jours",
+    "onDaysHint": "(aucun = même jour de la semaine que le début)",
+    "startsAnchor": "Commence (ancre)",
+    "endOnDate": "À une date",
+    "endAfterN": "Après N fois",
+    "occurrences": "Occurrences"
   }
 }

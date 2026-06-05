@@ -90,16 +90,16 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       setCurStatus(s);          // update in place — do NOT close the modal
       onChanged?.();            // refresh the list behind the modal
     } catch {
-      setErr("You can't change this task's status.");
+      setErr(t("tm.errStatus"));
     }
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
-    if (!subproject) { setErr("Pick a project and sub-project."); return; }
-    if (!!startTime !== !!endTime) { setErr("Set both a start and end time, or neither."); return; }
-    if (startTime && endTime && endTime <= startTime) { setErr("End time must be after the start time."); return; }
+    if (!subproject) { setErr(t("tm.errPickProject")); return; }
+    if (!!startTime !== !!endTime) { setErr(t("tm.errTimes")); return; }
+    if (startTime && endTime && endTime <= startTime) { setErr(t("tm.errEndTime")); return; }
     const recurrence: Recurrence | null = repeats
       ? { freq, interval, anchor, end_date: endMode === "date" ? endDate : null, count: endMode === "count" ? count : null,
           weekdays: freq === "weekly" ? weekdays : [] }
@@ -125,19 +125,19 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       onSaved();
     } catch (e) {
       const ae = e as ApiError;
-      setErr(ae.status === 403 ? "You don't have permission to do that." : "Could not save — check the fields.");
+      setErr(ae.status === 403 ? t("tm.errPerm") : t("settings.errSave"));
     } finally {
       setBusy(false);
     }
   }
 
   async function del() {
-    if (!confirm("Delete this task?")) return;
+    if (!confirm(t("tm.confirmDelete"))) return;
     try {
       await api.del(`/api/tasks/${task!.id}`);
       onSaved();
     } catch {
-      setErr("Could not delete.");
+      setErr(t("tm.errDelete"));
     }
   }
 
@@ -235,7 +235,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <div className="field">
             <label>
               {t("task.startDate")}{" "}
-              <span className="info" title="If left blank and a deadline is set, the task shows on the calendar from its creation date up to the deadline.">ⓘ</span>
+              <span className="info" title={t("tm.startDateInfo")}>ⓘ</span>
             </label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
@@ -249,7 +249,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <div className="field">
             <label>
               {t("task.startTime")}{" "}
-              <span className="info" title="Optional. Set both times for a timed task (e.g. a class 1pm–4pm). Timed tasks sort to the top of a day's list.">ⓘ</span>
+              <span className="info" title={t("tm.startTimeInfo")}>ⓘ</span>
             </label>
             <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
@@ -274,19 +274,21 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
             <div className="row2">
               <div className="field">
-                <label>Frequency</label>
+                <label>{t("tm.frequency")}</label>
                 <select value={freq} onChange={(e) => setFreq(e.target.value as Recurrence["freq"])}>
-                  {["daily", "weekly", "monthly", "yearly"].map((f) => <option key={f} value={f}>{f}</option>)}
+                  {(["daily", "weekly", "monthly", "yearly"] as const).map((f) => (
+                    <option key={f} value={f}>{t(`tm.freq${f.charAt(0).toUpperCase()}${f.slice(1)}`)}</option>
+                  ))}
                 </select>
               </div>
               <div className="field">
-                <label>Every (interval)</label>
+                <label>{t("tm.everyInterval")}</label>
                 <input type="number" min={1} value={interval} onChange={(e) => setInterval(Number(e.target.value))} />
               </div>
             </div>
             {freq === "weekly" && (
               <div className="field">
-                <label>On days <span className="muted" style={{ fontWeight: 400 }}>(none = same weekday as start)</span></label>
+                <label>{t("tm.onDays")} <span className="muted" style={{ fontWeight: 400 }}>{t("tm.onDaysHint")}</span></label>
                 <div style={{ display: "flex", gap: 4 }}>
                   {WD_TOGGLES.map((w, i) => (
                     <button key={i} type="button"
@@ -300,24 +302,24 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             )}
             <div className="row2">
               <div className="field">
-                <label>Starts (anchor)</label>
+                <label>{t("tm.startsAnchor")}</label>
                 <input type="date" value={anchor} onChange={(e) => setAnchor(e.target.value)} />
               </div>
               <div className="field">
-                <label>Ends</label>
+                <label>{t("settings.ends")}</label>
                 <select value={endMode} onChange={(e) => setEndMode(e.target.value as EndMode)}>
-                  <option value="none">Never</option>
-                  <option value="date">On date</option>
-                  <option value="count">After N times</option>
+                  <option value="none">{t("settings.endsNever")}</option>
+                  <option value="date">{t("tm.endOnDate")}</option>
+                  <option value="count">{t("tm.endAfterN")}</option>
                 </select>
               </div>
             </div>
             {endMode === "date" && (
-              <div className="field"><label>End date</label>
+              <div className="field"><label>{t("settings.endDate")}</label>
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
             )}
             {endMode === "count" && (
-              <div className="field"><label>Occurrences</label>
+              <div className="field"><label>{t("tm.occurrences")}</label>
                 <input type="number" min={1} value={count} onChange={(e) => setCount(Number(e.target.value))} /></div>
             )}
           </div>

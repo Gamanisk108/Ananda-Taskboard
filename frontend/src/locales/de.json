@@ -401,5 +401,28 @@
     "approval": "Genehmigung",
     "recurrence": "Wiederholung",
     "links": "Links"
+  },
+  "tm": {
+    "errStatus": "Du kannst den Status dieser Aufgabe nicht ändern.",
+    "errPickProject": "Wähle ein Projekt und ein Unterprojekt.",
+    "errTimes": "Lege sowohl Start- als auch Endzeit fest, oder keine.",
+    "errEndTime": "Die Endzeit muss nach der Startzeit liegen.",
+    "errPerm": "Du hast keine Berechtigung dafür.",
+    "confirmDelete": "Diese Aufgabe löschen?",
+    "errDelete": "Löschen fehlgeschlagen.",
+    "startDateInfo": "Wenn leer gelassen und eine Frist gesetzt ist, erscheint die Aufgabe im Kalender vom Erstellungsdatum bis zur Frist.",
+    "startTimeInfo": "Optional. Lege beide Zeiten für eine zeitgebundene Aufgabe fest (z. B. ein Kurs 13–16 Uhr). Zeitgebundene Aufgaben stehen oben in der Tagesliste.",
+    "frequency": "Häufigkeit",
+    "freqDaily": "täglich",
+    "freqWeekly": "wöchentlich",
+    "freqMonthly": "monatlich",
+    "freqYearly": "jährlich",
+    "everyInterval": "Alle (Intervall)",
+    "onDays": "An Tagen",
+    "onDaysHint": "(keine = gleicher Wochentag wie der Start)",
+    "startsAnchor": "Beginnt (Anker)",
+    "endOnDate": "An Datum",
+    "endAfterN": "Nach N Malen",
+    "occurrences": "Vorkommen"
   }
 }

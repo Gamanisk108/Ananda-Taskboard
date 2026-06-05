@@ -401,5 +401,28 @@
     "approval": "Aprobación",
     "recurrence": "Recurrencia",
     "links": "Enlaces"
+  },
+  "tm": {
+    "errStatus": "No puedes cambiar el estado de esta tarea.",
+    "errPickProject": "Elige un proyecto y un subproyecto.",
+    "errTimes": "Establece una hora de inicio y de fin, o ninguna.",
+    "errEndTime": "La hora de fin debe ser posterior a la de inicio.",
+    "errPerm": "No tienes permiso para hacer eso.",
+    "confirmDelete": "¿Eliminar esta tarea?",
+    "errDelete": "No se pudo eliminar.",
+    "startDateInfo": "Si se deja en blanco y hay una fecha límite, la tarea aparece en el calendario desde su fecha de creación hasta la fecha límite.",
+    "startTimeInfo": "Opcional. Establece ambas horas para una tarea con horario (p. ej., una clase de 13 a 16 h). Las tareas con horario se ordenan al inicio de la lista del día.",
+    "frequency": "Frecuencia",
+    "freqDaily": "diaria",
+    "freqWeekly": "semanal",
+    "freqMonthly": "mensual",
+    "freqYearly": "anual",
+    "everyInterval": "Cada (intervalo)",
+    "onDays": "En los días",
+    "onDaysHint": "(ninguno = mismo día de la semana que el inicio)",
+    "startsAnchor": "Comienza (ancla)",
+    "endOnDate": "En fecha",
+    "endAfterN": "Después de N veces",
+    "occurrences": "Ocurrencias"
   }
 }

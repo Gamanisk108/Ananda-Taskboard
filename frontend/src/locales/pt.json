@@ -401,5 +401,28 @@
     "approval": "Aprovação",
     "recurrence": "Recorrência",
     "links": "Links"
+  },
+  "tm": {
+    "errStatus": "Você não pode alterar o status desta tarefa.",
+    "errPickProject": "Escolha um projeto e um subprojeto.",
+    "errTimes": "Defina uma hora de início e de fim, ou nenhuma.",
+    "errEndTime": "A hora de fim deve ser posterior à de início.",
+    "errPerm": "Você não tem permissão para fazer isso.",
+    "confirmDelete": "Excluir esta tarefa?",
+    "errDelete": "Não foi possível excluir.",
+    "startDateInfo": "Se deixado em branco e houver um prazo, a tarefa aparece no calendário da data de criação até o prazo.",
+    "startTimeInfo": "Opcional. Defina ambos os horários para uma tarefa com horário (ex.: uma aula das 13h às 16h). Tarefas com horário aparecem no topo da lista do dia.",
+    "frequency": "Frequência",
+    "freqDaily": "diária",
+    "freqWeekly": "semanal",
+    "freqMonthly": "mensal",
+    "freqYearly": "anual",
+    "everyInterval": "A cada (intervalo)",
+    "onDays": "Nos dias",
+    "onDaysHint": "(nenhum = mesmo dia da semana do início)",
+    "startsAnchor": "Começa (âncora)",
+    "endOnDate": "Em data",
+    "endAfterN": "Após N vezes",
+    "occurrences": "Ocorrências"
   }
 }

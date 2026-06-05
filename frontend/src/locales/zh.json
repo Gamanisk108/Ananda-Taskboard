@@ -401,5 +401,28 @@
     "approval": "审批",
     "recurrence": "重复",
     "links": "链接"
+  },
+  "tm": {
+    "errStatus": "您无法更改此任务的状态。",
+    "errPickProject": "请选择一个项目和子项目。",
+    "errTimes": "请同时设置开始和结束时间，或都不设置。",
+    "errEndTime": "结束时间必须晚于开始时间。",
+    "errPerm": "您没有执行该操作的权限。",
+    "confirmDelete": "删除此任务？",
+    "errDelete": "无法删除。",
+    "startDateInfo": "若留空且设置了截止日期，任务会在日历上从创建日期显示到截止日期。",
+    "startTimeInfo": "可选。为定时任务设置两个时间（例如下午 1 点至 4 点的课程）。定时任务会排在当天列表顶部。",
+    "frequency": "频率",
+    "freqDaily": "每天",
+    "freqWeekly": "每周",
+    "freqMonthly": "每月",
+    "freqYearly": "每年",
+    "everyInterval": "每隔（间隔）",
+    "onDays": "在以下日子",
+    "onDaysHint": "（不选 = 与开始日相同的星期）",
+    "startsAnchor": "开始（锚点）",
+    "endOnDate": "在某日期",
+    "endAfterN": "N 次后",
+    "occurrences": "次数"
   }
 }

@@ -401,5 +401,28 @@
     "approval": "Approvazione",
     "recurrence": "Ricorrenza",
     "links": "Link"
+  },
+  "tm": {
+    "errStatus": "Non puoi cambiare lo stato di questa attività.",
+    "errPickProject": "Scegli un progetto e un sottoprogetto.",
+    "errTimes": "Imposta sia l'ora di inizio che di fine, o nessuna.",
+    "errEndTime": "L'ora di fine deve essere successiva a quella di inizio.",
+    "errPerm": "Non hai i permessi per farlo.",
+    "confirmDelete": "Eliminare questa attività?",
+    "errDelete": "Impossibile eliminare.",
+    "startDateInfo": "Se lasciato vuoto e c'è una scadenza, l'attività appare sul calendario dalla data di creazione fino alla scadenza.",
+    "startTimeInfo": "Facoltativo. Imposta entrambe le ore per un'attività con orario (es. una lezione 13–16). Le attività con orario si ordinano in cima all'elenco del giorno.",
+    "frequency": "Frequenza",
+    "freqDaily": "giornaliera",
+    "freqWeekly": "settimanale",
+    "freqMonthly": "mensile",
+    "freqYearly": "annuale",
+    "everyInterval": "Ogni (intervallo)",
+    "onDays": "Nei giorni",
+    "onDaysHint": "(nessuno = stesso giorno della settimana dell'inizio)",
+    "startsAnchor": "Inizia (ancora)",
+    "endOnDate": "In data",
+    "endAfterN": "Dopo N volte",
+    "occurrences": "Occorrenze"
   }
 }

@@ -401,5 +401,28 @@
     "approval": "Approval",
     "recurrence": "Recurrence",
     "links": "Links"
+  },
+  "tm": {
+    "errStatus": "You can't change this task's status.",
+    "errPickProject": "Pick a project and sub-project.",
+    "errTimes": "Set both a start and end time, or neither.",
+    "errEndTime": "End time must be after the start time.",
+    "errPerm": "You don't have permission to do that.",
+    "confirmDelete": "Delete this task?",
+    "errDelete": "Could not delete.",
+    "startDateInfo": "If left blank and a deadline is set, the task shows on the calendar from its creation date up to the deadline.",
+    "startTimeInfo": "Optional. Set both times for a timed task (e.g. a class 1pm–4pm). Timed tasks sort to the top of a day's list.",
+    "frequency": "Frequency",
+    "freqDaily": "daily",
+    "freqWeekly": "weekly",
+    "freqMonthly": "monthly",
+    "freqYearly": "yearly",
+    "everyInterval": "Every (interval)",
+    "onDays": "On days",
+    "onDaysHint": "(none = same weekday as start)",
+    "startsAnchor": "Starts (anchor)",
+    "endOnDate": "On date",
+    "endAfterN": "After N times",
+    "occurrences": "Occurrences"
   }
 }
