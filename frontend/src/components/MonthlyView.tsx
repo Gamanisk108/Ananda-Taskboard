@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   addDays, addMonths, format, isSameMonth, startOfMonth, startOfWeek,
 } from "date-fns";
+import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 import { DayTaskList } from "./DayTaskList";
@@ -94,7 +95,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
         <button className="btn-secondary" onClick={() => setMonth(addMonths(month, -1))}>{t("cal.prev")}</button>
         <button className="btn-secondary" onClick={() => setMonth(startOfMonth(new Date()))}>{t("cal.thisMonth")}</button>
         <button className="btn-secondary" onClick={() => setMonth(addMonths(month, 1))}>{t("cal.next")}</button>
-        <span className="muted mono">{format(month, "MMMM yyyy")}</span>
+        <span className="muted mono">{format(month, "MMMM yyyy", { locale: dfLocale() })}</span>
       </div>
       {!items ? (
         <Spinner />
@@ -117,7 +118,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                   className={`mcell ${inMonth ? "" : "dim"} ${hasOverdue ? "has-overdue" : hasSoon ? "has-soon" : ""}`}
                   onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
                 >
-                  <span className="day-num">{format(d, "MMM d")}
+                  <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}
                     {hasOverdue && <span className="od" title={t("list.missedDeadline")}> ❗</span>}
                     {hasSoon && <span className="od-soon" title={t("list.dueSoon")}> ❗</span>}
                   </span>
@@ -135,7 +136,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
           </div>
 
           {dayOpen && (
-            <Modal title={format(new Date(dayOpen), "EEEE, MMM d, yyyy")} onClose={() => setDayOpen(null)}>
+            <Modal title={format(new Date(dayOpen), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
               {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
                 <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{EVENT_ICON[e.kind]} {e.title}</div>
               ))}

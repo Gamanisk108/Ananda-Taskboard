@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addDays, addWeeks, format, startOfWeek } from "date-fns";
+import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { useUsers, userInitials, userName } from "../users";
 import { Modal, Spinner, PriorityIcon } from "./common";
@@ -127,7 +128,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
         <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>{t("cal.prev")}</button>
         <button className="btn-secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>{t("cal.thisWeek")}</button>
         <button className="btn-secondary" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>{t("cal.next")}</button>
-        <span className="muted mono">{format(weekStart, "MMM d")} – {format(addDays(weekStart, 6), "MMM d, yyyy")}</span>
+        <span className="muted mono">{format(weekStart, "MMM d", { locale: dfLocale() })} – {format(addDays(weekStart, 6), "MMM d, yyyy", { locale: dfLocale() })}</span>
       </div>
       {!items ? (
         <Spinner />
@@ -137,7 +138,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
             {days.map((d, idx) => (
               <div className="wk-hcell wk-hcell-click" key={idx}
                 title={t("cal.openDay")} onClick={() => setDayOpen(dayIso[idx])}>
-                <div>{format(d, "EEE")} <span className="day-num">{format(d, "MMM d")}</span></div>
+                <div>{format(d, "EEE", { locale: dfLocale() })} <span className="day-num">{format(d, "MMM d", { locale: dfLocale() })}</span></div>
               </div>
             ))}
           </div>
@@ -183,7 +184,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Prop
         </div>
       )}
       {dayOpen && (
-        <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy")} onClose={() => setDayOpen(null)}>
+        <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
           <DayTaskList
             items={(items ?? []).filter((i) => i.date === dayOpen)}
             colorByProject={colorByProject}
