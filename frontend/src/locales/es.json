@@ -277,6 +277,16 @@
     "next": "Sig. →",
     "thisWeek": "Esta semana",
     "openDay": "Abrir las tareas de este día",
-    "noTasksWeek": "No hay tareas esta semana."
+    "noTasksWeek": "No hay tareas esta semana.",
+    "thisMonth": "Este mes",
+    "dow": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    }
   }
 }

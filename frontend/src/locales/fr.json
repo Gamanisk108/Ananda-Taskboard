@@ -277,6 +277,16 @@
     "next": "Suiv. →",
     "thisWeek": "Cette semaine",
     "openDay": "Ouvrir les tâches de ce jour",
-    "noTasksWeek": "Aucune tâche cette semaine."
+    "noTasksWeek": "Aucune tâche cette semaine.",
+    "thisMonth": "Ce mois-ci",
+    "dow": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    }
   }
 }

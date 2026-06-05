@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   addDays, addMonths, format, isSameMonth, startOfMonth, startOfWeek,
 } from "date-fns";
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Props) {
+  const { t } = useTranslation();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [items, setItems] = useState<CalendarInstance[] | null>(null);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
@@ -89,9 +91,9 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
   return (
     <div className="rise">
       <div className="bulkbar">
-        <button className="btn-secondary" onClick={() => setMonth(addMonths(month, -1))}>← Prev</button>
-        <button className="btn-secondary" onClick={() => setMonth(startOfMonth(new Date()))}>This month</button>
-        <button className="btn-secondary" onClick={() => setMonth(addMonths(month, 1))}>Next →</button>
+        <button className="btn-secondary" onClick={() => setMonth(addMonths(month, -1))}>{t("cal.prev")}</button>
+        <button className="btn-secondary" onClick={() => setMonth(startOfMonth(new Date()))}>{t("cal.thisMonth")}</button>
+        <button className="btn-secondary" onClick={() => setMonth(addMonths(month, 1))}>{t("cal.next")}</button>
         <span className="muted mono">{format(month, "MMMM yyyy")}</span>
       </div>
       {!items ? (
@@ -99,8 +101,8 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
       ) : (
         <>
           <div className="month">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div className="dow" key={d}>{d}</div>
+            {(["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const).map((d) => (
+              <div className="dow" key={d}>{t(`cal.dow.${d}`)}</div>
             ))}
             {cells.map((d) => {
               const iso = format(d, "yyyy-MM-dd");
@@ -116,8 +118,8 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Pro
                   onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}
                 >
                   <span className="day-num">{format(d, "MMM d")}
-                    {hasOverdue && <span className="od" title="Missed Deadline"> ❗</span>}
-                    {hasSoon && <span className="od-soon" title="Due today or tomorrow"> ❗</span>}
+                    {hasOverdue && <span className="od" title={t("list.missedDeadline")}> ❗</span>}
+                    {hasSoon && <span className="od-soon" title={t("list.dueSoon")}> ❗</span>}
                   </span>
                   {dayEvents.map((e, k) => (
                     <div key={`ev-${k}`} className="ev-bar" title={e.title}>{EVENT_ICON[e.kind]} {e.title}</div>

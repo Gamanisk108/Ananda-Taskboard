@@ -277,6 +277,16 @@
     "next": "下一个 →",
     "thisWeek": "本周",
     "openDay": "打开这一天的任务",
-    "noTasksWeek": "本周没有任务。"
+    "noTasksWeek": "本周没有任务。",
+    "thisMonth": "本月",
+    "dow": {
+      "sun": "日",
+      "mon": "一",
+      "tue": "二",
+      "wed": "三",
+      "thu": "四",
+      "fri": "五",
+      "sat": "六"
+    }
   }
 }

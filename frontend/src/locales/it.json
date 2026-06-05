@@ -277,6 +277,16 @@
     "next": "Succ. →",
     "thisWeek": "Questa settimana",
     "openDay": "Apri le attività di questo giorno",
-    "noTasksWeek": "Nessuna attività questa settimana."
+    "noTasksWeek": "Nessuna attività questa settimana.",
+    "thisMonth": "Questo mese",
+    "dow": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Gio",
+      "fri": "Ven",
+      "sat": "Sab"
+    }
   }
 }
