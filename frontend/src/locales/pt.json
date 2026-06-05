@@ -9,7 +9,8 @@
     "search": "Buscar…",
     "add": "Adicionar",
     "loading": "Carregando…",
-    "subtasksByStatus": "Subtarefas por status"
+    "subtasksByStatus": "Subtarefas por status",
+    "done": "Concluído"
   },
   "nav": {
     "approvals": "Aprovações",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "Responsável"
+  },
+  "import": {
+    "button": "Importar ▾",
+    "intro": "Cole as linhas copiadas de uma planilha (incluindo a linha de cabeçalho), ou envie um arquivo CSV / TSV / JSON / Excel. As linhas são associadas a tarefas existentes pela coluna ID; linhas sem um ID conhecido criam novas tarefas. Projetos/subprojetos ausentes são criados automaticamente.",
+    "pasteLabel": "Colar de uma planilha",
+    "uploadLabel": "…ou envie um arquivo",
+    "formatLabel": "Formato",
+    "fmtCsv": "CSV (vírgula)",
+    "fmtTsv": "TSV / colar do Google Sheets (tab)",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — apenas upload",
+    "rows": "{{n}} linhas",
+    "nCreate": "{{n}} criar",
+    "nUpdate": "{{n}} atualizar",
+    "nError": "{{n}} erro",
+    "willCreate": "Serão criados: {{list}}",
+    "overwriteWarn": "⚠ As linhas com um ID correspondente substituirão a tarefa existente. Mude as que quiser para \"Criar nova\" ou \"Ignorar\" abaixo.",
+    "colAction": "Ação",
+    "colDecision": "Decisão",
+    "skipped": "ignorada",
+    "optOverwrite": "Sobrescrever",
+    "optCreateNew": "Criar nova",
+    "optSkip": "Ignorar",
+    "optCreate": "Criar",
+    "badgeUpdate": "Atualizar",
+    "badgeError": "Erro",
+    "reading": "Lendo…",
+    "preview": "Pré-visualizar importação",
+    "importing": "Importando…",
+    "confirm": "Confirmar importação",
+    "imported": "Importado — {{created}} criadas, {{updated}} atualizadas{{skipped}}{{errored}}.",
+    "resSkipped": ", {{n}} ignoradas",
+    "resErrored": ", {{n}} com erro",
+    "importMore": "Importar mais",
+    "errRead": "Não foi possível ler essa entrada.",
+    "errFailed": "A importação falhou."
   }
 }

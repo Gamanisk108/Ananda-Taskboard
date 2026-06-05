@@ -9,7 +9,8 @@
     "search": "શોધો…",
     "add": "ઉમેરો",
     "loading": "લોડ થઈ રહ્યું છે…",
-    "subtasksByStatus": "સ્થિતિ પ્રમાણે પેટા-કાર્યો"
+    "subtasksByStatus": "સ્થિતિ પ્રમાણે પેટા-કાર્યો",
+    "done": "થઈ ગયું"
   },
   "nav": {
     "approvals": "મંજૂરીઓ",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "જવાબદાર"
+  },
+  "import": {
+    "button": "આયાત ▾",
+    "intro": "સ્પ્રેડશીટમાંથી કૉપિ કરેલી પંક્તિઓ પેસ્ટ કરો (હેડર પંક્તિ સહિત), અથવા CSV / TSV / JSON / Excel ફાઇલ અપલોડ કરો. પંક્તિઓ ID કૉલમ દ્વારા હાલનાં કાર્યો સાથે મેળવાય છે; જાણીતા ID વગરની પંક્તિઓ નવાં કાર્યો બનાવે છે. ગુમ પ્રોજેક્ટ/પેટા-પ્રોજેક્ટ આપમેળે બને છે.",
+    "pasteLabel": "સ્પ્રેડશીટમાંથી પેસ્ટ કરો",
+    "uploadLabel": "…અથવા એક ફાઇલ અપલોડ કરો",
+    "formatLabel": "ફોર્મેટ",
+    "fmtCsv": "CSV (અલ્પવિરામ)",
+    "fmtTsv": "TSV / Google Sheets પેસ્ટ (ટૅબ)",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — ફક્ત અપલોડ",
+    "rows": "{{n}} પંક્તિઓ",
+    "nCreate": "{{n}} બનાવો",
+    "nUpdate": "{{n}} અપડેટ",
+    "nError": "{{n}} ભૂલ",
+    "willCreate": "બનશે: {{list}}",
+    "overwriteWarn": "⚠ મેળ ખાતી ID વાળી પંક્તિઓ હાલના કાર્યને ઓવરરાઇટ કરશે. નીચે કોઈપણને \"નવું બનાવો\" અથવા \"છોડો\"માં બદલો.",
+    "colAction": "ક્રિયા",
+    "colDecision": "નિર્ણય",
+    "skipped": "છોડ્યું",
+    "optOverwrite": "ઓવરરાઇટ",
+    "optCreateNew": "નવું બનાવો",
+    "optSkip": "છોડો",
+    "optCreate": "બનાવો",
+    "badgeUpdate": "અપડેટ",
+    "badgeError": "ભૂલ",
+    "reading": "વાંચી રહ્યું છે…",
+    "preview": "આયાત પૂર્વાવલોકન",
+    "importing": "આયાત થઈ રહ્યું છે…",
+    "confirm": "આયાત પુષ્ટિ કરો",
+    "imported": "આયાત થયું — {{created}} બન્યાં, {{updated}} અપડેટ{{skipped}}{{errored}}.",
+    "resSkipped": ", {{n}} છોડ્યાં",
+    "resErrored": ", {{n}} ભૂલ",
+    "importMore": "વધુ આયાત કરો",
+    "errRead": "તે ઇનપુટ વાંચી શકાયું નહીં.",
+    "errFailed": "આયાત નિષ્ફળ થયું."
   }
 }

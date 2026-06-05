@@ -9,7 +9,8 @@
     "search": "Cerca…",
     "add": "Aggiungi",
     "loading": "Caricamento…",
-    "subtasksByStatus": "Sottoattività per stato"
+    "subtasksByStatus": "Sottoattività per stato",
+    "done": "Fatto"
   },
   "nav": {
     "approvals": "Approvazioni",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "Assegnatario"
+  },
+  "import": {
+    "button": "Importa ▾",
+    "intro": "Incolla le righe copiate da un foglio di calcolo (inclusa la riga di intestazione), o carica un file CSV / TSV / JSON / Excel. Le righe vengono abbinate alle attività esistenti tramite la colonna ID; le righe senza un ID noto creano nuove attività. I progetti/sottoprogetti mancanti vengono creati automaticamente.",
+    "pasteLabel": "Incolla da un foglio di calcolo",
+    "uploadLabel": "…o carica un file",
+    "formatLabel": "Formato",
+    "fmtCsv": "CSV (virgola)",
+    "fmtTsv": "TSV / incolla da Google Sheets (tab)",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — solo caricamento",
+    "rows": "{{n}} righe",
+    "nCreate": "{{n}} da creare",
+    "nUpdate": "{{n}} da aggiornare",
+    "nError": "{{n}} errori",
+    "willCreate": "Verranno creati: {{list}}",
+    "overwriteWarn": "⚠ Le righe con un ID corrispondente sovrascriveranno l'attività esistente. Cambia quelle che vuoi in \"Crea nuovo\" o \"Salta\" qui sotto.",
+    "colAction": "Azione",
+    "colDecision": "Decisione",
+    "skipped": "saltata",
+    "optOverwrite": "Sovrascrivi",
+    "optCreateNew": "Crea nuovo",
+    "optSkip": "Salta",
+    "optCreate": "Crea",
+    "badgeUpdate": "Aggiorna",
+    "badgeError": "Errore",
+    "reading": "Lettura…",
+    "preview": "Anteprima importazione",
+    "importing": "Importazione…",
+    "confirm": "Conferma importazione",
+    "imported": "Importato — {{created}} create, {{updated}} aggiornate{{skipped}}{{errored}}.",
+    "resSkipped": ", {{n}} saltate",
+    "resErrored": ", {{n}} con errori",
+    "importMore": "Importa altro",
+    "errRead": "Impossibile leggere quell'input.",
+    "errFailed": "Importazione non riuscita."
   }
 }

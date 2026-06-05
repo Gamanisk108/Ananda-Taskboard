@@ -9,7 +9,8 @@
     "search": "Suchen…",
     "add": "Hinzufügen",
     "loading": "Wird geladen…",
-    "subtasksByStatus": "Unteraufgaben nach Status"
+    "subtasksByStatus": "Unteraufgaben nach Status",
+    "done": "Fertig"
   },
   "nav": {
     "approvals": "Genehmigungen",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "Zuständig"
+  },
+  "import": {
+    "button": "Importieren ▾",
+    "intro": "Füge aus einer Tabelle kopierte Zeilen ein (einschließlich Kopfzeile) oder lade eine CSV-/TSV-/JSON-/Excel-Datei hoch. Zeilen werden über die ID-Spalte vorhandenen Aufgaben zugeordnet; Zeilen ohne bekannte ID erstellen neue Aufgaben. Fehlende Projekte/Unterprojekte werden automatisch erstellt.",
+    "pasteLabel": "Aus einer Tabelle einfügen",
+    "uploadLabel": "…oder eine Datei hochladen",
+    "formatLabel": "Format",
+    "fmtCsv": "CSV (Komma)",
+    "fmtTsv": "TSV / Google Sheets-Einfügen (Tab)",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — nur Upload",
+    "rows": "{{n}} Zeilen",
+    "nCreate": "{{n}} erstellen",
+    "nUpdate": "{{n}} aktualisieren",
+    "nError": "{{n}} Fehler",
+    "willCreate": "Wird erstellt: {{list}}",
+    "overwriteWarn": "⚠ Zeilen mit übereinstimmender ID überschreiben die vorhandene Aufgabe. Stelle einzelne unten auf \"Neu erstellen\" oder \"Überspringen\" um.",
+    "colAction": "Aktion",
+    "colDecision": "Entscheidung",
+    "skipped": "übersprungen",
+    "optOverwrite": "Überschreiben",
+    "optCreateNew": "Neu erstellen",
+    "optSkip": "Überspringen",
+    "optCreate": "Erstellen",
+    "badgeUpdate": "Aktualisieren",
+    "badgeError": "Fehler",
+    "reading": "Wird gelesen…",
+    "preview": "Import-Vorschau",
+    "importing": "Wird importiert…",
+    "confirm": "Import bestätigen",
+    "imported": "Importiert — {{created}} erstellt, {{updated}} aktualisiert{{skipped}}{{errored}}.",
+    "resSkipped": ", {{n}} übersprungen",
+    "resErrored": ", {{n}} fehlerhaft",
+    "importMore": "Mehr importieren",
+    "errRead": "Diese Eingabe konnte nicht gelesen werden.",
+    "errFailed": "Import fehlgeschlagen."
   }
 }

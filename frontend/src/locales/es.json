@@ -9,7 +9,8 @@
     "search": "Buscar…",
     "add": "Agregar",
     "loading": "Cargando…",
-    "subtasksByStatus": "Subtareas por estado"
+    "subtasksByStatus": "Subtareas por estado",
+    "done": "Listo"
   },
   "nav": {
     "approvals": "Aprobaciones",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "Responsable"
+  },
+  "import": {
+    "button": "Importar ▾",
+    "intro": "Pega las filas copiadas de una hoja de cálculo (incluida la fila de encabezado), o sube un archivo CSV / TSV / JSON / Excel. Las filas se asocian a tareas existentes por la columna ID; las filas sin un ID conocido crean tareas nuevas. Los proyectos/subproyectos que falten se crean automáticamente.",
+    "pasteLabel": "Pegar desde una hoja de cálculo",
+    "uploadLabel": "…o sube un archivo",
+    "formatLabel": "Formato",
+    "fmtCsv": "CSV (coma)",
+    "fmtTsv": "TSV / pegado de Google Sheets (tab)",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — solo subida",
+    "rows": "{{n}} filas",
+    "nCreate": "{{n}} crear",
+    "nUpdate": "{{n}} actualizar",
+    "nError": "{{n}} error",
+    "willCreate": "Se crearán: {{list}}",
+    "overwriteWarn": "⚠ Las filas con un ID coincidente sobrescribirán la tarea existente. Cambia las que quieras a \"Crear nueva\" o \"Omitir\" abajo.",
+    "colAction": "Acción",
+    "colDecision": "Decisión",
+    "skipped": "omitida",
+    "optOverwrite": "Sobrescribir",
+    "optCreateNew": "Crear nueva",
+    "optSkip": "Omitir",
+    "optCreate": "Crear",
+    "badgeUpdate": "Actualizar",
+    "badgeError": "Error",
+    "reading": "Leyendo…",
+    "preview": "Vista previa de importación",
+    "importing": "Importando…",
+    "confirm": "Confirmar importación",
+    "imported": "Importado — {{created}} creadas, {{updated}} actualizadas{{skipped}}{{errored}}.",
+    "resSkipped": ", {{n}} omitidas",
+    "resErrored": ", {{n}} con errores",
+    "importMore": "Importar más",
+    "errRead": "No se pudo leer esa entrada.",
+    "errFailed": "La importación falló."
   }
 }

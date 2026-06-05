@@ -9,7 +9,8 @@
     "search": "搜索…",
     "add": "添加",
     "loading": "加载中…",
-    "subtasksByStatus": "按状态分类的子任务"
+    "subtasksByStatus": "按状态分类的子任务",
+    "done": "完成"
   },
   "nav": {
     "approvals": "审批",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "负责人"
+  },
+  "import": {
+    "button": "导入 ▾",
+    "intro": "粘贴从电子表格复制的行（包含表头行），或上传 CSV / TSV / JSON / Excel 文件。行通过 ID 列与现有任务匹配；没有已知 ID 的行会创建新任务。缺失的项目/子项目会自动创建。",
+    "pasteLabel": "从电子表格粘贴",
+    "uploadLabel": "…或上传文件",
+    "formatLabel": "格式",
+    "fmtCsv": "CSV（逗号）",
+    "fmtTsv": "TSV / Google 表格粘贴（制表符）",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — 仅上传",
+    "rows": "{{n}} 行",
+    "nCreate": "{{n}} 新建",
+    "nUpdate": "{{n}} 更新",
+    "nError": "{{n}} 错误",
+    "willCreate": "将创建：{{list}}",
+    "overwriteWarn": "⚠ ID 匹配的行将覆盖现有任务。可在下方将任意行切换为“新建”或“跳过”。",
+    "colAction": "操作",
+    "colDecision": "决定",
+    "skipped": "已跳过",
+    "optOverwrite": "覆盖",
+    "optCreateNew": "新建",
+    "optSkip": "跳过",
+    "optCreate": "新建",
+    "badgeUpdate": "更新",
+    "badgeError": "错误",
+    "reading": "读取中…",
+    "preview": "预览导入",
+    "importing": "导入中…",
+    "confirm": "确认导入",
+    "imported": "已导入 — 新建 {{created}}，更新 {{updated}}{{skipped}}{{errored}}。",
+    "resSkipped": "，跳过 {{n}}",
+    "resErrored": "，{{n}} 出错",
+    "importMore": "导入更多",
+    "errRead": "无法读取该输入。",
+    "errFailed": "导入失败。"
   }
 }

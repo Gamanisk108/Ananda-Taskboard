@@ -9,7 +9,8 @@
     "search": "Rechercher…",
     "add": "Ajouter",
     "loading": "Chargement…",
-    "subtasksByStatus": "Sous-tâches par statut"
+    "subtasksByStatus": "Sous-tâches par statut",
+    "done": "Terminé"
   },
   "nav": {
     "approvals": "Approbations",
@@ -341,5 +342,41 @@
   },
   "subtask": {
     "assignee": "Responsable"
+  },
+  "import": {
+    "button": "Importer ▾",
+    "intro": "Collez les lignes copiées depuis un tableur (y compris la ligne d'en-tête), ou importez un fichier CSV / TSV / JSON / Excel. Les lignes sont associées aux tâches existantes par la colonne ID ; les lignes sans ID connu créent de nouvelles tâches. Les projets/sous-projets manquants sont créés automatiquement.",
+    "pasteLabel": "Coller depuis un tableur",
+    "uploadLabel": "…ou importer un fichier",
+    "formatLabel": "Format",
+    "fmtCsv": "CSV (virgule)",
+    "fmtTsv": "TSV / collage Google Sheets (tab)",
+    "fmtJson": "JSON",
+    "fmtXlsx": "Excel (.xlsx) — import uniquement",
+    "rows": "{{n}} lignes",
+    "nCreate": "{{n}} à créer",
+    "nUpdate": "{{n}} à mettre à jour",
+    "nError": "{{n}} erreur",
+    "willCreate": "Seront créés : {{list}}",
+    "overwriteWarn": "⚠ Les lignes avec un ID correspondant écraseront la tâche existante. Basculez celles de votre choix sur « Créer une nouvelle » ou « Ignorer » ci-dessous.",
+    "colAction": "Action",
+    "colDecision": "Décision",
+    "skipped": "ignorée",
+    "optOverwrite": "Écraser",
+    "optCreateNew": "Créer une nouvelle",
+    "optSkip": "Ignorer",
+    "optCreate": "Créer",
+    "badgeUpdate": "Mettre à jour",
+    "badgeError": "Erreur",
+    "reading": "Lecture…",
+    "preview": "Aperçu de l'import",
+    "importing": "Importation…",
+    "confirm": "Confirmer l'import",
+    "imported": "Importé — {{created}} créées, {{updated}} mises à jour{{skipped}}{{errored}}.",
+    "resSkipped": ", {{n}} ignorées",
+    "resErrored": ", {{n}} en erreur",
+    "importMore": "Importer plus",
+    "errRead": "Impossible de lire cette entrée.",
+    "errFailed": "L'import a échoué."
   }
 }
