@@ -30,3 +30,4 @@ qa/shots/
 vapid_*.json
 .env.*
 !.env.example
+.fallow/

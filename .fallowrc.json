@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    "design/**",
+    "frontend/dist/**"
+  ],
+  "entry": [
+    "frontend/src/main.tsx",
+    "frontend/public/push-sw.js"
+  ],
+  "duplicates": {
+    "minOccurrences": 2
+  },
+  "rules": {}
+}
