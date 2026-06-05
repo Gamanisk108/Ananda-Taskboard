@@ -18,7 +18,7 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
     onChanged(); load();
   }
   async function purge(type: string, id: number) {
-    if (!confirm("Delete forever? This cannot be undone.")) return;
+    if (!confirm(t("trash.confirmPurge"))) return;
     await api.del("/api/trash/action", { type, id });
     load();
   }

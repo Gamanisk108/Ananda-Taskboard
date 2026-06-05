@@ -63,7 +63,7 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
   }
 
   async function del(id: number) {
-    if (!confirm("Delete this comment?")) return;
+    if (!confirm(t("cs.confirmDelete"))) return;
     await api.del(`/api/comments/${id}`);
     load();
   }
@@ -96,15 +96,15 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
         return (
           <div key={c.id} className="card" data-testid="comment" style={{ padding: 9, marginBottom: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, alignItems: "center" }}>
-              <strong>{c.author === meId ? "You" : "Team member"}</strong>
+              <strong>{c.author === meId ? t("cs.you") : t("cs.teamMember")}</strong>
               <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span className="muted mono">{c.created_at.slice(0, 10)}</span>
                 {canManage && editing?.id !== c.id && (
                   <>
                     <button type="button" className="btn-ghost" data-testid="comment-edit" style={{ padding: "1px 6px", fontSize: 12 }}
-                      onClick={() => setEditing({ id: c.id, text: c.text })}>Edit</button>
+                      onClick={() => setEditing({ id: c.id, text: c.text })}>{t("common.edit")}</button>
                     <button type="button" className="btn-ghost" data-testid="comment-delete" style={{ padding: "1px 6px", fontSize: 12, color: "var(--danger)" }}
-                      onClick={() => del(c.id)}>Delete</button>
+                      onClick={() => del(c.id)}>{t("common.delete")}</button>
                   </>
                 )}
               </span>
@@ -113,8 +113,8 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <input data-testid="comment-edit-input" value={editing.text} onChange={(e) => setEditing({ id: c.id, text: e.target.value })}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); saveEdit(); } }} />
-                <button type="button" className="btn-primary" data-testid="comment-save" onClick={saveEdit}>Save</button>
-                <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>Cancel</button>
+                <button type="button" className="btn-primary" data-testid="comment-save" onClick={saveEdit}>{t("common.save")}</button>
+                <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>{t("common.cancel")}</button>
               </div>
             ) : (
               <div style={{ whiteSpace: "pre-wrap", marginTop: 3 }}>{c.text}</div>

@@ -30,7 +30,9 @@
     "copySummary": "Copy summary",
     "shareView": "Share view",
     "archive": "Archive",
-    "hideArchive": "Hide archive"
+    "hideArchive": "Hide archive",
+    "archiveHint": "Completed tasks auto-archive after 7 days",
+    "shareHint": "Copy a link to this exact view"
   },
   "menu": {
     "account": "Account menu",
@@ -182,7 +184,8 @@
     "daysLeft": "{{n}}d left",
     "projects": "Projects",
     "subprojects": "Sub-projects",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "confirmPurge": "Delete forever? This cannot be undone."
   },
   "restore": {
     "intro": "Full snapshots of the whole board. Restoring auto-saves the current state first (so it's undoable). Auto-saves happen daily (last 10 kept); manual saves stay forever.",
@@ -493,5 +496,10 @@
     "noExclusions": "No exclusions.",
     "taskIdPh": "Task ID (e.g. 318)",
     "selectHide": "Select what to hide…"
+  },
+  "cs": {
+    "confirmDelete": "Delete this comment?",
+    "you": "You",
+    "teamMember": "Team member"
   }
 }

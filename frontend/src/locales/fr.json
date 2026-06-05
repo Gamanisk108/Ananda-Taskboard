@@ -30,7 +30,9 @@
     "copySummary": "Copier le résumé",
     "shareView": "Partager la vue",
     "archive": "Archives",
-    "hideArchive": "Masquer les archives"
+    "hideArchive": "Masquer les archives",
+    "archiveHint": "Les tâches terminées sont archivées automatiquement après 7 jours",
+    "shareHint": "Copier un lien vers cette vue exacte"
   },
   "menu": {
     "account": "Menu du compte",
@@ -182,7 +184,8 @@
     "daysLeft": "{{n}}j restants",
     "projects": "Projets",
     "subprojects": "Sous-projets",
-    "tasks": "Tâches"
+    "tasks": "Tâches",
+    "confirmPurge": "Supprimer définitivement ? Cette action est irréversible."
   },
   "restore": {
     "intro": "Instantanés complets de tout le tableau. La restauration sauvegarde d'abord l'état actuel (donc réversible). Les sauvegardes auto sont quotidiennes (10 conservées) ; les manuelles restent.",
@@ -493,5 +496,10 @@
     "noExclusions": "Aucune exclusion.",
     "taskIdPh": "ID de tâche (p. ex. 318)",
     "selectHide": "Sélectionnez ce qu'il faut masquer…"
+  },
+  "cs": {
+    "confirmDelete": "Supprimer ce commentaire ?",
+    "you": "Vous",
+    "teamMember": "Membre de l'équipe"
   }
 }

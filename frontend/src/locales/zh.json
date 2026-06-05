@@ -30,7 +30,9 @@
     "copySummary": "复制摘要",
     "shareView": "分享视图",
     "archive": "归档",
-    "hideArchive": "隐藏归档"
+    "hideArchive": "隐藏归档",
+    "archiveHint": "已完成的任务在 7 天后自动归档",
+    "shareHint": "复制指向此确切视图的链接"
   },
   "menu": {
     "account": "账户菜单",
@@ -182,7 +184,8 @@
     "daysLeft": "剩 {{n}} 天",
     "projects": "项目",
     "subprojects": "子项目",
-    "tasks": "任务"
+    "tasks": "任务",
+    "confirmPurge": "永久删除？此操作无法撤销。"
   },
   "restore": {
     "intro": "整个看板的完整快照。还原前会先自动保存当前状态（可撤销）。自动保存每天进行（保留最近 10 个）；手动保存永久保留。",
@@ -493,5 +496,10 @@
     "noExclusions": "无排除项。",
     "taskIdPh": "任务 ID（例如 318）",
     "selectHide": "选择要隐藏的内容…"
+  },
+  "cs": {
+    "confirmDelete": "删除此评论？",
+    "you": "你",
+    "teamMember": "团队成员"
   }
 }

@@ -30,7 +30,9 @@
     "copySummary": "Copia riepilogo",
     "shareView": "Condividi vista",
     "archive": "Archivio",
-    "hideArchive": "Nascondi archivio"
+    "hideArchive": "Nascondi archivio",
+    "archiveHint": "Le attività completate vengono archiviate automaticamente dopo 7 giorni",
+    "shareHint": "Copia un link a questa vista esatta"
   },
   "menu": {
     "account": "Menu account",
@@ -182,7 +184,8 @@
     "daysLeft": "{{n}}g rimasti",
     "projects": "Progetti",
     "subprojects": "Sotto-progetti",
-    "tasks": "Attività"
+    "tasks": "Attività",
+    "confirmPurge": "Eliminare definitivamente? Questa azione non può essere annullata."
   },
   "restore": {
     "intro": "Istantanee complete dell'intera bacheca. Il ripristino salva prima lo stato attuale (così è annullabile). I salvataggi automatici avvengono ogni giorno (ultimi 10); quelli manuali restano per sempre.",
@@ -493,5 +496,10 @@
     "noExclusions": "Nessuna esclusione.",
     "taskIdPh": "ID attività (es. 318)",
     "selectHide": "Seleziona cosa nascondere…"
+  },
+  "cs": {
+    "confirmDelete": "Eliminare questo commento?",
+    "you": "Tu",
+    "teamMember": "Membro del team"
   }
 }

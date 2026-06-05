@@ -30,7 +30,9 @@
     "copySummary": "Zusammenfassung kopieren",
     "shareView": "Ansicht teilen",
     "archive": "Archiv",
-    "hideArchive": "Archiv ausblenden"
+    "hideArchive": "Archiv ausblenden",
+    "archiveHint": "Erledigte Aufgaben werden nach 7 Tagen automatisch archiviert",
+    "shareHint": "Einen Link zu genau dieser Ansicht kopieren"
   },
   "menu": {
     "account": "Kontomenü",
@@ -182,7 +184,8 @@
     "daysLeft": "noch {{n}}T",
     "projects": "Projekte",
     "subprojects": "Unterprojekte",
-    "tasks": "Aufgaben"
+    "tasks": "Aufgaben",
+    "confirmPurge": "Endgültig löschen? Dies kann nicht rückgängig gemacht werden."
   },
   "restore": {
     "intro": "Vollständige Schnappschüsse des gesamten Boards. Beim Wiederherstellen wird zuerst der aktuelle Stand gespeichert (rückgängig machbar). Auto-Speicherungen täglich (letzte 10); manuelle bleiben.",
@@ -493,5 +496,10 @@
     "noExclusions": "Keine Ausschlüsse.",
     "taskIdPh": "Aufgaben-ID (z. B. 318)",
     "selectHide": "Wähle, was ausgeblendet werden soll…"
+  },
+  "cs": {
+    "confirmDelete": "Diesen Kommentar löschen?",
+    "you": "Du",
+    "teamMember": "Teammitglied"
   }
 }

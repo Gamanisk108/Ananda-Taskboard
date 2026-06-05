@@ -215,7 +215,7 @@ export default function App() {
           <button
             className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
             onClick={() => { setView("list"); setShowArchived((a) => !a); }}
-            title="Completed tasks auto-archive after 7 days"
+            title={t("view.archiveHint")}
           >
             📖 {showArchived ? t("view.hideArchive") : t("view.archive")}
           </button>
@@ -364,6 +364,6 @@ function ShareViewButton() {
     setLabel(await shareUrl(window.location.href));
     setTimeout(() => setLabel(""), 2500);
   }
-  return <button className="btn-secondary" onClick={share} title="Copy a link to this exact view">🔗 {label || t("view.shareView")}</button>;
+  return <button className="btn-secondary" onClick={share} title={t("view.shareHint")}>🔗 {label || t("view.shareView")}</button>;
 }
 

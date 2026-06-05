@@ -30,7 +30,9 @@
     "copySummary": "Copiar resumo",
     "shareView": "Compartilhar visão",
     "archive": "Arquivo",
-    "hideArchive": "Ocultar arquivo"
+    "hideArchive": "Ocultar arquivo",
+    "archiveHint": "Tarefas concluídas são arquivadas automaticamente após 7 dias",
+    "shareHint": "Copiar um link para esta visualização exata"
   },
   "menu": {
     "account": "Menu da conta",
@@ -182,7 +184,8 @@
     "daysLeft": "{{n}}d restantes",
     "projects": "Projetos",
     "subprojects": "Subprojetos",
-    "tasks": "Tarefas"
+    "tasks": "Tarefas",
+    "confirmPurge": "Excluir para sempre? Isto não pode ser desfeito."
   },
   "restore": {
     "intro": "Capturas completas de todo o quadro. Restaurar salva primeiro o estado atual (reversível). Salvamentos automáticos são diários (10 mantidos); os manuais permanecem.",
@@ -493,5 +496,10 @@
     "noExclusions": "Sem exclusões.",
     "taskIdPh": "ID da tarefa (ex.: 318)",
     "selectHide": "Selecione o que ocultar…"
+  },
+  "cs": {
+    "confirmDelete": "Excluir este comentário?",
+    "you": "Você",
+    "teamMember": "Membro da equipe"
   }
 }

@@ -30,7 +30,9 @@
     "copySummary": "Copiar resumen",
     "shareView": "Compartir vista",
     "archive": "Archivo",
-    "hideArchive": "Ocultar archivo"
+    "hideArchive": "Ocultar archivo",
+    "archiveHint": "Las tareas completadas se archivan automáticamente tras 7 días",
+    "shareHint": "Copiar un enlace a esta vista exacta"
   },
   "menu": {
     "account": "Menú de cuenta",
@@ -182,7 +184,8 @@
     "daysLeft": "{{n}}d restantes",
     "projects": "Proyectos",
     "subprojects": "Subproyectos",
-    "tasks": "Tareas"
+    "tasks": "Tareas",
+    "confirmPurge": "¿Eliminar para siempre? Esto no se puede deshacer."
   },
   "restore": {
     "intro": "Capturas completas de todo el tablero. Al restaurar se guarda primero el estado actual (es reversible). Los guardados automáticos son diarios (se conservan 10); los manuales permanecen.",
@@ -493,5 +496,10 @@
     "noExclusions": "Sin exclusiones.",
     "taskIdPh": "ID de tarea (p. ej., 318)",
     "selectHide": "Selecciona qué ocultar…"
+  },
+  "cs": {
+    "confirmDelete": "¿Eliminar este comentario?",
+    "you": "Tú",
+    "teamMember": "Miembro del equipo"
   }
 }
