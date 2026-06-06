@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 
 from accounts.models import Group, User
 from notifications.push import send_web_push
-from permissions.models import AccessGrant
+from permissions.models import AccessGrant, Exclusion
 from projects.models import PALETTE, Project, SubProject
 from tasks.models import Task
 
@@ -67,15 +67,26 @@ def test_member_cannot_edit_via_api_in_hidden_subproject(member, sp):
 
 # --- revocation safety ------------------------------------------------------
 
-def test_revoked_access_then_assigned_task_is_safe(member, sp):
+def test_revoked_grant_keeps_assigned_task_until_excluded_or_unassigned(member, sp):
+    # Policy (confirmed 2026-06-06): assignment alone confers task-granular visibility,
+    # so revoking a member's sub-project GRANT does NOT hide a task they're still
+    # assigned to — they remain an assignee and can still see/act on it. The real
+    # cut-offs are an Exclusion (deny > assignment) or removing the assignment.
     grant = AccessGrant.objects.create(user=member, subproject=sp, level="member")
     t = Task.objects.create(subproject=sp, title="T")
     t.assignees.add(member)
     assert login(member).get(f"/api/tasks/{t.id}").status_code == 200
-    grant.delete()  # access revoked
-    # task no longer visible, and status change blocked
+    grant.delete()  # grant revoked, but still assigned → still visible + actionable
+    assert login(member).get(f"/api/tasks/{t.id}").status_code == 200
+    assert login(member).post(f"/api/tasks/{t.id}/status", {"status": "done"}, format="json").status_code == 200
+    # Deny beats assignment: an Exclusion fully cuts the member off (invisible again).
+    exc = Exclusion.objects.create(user=member, excluded_task=t)
     assert login(member).get(f"/api/tasks/{t.id}").status_code == 404
-    assert login(member).post(f"/api/tasks/{t.id}/status", {"status": "done"}, format="json").status_code == 404
+    assert login(member).post(f"/api/tasks/{t.id}/status", {"status": "todo"}, format="json").status_code == 404
+    # ...and so does removing the assignment (no grant, no assignment → invisible).
+    exc.delete()
+    t.assignees.remove(member)
+    assert login(member).get(f"/api/tasks/{t.id}").status_code == 404
 
 
 # --- rejected tasks disappear -----------------------------------------------
