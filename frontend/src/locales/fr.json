@@ -119,6 +119,28 @@
     "role_admin": "Administrateur",
     "role_member": "Membre"
   },
+  "invite": {
+    "title": "Inviter quelqu'un",
+    "hint": "Cette personne recevra un e-mail pour rejoindre l'équipe. Les nouveaux peuvent créer leur compte depuis l'invitation.",
+    "send": "Envoyer l'invitation",
+    "sent": "Invitation envoyée à {{email}}.",
+    "error": "Impossible d'envoyer l'invitation.",
+    "pending": "Invitations en attente",
+    "revoke": "Révoquer",
+    "confirmRevoke": "Révoquer cette invitation ?"
+  },
+  "accept": {
+    "title": "Rejoindre {{org}}",
+    "subtitle": "Vous avez été invité à {{org}} en tant que {{role}} ({{email}}).",
+    "join": "Rejoindre {{org}}",
+    "joining": "Adhésion…",
+    "joinedTitle": "Bienvenue dans {{org}}",
+    "joinedBody": "Vous avez rejoint l'équipe. Connectez-vous pour commencer.",
+    "invalidTitle": "Invitation non valide",
+    "invalidBody": "Cette invitation est invalide ou a expiré. Demandez à votre administrateur d'en envoyer une nouvelle.",
+    "loading": "Chargement…",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
   "task": {
     "edit": "Modifier la tâche",
     "new": "Nouvelle tâche",

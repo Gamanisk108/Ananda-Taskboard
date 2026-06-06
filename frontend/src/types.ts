@@ -15,6 +15,7 @@ export interface SubProjectNode {
   color: string;
   is_default: boolean;
   level: Level;
+  created_at?: string;
 }
 export interface ProjectNode {
   id: number;
@@ -22,6 +23,7 @@ export interface ProjectNode {
   color: string;
   show_project_overview: boolean;
   subprojects: SubProjectNode[];
+  created_at?: string;
 }
 export interface Tree {
   projects: ProjectNode[];

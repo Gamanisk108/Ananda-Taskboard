@@ -48,10 +48,13 @@ html[data-theme="dark"] {
   --flag-od:#ff4d45;  /* vivid warning red (brighter for contrast on the navy canvas) */
   --row:var(--surface); --hover:#1b2d4d;
   --overdue-bg:#e0634a33; --soon-bg:#e0b04a2e;
-  --wk-today:#ffffff; --wk-today-line:var(--azure);
+  /* Today highlight: keep the column/cell BODY dark (a faint azure wash), let the
+     --wk-today-line border frame + light header do the signposting. A solid white
+     fill here was the dark-mode "white block" bug. */
+  --wk-today:color-mix(in srgb,var(--azure) 12%,var(--surface)); --wk-today-line:var(--azure);
   --wk-past:color-mix(in srgb,#6f7c93 40%,transparent);
   --wk-future:color-mix(in srgb,#cbb06a 26%,transparent);
-  --mo-today:#ffffff; --mo-soon:color-mix(in srgb,var(--bar-soon) 26%,var(--surface));
+  --mo-today:color-mix(in srgb,var(--azure) 14%,var(--surface)); --mo-soon:color-mix(in srgb,var(--bar-soon) 26%,var(--surface));
   --wk-divider:rgba(255,255,255,.05);
   --shadow-1:0 1px 2px rgba(0,0,0,.3);
   --shadow-2:0 6px 22px rgba(0,0,0,.45);
@@ -89,8 +92,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Display serif for top-level headings; UI sans elsewhere is set per-component. */
-h1, h2, h3 { font-family: var(--f-display); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
+/* Headings use the UI sans (same as the Weekly date display, e.g. "May 31 – Jun 6,
+   2026"). The display serif (--f-display) is reserved for the brand title +
+   "Love & Blessings…" subtitle, which set it explicitly in App.css. */
+h1, h2, h3 { font-family: var(--f-ui); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
 h1 { font-size: 1.6rem; }
 h2 { font-size: 1.2rem; }
 h3 { font-size: 1rem; }

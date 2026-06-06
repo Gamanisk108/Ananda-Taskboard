@@ -15,6 +15,7 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);  // synchronous double-submit guard (state lags a tick)
   const [editing, setEditing] = useState<{ id: number; text: string } | null>(null);
   // active @-mention being typed: the query text and where the "@" sits
   const [mention, setMention] = useState<{ query: string; at: number } | null>(null);
@@ -71,11 +72,13 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
+    if (submitting.current) return;        // block double-click duplicate comments
     // only keep mentions whose @Name still appears in the final text
     const mentions = mentionedIds.filter((id) => {
       const u = users.find((x) => x.id === id);
       return u && text.includes(`@${u.name || u.email}`);
     });
+    submitting.current = true;
     setBusy(true);
     try {
       await api.post(`/api/tasks/${taskId}/comments`, { text, mentions });
@@ -84,6 +87,7 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
       setMentionedIds([]);
       load();
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }

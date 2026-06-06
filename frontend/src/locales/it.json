@@ -119,6 +119,28 @@
     "role_admin": "Amministratore",
     "role_member": "Membro"
   },
+  "invite": {
+    "title": "Invita qualcuno",
+    "hint": "Riceverà un'email per unirsi a questo team. Le nuove persone possono creare il loro account dall'invito.",
+    "send": "Invia invito",
+    "sent": "Invito inviato a {{email}}.",
+    "error": "Impossibile inviare l'invito.",
+    "pending": "Inviti in sospeso",
+    "revoke": "Revoca",
+    "confirmRevoke": "Revocare questo invito?"
+  },
+  "accept": {
+    "title": "Unisciti a {{org}}",
+    "subtitle": "Sei stato invitato a {{org}} come {{role}} ({{email}}).",
+    "join": "Unisciti a {{org}}",
+    "joining": "Adesione…",
+    "joinedTitle": "Benvenuto in {{org}}",
+    "joinedBody": "Ti sei unito al team. Accedi per iniziare.",
+    "invalidTitle": "Invito non valido",
+    "invalidBody": "Questo invito non è valido o è scaduto. Chiedi al tuo amministratore di inviarne uno nuovo.",
+    "loading": "Caricamento…",
+    "error": "Qualcosa è andato storto. Riprova."
+  },
   "task": {
     "edit": "Modifica attività",
     "new": "Nuova attività",

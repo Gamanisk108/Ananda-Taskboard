@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { Search, RefreshCw } from "lucide-react";
@@ -19,7 +20,6 @@ function fmtDeadline(d: string): string {
 interface Props {
   projectId?: number;
   subprojectId?: number;
-  refreshKey: number;
   onEdit: (t: Task) => void;
   me: Me;
   showArchived?: boolean;
@@ -27,9 +27,8 @@ interface Props {
 
 type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "priority" | "assignee" | "created";
 
-export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, showArchived = false }: Props) {
+export function ListView({ projectId, subprojectId, onEdit, me, showArchived = false }: Props) {
   const { t: tr } = useTranslation();  // aliased: `t` is used below for the task row
-  const [tasks, setTasks] = useState<Task[] | null>(null);
   const [q, setQ] = useState("");
   // combinable filters
   const [fProject, setFProject] = useState(0);
@@ -52,16 +51,20 @@ export function ListView({ projectId, subprojectId, refreshKey, onEdit, me, show
   const statusOrder = useMemo(() => Object.fromEntries(statuses.map((s, i) => [s.key, i])), [statuses]);
 
   // Tab scope (project/subproject) is applied server-side; everything else is client-side.
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (subprojectId) params.set("subproject", String(subprojectId));
-    else if (projectId) params.set("project", String(projectId));
-    if (showArchived) params.set("archived", "1");
-    // Group filter is server-side (needs membership expansion the client can't see).
-    if (fAssigneeGroup) params.set("assignee_group", String(fAssigneeGroup));
-    setTasks(null);
-    api.get(`/api/tasks?${params}`).then(setTasks).catch(() => setTasks([]));
-  }, [projectId, subprojectId, refreshKey, showArchived, fAssigneeGroup]);
+  // Server-side params (the rest is filtered client-side). The group filter is
+  // server-side too — it needs membership expansion the client can't see.
+  const params = new URLSearchParams();
+  if (subprojectId) params.set("subproject", String(subprojectId));
+  else if (projectId) params.set("project", String(projectId));
+  if (showArchived) params.set("archived", "1");
+  if (fAssigneeGroup) params.set("assignee_group", String(fAssigneeGroup));
+  const qs = params.toString();
+  // bump()'s invalidate (key prefix ["tasks"]) refreshes this after any CRUD; the
+  // query key also re-fetches when the tab scope / archive / group filter changes.
+  const { data: tasks = null } = useQuery({
+    queryKey: ["tasks", "list", me.active_org ?? null, projectId ?? null, subprojectId ?? null, showArchived, fAssigneeGroup],
+    queryFn: () => api.get(`/api/tasks?${qs}`) as Promise<Task[]>,
+  });
 
   const assigneeNames = (t: Task) => t.assignees.map((id) => userName(users, id));
 

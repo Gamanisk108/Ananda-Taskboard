@@ -1,33 +1,15 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "./api/client";
 import type { Me, UserLite } from "./types";
 
-// Small shared cache so we don't refetch the user list in every component.
-let cache: UserLite[] | null = null;
-let inflight: Promise<UserLite[]> | null = null;
-
-function fetchUsers(): Promise<UserLite[]> {
-  if (cache) return Promise.resolve(cache);
-  if (!inflight) {
-    inflight = api.get("/api/users").then((d) => {
-      cache = d as UserLite[];
-      inflight = null;
-      return cache;
-    });
-  }
-  return inflight;
-}
-
-export function invalidateUsers() {
-  cache = null;
-}
-
-export function useUsers() {
-  const [users, setUsers] = useState<UserLite[]>(cache ?? []);
-  useEffect(() => {
-    fetchUsers().then(setUsers).catch(() => setUsers([]));
-  }, []);
-  return users;
+// The org's user roster. TanStack Query gives the shared cache + request dedup the
+// old hand-rolled module cache did; refresh it via invalidateQueries(["users"]).
+export function useUsers(): UserLite[] {
+  const { data } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => api.get("/api/users") as Promise<UserLite[]>,
+  });
+  return data ?? [];
 }
 
 /** Sub-project ids the current user can reach, read off their permission-filtered tree. */

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
@@ -12,7 +13,6 @@ import type { Me, Task } from "../types";
 interface Props {
   projectId?: number;
   subprojectId?: number;
-  refreshKey: number;
   onEdit: (t: Task) => void;
   me: Me;
 }
@@ -22,31 +22,36 @@ function fmtShort(d: string): string {
   return Number.isNaN(dt.getTime()) ? d : format(dt, "MMM d", { locale: dfLocale() });
 }
 
-export function KanbanView({ projectId, subprojectId, refreshKey, onEdit, me }: Props) {
+export function KanbanView({ projectId, subprojectId, onEdit, me }: Props) {
   const { t: tr } = useTranslation();
-  const [tasks, setTasks] = useState<Task[] | null>(null);
+  const queryClient = useQueryClient();
   const [dragId, setDragId] = useState<number | null>(null);
   const [dropCol, setDropCol] = useState<string | null>(null);
   const statuses = useStatuses();
   const subs = buildSubLookup(me.tree);
   const users = useUsers();
 
-  function load() {
-    const p = new URLSearchParams();
-    if (subprojectId) p.set("subproject", String(subprojectId));
-    else if (projectId) p.set("project", String(projectId));
-    setTasks(null);
-    api.get(`/api/tasks?${p}`).then(setTasks).catch(() => setTasks([]));
-  }
-  useEffect(load, [projectId, subprojectId, refreshKey]);
+  const p = new URLSearchParams();
+  if (subprojectId) p.set("subproject", String(subprojectId));
+  else if (projectId) p.set("project", String(projectId));
+  const qs = p.toString();
+  // Same key shape as ListView so List ⇄ Board on the same scope share one cache.
+  const taskKey = ["tasks", "list", me.active_org ?? null, projectId ?? null, subprojectId ?? null, false, 0];
+  const { data: tasks = null } = useQuery({
+    queryKey: taskKey,
+    queryFn: () => api.get(`/api/tasks?${qs}`) as Promise<Task[]>,
+  });
 
   async function move(taskId: number, statusKey: string) {
-    const prev = tasks;
-    setTasks((ts) => (ts ?? []).map((t) => (t.id === taskId ? { ...t, status: statusKey } : t)));
+    // Optimistic: patch the cached list, revert it on error, then sync every view.
+    const prev = queryClient.getQueryData<Task[]>(taskKey);
+    queryClient.setQueryData<Task[]>(taskKey, (ts) =>
+      (ts ?? []).map((t) => (t.id === taskId ? { ...t, status: statusKey } : t)));
     try {
       await api.post(`/api/tasks/${taskId}/status`, { status: statusKey });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     } catch {
-      setTasks(prev ?? []); // revert (e.g. not your task → 403)
+      queryClient.setQueryData(taskKey, prev); // revert (e.g. not your task → 403)
       alert(tr("kanban.moveErr"));
     }
   }

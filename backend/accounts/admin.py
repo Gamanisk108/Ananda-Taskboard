@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import Group, Membership, Organization, Tier, User
+from .models import Group, Invitation, Membership, Organization, Tier, User
 
 
 class UserCreateForm(UserCreationForm):
@@ -68,6 +68,13 @@ class TierAdmin(admin.ModelAdmin):
     list_display = ("name", "organization", "default_sees")
     list_filter = ("organization", "default_sees")
     search_fields = ("name",)
+
+
+@admin.register(Invitation)
+class InvitationAdmin(admin.ModelAdmin):
+    list_display = ("email", "organization", "role", "tier", "status", "invited_by", "created_at")
+    list_filter = ("status", "role", "organization")
+    search_fields = ("email", "organization__name")
 
 
 # Full platform control: the User page surfaces each person's org memberships.

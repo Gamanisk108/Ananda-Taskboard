@@ -119,6 +119,28 @@
     "role_admin": "管理员",
     "role_member": "成员"
   },
+  "invite": {
+    "title": "邀请成员",
+    "hint": "对方将收到加入此团队的邮件。新用户可通过邀请创建账户。",
+    "send": "发送邀请",
+    "sent": "邀请已发送至 {{email}}。",
+    "error": "无法发送邀请。",
+    "pending": "待处理的邀请",
+    "revoke": "撤销",
+    "confirmRevoke": "撤销此邀请？"
+  },
+  "accept": {
+    "title": "加入 {{org}}",
+    "subtitle": "你被邀请以{{role}}身份加入 {{org}}（{{email}}）。",
+    "join": "加入 {{org}}",
+    "joining": "加入中…",
+    "joinedTitle": "欢迎加入 {{org}}",
+    "joinedBody": "你已加入团队。登录即可开始。",
+    "invalidTitle": "邀请无效",
+    "invalidBody": "此邀请无效或已过期。请让团队管理员重新发送。",
+    "loading": "加载中…",
+    "error": "出了点问题。请重试。"
+  },
   "task": {
     "edit": "编辑任务",
     "new": "新建任务",

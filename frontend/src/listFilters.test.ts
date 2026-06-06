@@ -10,7 +10,7 @@ const sub = (projectId: number): SubInfo => ({
 const subs = new Map<number, SubInfo>([[10, sub(1)], [20, sub(2)]]);
 
 const NONE: TaskFilters = {
-  q: "", fProject: 0, fSub: 0, fAssignee: 0, fStatus: "", fPriority: 0, fRecur: "", fDeadline: "",
+  q: "", fProjects: [], fSubs: [], fStatuses: [], fPriorities: [], fRecur: "", fDeadline: "",
 };
 
 function mkTask(over: Partial<Task> = {}): Task {
@@ -40,36 +40,31 @@ describe("matchesFilters", () => {
     });
   });
 
-  describe("project / subproject scope", () => {
-    it("filters by the subproject's parent project", () => {
-      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fProject: 1 }, subs)).toBe(true);
-      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fProject: 2 }, subs)).toBe(false);
+  describe("project / subproject scope (multi-select)", () => {
+    it("filters by the subprojects' parent projects", () => {
+      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fProjects: [1] }, subs)).toBe(true);
+      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fProjects: [2] }, subs)).toBe(false);
     });
-    it("filters by exact subproject", () => {
-      expect(matchesFilters(mkTask({ subproject: 20 }), { ...NONE, fSub: 20 }, subs)).toBe(true);
-      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fSub: 20 }, subs)).toBe(false);
+    it("ORs multiple selected projects", () => {
+      expect(matchesFilters(mkTask({ subproject: 20 }), { ...NONE, fProjects: [1, 2] }, subs)).toBe(true);
     });
-  });
-
-  describe("assignee", () => {
-    it("fAssignee -1 keeps only unassigned tasks", () => {
-      expect(matchesFilters(mkTask({ assignees: [] }), { ...NONE, fAssignee: -1 }, subs)).toBe(true);
-      expect(matchesFilters(mkTask({ assignees: [7] }), { ...NONE, fAssignee: -1 }, subs)).toBe(false);
-    });
-    it("a specific id keeps only tasks that include that person", () => {
-      expect(matchesFilters(mkTask({ assignees: [7, 9] }), { ...NONE, fAssignee: 7 }, subs)).toBe(true);
-      expect(matchesFilters(mkTask({ assignees: [9] }), { ...NONE, fAssignee: 7 }, subs)).toBe(false);
+    it("filters by exact subprojects", () => {
+      expect(matchesFilters(mkTask({ subproject: 20 }), { ...NONE, fSubs: [20] }, subs)).toBe(true);
+      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fSubs: [20] }, subs)).toBe(false);
+      expect(matchesFilters(mkTask({ subproject: 10 }), { ...NONE, fSubs: [10, 20] }, subs)).toBe(true);
     });
   });
 
-  describe("status / priority", () => {
-    it("filters by status key", () => {
-      expect(matchesFilters(mkTask({ status: "done" }), { ...NONE, fStatus: "done" }, subs)).toBe(true);
-      expect(matchesFilters(mkTask({ status: "todo" }), { ...NONE, fStatus: "done" }, subs)).toBe(false);
+  describe("status / priority (multi-select)", () => {
+    it("ORs the selected status keys", () => {
+      expect(matchesFilters(mkTask({ status: "done" }), { ...NONE, fStatuses: ["done"] }, subs)).toBe(true);
+      expect(matchesFilters(mkTask({ status: "todo" }), { ...NONE, fStatuses: ["done"] }, subs)).toBe(false);
+      expect(matchesFilters(mkTask({ status: "in_progress" }), { ...NONE, fStatuses: ["todo", "in_progress"] }, subs)).toBe(true);
     });
-    it("filters by priority", () => {
-      expect(matchesFilters(mkTask({ priority: 5 }), { ...NONE, fPriority: 5 }, subs)).toBe(true);
-      expect(matchesFilters(mkTask({ priority: 3 }), { ...NONE, fPriority: 5 }, subs)).toBe(false);
+    it("ORs the selected priorities", () => {
+      expect(matchesFilters(mkTask({ priority: 5 }), { ...NONE, fPriorities: [5] }, subs)).toBe(true);
+      expect(matchesFilters(mkTask({ priority: 3 }), { ...NONE, fPriorities: [5] }, subs)).toBe(false);
+      expect(matchesFilters(mkTask({ priority: 1 }), { ...NONE, fPriorities: [1, 5] }, subs)).toBe(true);
     });
   });
 
@@ -101,10 +96,10 @@ describe("matchesFilters", () => {
     });
   });
 
-  it("requires ALL active filters to pass (AND semantics)", () => {
-    const t = mkTask({ title: "Write report", subproject: 10, priority: 5, assignees: [7] });
-    expect(matchesFilters(t, { ...NONE, q: "report", fProject: 1, fPriority: 5, fAssignee: 7 }, subs)).toBe(true);
-    // one mismatch (priority) fails the whole predicate
-    expect(matchesFilters(t, { ...NONE, q: "report", fProject: 1, fPriority: 1, fAssignee: 7 }, subs)).toBe(false);
+  it("requires ALL active filter categories to pass (AND across, OR within)", () => {
+    const t = mkTask({ title: "Write report", subproject: 10, priority: 5 });
+    expect(matchesFilters(t, { ...NONE, q: "report", fProjects: [1], fPriorities: [5] }, subs)).toBe(true);
+    // one mismatch (priority not in the selected set) fails the whole predicate
+    expect(matchesFilters(t, { ...NONE, q: "report", fProjects: [1], fPriorities: [1] }, subs)).toBe(false);
   });
 });

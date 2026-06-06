@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Web · Sign in &amp; Reset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="ananda-auth.css" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .seg{display:inline-flex;background:#efe5cc;border-radius:999px;padding:3px;gap:2px}
+  #toolbar .seg button{border:none;border-radius:999px;padding:5px 14px;background:transparent;color:#5a6172;
+    font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  #toolbar .seg button.on{background:#fffdf8;color:#23262b;box-shadow:0 1px 2px rgba(30,58,110,.12)}
+  #toolbar .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:760px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Web</span></div>
+  <span class="sep"></span>
+  <div class="seg" id="themeSeg">
+    <button data-mt="light" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>Light</button>
+    <button data-mt="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark</button>
+  </div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="auth-screens.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="auth-canvas.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="web-signin" title="Web — sign in & reset" subtitle="One centered card on the soft canvas. The whole flow, left to right.">
+        {Web({ id:"w-login", label:"1 · Sign in", state:"login" })}
+        {Web({ id:"w-request", label:"2 · Request reset", state:"request" })}
+        {Web({ id:"w-check", label:"3 · Check your email", state:"check" })}
+        {Web({ id:"w-setnew", label:"5 · Choose a new password", state:"setnew" })}
+        {Web({ id:"w-success", label:"5a · Updated", state:"success" })}
+        {Web({ id:"w-expired", label:"5b · Link expired", state:"expired" })}
+        {Note({ id:"web-notes", label:"Notes", title:"One card, every state", sub:"Web sign-in & reset", items:[
+          'Every screen is the <b>same centered card</b> — brand row, optional title, labelled fields, one <b>full-width primary</b> button. Only the contents change, so the flow feels like one place.',
+          '<b>Sign in</b> keeps your existing card: brand + muted subtitle + Email / Password, with a small <b>Forgot password?</b> link under the button.',
+          '<b>Request reset</b> → <b>Check your email</b> shows the <b>same confirmation whether or not the account exists</b> — no account-leak. The email is echoed in <b>bold</b> so people know which inbox to open.',
+          'Copy is <b>short and label-driven</b> so it survives translation into all 13 languages without breaking the layout — titles balance, ledes wrap with ' + k + 'text-wrap:pretty</span>.',
+          'The card sits on the same ' + k + '--canvas</span> as the app, with a faint gold dome glow up top — calm, uncluttered, reassuring.',
+        ], tip:'No account-creation, no social login here — this is sign-in + reset only. Sign-up lives in its own file.' })}
+      </DCSection>
+
+      <DCSection id="web-email" title="The reset email" subtitle="Subject: “Reset your Ananda Taskboard password.” Client view.">
+        {Raw({ id:"e-web", label:"4 · Email (client view)", html:window.A.emailWeb(), w:660, h:700 })}
+        {Note({ id:"email-notes", label:"Notes", title:"The email itself", sub:"Friendly, one job", items:[
+          'Subject is plain and searchable: <b>Reset your Ananda Taskboard password</b>. From <span class="k">no-reply@ananda.test</span> with the lotus avatar.',
+          'A <b>one-line greeting</b>, one sentence of why, then a <b>prominent “Reset password” button</b> — the single thing to do.',
+          'Carries the two safety lines every reset email needs: <b>“expires in 1 hour”</b> (gold, with a clock) and <b>“if you didn\u2019t request this, ignore it.”</b>',
+          'A plain-text <b>fallback link</b> is included for clients that strip buttons; signed off with the <b>Love &amp; Blessings</b> tagline.',
+          'Rendered on the temple surface so it feels like the app — but the surrounding <b>client chrome is neutral</b> (real inboxes aren\u2019t themed).',
+        ], tip:'Same email, light or dark — flip the canvas to preview the dark inbox.' })}
+      </DCSection>
+
+      <DCSection id="web-parity" title="Light + dark parity" subtitle="Every web screen ships both themes from the same tokens.">
+        {Web({ id:"d-login", label:"Sign in · dark", state:"login", theme:"dark" })}
+        {Web({ id:"d-check", label:"Check email · dark", state:"check", theme:"dark" })}
+        {Web({ id:"d-setnew", label:"New password · dark", state:"setnew", theme:"dark" })}
+        {Raw({ id:"d-email", label:"Email · dark", html:window.A.emailWeb(), theme:"dark", w:660, h:700 })}
+        {Note({ id:"parity-notes", label:"Notes", title:"Both themes, one token set", sub:"Light + dark", items:[
+          'All states render in light and dark from the same CSS variables — the navy <b>Temple of Light</b> ramp, gold accents, and the blue ' + k + '--dome</span> link/focus colour.',
+          'In dark, the brand wordmark and links shift to <b>azure</b> for contrast; the gold expiry line stays gold.',
+          'Focus rings use ' + k + '--primary-weak</span> so keyboard / tab navigation is visible in both themes — important for an internal tool used daily.',
+        ], tip:'The toolbar Light / Dark switch flips the whole canvas; the frames in this row are pinned so you can compare side by side.' })}
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

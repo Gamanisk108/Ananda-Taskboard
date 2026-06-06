@@ -1,7 +1,7 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
-import { writableProjects, todayISO } from "../lookup";
+import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
@@ -160,17 +160,26 @@ function RecurrenceFields(p: RecurrenceFieldsProps) {
   );
 }
 
-// Cancel / Delete / Save row, plus the share-link button when editing.
-function ModalFooter({ editing, task, busy, shareLabel, setShareLabel, onClose, del }: {
+// Cancel / Delete / Save row, plus the share-link button when editing. For a
+// read-only (view-only) task it collapses to a single Close button — no Save/Delete.
+function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel, onClose, del }: {
   editing: boolean;
   task: Task | null;
   busy: boolean;
+  readOnly: boolean;
   shareLabel: string;
   setShareLabel: Dispatch<SetStateAction<string>>;
   onClose: () => void;
   del: () => void;
 }) {
   const { t } = useTranslation();
+  if (readOnly) {
+    return (
+      <div className="modal-foot">
+        <button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>
+      </div>
+    );
+  }
   return (
     <div className="modal-foot">
       {editing && (
@@ -292,6 +301,17 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [shareLabel, setShareLabel] = useState("");
+  // Synchronous in-flight guard: `busy` (state) updates a tick late, so 2–3 fast
+  // clicks could all fire before the button re-renders disabled, creating duplicate
+  // tasks (QA 2026-06-05). The ref blocks re-entry immediately.
+  const submitting = useRef(false);
+
+  // View-only when editing a task the user can't edit: a viewer-level sub-project, or
+  // one not in their tree at all (e.g. visible only via direct assignment). Admins and
+  // member-level holders edit normally. Drives the read-only form + real-scope display.
+  const subLookup = useMemo(() => buildSubLookup(me.tree), [me]);
+  const taskSub = task ? subLookup.get(task.subproject) : undefined;
+  const readOnly = !!task && !me.is_admin && taskSub?.level !== "member";
 
   const fields = useTaskFields(task, me, projects, defaultProject, defaultSubproject);
   const rec = useRecurrenceState(task);
@@ -317,11 +337,13 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting.current) return;        // block double/triple-click duplicates
     setErr("");
     if (!subproject) { setErr(t("tm.errPickProject")); return; }
     if (!!startTime !== !!endTime) { setErr(t("tm.errTimes")); return; }
     if (startTime && endTime && endTime <= startTime) { setErr(t("tm.errEndTime")); return; }
     const payload = buildPayload(rec.build());
+    submitting.current = true;
     setBusy(true);
     try {
       if (editing) await api.patch(`/api/tasks/${task!.id}`, payload);
@@ -331,6 +353,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       const ae = e as ApiError;
       setErr(ae.status === 403 ? t("tm.errPerm") : t("settings.errSave"));
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -349,26 +372,49 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide>
       <form onSubmit={save}>
         {editing && <ApprovalBanners task={task!} onSaved={onSaved} />}
+        {readOnly && (
+          <div className="field">
+            <span className="pill" style={{ background: "var(--surface-sunk)" }} title={t("task.viewOnlyHint")}>👁 {t("task.viewOnly")}</span>
+          </div>
+        )}
 
+        {/* A disabled fieldset makes every control inside read-only in one stroke — so
+            a viewer is never shown an editable form that only 403s on Save. */}
+        <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
         <div className="field">
           <label>{t("task.name")}</label>
           <input data-testid="task-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder={t("task.namePlaceholder")} />
         </div>
 
-        <div className="row2">
-          <div className="field">
-            <label>{t("task.project")}</label>
-            <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))}>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+        {readOnly ? (
+          // Show the task's REAL project/sub-project. The editable picker is filtered to
+          // postable projects, which would mis-display (or mis-relocate) a view-only task.
+          <div className="row2">
+            <div className="field">
+              <label>{t("task.project")}</label>
+              <div className="muted" style={{ padding: "8px 0" }}>{taskSub?.projectName ?? "—"}</div>
+            </div>
+            <div className="field">
+              <label>{t("task.subproject")}</label>
+              <div className="muted" style={{ padding: "8px 0" }}>{taskSub?.name ?? "—"}</div>
+            </div>
           </div>
-          <div className="field">
-            <label>{t("task.subproject")}</label>
-            <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))}>
-              {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+        ) : (
+          <div className="row2">
+            <div className="field">
+              <label>{t("task.project")}</label>
+              <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))}>
+                {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>{t("task.subproject")}</label>
+              <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))}>
+                {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="row2">
           <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} />
@@ -456,10 +502,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             {t("task.autoComplete")}
           </label>
         </div>
+        </fieldset>
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 
-        <ModalFooter editing={editing} task={task} busy={busy} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />
+        <ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}

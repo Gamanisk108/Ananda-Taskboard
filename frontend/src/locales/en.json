@@ -119,6 +119,28 @@
     "role_admin": "Admin",
     "role_member": "Member"
   },
+  "invite": {
+    "title": "Invite someone",
+    "hint": "They'll get an email to join this team. New people can create their account from the invite.",
+    "send": "Send invitation",
+    "sent": "Invitation sent to {{email}}.",
+    "error": "Could not send the invitation.",
+    "pending": "Pending invitations",
+    "revoke": "Revoke",
+    "confirmRevoke": "Revoke this invitation?"
+  },
+  "accept": {
+    "title": "Join {{org}}",
+    "subtitle": "You've been invited to {{org}} as {{role}} ({{email}}).",
+    "join": "Join {{org}}",
+    "joining": "Joining…",
+    "joinedTitle": "Welcome to {{org}}",
+    "joinedBody": "You've joined the team. Sign in to get started.",
+    "invalidTitle": "Invitation not valid",
+    "invalidBody": "This invitation is invalid or has expired. Ask your team admin to send a new one.",
+    "loading": "Loading…",
+    "error": "Something went wrong. Please try again."
+  },
   "task": {
     "edit": "Edit task",
     "new": "New task",
@@ -126,6 +148,8 @@
     "namePlaceholder": "e.g. Design spring flyer",
     "project": "Project",
     "subproject": "Sub-project",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task.",
     "status": "Status",
     "statusApplied": "Status (applied immediately)",
     "changeTo": "Change to…",
@@ -502,6 +526,7 @@
     "role": "Role",
     "roleMember": "Member",
     "roleAdmin": "Admin",
+    "ownRoleLocked": "You can't change your own admin role.",
     "tier": "Tier",
     "tierHint": "(new member inherits its access)",
     "noTierBlank": "No tier (blank slate)",

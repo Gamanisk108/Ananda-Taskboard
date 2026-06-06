@@ -9,7 +9,7 @@ import { Modal, Spinner, DueFlag } from "./common";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type EventSpan, type Task } from "../types";
 
-export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
+export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [dayOpen, setDayOpen] = useState<string | null>(null);
@@ -21,7 +21,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
   const gridStart = startOfWeek(month, { weekStartsOn: 0 });
   const from = format(gridStart, "yyyy-MM-dd");
   const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
-  const { items, events } = useCalendarRange(from, to, projectId, subprojectId, refreshKey);
+  const { items, events } = useCalendarRange(from, to, projectId, subprojectId);
 
   const eventsByDate = useMemo(() => {
     const m = new Map<string, EventSpan[]>();

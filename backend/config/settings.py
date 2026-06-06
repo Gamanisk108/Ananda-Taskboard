@@ -203,6 +203,8 @@ EMAIL_FILE_PATH = env("EMAIL_FILE_PATH", str(BASE_DIR / "sent_emails"))
 FRONTEND_URL = env("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 # Password-reset links are valid for 1 hour (matches the UI + email copy).
 PASSWORD_RESET_TIMEOUT = int(env("PASSWORD_RESET_TIMEOUT", "3600"))
+# Org invitations are valid for 14 days.
+INVITE_TIMEOUT_DAYS = int(env("INVITE_TIMEOUT_DAYS", "14"))
 
 # --- Web Push (VAPID) -------------------------------------------------------
 VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY", "")

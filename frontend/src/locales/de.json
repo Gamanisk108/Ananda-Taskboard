@@ -119,6 +119,28 @@
     "role_admin": "Administrator",
     "role_member": "Mitglied"
   },
+  "invite": {
+    "title": "Jemanden einladen",
+    "hint": "Die Person erhält eine E-Mail, um diesem Team beizutreten. Neue Personen können ihr Konto über die Einladung erstellen.",
+    "send": "Einladung senden",
+    "sent": "Einladung an {{email}} gesendet.",
+    "error": "Einladung konnte nicht gesendet werden.",
+    "pending": "Ausstehende Einladungen",
+    "revoke": "Widerrufen",
+    "confirmRevoke": "Diese Einladung widerrufen?"
+  },
+  "accept": {
+    "title": "{{org}} beitreten",
+    "subtitle": "Sie wurden zu {{org}} als {{role}} eingeladen ({{email}}).",
+    "join": "{{org}} beitreten",
+    "joining": "Beitreten…",
+    "joinedTitle": "Willkommen bei {{org}}",
+    "joinedBody": "Sie sind dem Team beigetreten. Melden Sie sich an, um zu starten.",
+    "invalidTitle": "Einladung ungültig",
+    "invalidBody": "Diese Einladung ist ungültig oder abgelaufen. Bitten Sie Ihren Team-Administrator um eine neue.",
+    "loading": "Wird geladen…",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
   "task": {
     "edit": "Aufgabe bearbeiten",
     "new": "Neue Aufgabe",

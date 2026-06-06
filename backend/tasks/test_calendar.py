@@ -49,19 +49,17 @@ def test_task_spans_start_to_deadline(admin, sp):
     assert deadline_days == ["2026-06-05"]
 
 
-def test_deadline_only_spans_from_creation(admin, sp):
-    # No start date → the calendar spans from the creation date up to the deadline.
+def test_deadline_only_shows_only_on_deadline(admin, sp):
+    # No start date → a bare due-date is a single point: it appears ONLY on the
+    # deadline day, never spanning back to the creation date.
     from datetime import date as _date, timedelta
     today = _date.today()
     deadline = today + timedelta(days=3)
     Task.objects.create(subproject=sp, title="DueSoon", deadline=deadline)
     res = login(admin).get(f"/api/calendar?from={(today - timedelta(days=2)).isoformat()}&to={(today + timedelta(days=10)).isoformat()}")
     dates = sorted(i["date"] for i in res.data)
-    # robust to UTC/local date offset: span ends on the deadline, covers >1 day,
-    # and the deadline day is flagged.
-    assert dates[-1] == deadline.isoformat()
-    assert len(dates) >= 2
-    assert any(i["is_deadline"] and i["date"] == deadline.isoformat() for i in res.data)
+    assert dates == [deadline.isoformat()]
+    assert res.data[0]["is_deadline"]
 
 
 def test_span_clipped_to_window(admin, sp):
@@ -100,6 +98,9 @@ def test_pending_excluded(admin, sp):
 
 def test_member_calendar_respects_visibility(member, sp):
     hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Hidden")
+    from accounts.models import Tier
+    member.tier = Tier.objects.create(name="Sub-Project Only", default_sees="subproject")
+    member.save(update_fields=["tier"])
     AccessGrant.objects.create(user=member, subproject=sp, level="viewer")
     Task.objects.create(subproject=sp, title="Mine", deadline=date(2026, 6, 5))
     Task.objects.create(subproject=hidden, title="NotMine", deadline=date(2026, 6, 5))

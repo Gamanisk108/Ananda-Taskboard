@@ -67,8 +67,9 @@ class Task(SoftDeleteModel):
     class Status(models.TextChoices):
         TODO = "todo", "To Do"
         IN_PROGRESS = "in_progress", "In Progress"
-        DONE = "done", "Done"
         DELAYED = "delayed", "Delayed"
+        REVIEW = "review", "Ready for Review"
+        DONE = "done", "Done"
 
     class Approval(models.TextChoices):
         PENDING = "pending", "Pending"
@@ -191,6 +192,11 @@ class CalendarEvent(models.Model):
         RANGE = "range", "Date range"
         REPEATING = "repeating", "Repeating"
 
+    # The owning tenant. Nullable transitional (data migration backfills existing
+    # rows); the app sets it on create, so new events are never null.
+    organization = models.ForeignKey(
+        "accounts.Organization", null=True, blank=True, on_delete=models.CASCADE, related_name="events"
+    )
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.SINGLE)
     date = models.DateField()                 # single/yearly date, range start, or series anchor
     end_date = models.DateField(null=True, blank=True)   # range end (incl) or repeat "until"

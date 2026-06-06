@@ -24,7 +24,7 @@ interface Bar {
   lane: number;
 }
 
-export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
+export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const users = useUsers();
@@ -37,7 +37,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
   const todayIdx = dayIso.indexOf(today);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
 
-  const { items, events } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId, refreshKey);
+  const { items, events } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId);
 
   async function open(id: number) {
     const task = (await api.get(`/api/tasks/${id}`)) as Task;

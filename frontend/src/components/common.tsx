@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
@@ -6,6 +6,81 @@ import { PRIORITY_META, type UserLite } from "../types";
 
 export function ColorDot({ color }: { color: string }) {
   return <span className="dot" style={{ background: color }} />;
+}
+
+export interface MultiSelectOption {
+  value: string;        // stable key (e.g. a stringified id or status key)
+  label: string;
+  color?: string;       // optional leading dot
+  section?: string;     // optional group header (e.g. "People" / "Groups")
+}
+
+/** A checkbox-dropdown filter. Closed button shows the first pick + "+N"; the open
+ *  popover is a checkbox list (optionally grouped by `section`). Multi-select with
+ *  OR semantics is up to the caller. Closes on outside-click / Escape. */
+export function MultiSelect({
+  options, selected, onChange, placeholder, testId, width,
+}: {
+  options: MultiSelectOption[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+  placeholder: string;
+  testId?: string;
+  width?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const selectedSet = new Set(selected);
+  const chosen = options.filter((o) => selectedSet.has(o.value));
+  const label = chosen.length === 0 ? placeholder
+    : chosen.length === 1 ? chosen[0].label
+    : `${chosen[0].label} +${chosen.length - 1}`;
+
+  function toggle(v: string) {
+    onChange(selectedSet.has(v) ? selected.filter((x) => x !== v) : [...selected, v]);
+  }
+
+  // Preserve option order while inserting a header whenever the section changes.
+  let lastSection: string | undefined;
+
+  return (
+    <div className={`ms${chosen.length ? " on" : ""}`} ref={ref} data-testid={testId} style={width ? { width } : undefined}>
+      <button type="button" className="ms-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} title={label}>
+        <span className="ms-label">{label}</span>
+        <span className="ms-caret" aria-hidden>▾</span>
+      </button>
+      {open && (
+        <div className="ms-pop" role="listbox">
+          {options.length === 0 && <div className="ms-empty">—</div>}
+          {options.map((o) => {
+            const header = o.section && o.section !== lastSection ? o.section : null;
+            lastSection = o.section;
+            return (
+              <div key={o.value}>
+                {header && <div className="ms-section">{header}</div>}
+                <label className="ms-opt">
+                  <input type="checkbox" checked={selectedSet.has(o.value)} onChange={() => toggle(o.value)} />
+                  {o.color && <span className="dot" style={{ background: o.color }} />}
+                  <span className="ms-opt-label">{o.label}</span>
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Chevron-based priority badge (own SVG paths — not Jira's icons). Double
@@ -95,12 +170,23 @@ export function Modal({
   wide?: boolean;
 }) {
   const { t } = useTranslation();
+  // Escape closes the modal (app-wide expectation). Backdrop click closes too
+  // (onClick below); the inner card stops propagation so clicks inside don't.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="card modal sheet rise"
         style={{ maxWidth: wide ? 760 : 520 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         <div className="modal-head">
           <h2 style={{ fontSize: 18 }}>{title}</h2>

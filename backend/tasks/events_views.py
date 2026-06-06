@@ -18,12 +18,24 @@ from .recurrence import event_weekly_dates
 from .serializers import CalendarEventSerializer, StatusSerializer
 
 
+def _org(request):
+    return getattr(request, "org", None)
+
+
 class CalendarEventViewSet(viewsets.ModelViewSet):
-    """CRUD for events. Admins write; any authenticated user can read the list."""
+    """CRUD for events, scoped to the active org. Admins write; any authenticated
+    member of the org can read the list."""
 
     queryset = CalendarEvent.objects.all()
     serializer_class = CalendarEventSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        org = _org(self.request)
+        return CalendarEvent.objects.filter(organization=org) if org is not None else CalendarEvent.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(organization=_org(self.request))
 
 
 class StatusViewSet(viewsets.ModelViewSet):
@@ -97,8 +109,10 @@ class EventsRangeView(APIView):
     def get(self, request):
         start = _parse(request.query_params.get("from"), "from")
         end = _parse(request.query_params.get("to"), "to")
+        org = _org(request)
+        events = CalendarEvent.objects.filter(organization=org) if org is not None else CalendarEvent.objects.all()
         out = []
-        for ev in CalendarEvent.objects.all():
+        for ev in events:
             out.extend(expand_event(ev, start, end))
         out.sort(key=lambda e: (e["start"], e["title"]))
         return Response(out)

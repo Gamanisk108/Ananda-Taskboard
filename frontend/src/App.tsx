@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown } from "lucide-react";
 import "./App.css";
@@ -8,6 +9,7 @@ import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
 import { ResetPassword } from "./components/ResetPassword";
 import { VerifyEmail } from "./components/VerifyEmail";
+import { AcceptInvite } from "./components/AcceptInvite";
 import { PlatformStats } from "./components/PlatformStats";
 import { Spinner, ColorDot } from "./components/common";
 import { ListView } from "./components/ListView";
@@ -38,6 +40,15 @@ export default function App() {
   useEffect(() => {
     i18n.changeLanguage(resolveLanguage(me?.language));
   }, [me?.language]);
+
+  // Keep <html lang> in sync with the active language (a11y/spellcheck/SEO). Driven
+  // by i18next's own event so it updates regardless of what triggered the switch.
+  useEffect(() => {
+    const sync = (lng: string) => { document.documentElement.lang = lng; };
+    sync(i18n.language);
+    i18n.on("languageChanged", sync);
+    return () => { i18n.off("languageChanged", sync); };
+  }, []);
 
   async function changeLanguage(lang: string) {
     await i18n.changeLanguage(lang);
@@ -72,8 +83,11 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [showPlatform, setShowPlatform] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const bump = () => setRefreshKey((k) => k + 1);
+  const queryClient = useQueryClient();
+  // All task views (List/Board/Weekly/Monthly) + the tab counts now read through
+  // TanStack Query under the ["tasks"] key prefix, so one invalidate refreshes them
+  // all after any create/edit/delete/status/move/event change.
+  const bump = () => queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
   const tree = me?.tree;
   const projects = tree?.projects ?? [];
@@ -99,24 +113,25 @@ export default function App() {
     if (me) import("./statuses").then((m) => m.fetchStatuses(true));
   }, [me?.id]);
 
-  // Per-project task counts for the tab badges (design shows a count per tab).
-  const [counts, setCounts] = useState<{ total: number; byProject: Record<number, number> }>({ total: 0, byProject: {} });
-  useEffect(() => {
-    if (!me) return;
-    let alive = true;
-    api.get("/api/tasks").then((ts) => {
-      if (!alive) return;
-      const sub2proj = new Map<number, number>();
-      for (const p of projects) for (const s of p.subprojects) sub2proj.set(s.id, p.id);
-      const byProject: Record<number, number> = {};
-      for (const tk of ts as Task[]) {
-        const pid = sub2proj.get(tk.subproject);
-        if (pid != null) byProject[pid] = (byProject[pid] ?? 0) + 1;
-      }
-      setCounts({ total: (ts as Task[]).length, byProject });
-    }).catch(() => {});
-    return () => { alive = false; };
-  }, [me?.id, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Per-project task counts for the tab badges (design shows a count per tab). The
+  // unfiltered task list is fetched via TanStack Query (key prefix ["tasks"], so
+  // bump()'s invalidate refreshes it); counts are derived from the cached data.
+  const { data: allTasks } = useQuery({
+    queryKey: ["tasks", "all", me?.active_org ?? null],
+    queryFn: () => api.get("/api/tasks") as Promise<Task[]>,
+    enabled: !!me,
+  });
+  const counts = useMemo(() => {
+    const ts = allTasks ?? [];
+    const sub2proj = new Map<number, number>();
+    for (const p of projects) for (const s of p.subprojects) sub2proj.set(s.id, p.id);
+    const byProject: Record<number, number> = {};
+    for (const tk of ts) {
+      const pid = sub2proj.get(tk.subproject);
+      if (pid != null) byProject[pid] = (byProject[pid] ?? 0) + 1;
+    }
+    return { total: ts.length, byProject };
+  }, [allTasks, projects]);
 
   // Deep-link IN: on first login, honor ?project / ?sub / ?view / ?task in the URL.
   useEffect(() => {
@@ -150,6 +165,8 @@ export default function App() {
   if (new URLSearchParams(window.location.search).has("reset")) return <ResetPassword />;
   // Signup verification deep-link (?verify&uid=…&token=…) — also pre-auth.
   if (new URLSearchParams(window.location.search).has("verify")) return <VerifyEmail />;
+  // Invitation accept deep-link (?invite=<id>&token=…) — also pre-auth.
+  if (new URLSearchParams(window.location.search).has("invite")) return <AcceptInvite />;
   if (loading) return <Spinner />;
   if (!me) return <Login />;
 
@@ -160,7 +177,7 @@ export default function App() {
   const canCreate =
     me.is_admin || projects.some((p) => p.subprojects.some((s) => s.level === "member"));
 
-  const viewProps = { projectId, subprojectId, refreshKey, onEdit: (t: Task) => setEditing(t), me };
+  const viewProps = { projectId, subprojectId, onEdit: (t: Task) => setEditing(t), me };
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   return (

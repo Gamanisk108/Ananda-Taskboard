@@ -24,6 +24,19 @@ def _org(request):
     """The active organization for this request (set by OrgContextMiddleware)."""
     return getattr(request, "org", None)
 
+
+def _csv_ids(raw):
+    """Parse a comma-separated list of ids ("3,7,12") into [int]; [] when blank or
+    malformed. Supports the multi-select assignee/group filters."""
+    if not raw:
+        return []
+    out = []
+    for part in str(raw).split(","):
+        part = part.strip()
+        if part.isdigit():
+            out.append(int(part))
+    return out
+
 from .models import Comment, Subtask, Task
 from .serializers import CommentSerializer, SubtaskSerializer, TaskSerializer
 
@@ -118,15 +131,27 @@ class TaskViewSet(ModelViewSet):
             qs = qs.filter(subproject__project_id=params["project"])
         if params.get("status"):
             qs = qs.filter(status=params["status"])
-        if params.get("member"):
-            qs = qs.filter(assignees__id=params["member"])
-        # Filter by group: tasks assigned to the group directly OR to any of its
-        # members (member-expansion done here so membership stays server-side).
-        if params.get("assignee_group"):
-            from accounts.models import Group
-            gid = params["assignee_group"]
-            member_ids = list(Group.objects.filter(id=gid).values_list("members__id", flat=True))
-            qs = qs.filter(Q(assignee_groups__id=gid) | Q(assignees__id__in=member_ids))
+        # Assignee filter — multi-select with OR semantics across: any of the chosen
+        # people, members of any chosen group, tasks assigned directly to a chosen
+        # group, and/or unassigned tasks. Group member-expansion stays server-side so
+        # membership is never exposed to the client. Accepts comma-separated ids
+        # (and the legacy single-id form).
+        people = _csv_ids(params.get("member"))
+        group_ids = _csv_ids(params.get("assignee_group"))
+        want_unassigned = params.get("unassigned") in ("1", "true")
+        if people or group_ids or want_unassigned:
+            cond = Q()
+            if people:
+                cond |= Q(assignees__id__in=people)
+            if group_ids:
+                from accounts.models import Group
+                member_ids = list(
+                    Group.objects.filter(id__in=group_ids).values_list("members__id", flat=True)
+                )
+                cond |= Q(assignee_groups__id__in=group_ids) | Q(assignees__id__in=member_ids)
+            if want_unassigned:
+                cond |= Q(assignees__isnull=True)
+            qs = qs.filter(cond)
         return qs.distinct()
 
     def _require_visible_subproject(self, subproject_id):

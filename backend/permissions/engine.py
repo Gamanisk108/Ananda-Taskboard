@@ -2,11 +2,14 @@
 
 Every queryset, endpoint, export, push, and summary derives visibility from here.
 
-Effective access = union of the user's direct grants + all their groups' grants +
-their tier's grants; most-permissive level wins (member > viewer) and widest "sees"
-wins (project > subproject > own). Whole-project grants expand to all of that
-project's sub-projects, computed live, so newly added sub-projects are covered
-automatically and group/tier changes take effect immediately.
+Two separate axes:
+  - WHERE a member can reach (and edit) = union of their direct grants + all their
+    groups' grants + their tier's grants; most-permissive level wins (member > viewer).
+    Whole-project grants expand to all of that project's sub-projects, computed live.
+  - HOW MUCH they can SEE = their single "View Access" level (their tier's breadth:
+    Tasks Only < Sub-Project Only < Full Project < Organization), applied uniformly
+    everywhere they can reach. This is NOT read per individual grant.
+Group/tier changes take effect immediately (nothing is materialized).
 
 Multi-tenancy
 -------------
@@ -27,19 +30,20 @@ Two layers of visibility:
      applying the "own tasks only" narrowing and subtracting exclusions
      (deny > assignment > allow).
 
-A grant's "sees":
-  - own        → only tasks the user (or one of their groups) is assigned to.
-  - subproject → all tasks in the granted sub-project(s).
-  - project    → all tasks in the whole project — widens READ visibility to sibling
-                 sub-projects of a granted sub-project (edit level still only applies
-                 where actually granted).
+A member's View Access ("sees"):
+  - own (Tasks Only)        → only tasks the user (or one of their groups) is assigned to.
+  - subproject (Sub-Project)→ all tasks in the sub-projects they can reach.
+  - project (Full Project)  → all tasks in the whole project — widens READ visibility
+                              to sibling sub-projects (edit still only where granted).
+  - org (Organization)      → all tasks across the whole org (read-only outside their
+                              actual grants, which keep their edit level).
 """
 
 from collections import defaultdict
 
 from django.db.models import Q
 
-from accounts.models import SEES_OWN, SEES_PROJECT, SEES_RANK, SEES_SUBPROJECT
+from accounts.models import SEES_ORG, SEES_OWN, SEES_PROJECT, SEES_RANK, SEES_SUBPROJECT
 
 from .models import LEVEL_MEMBER, LEVEL_RANK, LEVEL_VIEWER, AccessGrant, Exclusion
 
@@ -80,6 +84,16 @@ def _subject_ids(user, org):
     return group_ids, (m.tier_id if m else None)
 
 
+def _tier_sees(tier_id):
+    """A member's View Access breadth = their tier's `default_sees`. No tier → 'own'
+    (Tasks Only): the safe default of seeing only the tasks assigned to them."""
+    if not tier_id:
+        return SEES_OWN
+    from accounts.models import Tier
+    t = Tier.objects.filter(id=tier_id).only("default_sees").first()
+    return t.default_sees if t else SEES_OWN
+
+
 def access_map(user, org=None):
     """Return {subproject_id: {"level": level, "sees": sees}} for the user.
 
@@ -106,30 +120,30 @@ def access_map(user, org=None):
         }
 
     group_ids, tier_id = _subject_ids(user, org)
+    # HOW MUCH a member sees is their single View Access level (their tier's breadth),
+    # applied uniformly everywhere they can reach — NOT read per individual grant.
+    view_sees = _tier_sees(tier_id)
 
     grants = AccessGrant.objects.filter(_subject_q(user, group_ids, tier_id))
     if org is not None:
         grants = grants.filter(
             Q(subproject__project__organization=org) | Q(project__organization=org)
         )
-    grants = grants.values("level", "sees", "subproject_id", "project_id")
+    grants = list(grants.values("level", "subproject_id", "project_id"))
 
     # Sub-project → project for every directly granted sub-project (needed to widen
-    # sees=project grants to sibling sub-projects).
+    # Full-Project view access to sibling sub-projects).
     granted_sub_ids = {g["subproject_id"] for g in grants if g["subproject_id"] is not None}
     sub_to_proj = dict(
         SubProject.objects.filter(id__in=granted_sub_ids).values_list("id", "project_id")
     ) if granted_sub_ids else {}
 
     # Projects whose full sub-project list we need to expand: whole-project grants,
-    # plus the parent project of any sees=project sub-project grant.
+    # plus — when View Access is Full Project — the parent of every reachable sub-project.
     whole_project_ids = {g["project_id"] for g in grants if g["project_id"] is not None}
-    widen_project_ids = {
-        sub_to_proj[g["subproject_id"]]
-        for g in grants
-        if g["subproject_id"] is not None and g["sees"] == SEES_PROJECT and g["subproject_id"] in sub_to_proj
-    }
-    expand_project_ids = whole_project_ids | widen_project_ids
+    expand_project_ids = set(whole_project_ids)
+    if view_sees == SEES_PROJECT:
+        expand_project_ids |= set(sub_to_proj.values())
     project_subprojects = defaultdict(list)
     if expand_project_ids:
         for sp_id, proj_id in SubProject.objects.filter(
@@ -149,17 +163,27 @@ def access_map(user, org=None):
         if SEES_RANK[sees] > SEES_RANK[cur["sees"]]:
             cur["sees"] = sees
 
+    # Organization View Access: every sub-project in the org is visible (read-only),
+    # then overlaid below by the member's actually-granted sub-projects at their
+    # edit level. Edit rights still come only from real grants.
+    if view_sees == SEES_ORG:
+        org_sps = SubProject.objects.all()
+        if org is not None:
+            org_sps = org_sps.filter(project__organization=org)
+        for sp_id in org_sps.values_list("id", flat=True):
+            _apply(sp_id, LEVEL_VIEWER, SEES_ORG)
+
     for g in grants:
         if g["subproject_id"] is not None:
-            _apply(g["subproject_id"], g["level"], g["sees"])
-            if g["sees"] == SEES_PROJECT:
+            _apply(g["subproject_id"], g["level"], view_sees)
+            if view_sees == SEES_PROJECT:
                 proj_id = sub_to_proj.get(g["subproject_id"])
                 # Read-only widening to siblings: see all their tasks, no edit rights.
                 for sib_id in project_subprojects.get(proj_id, []):
-                    _apply(sib_id, LEVEL_VIEWER, SEES_SUBPROJECT)
+                    _apply(sib_id, LEVEL_VIEWER, SEES_PROJECT)
         elif g["project_id"] is not None:
             for sp_id in project_subprojects.get(g["project_id"], []):
-                _apply(sp_id, g["level"], g["sees"])
+                _apply(sp_id, g["level"], view_sees)
 
     # Subtract sub-project / project level exclusions (whole-scope denies).
     if result:
@@ -273,25 +297,28 @@ def visible_tasks_q(user, org=None, prefix=""):
 
     group_ids, tier_id = _subject_ids(user, org)
     amap = access_map(user, org)
-    if not amap:
-        return Q(pk__in=[])  # no access → nothing
 
     def f(lookup):
         return f"{prefix}{lookup}"
 
-    all_sps = [sp for sp, info in amap.items() if info["sees"] in (SEES_SUBPROJECT, SEES_PROJECT)]
-    own_sps = [sp for sp, info in amap.items() if info["sees"] == SEES_OWN]
+    # Direct assignment confers task-granular visibility on its own, independent of any
+    # sub-project grant: assigning a user (or one of their groups) to a task must never
+    # hand them work they cannot see ("orphaned assignment"). Deny still overrides this
+    # below (deny > assignment > allow). Org-scoped so it never crosses the tenant line.
+    # This also subsumes the old sees=own narrowing — an "own" grant's whole point is to
+    # surface exactly the holder's assigned tasks, which this clause already does.
+    assigned = Q(**{f("assignees__id"): user.id})
+    if group_ids:
+        assigned |= Q(**{f("assignee_groups__id__in"): group_ids})
+    if org is not None:
+        assigned &= Q(**{f("subproject__project__organization"): org})
+    allow = assigned
 
-    allow = Q()
+    # Grant-derived breadth: sub-projects the user may see in full (sees=subproject or
+    # the read-only project widening) surface ALL their tasks, not just assigned ones.
+    all_sps = [sp for sp, info in amap.items() if info["sees"] in (SEES_SUBPROJECT, SEES_PROJECT, SEES_ORG)]
     if all_sps:
         allow |= Q(**{f("subproject_id__in"): all_sps})
-    if own_sps:
-        mine = Q(**{f("assignees__id"): user.id})
-        if group_ids:
-            mine |= Q(**{f("assignee_groups__id__in"): group_ids})
-        allow |= Q(**{f("subproject_id__in"): own_sps}) & mine
-    if not allow:
-        return Q(pk__in=[])
 
     # Deny wins over everything (including assignment). Build the set of denied
     # task pks as an explicit subquery and exclude by pk — this is the only form

@@ -119,6 +119,28 @@
     "role_admin": "Administrador",
     "role_member": "Membro"
   },
+  "invite": {
+    "title": "Convidar alguém",
+    "hint": "Essa pessoa receberá um e-mail para entrar nesta equipe. Novos usuários podem criar a conta pelo convite.",
+    "send": "Enviar convite",
+    "sent": "Convite enviado para {{email}}.",
+    "error": "Não foi possível enviar o convite.",
+    "pending": "Convites pendentes",
+    "revoke": "Revogar",
+    "confirmRevoke": "Revogar este convite?"
+  },
+  "accept": {
+    "title": "Entrar em {{org}}",
+    "subtitle": "Você foi convidado para {{org}} como {{role}} ({{email}}).",
+    "join": "Entrar em {{org}}",
+    "joining": "Entrando…",
+    "joinedTitle": "Bem-vindo a {{org}}",
+    "joinedBody": "Você entrou na equipe. Faça login para começar.",
+    "invalidTitle": "Convite inválido",
+    "invalidBody": "Este convite é inválido ou expirou. Peça ao administrador para enviar um novo.",
+    "loading": "Carregando…",
+    "error": "Algo deu errado. Tente novamente."
+  },
   "task": {
     "edit": "Editar tarefa",
     "new": "Nova tarefa",

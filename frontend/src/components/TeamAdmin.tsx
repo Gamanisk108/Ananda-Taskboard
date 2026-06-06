@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { invalidateUsers } from "../users";
+import { useQueryClient } from "@tanstack/react-query";
 import { Modal, Spinner } from "./common";
+import { useSubmitGuard } from "../useSubmitGuard";
+import { useAuth } from "../state/auth";
 import { SEES_LABEL, type Sees } from "../types";
 
 type Tab = "members" | "groups" | "access" | "activity";
@@ -28,6 +30,7 @@ const TIER_DESC: Record<Sees, string> = {
 
 export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t: tr } = useTranslation();  // `t` is used below as the tab loop var
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("members");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [groups, setGroups] = useState<GroupRow[]>([]);
@@ -48,7 +51,9 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
     setProjects(p as Proj[]); setGrants(gr as Grant[]); setExclusions(ex as Exclusion[]);
     setAudit(au as AuditRow[]);
     setLoading(false);
-    invalidateUsers();
+    // refresh the shared TanStack caches the roster/groups feed elsewhere (pickers)
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+    queryClient.invalidateQueries({ queryKey: ["groups"] });
     if (signal) onChanged();
   }
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
@@ -80,25 +85,104 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
   );
 }
 
+interface InviteRow {
+  id: number; email: string; role: string; tier: number | null; tier_name: string | null;
+  invited_by_name: string | null; created_at: string;
+}
+
+function InvitesSection({ tiers }: { tiers: TierRow[] }) {
+  const { t: tr } = useTranslation();
+  const [email, setEmail] = useState(""); const [role, setRole] = useState("member");
+  const [tier, setTier] = useState(""); const [err, setErr] = useState(""); const [sent, setSent] = useState("");
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [busy, guard] = useSubmitGuard();
+
+  async function load() { try { setInvites(await api.get("/api/invitations") as InviteRow[]); } catch { /* ignore */ } }
+  useEffect(() => { load(); }, []);
+
+  function send() {
+    return guard(async () => {
+      setErr(""); setSent("");
+      try {
+        await api.post("/api/invitations", { email, role, tier: role === "admin" || !tier ? null : Number(tier) });
+        setSent(tr("invite.sent", { email })); setEmail(""); setRole("member"); setTier(""); load();
+      } catch (e) {
+        const d = (e as { data?: { email?: string[] | string } })?.data;
+        const m = Array.isArray(d?.email) ? d!.email[0] : (typeof d?.email === "string" ? d.email : tr("invite.error"));
+        setErr(m);
+      }
+    });
+  }
+  async function revoke(id: number) { if (confirm(tr("invite.confirmRevoke"))) { await api.del(`/api/invitations/${id}`); load(); } }
+
+  return (
+    <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
+      <h3 className="section-title">{tr("invite.title")}</h3>
+      <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>{tr("invite.hint")}</div>
+      <div className="row2">
+        <div className="field"><label>{tr("login.email")}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        <div className="field"><label>{tr("ta.role")}</label>
+          <select value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
+          </select>
+        </div>
+      </div>
+      <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
+        <label>{tr("ta.tier")}</label>
+        <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
+          <option value="">{tr("ta.noTierBlank")}</option>
+          {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+        </select>
+      </div>
+      {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
+      {sent && <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>{sent}</div>}
+      <button className="btn-primary" onClick={send} disabled={busy}>{tr("invite.send")}</button>
+
+      {invites.length > 0 && (
+        <>
+          <h4 style={{ margin: "14px 0 6px" }}>{tr("invite.pending")}</h4>
+          <table className="tbl">
+            <thead><tr><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.tier")}</th><th></th></tr></thead>
+            <tbody>
+              {invites.map((i) => (
+                <tr key={i.id}>
+                  <td className="muted">{i.email}</td>
+                  <td>{tr(i.role === "admin" ? "ta.roleAdmin" : "ta.roleMember")}</td>
+                  <td className="muted">{i.tier_name || "—"}</td>
+                  <td><button className="btn-ghost" onClick={() => revoke(i.id)}>{tr("invite.revoke")}</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
 function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[]; reload: () => void }) {
   const { t: tr } = useTranslation();
+  const { me } = useAuth();
   const [name, setName] = useState(""); const [email, setEmail] = useState("");
   const [password, setPassword] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState<string>("");
   const [err, setErr] = useState("");
+  const [busy, guard] = useSubmitGuard();
   // optimistic local copy so role/tier/active changes show instantly (the full
   // reload runs in the background and re-syncs via the effect below).
   const [rows, setRows] = useState(users);
   useEffect(() => setRows(users), [users]);
   const patch = (id: number, p: Partial<UserRow>) => setRows((rs) => rs.map((u) => (u.id === id ? { ...u, ...p } : u)));
 
-  async function add() {
-    setErr("");
-    try {
-      await api.post("/api/users", { name, email, password, role, tier: tier ? Number(tier) : null });
-      setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
-      reload();
-    } catch { setErr(tr("ta.errAddMember")); }
+  function add() {
+    return guard(async () => {
+      setErr("");
+      try {
+        await api.post("/api/users", { name, email, password, role, tier: tier ? Number(tier) : null });
+        setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
+        reload();
+      } catch { setErr(tr("ta.errAddMember")); }
+    });
   }
   async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r, is_admin: r === "admin" }); try { await api.patch(`/api/users/${u.id}`, { role: r }); } catch { patch(u.id, { role: u.role }); } }
   async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); } catch { patch(u.id, { tier: u.tier }); } }
@@ -110,6 +194,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
 
   return (
     <>
+      <InvitesSection tiers={tiers} />
       <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
         <h3 className="section-title">{tr("ta.addMemberTitle")}</h3>
         <div className="row2">
@@ -132,7 +217,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
           </select>
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
-        <button className="btn-primary" onClick={add}>{tr("ta.addMember")}</button>
+        <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addMember")}</button>
         <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{tr("ta.shareHint")}</div>
       </div>
 
@@ -144,7 +229,10 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
               <td>{u.name || "—"}</td>
               <td className="muted">{u.email}</td>
               <td>
-                <select value={u.role} onChange={(e) => setMemberRole(u, e.target.value)} style={{ width: "auto" }}>
+                {/* You can't demote your own admin account (backend blocks it) — disable
+                    the select rather than let it fail-on-use (QA 2026-06-05). */}
+                <select value={u.role} onChange={(e) => setMemberRole(u, e.target.value)} style={{ width: "auto" }}
+                  disabled={u.id === me?.id} title={u.id === me?.id ? tr("ta.ownRoleLocked") : undefined}>
                   <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
                 </select>
               </td>
@@ -169,7 +257,8 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
 function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[]; reload: () => void }) {
   const { t: tr } = useTranslation();
   const [name, setName] = useState("");
-  async function add() { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }
+  const [busy, guard] = useSubmitGuard();
+  function add() { return guard(async () => { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }); }
   async function del(g: GroupRow) { if (confirm(tr("ta.confirmDeleteGroup", { name: g.name }))) { await api.del(`/api/groups/${g.id}`); reload(); } }
   async function toggleMember(g: GroupRow, uid: number) {
     const ids = g.member_ids.includes(uid) ? g.member_ids.filter((x) => x !== uid) : [...g.member_ids, uid];
@@ -180,7 +269,7 @@ function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[
     <>
       <div className="field" style={{ display: "flex", gap: 8 }}>
         <input placeholder={tr("ta.newGroupPh")} value={name} onChange={(e) => setName(e.target.value)} />
-        <button className="btn-primary" onClick={add}>{tr("ta.addGroup")}</button>
+        <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addGroup")}</button>
       </div>
       {groups.map((g) => (
         <div key={g.id} className="card" style={{ padding: 12, marginBottom: 10 }}>

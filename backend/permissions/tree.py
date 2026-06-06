@@ -6,11 +6,24 @@ overview-tab flags. Overviews appear ONLY when there's >1 thing to consolidate:
 
 from projects.models import Project, SubProject
 
-from .engine import visible_subprojects
+from .engine import visible_subprojects, visible_tasks_q
+from .models import LEVEL_VIEWER
 
 
 def visible_tree(user, org=None):
     levels = visible_subprojects(user, org)  # {subproject_id: level}
+    # Also surface any sub-project that holds a task the user can see (e.g. a task
+    # assigned to them where they hold no sub-project grant) so it gets a tab
+    # instead of leaving the task orphaned with nowhere to live in the rail.
+    if user and getattr(user, "is_authenticated", False):
+        from tasks.models import Task
+        extra = (
+            Task.objects.filter(visible_tasks_q(user, org))
+            .values_list("subproject_id", flat=True)
+            .distinct()
+        )
+        for sp_id in extra:
+            levels.setdefault(sp_id, LEVEL_VIEWER)
     if not levels:
         return {"projects": [], "show_global_overview": False}
 

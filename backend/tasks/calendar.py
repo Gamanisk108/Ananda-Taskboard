@@ -83,19 +83,19 @@ class CalendarView(APIView):
                 for d in occurrence_dates(task.recurrence_rule, start, end):
                     out.append(_instance(task, d, today, is_deadline=True))
                 continue
-            # Non-recurring span → shows on every day up to the deadline.
-            # Start = explicit Start date; else (deadline only) the creation date,
-            # so a deadline'd task spans from when it was made to its due date.
-            span_end = task.deadline or task.timeline_start
-            if not span_end:
-                continue  # no dates → only in the list view, not the calendar
+            # Non-recurring tasks on the calendar:
+            #  - With a Start date → span Start..deadline (or just the Start day if
+            #    there's no deadline yet).
+            #  - Deadline only (no Start) → show ONLY on the deadline day; a bare
+            #    due-date is a single point, not a span from when it was created.
+            #  - Neither date → list view only, never the calendar.
             if task.timeline_start:
                 span_start = task.timeline_start
-            elif task.deadline and task.created_at:
-                created = task.created_at.date()
-                span_start = min(created, task.deadline)  # if created after the deadline, just the day
+                span_end = task.deadline or task.timeline_start
+            elif task.deadline:
+                span_start = span_end = task.deadline
             else:
-                span_start = span_end
+                continue
             if span_start > span_end:
                 span_start, span_end = span_end, span_start
             d = max(span_start, start)
