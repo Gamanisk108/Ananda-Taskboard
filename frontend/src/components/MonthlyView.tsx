@@ -6,6 +6,7 @@ import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { dayCells, useCalendarRange, type CalendarViewProps } from "../calendar";
 import { Modal, Spinner, DueFlag } from "./common";
+import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type EventSpan, type Holiday, type Task } from "../types";
 
@@ -116,18 +117,15 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
                     {hasOverdue && <DueFlag kind="overdue" size={13} title={t("list.missedDeadline")} />}
                     {!hasOverdue && hasSoon && <DueFlag kind="soon" size={13} title={t("list.dueSoon")} />}
                   </div>
-                  {(() => {
-                    const dayHols = holidaysByDate.get(iso) ?? [];
-                    const { visible, more } = dayCells(dayEvents, dayHols, 3);
-                    return (<>
-                      {visible.map((c, k) => (
-                        <div key={`c${k}`} className={`mev${c.holiday ? " holiday" : ""}`} title={c.label}>
-                          {c.holiday ? c.label : `${EVENT_ICON[(dayEvents[k] as EventSpan).kind]} ${c.label}`}
-                        </div>
-                      ))}
-                      {more > 0 && <div className="more">+{more} {t("cal.more", "more")}</div>}
-                    </>);
-                  })()}
+                  <DayCellLines
+                    {...dayCells(
+                      dayEvents.map((e) => ({ title: `${EVENT_ICON[e.kind]} ${e.title}` })),
+                      holidaysByDate.get(iso) ?? [],
+                      3,
+                    )}
+                    cls="mev"
+                    moreLabel={t("cal.more", "more")}
+                  />
                   {dayItems.length > 0 && (
                     <div className="badges">
                       {countsByColor(dayItems).map(([c, n]) => (

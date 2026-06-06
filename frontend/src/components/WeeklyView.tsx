@@ -8,6 +8,7 @@ import { dayCells, packLanes, useCalendarRange, type CalendarViewProps } from ".
 import { isComplete } from "../statuses";
 import { useUsers, userInitials, userName, avatarColor } from "../users";
 import { Modal, Spinner, DueFlag } from "./common";
+import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
 import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
 
@@ -121,10 +122,7 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
                     {iso === today && <span className="today-tag">{t("cal.today", "Today")}</span>}
                     <span className="dnum">{format(d, "MMM d", { locale: dfLocale() })}</span>
                   </div>
-                  {cellsByDay[idx].visible.map((c, k) => (
-                    <div key={`c${k}`} className={`ev${c.holiday ? " holiday" : ""}`} title={c.label}>{c.label}</div>
-                  ))}
-                  {cellsByDay[idx].more > 0 && <div className="more">+{cellsByDay[idx].more} {t("cal.more", "more")}</div>}
+                  <DayCellLines {...cellsByDay[idx]} cls="ev" moreLabel={t("cal.more", "more")} />
                 </div>
               );
             })}
