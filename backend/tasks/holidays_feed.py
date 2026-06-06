@@ -6,7 +6,9 @@ Deterministic sets are computed (library / algorithm); the lunar Hindu festivals
 are table-driven. Results per (set, year) are deterministic and cached.
 """
 
-from datetime import date
+from datetime import date, timedelta
+
+from dateutil.easter import easter
 
 # ---- Ananda / SRF lineage: fixed Western-calendar dates --------------------
 # (month, day) -> title. Source: ananda.org/thank-you-god (design/Ananda Holidays.jpeg).
@@ -45,4 +47,17 @@ def us_observances(year):
         (_nth_weekday(year, 6, _SUN, 3),  "Father's Day"),
         (_nth_weekday(year, 3, _SUN, 2),  "Daylight Saving begins"),
         (_nth_weekday(year, 11, _SUN, 1), "Daylight Saving ends"),
+    ]
+
+
+# ---- Christian: Easter-derived moveable feasts + fixed ----------------------
+def christian(year):
+    e = easter(year)  # Gregorian Easter Sunday
+    return [
+        (e - timedelta(days=46), "Ash Wednesday"),
+        (e - timedelta(days=7),  "Palm Sunday"),
+        (e - timedelta(days=2),  "Good Friday"),
+        (e,                      "Easter"),
+        (date(year, 1, 6),       "Epiphany"),
+        (date(year, 12, 25),     "Christmas Day"),
     ]

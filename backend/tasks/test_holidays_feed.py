@@ -34,3 +34,22 @@ def test_dst_2026_begins_mar_8_ends_nov_1():
     days = dict((title, d) for d, title in us_observances(2026))
     assert days["Daylight Saving begins"] == date(2026, 3, 8)
     assert days["Daylight Saving ends"] == date(2026, 11, 1)
+
+
+from tasks.holidays_feed import christian
+
+
+def test_easter_2027_is_march_28():
+    days = dict((title, d) for d, title in christian(2027))
+    assert days["Easter"] == date(2027, 3, 28)
+
+
+def test_good_friday_is_two_days_before_easter():
+    days = dict((title, d) for d, title in christian(2026))
+    assert days["Easter"] == date(2026, 4, 5)
+    assert days["Good Friday"] == date(2026, 4, 3)
+
+
+def test_christmas_is_fixed():
+    days = dict((title, d) for d, title in christian(2030))
+    assert days["Christmas Day"] == date(2030, 12, 25)
