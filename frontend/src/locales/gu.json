@@ -219,7 +219,8 @@
     "groups": "જૂથો",
     "access": "ઍક્સેસ",
     "tiers": "સ્તરો",
-    "activity": "પ્રવૃત્તિ"
+    "activity": "પ્રવૃત્તિ",
+    "holidays": "રજાઓ"
   },
   "empty": {
     "approvals": "મંજૂરી માટે કંઈ બાકી નથી.",
@@ -399,6 +400,7 @@
     "openDay": "આ દિવસનાં કાર્યો ખોલો",
     "noTasksWeek": "આ અઠવાડિયે કોઈ કાર્ય નથી.",
     "thisMonth": "આ મહિનો",
+    "more": "વધુ",
     "dow": {
       "sun": "રવિ",
       "mon": "સોમ",
@@ -589,5 +591,18 @@
     "confirmDelete": "આ ટિપ્પણી કાઢવી?",
     "you": "તમે",
     "teamMember": "ટીમ સભ્ય"
+  },
+  "holidays": {
+    "title": "આ સંગઠનના કૅલેન્ડર પર દેખાડવામાં આવતા રજા સેટ",
+    "help": "વિશ્વભરના સભ્યો ફક્ત એ જ જુએ છે જે તમે અહીં સક્ષમ કરો છો.",
+    "set": {
+      "us_federal": "US ફેડરલ રજાઓ",
+      "us_observances": "US ઉત્સવો (Mother's/Father's Day, ડેલાઇટ સેવિંગ)",
+      "christian": "ખ્રિસ્તી / ધાર્મિક",
+      "hindu_festivals": "Hindu / યોગ તહેવારો",
+      "ananda_lineage": "Ananda પરંપરાના દિવસો"
+    },
+    "save": "સાચવો",
+    "saved": "સાચવ્યું"
   }
 }

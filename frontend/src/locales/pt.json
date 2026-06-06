@@ -219,7 +219,8 @@
     "groups": "Grupos",
     "access": "Acesso",
     "tiers": "Níveis",
-    "activity": "Atividade"
+    "activity": "Atividade",
+    "holidays": "Feriados"
   },
   "empty": {
     "approvals": "Nada aguardando aprovação.",
@@ -399,6 +400,7 @@
     "openDay": "Abrir as tarefas deste dia",
     "noTasksWeek": "Nenhuma tarefa esta semana.",
     "thisMonth": "Este mês",
+    "more": "mais",
     "dow": {
       "sun": "Dom",
       "mon": "Seg",
@@ -589,5 +591,18 @@
     "confirmDelete": "Excluir este comentário?",
     "you": "Você",
     "teamMember": "Membro da equipe"
+  },
+  "holidays": {
+    "title": "Conjuntos de feriados exibidos nos calendários desta organização",
+    "help": "Membros do mundo inteiro veem apenas o que você habilita aqui.",
+    "set": {
+      "us_federal": "Feriados federais dos EUA",
+      "us_observances": "Datas comemorativas dos EUA (Dia das Mães/Pais, Horário de verão)",
+      "christian": "Cristão / religioso",
+      "hindu_festivals": "Hindu / festivais de yoga",
+      "ananda_lineage": "Dias da tradição Ananda"
+    },
+    "save": "Salvar",
+    "saved": "Salvo"
   }
 }

@@ -219,7 +219,8 @@
     "groups": "群组",
     "access": "访问权限",
     "tiers": "层级",
-    "activity": "活动"
+    "activity": "活动",
+    "holidays": "节假日"
   },
   "empty": {
     "approvals": "没有待审批的内容。",
@@ -399,6 +400,7 @@
     "openDay": "打开这一天的任务",
     "noTasksWeek": "本周没有任务。",
     "thisMonth": "本月",
+    "more": "更多",
     "dow": {
       "sun": "日",
       "mon": "一",
@@ -589,5 +591,18 @@
     "confirmDelete": "删除此评论？",
     "you": "你",
     "teamMember": "团队成员"
+  },
+  "holidays": {
+    "title": "显示在此组织日历上的节假日集合",
+    "help": "全球成员只能看到您在此处启用的内容。",
+    "set": {
+      "us_federal": "美国联邦节假日",
+      "us_observances": "美国纪念日（Mother's/Father's Day、夏令时）",
+      "christian": "基督教 / 宗教节日",
+      "hindu_festivals": "Hindu / 瑜伽节日",
+      "ananda_lineage": "Ananda 传承纪念日"
+    },
+    "save": "保存",
+    "saved": "已保存"
   }
 }

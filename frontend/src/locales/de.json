@@ -219,7 +219,8 @@
     "groups": "Gruppen",
     "access": "Zugriff",
     "tiers": "Stufen",
-    "activity": "Aktivität"
+    "activity": "Aktivität",
+    "holidays": "Feiertage"
   },
   "empty": {
     "approvals": "Nichts zur Genehmigung ausstehend.",
@@ -399,6 +400,7 @@
     "openDay": "Aufgaben dieses Tages öffnen",
     "noTasksWeek": "Keine Aufgaben in dieser Woche.",
     "thisMonth": "Dieser Monat",
+    "more": "weitere",
     "dow": {
       "sun": "So",
       "mon": "Mo",
@@ -589,5 +591,18 @@
     "confirmDelete": "Diesen Kommentar löschen?",
     "you": "Du",
     "teamMember": "Teammitglied"
+  },
+  "holidays": {
+    "title": "Feiertagssets, die auf den Kalendern dieser Organisation angezeigt werden",
+    "help": "Weltweite Mitglieder sehen nur, was Sie hier aktivieren.",
+    "set": {
+      "us_federal": "US-Bundesfeiertage",
+      "us_observances": "US-Gedenktage (Muttertag/Vatertag, Sommerzeit)",
+      "christian": "Christlich / religiös",
+      "hindu_festivals": "Hindu / Yoga-Feste",
+      "ananda_lineage": "Ananda-Traditionstage"
+    },
+    "save": "Speichern",
+    "saved": "Gespeichert"
   }
 }

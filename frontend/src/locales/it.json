@@ -219,7 +219,8 @@
     "groups": "Gruppi",
     "access": "Accesso",
     "tiers": "Livelli",
-    "activity": "Attività"
+    "activity": "Attività",
+    "holidays": "Festività"
   },
   "empty": {
     "approvals": "Nulla in attesa di approvazione.",
@@ -399,6 +400,7 @@
     "openDay": "Apri le attività di questo giorno",
     "noTasksWeek": "Nessuna attività questa settimana.",
     "thisMonth": "Questo mese",
+    "more": "altro",
     "dow": {
       "sun": "Dom",
       "mon": "Lun",
@@ -589,5 +591,18 @@
     "confirmDelete": "Eliminare questo commento?",
     "you": "Tu",
     "teamMember": "Membro del team"
+  },
+  "holidays": {
+    "title": "Set di festività mostrati sui calendari di questa organizzazione",
+    "help": "I membri di tutto il mondo vedono solo ciò che abiliti qui.",
+    "set": {
+      "us_federal": "Festività federali degli Stati Uniti",
+      "us_observances": "Ricorrenze statunitensi (Festa della mamma/del papà, Ora legale)",
+      "christian": "Cristiano / religioso",
+      "hindu_festivals": "Hindu / festival dello yoga",
+      "ananda_lineage": "Giorni della tradizione Ananda"
+    },
+    "save": "Salva",
+    "saved": "Salvato"
   }
 }
