@@ -57,7 +57,15 @@ export function useCalendarRange(
     queryKey: ["tasks", "holidays", from, to],
     queryFn: () => api.get(`/api/holidays/range?from=${from}&to=${to}`) as Promise<Holiday[]>,
   });
-  return { items, events, holidays };
+  // Tasks with no start date and no deadline never land on a calendar day; both
+  // views surface them as a standalone "No date" list. Independent of [from, to],
+  // so keyed only by scope (and under the same ["tasks"] prefix to refresh on writes).
+  const scopeQs = subprojectId ? `?subproject=${subprojectId}` : projectId ? `?project=${projectId}` : "";
+  const { data: undated = [] } = useQuery({
+    queryKey: ["tasks", "undated", projectId ?? null, subprojectId ?? null],
+    queryFn: () => api.get(`/api/calendar/undated${scopeQs}`) as Promise<CalendarInstance[]>,
+  });
+  return { items, events, holidays, undated };
 }
 
 // One renderable line in a day cell: a user event or a holiday. Events sort

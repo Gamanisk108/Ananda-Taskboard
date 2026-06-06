@@ -29,7 +29,9 @@ def _instance(task, on_date, today, is_deadline):
     return {
         "task_id": task.id,
         "title": task.title,
-        "date": on_date.isoformat(),
+        # Undated tasks (surfaced as a standalone list) carry "" — they never land
+        # on a calendar day; the day-list rows ignore the field anyway.
+        "date": on_date.isoformat() if on_date else "",
         "status": task.status,
         "is_recurring": task.is_recurring,
         "is_deadline": is_deadline,  # the actual due day of a multi-day span
@@ -104,4 +106,41 @@ class CalendarView(APIView):
                 out.append(_instance(task, d, today, is_deadline=(d == task.deadline)))
                 d += timedelta(days=1)
         out.sort(key=lambda i: (i["date"], i["project_name"], i["title"]))
+        return Response(out)
+
+
+class UndatedTasksView(APIView):
+    """Tasks with no start date, no deadline, and no recurrence — they never land
+    on a calendar day, so the month/week views surface them as a standalone list.
+    Same filters as the calendar feed: approved, not archived, not complete, and
+    visibility-scoped; project/sub-project filterable. Shaped like calendar
+    instances so the day-list component renders them unchanged."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import complete_status_keys
+
+        user = request.user
+        org = getattr(request, "org", None)
+        qs = (
+            Task.objects.filter(
+                approval_state=Task.Approval.APPROVED,
+                archived_at__isnull=True,
+                timeline_start__isnull=True,
+                deadline__isnull=True,
+                recurrence_rule__isnull=True,
+            )
+            .exclude(status__in=complete_status_keys())  # done tasks never appear
+            .select_related("subproject__project")
+            .prefetch_related("assignees")
+        )
+        qs = qs.filter(visible_tasks_q(user, org)).distinct()
+        for key, field in (("project", "subproject__project_id"), ("subproject", "subproject_id")):
+            if request.query_params.get(key):
+                qs = qs.filter(**{field: request.query_params[key]})
+
+        today = date.today()
+        out = [_instance(task, None, today, is_deadline=False) for task in qs]
+        out.sort(key=lambda i: (i["project_name"], i["title"]))
         return Response(out)

@@ -411,7 +411,9 @@
       "thu": "Jue",
       "fri": "Vie",
       "sat": "Sáb"
-    }
+    },
+    "noDate": "Sin fecha",
+    "noDateTitle": "Sin fecha — {{count}} tareas"
   },
   "del": {
     "kindProject": "proyecto",

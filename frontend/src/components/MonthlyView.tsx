@@ -8,6 +8,7 @@ import { dayCells, useCalendarRange, type CalendarViewProps } from "../calendar"
 import { Modal, Spinner, DueFlag } from "./common";
 import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
+import { UndatedTasks } from "./UndatedTasks";
 import { EVENT_ICON, type CalendarInstance, type EventSpan, type Holiday, type Task } from "../types";
 
 export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewProps) {
@@ -22,7 +23,7 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
   const gridStart = startOfWeek(month, { weekStartsOn: 0 });
   const from = format(gridStart, "yyyy-MM-dd");
   const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
-  const { items, events, holidays } = useCalendarRange(from, to, projectId, subprojectId);
+  const { items, events, holidays, undated } = useCalendarRange(from, to, projectId, subprojectId);
 
   const eventsByDate = useMemo(() => {
     const m = new Map<string, EventSpan[]>();
@@ -87,6 +88,7 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
           <button className="btn-secondary icon-btn" onClick={() => setMonth(addMonths(month, 1))} aria-label={t("cal.next")}><ChevronRight /></button>
         </div>
         <h2>{format(month, "MMMM yyyy", { locale: dfLocale() })}</h2>
+        <UndatedTasks undated={undated} colorByProject={colorByProject} onOpen={open} />
       </div>
       {!items ? (
         <Spinner />

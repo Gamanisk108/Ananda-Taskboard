@@ -411,7 +411,9 @@
       "thu": "四",
       "fri": "五",
       "sat": "六"
-    }
+    },
+    "noDate": "无日期",
+    "noDateTitle": "无日期 — {{count}} 个任务"
   },
   "del": {
     "kindProject": "项目",

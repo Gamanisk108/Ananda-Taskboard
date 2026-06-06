@@ -411,7 +411,9 @@
       "thu": "Do",
       "fri": "Fr",
       "sat": "Sa"
-    }
+    },
+    "noDate": "Ohne Datum",
+    "noDateTitle": "Ohne Datum — {{count}} Aufgaben"
   },
   "del": {
     "kindProject": "Projekt",

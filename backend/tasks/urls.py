@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .bulk import BulkTasksView, MarkDoneView
-from .calendar import CalendarView
+from .calendar import CalendarView, UndatedTasksView
 from .events_views import CalendarEventViewSet, EventsRangeView, HolidaySettingsView, HolidaysRangeView, StatusViewSet
 from .history_service import HistoryDatesView, HistoryView
 from .views import ApprovalsView, CommentViewSet, SubtaskViewSet, TaskViewSet
@@ -17,6 +17,7 @@ router.register("statuses", StatusViewSet, basename="status")
 urlpatterns = [
     path("approvals", ApprovalsView.as_view(), name="approvals"),
     path("calendar", CalendarView.as_view(), name="calendar"),
+    path("calendar/undated", UndatedTasksView.as_view(), name="calendar-undated"),
     path("events/range", EventsRangeView.as_view(), name="events-range"),  # before router
     path("holidays/range", HolidaysRangeView.as_view(), name="holidays-range"),
     path("holidays/settings", HolidaySettingsView.as_view(), name="holidays-settings"),

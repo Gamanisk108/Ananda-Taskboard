@@ -411,7 +411,9 @@
       "thu": "Qui",
       "fri": "Sex",
       "sat": "Sáb"
-    }
+    },
+    "noDate": "Sem data",
+    "noDateTitle": "Sem data — {{count}} tarefas"
   },
   "del": {
     "kindProject": "projeto",

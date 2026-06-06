@@ -10,6 +10,7 @@ import { useUsers, userInitials, userName, avatarColor } from "../users";
 import { Modal, Spinner, DueFlag } from "./common";
 import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
+import { UndatedTasks } from "./UndatedTasks";
 import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
 
 interface Bar {
@@ -38,7 +39,7 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
   const todayIdx = dayIso.indexOf(today);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
 
-  const { items, events, holidays } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId);
+  const { items, events, holidays, undated } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId);
 
   async function open(id: number) {
     const task = (await api.get(`/api/tasks/${id}`)) as Task;
@@ -105,6 +106,7 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
           <button className="btn-secondary icon-btn" onClick={() => setWeekStart(addWeeks(weekStart, 1))} aria-label={t("cal.next")}><ChevronRight /></button>
         </div>
         <h2>{format(weekStart, "MMM d", { locale: dfLocale() })} – {format(addDays(weekStart, 6), "MMM d, yyyy", { locale: dfLocale() })}</h2>
+        <UndatedTasks undated={undated} colorByProject={colorByProject} onOpen={open} />
       </div>
       {!items ? (
         <Spinner />

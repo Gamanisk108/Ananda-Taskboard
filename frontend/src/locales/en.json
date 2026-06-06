@@ -411,7 +411,9 @@
       "thu": "Thu",
       "fri": "Fri",
       "sat": "Sat"
-    }
+    },
+    "noDate": "No date",
+    "noDateTitle": "No date — {{count}} tasks"
   },
   "del": {
     "kindProject": "project",

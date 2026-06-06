@@ -96,6 +96,32 @@ def test_pending_excluded(admin, sp):
     assert res.data == []
 
 
+def test_undated_endpoint_returns_only_undated_open_tasks(admin, sp):
+    Task.objects.create(subproject=sp, title="NoDate")                                   # included
+    Task.objects.create(subproject=sp, title="HasDeadline", deadline=date(2026, 6, 5))   # excluded (dated)
+    Task.objects.create(subproject=sp, title="HasStart", timeline_start=date(2026, 6, 5))  # excluded (dated)
+    Task.objects.create(subproject=sp, title="DoneNoDate", status="done")                # excluded (complete)
+    rule = RecurrenceRule.objects.create(freq="weekly", interval=1, anchor=date(2026, 6, 1))
+    Task.objects.create(subproject=sp, title="RecurNoDate", recurrence_rule=rule)         # excluded (recurring)
+    res = login(admin).get("/api/calendar/undated")
+    assert res.status_code == 200
+    assert [i["title"] for i in res.data] == ["NoDate"]
+    assert res.data[0]["date"] == ""  # undated marker
+
+
+def test_undated_endpoint_respects_visibility(member, sp):
+    hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Hidden")
+    from accounts.models import Tier
+    member.tier = Tier.objects.create(name="Sub-Project Only", default_sees="subproject")
+    member.save(update_fields=["tier"])
+    AccessGrant.objects.create(user=member, subproject=sp, level="viewer")
+    Task.objects.create(subproject=sp, title="MineUndated")
+    Task.objects.create(subproject=hidden, title="NotMineUndated")
+    res = login(member).get("/api/calendar/undated")
+    titles = {i["title"] for i in res.data}
+    assert "MineUndated" in titles and "NotMineUndated" not in titles
+
+
 def test_member_calendar_respects_visibility(member, sp):
     hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Hidden")
     from accounts.models import Tier
