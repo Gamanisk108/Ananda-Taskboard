@@ -1,4 +1,4 @@
-# Design Handoff — Help, FAQ & Onboarding, Subtask Editor (+ status relabel)
+# Design Handoff — Help, FAQ & Onboarding, Subtask Editor, Calendar "No date" list (+ status relabel)
 
 **For:** Claude Design — desktop web **and** responsive (mobile) browser versions.
 **Purpose:** A **standalone** handoff for the in-app Help/FAQ/onboarding feature built
@@ -187,3 +187,61 @@ data-preserving migration), the serializer's both-or-neither **time validation**
 edit permission** (any assignee — or a member of an assigned group — may edit a subtask even
 without parent-edit rights), and the unit tests. These drive behavior but need no visual
 treatment.
+
+---
+
+## Entry — 2026-06-06 — "No date" list on Monthly & Weekly + Done hidden
+
+**Context (read first):** Another **distinct feature**, bundled here per request. Tasks with
+**no start date and no deadline** never land on a calendar day, so they were invisible on the
+Monthly/Weekly views. Those views now surface them as a **standalone list** reached from a
+**"No date (N)" button** in the calendar header that opens a modal. Separately (already shipped,
+no design needed — see item 3), **Done tasks are hidden** from the Monthly/Weekly views and from
+the Copy Summary. **Built and live-Playwright-QA'd in light + dark** on both views (admin login);
+screenshots were working artifacts, not retained — states described below.
+
+### 1. "No date (N)" header button — NEW affordance (both views)
+- **What:** a **right-aligned button in the calendar header row** (`.cal-head`, the same row as
+  the ‹ prev / "This month|week" / next › nav and the period title), reading **"📋 No date (N)"**
+  where **N** is the count of undated tasks in the current scope. It appears on **both Monthly and
+  Weekly**. It is **hidden entirely when N = 0** (no empty affordance).
+- **Icon — design decision to make:** currently a **📋 emoji** (consistent with the day-modal's
+  event emojis and the top bar's 🌐). Claude Design may instead spec a **lucide icon** (e.g.
+  `CalendarOff` / `CalendarX` / `Inbox`) to match the header's lucide chevrons — call it either way.
+- **Draw:** the button at the right of the calendar header (secondary-button styling, like
+  "This month"), with a sample count e.g. "No date (4)"; both Monthly and Weekly headers. Light +
+  dark.
+- **Responsive:** `.cal-head` is `flex-wrap`, so on narrow widths the button **wraps to a second
+  line** below the nav/title rather than overflowing. Confirm that wrap reads cleanly (and decide
+  if it should be full-width when wrapped).
+- File: `frontend/src/components/UndatedTasks.tsx`; mounted in `MonthlyView.tsx` + `WeeklyView.tsx`.
+
+### 2. "No date" modal — REUSES the day-detail modal + day-list rows
+- **What:** clicking the button opens a standard **`Modal` titled "No date — {N} tasks"** whose
+  body is the **existing `DayTaskList`** — the same component used by the day-detail popup. So it's
+  the familiar **sort dropdown** (Time / A–Z / Status) above **task rows**, each row showing the
+  **priority icon · project/sub-project color dot · "All day" (or a time range) · title · assignees
+  · status pill**, with overdue rows tinted. Clicking a row **closes this modal and opens the full
+  Task editor**.
+- **Draw:** the modal with the sort control and ~4–6 undated rows (all "All day", since undated
+  tasks have no time); a row's hover state. Light + dark. Standard (non-wide) modal width, matching
+  the day-detail popup. (No bespoke empty state needed — the button hides at 0 — but `DayTaskList`
+  already renders a muted "No tasks" line if ever shown empty.)
+- File: `frontend/src/components/UndatedTasks.tsx` (wraps `DayTaskList`).
+
+### 3. Done tasks hidden from Monthly/Weekly + Copy Summary (already shipped — no design)
+- **What:** completed ("Done", or any status flagged *complete*) tasks **no longer appear** on the
+  Monthly or Weekly calendars, in the new "No date" list, or in the **Copy Summary** output. This
+  was already implemented server-side and is covered by tests — **noted only so existing design
+  references that show a greyed/"done" item on the calendar should be removed.** There is no longer
+  a greyed "done" bar state to design for on the Weekly view.
+
+### Translation flag (not visual)
+**2 new keys**, added to **all 13 locales** with **real translations**: `cal.noDate`
+("No date" — the button) and `cal.noDateTitle` ("No date — {{count}} tasks" — the modal title,
+with an interpolated count). No other new strings.
+
+### NOT design-relevant (internal — ignore for design)
+The new `GET /api/calendar/undated` endpoint (undated = no start, no deadline, not recurring;
+approved, non-archived, non-complete, visibility-scoped), the shared calendar data hook fetching
+that list, and the unit tests. Behavior only — no visual treatment.
