@@ -5,11 +5,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { dayCells, useCalendarRange, type CalendarViewProps } from "../calendar";
-import { Modal, Spinner, DueFlag } from "./common";
+import { Modal, Spinner, DueFlag, CalAnnounceIcon, CalHolidayIcon } from "./common";
 import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
 import { UndatedTasks } from "./UndatedTasks";
-import { EVENT_ICON, type CalendarInstance, type EventSpan, type Holiday, type Task } from "../types";
+import { type CalendarInstance, type EventSpan, type Holiday, type Task } from "../types";
 
 export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
@@ -121,7 +121,7 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
                   </div>
                   <DayCellLines
                     {...dayCells(
-                      dayEvents.map((e) => ({ title: `${EVENT_ICON[e.kind]} ${e.title}` })),
+                      dayEvents.map((e) => ({ title: e.title })),
                       holidaysByDate.get(iso) ?? [],
                       3,
                     )}
@@ -143,10 +143,14 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
           {dayOpen && (
             <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
               {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
-                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{EVENT_ICON[e.kind]} {e.title}</div>
+                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>
+                  <CalAnnounceIcon size={14} /><span className="cal-line-txt">{e.title}</span>
+                </div>
               ))}
               {(holidaysByDate.get(dayOpen) ?? []).map((h, k) => (
-                <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>{h.title}</div>
+                <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>
+                  <CalHolidayIcon size={14} /><span className="cal-line-txt">{h.title}</span>
+                </div>
               ))}
               <DayTaskList items={byDate.get(dayOpen) ?? []} colorByProject={colorByProject} onOpen={open} />
             </Modal>

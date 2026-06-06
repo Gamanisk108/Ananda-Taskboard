@@ -14,8 +14,9 @@
   --primary:#1e3a6e; --primary-ink:#fbf6ea; --dome:#2c5499; --azure:#7fa8d9;
   --primary-weak:#e9f0f9;
   --gold:#c9a24b; --gold-deep:#7a5c22; --wood:#a9824e;
-  --todo:#6b7280; --doing:#2c64a8; --delayed:#bb3b28; --done:#3f7d54;
+  --todo:#6b7280; --doing:#2c64a8; --delayed:#bb3b28; --review:#7a5aa6; --done:#3f7d54;
   --danger:#b4452f; --warn:#7a5c22; --ring-soon:#d99a1f; --bar-soon:#ffd21e;
+  --holiday:#94886f;  /* muted, warm taupe — icon-and-text color for calendar holidays */
   --flag-od:#e11d1d;  /* vivid warning red for the overdue badge (brighter than terracotta --danger) */
   /* derived row backgrounds */
   --row:var(--surface); --hover:#f2ead6;
@@ -43,8 +44,9 @@ html[data-theme="dark"] {
   --primary:#2c5499; --primary-ink:#f3eedd; --dome:#7fa8d9; --azure:#a9c6ec;
   --primary-weak:#1d3358;
   --gold:#e0be6a; --gold-deep:#e0be6a; --wood:#c79f63;
-  --todo:#9aa3b2; --doing:#6aa2e0; --delayed:#e3705a; --done:#5fb27a;
+  --todo:#9aa3b2; --doing:#6aa2e0; --delayed:#e3705a; --review:#b08cd6; --done:#5fb27a;
   --danger:#e07a63; --warn:#e0be6a; --ring-soon:#e0be6a; --bar-soon:#ffd21e;
+  --holiday:#8b94a8;  /* muted holiday color for the dark canvas */
   --flag-od:#ff4d45;  /* vivid warning red (brighter for contrast on the navy canvas) */
   --row:var(--surface); --hover:#1b2d4d;
   --overdue-bg:#e0634a33; --soon-bg:#e0b04a2e;

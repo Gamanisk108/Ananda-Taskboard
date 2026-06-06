@@ -11,7 +11,7 @@ import { Modal, Spinner, DueFlag } from "./common";
 import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
 import { UndatedTasks } from "./UndatedTasks";
-import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
+import { type CalendarInstance, type Task } from "../types";
 
 interface Bar {
   task_id: number;
@@ -81,8 +81,7 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
     return dayIso.map((iso) => {
       const dayEvents = events.filter((e) => e.start <= iso && e.end >= iso);
       const dayHols = holidays.filter((h) => h.start === iso);
-      const withIcons = dayEvents.map((e) => ({ title: `${EVENT_ICON[e.kind]} ${e.title}` }));
-      return dayCells(withIcons, dayHols, 2);
+      return dayCells(dayEvents.map((e) => ({ title: e.title })), dayHols, 2);
     });
   }, [events, holidays, dayIso]);
 

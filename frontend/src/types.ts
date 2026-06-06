@@ -1,7 +1,7 @@
 export type Level = "member" | "viewer";
 export type Approval = "pending" | "approved" | "rejected";
 
-/** A member's "View Access" — how many tasks they can SEE. */
+/** A member's "Access" — how many tasks they can SEE. */
 export type Sees = "own" | "subproject" | "project" | "org";
 export const SEES_LABEL: Record<Sees, string> = {
   own: "Tasks Only",
@@ -184,7 +184,3 @@ export interface Holiday {
   start: string; // YYYY-MM-DD
   end: string;   // == start (holidays are single-day)
 }
-
-export const EVENT_ICON: Record<EventKind, string> = {
-  single: "📍", yearly: "🎂", range: "📌", repeating: "🔁",
-};

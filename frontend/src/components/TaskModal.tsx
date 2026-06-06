@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
+import { Eye } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
@@ -405,7 +406,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         {editing && <ApprovalBanners task={task!} onSaved={onSaved} />}
         {readOnly && (
           <div className="field">
-            <span className="pill" style={{ background: "var(--surface-sunk)" }} title={t("task.viewOnlyHint")}>👁 {t("task.viewOnly")}</span>
+            <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }} title={t("task.viewOnlyHint")}><Eye size={14} strokeWidth={1.7} /> {t("task.viewOnly")}</span>
           </div>
         )}
 

@@ -29,7 +29,7 @@ const TIER_DESC: Record<Sees, string> = {
   org: "View all tasks across the organization",
 };
 
-// View Access dropdown order: narrowest → widest (Tasks Only … Organization).
+// Access dropdown order: narrowest → widest (Tasks Only … Organization).
 function byViewAccess(a: TierRow, b: TierRow) { return SEES_ORDER[a.default_sees] - SEES_ORDER[b.default_sees]; }
 function sortedTiers(tiers: TierRow[]) { return [...tiers].sort(byViewAccess); }
 
@@ -115,7 +115,7 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
     () => projects.flatMap((p) => p.subprojects.map((s) => ({ value: String(s.id), label: `${p.name} / ${s.name}` }))),
     [projects],
   );
-  // Default the View Access once tiers load (no blank option — every member has one).
+  // Default the Access once tiers load (no blank option — every member has one).
   useEffect(() => { if (!tier) { const d = defaultMemberTier(tiers); if (d) setTier(String(d.id)); } }, [tiers]);
 
   async function load() { try { setInvites(await api.get("/api/invitations") as InviteRow[]); } catch { /* ignore */ } }
@@ -151,7 +151,7 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
       </div>
       <div className="row2">
         <div className="field">
-          <label>{tr("ta.viewAccess", "View Access")}</label>
+          <label>{tr("ta.viewAccess", "Access")}</label>
           <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
             {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
           </select>
@@ -171,7 +171,7 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
         <>
           <h4 style={{ margin: "14px 0 6px" }}>{tr("invite.pending")}</h4>
           <table className="tbl">
-            <thead><tr><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "View Access")}</th><th></th></tr></thead>
+            <thead><tr><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "Access")}</th><th></th></tr></thead>
             <tbody>
               {invites.map((i) => (
                 <tr key={i.id}>
@@ -242,7 +242,7 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
           </div>
         </div>
         <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-          <label>{tr("ta.viewAccess", "View Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "how many tasks they can see")}</span></label>
+          <label>{tr("ta.viewAccess", "Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "how many tasks they can see")}</span></label>
           <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
             {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
           </select>
@@ -253,7 +253,7 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
       </div>
 
       <table className="tbl">
-        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "View Access")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
+        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "Access")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
         <tbody>
           {rows.map((u) => (
             <tr key={u.id}>
@@ -365,7 +365,7 @@ function Access({
   const [subjectType, setSubjectType] = useState<SubjectType>("user");
   const [subjectId, setSubjectId] = useState<number>(0);
 
-  // grant builder (WHERE + edit level; how-much is each member's View Access)
+  // grant builder (WHERE + edit level; how-much is each member's Access)
   const [scopeType, setScopeType] = useState<"subproject" | "project">("subproject");
   const [scopeId, setScopeId] = useState<number>(0);
   const [level, setLevel] = useState("member");
@@ -476,7 +476,7 @@ function Access({
               </div>
             </div>
             <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>
-              {tr("ta.viewAccessNote", "How many tasks they see is set by each member's View Access (on the Members tab).")}
+              {tr("ta.viewAccessNote", "How many tasks they see is set by each member's Access (on the Members tab).")}
             </div>
             <button className="btn-primary" data-testid="grant-add" onClick={addGrant}>{tr("ta.grantAccess")}</button>
           </div>

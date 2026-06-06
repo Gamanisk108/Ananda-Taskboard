@@ -128,6 +128,31 @@ export function DueFlag({ kind, size = 14, title }: { kind: "overdue" | "soon"; 
   );
 }
 
+/** Calendar announcement (user event) marker — line-art megaphone (design spec).
+ *  Holidays use CalHolidayIcon. Both inherit `currentColor` so the parent
+ *  .mev / .ev color rule tints them. */
+export function CalAnnounceIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"
+      style={{ flex: "none" }} aria-hidden="true">
+      <path d="M3 11v2a2 2 0 0 0 2 2h2l8 5V4L7 9H5a2 2 0 0 0-2 2z" />
+      <path d="M16.8 8.6a4 4 0 0 1 0 6.8" />
+    </svg>
+  );
+}
+
+/** Calendar holiday marker — line-art star (design spec). */
+export function CalHolidayIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"
+      style={{ flex: "none" }} aria-hidden="true">
+      <path d="M12 3 14.6 8.6 20.7 9.4 16.2 13.6 17.4 19.7 12 16.7 6.6 19.7 7.8 13.6 3.3 9.4 9.4 8.6 Z" />
+    </svg>
+  );
+}
+
 export function StatusPill({ status, editable }: { status: string; editable?: boolean }) {
   const c = statusColor(status);
   return (

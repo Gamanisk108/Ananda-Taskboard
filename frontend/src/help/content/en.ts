@@ -65,7 +65,7 @@ export const EN: Record<string, HelpContent> = {
   },
   team: {
     title: "Team & permissions",
-    body: "Team is where admins invite people, remove them, and decide what each person can see and do.\n\nEach member has a single View Access level that controls how much of the board they can see.",
+    body: "Team is where admins invite people, remove them, and decide what each person can see and do.\n\nEach member has a single Access level that controls how much of the board they can see.",
   },
   approvals: {
     title: "Approvals",

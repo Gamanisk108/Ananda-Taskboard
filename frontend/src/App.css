@@ -232,7 +232,7 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 
 .day-num { font-family: var(--f-mono); }
 .chip-initials { font-family: var(--f-mono); font-size: 10px; background: rgba(255,255,255,.28); border-radius: var(--r-pill); padding: 0 5px; flex: none; }
-.cal-event { margin: 4px 5px; font-size: 11px; color: var(--dome); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-event { margin: 4px 5px; font-size: 11px; color: var(--gold-deep); font-weight: 600; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mcell .cal-event { margin: 3px 0 0; }
 .mcell .ev-bar { display: block; font-size: 11px; font-weight: 600; color: var(--dome); background: var(--primary-weak); border: 1px solid var(--gold); border-radius: var(--r-ctl); padding: 1px 5px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -256,11 +256,13 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .badge { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-mono); font-size: 10.5px; color: #fff; border-radius: var(--r-pill); padding: 1px 7px; font-weight: 600; }
 .mcell .dh { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .mcell .dh .today-tag { margin-left: auto; }
-.mev { font-size: 11px; color: var(--dome); font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mev { font-size: 11px; color: var(--gold-deep); font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The label text shrinks/ellipsizes; the leading line-art marker stays full size. */
+.cal-line-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Holidays: muted, icon-less, read as background context (not tasks). */
-.mev.holiday { color: var(--muted); font-weight: 500; }
-.wk-hcell .ev.holiday { color: var(--muted); font-weight: 500; }
-.cal-event.holiday { color: var(--muted); font-weight: 500; }
+.mev.holiday { color: var(--holiday); font-weight: 500; }
+.wk-hcell .ev.holiday { color: var(--holiday); font-weight: 500; }
+.cal-event.holiday { color: var(--holiday); font-weight: 500; }
 .mcell .more, .wk-hcell .more { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ============================================================= KANBAN */
