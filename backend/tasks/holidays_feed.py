@@ -7,6 +7,7 @@ are table-driven. Results per (set, year) are deterministic and cached.
 """
 
 from datetime import date, timedelta
+from functools import lru_cache
 
 from dateutil.easter import easter
 import holidays as pyholidays
@@ -98,3 +99,58 @@ def christian(year):
         (date(year, 1, 6),       "Epiphany"),
         (date(year, 12, 25),     "Christmas Day"),
     ]
+
+
+# ---- Registry + aggregator -------------------------------------------------
+SET_PROVIDERS = {
+    "us_federal": us_federal,
+    "us_observances": us_observances,
+    "christian": christian,
+    "hindu_festivals": hindu_festivals,
+    "ananda_lineage": ananda_lineage,
+}
+
+# Order chosen for the admin UI and as the default for orgs with none set.
+DEFAULT_SETS = [
+    "us_federal", "us_observances", "christian",
+    "hindu_festivals", "ananda_lineage",
+]
+AVAILABLE_SETS = list(SET_PROVIDERS.keys())
+
+
+def provider_for(key):
+    """Resolve a set key to its provider, including `country:XX` packs."""
+    if key in SET_PROVIDERS:
+        return SET_PROVIDERS[key]
+    if key.startswith("country:"):
+        return country_pack(key.split(":", 1)[1])
+    return None
+
+
+@lru_cache(maxsize=1024)
+def _set_year(key, year):
+    """Cached (key, year) -> tuple of (iso_date, title, key). Deterministic."""
+    prov = provider_for(key)
+    if prov is None:
+        return ()
+    return tuple((d.isoformat(), title, key) for d, title in prov(year))
+
+
+def holidays_in_range(enabled_sets, start, end):
+    """Span dicts for every enabled set occurrence within [start, end] inclusive.
+
+    `enabled_sets` is an iterable of set keys; start/end are `date`s. Spans match
+    the existing EventSpan shape plus `set` and `holiday: True`.
+    """
+    lo, hi = start.isoformat(), end.isoformat()
+    out = []
+    for key in enabled_sets:
+        for year in range(start.year, end.year + 1):
+            for iso, title, set_key in _set_year(key, year):
+                if lo <= iso <= hi:
+                    out.append({
+                        "title": title, "set": set_key, "holiday": True,
+                        "start": iso, "end": iso,
+                    })
+    out.sort(key=lambda h: (h["start"], h["title"]))
+    return out

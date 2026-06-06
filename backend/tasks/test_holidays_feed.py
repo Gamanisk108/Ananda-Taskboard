@@ -88,3 +88,41 @@ def test_hindu_unknown_year_returns_empty_not_error():
 def test_hindu_festivals_have_titles_and_dates():
     for d, title in hindu_festivals(2026):
         assert isinstance(d, date) and isinstance(title, str) and title
+
+
+from tasks.holidays_feed import (
+    AVAILABLE_SETS, DEFAULT_SETS, holidays_in_range, provider_for,
+)
+
+
+def test_default_sets_are_the_five_ananda_sets():
+    assert DEFAULT_SETS == [
+        "us_federal", "us_observances", "christian",
+        "hindu_festivals", "ananda_lineage",
+    ]
+
+
+def test_range_filters_to_window_and_tags_set():
+    out = holidays_in_range(("ananda_lineage",), date(2026, 3, 1), date(2026, 3, 31))
+    titles = {h["title"] for h in out}
+    assert "Yogananda's Mahasamadhi" in titles          # Mar 7 in window
+    assert "Yogananda's Birthday" not in titles          # Jan 5 outside window
+    assert all(h["set"] == "ananda_lineage" and h["holiday"] is True for h in out)
+    assert all(h["start"] == h["end"] for h in out)
+
+
+def test_range_spans_year_boundary():
+    out = holidays_in_range(("ananda_lineage",), date(2025, 12, 28), date(2026, 1, 6))
+    titles = {h["title"] for h in out}
+    assert "Yogananda's Birthday" in titles               # Jan 5 2026
+
+
+def test_range_is_sorted_by_date_then_title():
+    out = holidays_in_range(tuple(DEFAULT_SETS), date(2026, 1, 1), date(2026, 12, 31))
+    keys = [(h["start"], h["title"]) for h in out]
+    assert keys == sorted(keys)
+
+
+def test_country_pack_key_routes_via_provider_for():
+    assert provider_for("country:IT") is not None
+    assert provider_for("nonsense") is None
