@@ -4,7 +4,7 @@ import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
-import { packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
+import { dayCells, packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
 import { isComplete } from "../statuses";
 import { useUsers, userInitials, userName, avatarColor } from "../users";
 import { Modal, Spinner, DueFlag } from "./common";
@@ -37,7 +37,7 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
   const todayIdx = dayIso.indexOf(today);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
 
-  const { items, events } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId);
+  const { items, events, holidays } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId);
 
   async function open(id: number) {
     const task = (await api.get(`/api/tasks/${id}`)) as Task;
@@ -74,11 +74,15 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
     return { bars: packed, laneCount: Math.max(2, laneCount) };
   }, [items, dayIso, colorByProject, today, tomorrow]);
 
-  // Events that cover each day (rendered as a line under the day header, per design).
-  const eventsByDay = useMemo(() => {
-    return dayIso.map((iso) =>
-      events.filter((e) => e.start <= iso && e.end >= iso).map((e) => `${EVENT_ICON[e.kind]} ${e.title}`));
-  }, [events, dayIso]);
+  // Per-day merged cells: user events first, holidays after, capped with "+N".
+  const cellsByDay = useMemo(() => {
+    return dayIso.map((iso) => {
+      const dayEvents = events.filter((e) => e.start <= iso && e.end >= iso);
+      const dayHols = holidays.filter((h) => h.start === iso);
+      const withIcons = dayEvents.map((e) => ({ title: `${EVENT_ICON[e.kind]} ${e.title}` }));
+      return dayCells(withIcons, dayHols, 2);
+    });
+  }, [events, holidays, dayIso]);
 
   function warnIcon(b: Bar) {
     if (b.overdue) return <DueFlag kind="overdue" size={13} />;
@@ -117,7 +121,10 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
                     {iso === today && <span className="today-tag">{t("cal.today", "Today")}</span>}
                     <span className="dnum">{format(d, "MMM d", { locale: dfLocale() })}</span>
                   </div>
-                  {eventsByDay[idx].length > 0 && <div className="ev" title={eventsByDay[idx].join(", ")}>{eventsByDay[idx][0]}</div>}
+                  {cellsByDay[idx].visible.map((c, k) => (
+                    <div key={`c${k}`} className={`ev${c.holiday ? " holiday" : ""}`} title={c.label}>{c.label}</div>
+                  ))}
+                  {cellsByDay[idx].more > 0 && <div className="more">+{cellsByDay[idx].more} {t("cal.more", "more")}</div>}
                 </div>
               );
             })}
@@ -170,6 +177,9 @@ export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProp
       )}
       {dayOpen && (
         <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
+          {holidays.filter((h) => h.start === dayOpen).map((h, k) => (
+            <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>{h.title}</div>
+          ))}
           <DayTaskList
             items={(items ?? []).filter((i) => i.date === dayOpen)}
             colorByProject={colorByProject}
