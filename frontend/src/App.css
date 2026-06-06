@@ -257,6 +257,11 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .mcell .dh { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .mcell .dh .today-tag { margin-left: auto; }
 .mev { font-size: 11px; color: var(--dome); font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Holidays: muted, icon-less, read as background context (not tasks). */
+.mev.holiday { color: var(--muted); font-weight: 500; }
+.wk-hcell .ev.holiday { color: var(--muted); font-weight: 500; }
+.cal-event.holiday { color: var(--muted); font-weight: 500; }
+.mcell .more, .wk-hcell .more { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ============================================================= KANBAN */
 .kanban { display: flex; gap: 13px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; min-height: 100%; }
