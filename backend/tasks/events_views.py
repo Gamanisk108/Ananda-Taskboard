@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 
 from permissions.drf import IsAdminOrReadOnly
 
+from .holidays_feed import AVAILABLE_SETS, DEFAULT_SETS, holidays_in_range
 from .models import CalendarEvent, Status
 from .recurrence import event_weekly_dates
 from .serializers import CalendarEventSerializer, StatusSerializer
@@ -116,3 +117,43 @@ class EventsRangeView(APIView):
             out.extend(expand_event(ev, start, end))
         out.sort(key=lambda e: (e["start"], e["title"]))
         return Response(out)
+
+
+class HolidaysRangeView(APIView):
+    """Computed holiday spans for the active org, intersecting [from, to]."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        start = _parse(request.query_params.get("from"), "from")
+        end = _parse(request.query_params.get("to"), "to")
+        org = _org(request)
+        sets = org.enabled_holiday_sets if (org and org.enabled_holiday_sets) else DEFAULT_SETS
+        return Response(holidays_in_range(tuple(sets), start, end))
+
+
+class HolidaySettingsView(APIView):
+    """GET the active org's enabled holiday sets (+ the full available list);
+    PATCH to change them (admins only). Country packs use `country:XX` keys."""
+
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get(self, request):
+        org = _org(request)
+        enabled = org.enabled_holiday_sets if (org and org.enabled_holiday_sets) else DEFAULT_SETS
+        return Response({"enabled": enabled, "available": AVAILABLE_SETS})
+
+    def patch(self, request):
+        org = _org(request)
+        if org is None:
+            raise ValidationError("No active organization.")
+        sets = request.data.get("enabled")
+        if not isinstance(sets, list) or any(not isinstance(s, str) for s in sets):
+            raise ValidationError({"enabled": "Expected a list of set keys."})
+        allowed = set(AVAILABLE_SETS)
+        bad = [s for s in sets if s not in allowed and not s.startswith("country:")]
+        if bad:
+            raise ValidationError({"enabled": f"Unknown sets: {bad}"})
+        org.enabled_holiday_sets = sets
+        org.save(update_fields=["enabled_holiday_sets"])
+        return Response({"enabled": sets, "available": AVAILABLE_SETS})
