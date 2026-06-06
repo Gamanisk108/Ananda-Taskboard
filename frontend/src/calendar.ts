@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { api } from "./api/client";
-import type { CalendarInstance, EventSpan, Me, Task } from "./types";
+import type { CalendarInstance, EventSpan, Holiday, Me, Task } from "./types";
 
 // Props shared by the week and month calendar views.
 export interface CalendarViewProps {
@@ -34,21 +34,19 @@ export function useCalendarRange(
   to: string,
   projectId: number | undefined,
   subprojectId: number | undefined,
+  refreshKey?: number,
 ) {
-  const p = new URLSearchParams({ from, to });
-  if (subprojectId) p.set("subproject", String(subprojectId));
-  else if (projectId) p.set("project", String(projectId));
-  const qs = p.toString();
-  // Both queries sit under the ["tasks"] prefix so bump()'s invalidateQueries
-  // (fired after any task OR event change) refreshes the calendar just like the
-  // list/board views — the prefix is a "board data" group, not a type claim.
-  const { data: items = null } = useQuery({
-    queryKey: ["tasks", "calendar", from, to, projectId ?? null, subprojectId ?? null],
-    queryFn: () => api.get(`/api/calendar?${qs}`) as Promise<CalendarInstance[]>,
-  });
-  const { data: events = [] } = useQuery({
-    queryKey: ["tasks", "events", from, to],
-    queryFn: () => api.get(`/api/events/range?from=${from}&to=${to}`) as Promise<EventSpan[]>,
-  });
-  return { items, events };
+  const [items, setItems] = useState<CalendarInstance[] | null>(null);
+  const [events, setEvents] = useState<EventSpan[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  useEffect(() => {
+    const p = new URLSearchParams({ from, to });
+    if (subprojectId) p.set("subproject", String(subprojectId));
+    else if (projectId) p.set("project", String(projectId));
+    setItems(null);
+    api.get(`/api/calendar?${p}`).then(setItems).catch(() => setItems([]));
+    api.get(`/api/events/range?from=${from}&to=${to}`).then(setEvents).catch(() => setEvents([]));
+    api.get(`/api/holidays/range?from=${from}&to=${to}`).then(setHolidays).catch(() => setHolidays([]));
+  }, [from, to, projectId, subprojectId, refreshKey]);
+  return { items, events, holidays };
 }

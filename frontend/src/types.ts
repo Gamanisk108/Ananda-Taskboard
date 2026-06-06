@@ -1,13 +1,16 @@
 export type Level = "member" | "viewer";
 export type Approval = "pending" | "approved" | "rejected";
 
-/** How many tasks in an accessible scope a grant lets the holder SEE. */
-export type Sees = "own" | "subproject" | "project";
+/** A member's "View Access" — how many tasks they can SEE. */
+export type Sees = "own" | "subproject" | "project" | "org";
 export const SEES_LABEL: Record<Sees, string> = {
-  own: "Own tasks only",
-  subproject: "All tasks in the sub-project",
-  project: "All tasks in the project",
+  own: "Tasks Only",
+  subproject: "Sub-Project Only",
+  project: "Full Project",
+  org: "Organization",
 };
+/** Dropdown / ranking order: narrowest → widest. */
+export const SEES_ORDER: Record<Sees, number> = { own: 1, subproject: 2, project: 3, org: 4 };
 
 export interface SubProjectNode {
   id: number;
@@ -164,6 +167,14 @@ export interface EventSpan {
   yearly: boolean;
   start: string; // YYYY-MM-DD
   end: string;
+}
+
+export interface Holiday {
+  title: string;
+  set: string;
+  holiday: true;
+  start: string; // YYYY-MM-DD
+  end: string;   // == start (holidays are single-day)
 }
 
 export const EVENT_ICON: Record<EventKind, string> = {
