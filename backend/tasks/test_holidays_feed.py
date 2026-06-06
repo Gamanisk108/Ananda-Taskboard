@@ -71,3 +71,20 @@ def test_us_federal_includes_juneteenth():
 def test_country_pack_italy_has_republic_day_june_2():
     days = {d for d, _ in country_pack("IT")(2026)}
     assert date(2026, 6, 2) in days  # Festa della Repubblica
+
+
+from tasks.holidays_feed import hindu_festivals
+
+
+def test_janmashtami_2026_is_sept_4_and_labels_babaji():
+    days = dict((title, d) for d, title in hindu_festivals(2026))
+    assert days["Janmashtami (Babaji Commemoration Day)"] == date(2026, 9, 4)
+
+
+def test_hindu_unknown_year_returns_empty_not_error():
+    assert hindu_festivals(1900) == []
+
+
+def test_hindu_festivals_have_titles_and_dates():
+    for d, title in hindu_festivals(2026):
+        assert isinstance(d, date) and isinstance(title, str) and title

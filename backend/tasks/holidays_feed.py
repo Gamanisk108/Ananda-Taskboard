@@ -64,6 +64,29 @@ def country_pack(code):
 us_federal = country_pack("US")
 
 
+# ---- Hindu / yoga festivals: curated lunisolar table -----------------------
+# (month, day) -> title, per year. Source: drikpanchang.com (US observance).
+# EXTEND 2025, 2027..2040 the same way; spot-check 2-3 dates/year vs source.
+_JANMASHTAMI = "Janmashtami (Babaji Commemoration Day)"
+_HINDU = {
+    2026: [
+        ((2, 15), "Maha Shivaratri"),
+        ((3, 4),  "Holi"),
+        ((3, 27), "Ram Navami"),
+        ((7, 29), "Guru Purnima"),
+        ((9, 4),  _JANMASHTAMI),
+        ((10, 11), "Navaratri begins"),
+        ((10, 20), "Dussehra"),
+        ((11, 8), "Diwali"),
+    ],
+    # 2025: [ ... ],  2027: [ ... ],  ... through 2040
+}
+
+
+def hindu_festivals(year):
+    return [(date(year, m, d), title) for (m, d), title in _HINDU.get(year, [])]
+
+
 # ---- Christian: Easter-derived moveable feasts + fixed ----------------------
 def christian(year):
     e = easter(year)  # Gregorian Easter Sunday
