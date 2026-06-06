@@ -151,7 +151,13 @@
 /* Header stays put; the body scrolls. Without the bounded height + scroll, tall
    modals pushed the ✕ close button off-screen ("trapped" — QA 2026-06-05). */
 .modal-head { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); border-radius: var(--r-card) var(--r-card) 0 0; }
-.modal-head h2 { font-size: 19px; white-space: nowrap; }
+.modal-head h2 { font-size: 19px; white-space: nowrap; display: inline-flex; align-items: center; gap: 9px; }
+/* Section-header icon before a dialog title (design rule #6): muted line-art, 19px. */
+.modal-head h2 .sh-icn { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); flex: none; }
+.modal-head h2 .sh-icn svg { width: 19px; height: 19px; display: block; }
+/* Modal close X is a 28×28 circular hover target around a 14px icon (design rule #9). */
+.modal-head .icon-btn { padding: 4px; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; flex: none; }
+.modal-head .icon-btn svg { width: 14px; height: 14px; }
 .modal-body { padding: 18px 20px 20px; overflow-y: auto; }
 .field { margin-bottom: 13px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -312,6 +318,7 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .usermenu-pop { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--shadow-pop); min-width: 200px; padding: 6px; z-index: 30; }
 .usermenu-item { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; background: transparent; border: none; padding: 9px 10px; border-radius: var(--r-ctl); color: var(--text); }
 .usermenu-item:hover { background: var(--sunk); }
+.usermenu-item > svg { flex: none; }
 .usermenu-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
 /* ============================================================= POPOVER (inline pickers) */
@@ -338,6 +345,8 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .topbar-actions button svg, .viewbar .right button svg { width: 17px; height: 17px; flex: none; }
 .viewbar .right button svg { width: 15px; height: 15px; }
 .icon-btn svg { width: 18px; height: 18px; }
+/* Ghost buttons that hold a single line-art glyph (approve/reject/delete rows). */
+.btn-ghost.icon-only { display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; }
 .user {
   display: flex; align-items: center; gap: 7px; background: var(--surface-2);
   border: 1px solid var(--border); border-radius: var(--r-pill);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
@@ -188,11 +189,14 @@ export function Modal({
   onClose,
   children,
   wide,
+  icon,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Optional line-art section-header icon shown before the title (design rule #6). */
+  icon?: ReactNode;
 }) {
   const { t } = useTranslation();
   // Escape closes the modal (app-wide expectation). Backdrop click closes too
@@ -214,8 +218,11 @@ export function Modal({
         aria-modal="true"
       >
         <div className="modal-head">
-          <h2 style={{ fontSize: 18 }}>{title}</h2>
-          <button className="btn-ghost" onClick={onClose} aria-label={t("common.close")}>✕</button>
+          <h2 style={{ fontSize: 18 }}>
+            {icon && <span className="sh-icn">{icon}</span>}
+            {title}
+          </h2>
+          <button className="btn-ghost icon-btn" onClick={onClose} aria-label={t("common.close")}><X size={14} /></button>
         </div>
         <div className="modal-body">{children}</div>
       </div>

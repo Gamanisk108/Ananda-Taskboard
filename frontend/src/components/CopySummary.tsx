@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Copy } from "lucide-react";
 import { api } from "../api/client";
 import { peopleInMyScope, useUsers } from "../users";
 import { useAdminGroups } from "../groups";
@@ -46,7 +47,7 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
   }
 
   return (
-    <Modal title={t("modals.copySummary")} onClose={onClose} wide>
+    <Modal icon={<Copy />} title={t("modals.copySummary")} onClose={onClose} wide>
       <div className="row2">
         <div className="field">
           <label>{t("copy.day")}</label>

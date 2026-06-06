@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Download } from "lucide-react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { peopleInMyScope, useUsers } from "../users";
@@ -95,7 +96,7 @@ export function ExportDialog({ me }: { me: Me }) {
     <>
       <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>{t("export.button")}</button>
       {open && (
-        <Modal title={t("modals.exportTasks")} onClose={() => setOpen(false)} wide>
+        <Modal icon={<Download />} title={t("modals.exportTasks")} onClose={() => setOpen(false)} wide>
           <div className="row2">
             <div className="field">
               <label>{t("import.formatLabel")}</label>

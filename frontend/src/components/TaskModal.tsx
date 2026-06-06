@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye } from "lucide-react";
+import { Eye, Archive, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
@@ -47,7 +47,7 @@ function ApprovalBanners({ task, onSaved }: { task: Task; onSaved: () => void })
       )}
       {task.archived_at && (
         <div className="field" style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span className="pill" style={{ background: "var(--surface-sunk)" }}>🗄 {t("task.archived")}</span>
+          <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {t("task.archived")}</span>
           <button type="button" className="btn-secondary"
             onClick={async () => { await api.post(`/api/tasks/${task.id}/unarchive`, {}); onSaved(); }}>
             {t("task.unarchive")}
@@ -187,9 +187,10 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
   return (
     <div className="modal-foot">
       {editing && (
-        <button type="button" className="btn-secondary" style={{ marginRight: "auto" }}
-          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
-          🔗 {shareLabel || t("task.share")}
+        <button type="button" className="btn-secondary"
+          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
+          style={{ marginRight: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Share2 size={14} /> {shareLabel || t("task.share")}
         </button>
       )}
       <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Check, X, LayoutGrid } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
@@ -110,7 +111,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   return (
-    <Modal title={t("modals.projects")} onClose={onClose} wide>
+    <Modal icon={<LayoutGrid />} title={t("modals.projects")} onClose={onClose} wide>
       <div className="field" style={{ display: "flex", gap: 8 }}>
         <input placeholder={t("mp.newProjectPh")} value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} />
         <button className="btn-primary" onClick={addProject} disabled={busy}>{t("mp.addProject")}</button>
@@ -185,8 +186,8 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
         {t("mp.trusted")}
       </label>
       <button className="btn-ghost" onClick={() => onSave(s)}>{t("common.save")}</button>
-      <button className="btn-ghost" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}>✓</button>
-      {!s.is_default && <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => onDelete(sub)}>✕</button>}
+      <button className="btn-ghost icon-only" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}><Check size={16} /></button>
+      {!s.is_default && <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>}
       {fmtCreated(sub.created_at) && (
         <span className="muted" style={{ marginLeft: "auto", fontSize: 11, whiteSpace: "nowrap" }}>
           {t("mp.created", "Created {{date}}", { date: fmtCreated(sub.created_at) })}

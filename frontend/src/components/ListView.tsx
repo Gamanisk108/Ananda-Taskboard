@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, Archive } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
@@ -167,7 +167,7 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
           <option value="no">{tr("list.oneOffOnly")}</option>
         </select>
         {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>Clear ({activeFilters})</button>}
-        {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)" }}>📖 Showing archive</span>}
+        {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {tr("list.showingArchive", "Showing archive")}</span>}
       </div>
 
       <div className="summary" style={{ margin: "0 -18px 14px" }}>

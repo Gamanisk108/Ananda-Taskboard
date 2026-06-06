@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { LayoutGrid, Columns3, Plus, Sparkles, type LucideIcon } from "lucide-react";
 import { Modal } from "./common";
 
 // One-card, skippable first-login welcome. Deliberately tiny: a title, three plain
@@ -6,23 +7,23 @@ import { Modal } from "./common";
 // flag and replay are owned by App.tsx so the same card can be re-shown from Help.
 export function WelcomeCard({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
-  const bullets = [
+  const bullets: { Icon: LucideIcon; text: string }[] = [
     {
-      icon: "🗂️",
+      Icon: LayoutGrid,
       text: t(
         "onboarding.b1",
         "Tap a colored tab to open a project and see its tasks.",
       ),
     },
     {
-      icon: "🔀",
+      Icon: Columns3,
       text: t(
         "onboarding.b2",
         "Switch between List, Board, Weekly and Monthly up top.",
       ),
     },
     {
-      icon: "➕",
+      Icon: Plus,
       text: t(
         "onboarding.b3",
         "Tap the big + New task button to add something to do.",
@@ -31,6 +32,7 @@ export function WelcomeCard({ onClose }: { onClose: () => void }) {
   ];
   return (
     <Modal
+      icon={<Sparkles />}
       title={t("onboarding.title", "Welcome to Ananda Taskboard 🙏")}
       onClose={onClose}
     >
@@ -53,10 +55,10 @@ export function WelcomeCard({ onClose }: { onClose: () => void }) {
               style={{ display: "flex", gap: 10, alignItems: "flex-start" }}
             >
               <span
-                style={{ fontSize: 22, lineHeight: 1, flex: "none" }}
+                style={{ flex: "none", color: "var(--primary)", display: "inline-flex", marginTop: 1 }}
                 aria-hidden
               >
-                {b.icon}
+                <b.Icon size={20} />
               </span>
               <span>{b.text}</span>
             </li>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { avatarColor, userInitials, useUsers } from "../users";
@@ -72,7 +73,7 @@ export function SubtaskEditor({
           <select data-testid="subtask-status" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto" }}>
             {statuses.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
           </select>
-          <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(s.id)}>✕</button>
+          <button type="button" className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => remove(s.id)}><X size={16} /></button>
         </div>
       ))}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>

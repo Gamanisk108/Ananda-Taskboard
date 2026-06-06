@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, ChevronRight, ChevronDown, Mail } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronDown, Mail, CircleHelp } from "lucide-react";
 import { Modal } from "./common";
 import {
   articlesForRole,
@@ -134,7 +134,7 @@ export function HelpCenter({
   }
 
   return (
-    <Modal title={t("help.title", "Help & FAQ")} onClose={onClose} wide>
+    <Modal icon={<CircleHelp />} title={t("help.title", "Help & FAQ")} onClose={onClose} wide>
       <input
         type="search"
         data-testid="help-search"

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp } from "lucide-react";
+import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, Contrast, LogOut } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -229,7 +230,7 @@ export default function App() {
             </select>
           )}
           {me.is_superuser && (
-            <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}>🌐<span className="lbl">{t("platform.nav")}</span></button>
+            <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}><Globe /><span className="lbl">{t("platform.nav")}</span></button>
           )}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}><CircleCheck /><span className="lbl">{t("nav.approvals")}</span></button>
@@ -426,30 +427,30 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSetti
         <div className="usermenu-pop">
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
-              <span>⚙️</span> {t("menu.settings")}
+              <SettingsIcon size={15} /> {t("menu.settings")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onHistory(); }}>
-              <span>🕰️</span> {t("menu.history")}
+              <HistoryIcon size={15} /> {t("menu.history")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onRestore(); }}>
-              <span>↻</span> {t("menu.restorePoints")}
+              <RotateCcw size={15} /> {t("menu.restorePoints")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
-              <span>↔</span> {t("menu.bulkMigrate")}
+              <ArrowLeftRight size={15} /> {t("menu.bulkMigrate")}
             </button>
           )}
           <button className="usermenu-item" onClick={enableNotifications}>
-            <span>🔔</span> {msg || t("menu.notificationsOn")}
+            <Bell size={15} /> {msg || t("menu.notificationsOn")}
           </button>
           <div className="usermenu-sep" />
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <span>🌐</span> {t("menu.language")}
+            <Globe size={15} /> {t("menu.language")}
             <select data-testid="language-select" value={language}
               onChange={(e) => onLanguage(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -458,7 +459,7 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSetti
             </select>
           </label>
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <span>🌗</span> {t("menu.theme")}
+            <Contrast size={15} /> {t("menu.theme")}
             <select data-testid="theme-select" value={theme}
               onChange={(e) => onTheme(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -470,7 +471,7 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, onSetti
           </label>
           <div className="usermenu-sep" />
           <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
-            <span>🚪</span> {t("menu.logout")}
+            <LogOut size={15} /> {t("menu.logout")}
           </button>
         </div>
       )}

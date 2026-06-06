@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X, Users } from "lucide-react";
 import { api } from "../api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Modal, Spinner, MultiSelect, type MultiSelectOption } from "./common";
@@ -69,7 +70,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
   };
 
   return (
-    <Modal title={tr("modals.team")} onClose={onClose} wide>
+    <Modal icon={<Users />} title={tr("modals.team")} onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
         {(["members", "groups", "access", "activity", "holidays"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>
@@ -505,7 +506,7 @@ function Access({
               {myExclusions.map((e) => (
                 <span key={e.id} className="pill" style={{ background: "#b4452f12", color: "var(--danger)", border: "1px solid #b4452f55" }}>
                   {excLabel(e)}
-                  <button className="btn-ghost" style={{ padding: "0 4px", color: "var(--danger)" }} onClick={() => removeExclusion(e.id)}>✕</button>
+                  <button className="btn-ghost icon-only" style={{ padding: "0 4px", color: "var(--danger)" }} title={tr("common.remove", "Remove")} onClick={() => removeExclusion(e.id)}><X size={12} /></button>
                 </span>
               ))}
               {myExclusions.length === 0 && <span className="muted" style={{ fontSize: 12 }}>{tr("ta.noExclusions")}</span>}

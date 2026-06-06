@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CalendarOff } from "lucide-react";
 import { Modal } from "./common";
 import { DayTaskList } from "./DayTaskList";
 import type { CalendarInstance } from "../types";
@@ -20,12 +21,12 @@ export function UndatedTasks({
 
   return (
     <>
-      <button type="button" className="btn-secondary" style={{ marginLeft: "auto" }}
+      <button type="button" className="btn-secondary" style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}
         data-testid="undated-button" onClick={() => setOpen(true)}>
-        📋 {t("cal.noDate", "No date")} ({undated.length})
+        <CalendarOff size={14} /> {t("cal.noDate", "No date")} ({undated.length})
       </button>
       {open && (
-        <Modal title={t("cal.noDateTitle", "No date — {{count}} tasks", { count: undated.length })} onClose={() => setOpen(false)}>
+        <Modal icon={<CalendarOff />} title={t("cal.noDateTitle", "No date — {{count}} tasks", { count: undated.length })} onClose={() => setOpen(false)}>
           <DayTaskList
             items={undated}
             colorByProject={colorByProject}
