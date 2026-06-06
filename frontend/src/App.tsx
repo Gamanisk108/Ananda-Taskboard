@@ -328,7 +328,7 @@ export default function App() {
       <main className="content">
         {me.tree.projects.length === 0 && !me.is_admin ? (
           <div className="empty" style={{ maxWidth: 460, margin: "40px auto", lineHeight: 1.5 }}>
-            <div style={{ fontSize: 34, marginBottom: 8 }}>🌱</div>
+            <img src="/ananda-empty.svg" alt="" width={140} height={136} style={{ display: "block", margin: "0 auto 10px" }} />
             <h3 style={{ margin: "0 0 6px", color: "var(--text)" }}>{t("onboarding.welcomeTitle", "You're all set up!")}</h3>
             <p style={{ margin: 0 }}>{t("onboarding.welcomeBody", "An admin hasn't added you to any projects yet. As soon as they add you — or assign you a task — your work will appear right here.")}</p>
           </div>
