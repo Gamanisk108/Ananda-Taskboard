@@ -1,4 +1,4 @@
-# Design Handoff — Help, FAQ & Onboarding (+ status relabel)
+# Design Handoff — Help, FAQ & Onboarding, Subtask Editor (+ status relabel)
 
 **For:** Claude Design — desktop web **and** responsive (mobile) browser versions.
 **Purpose:** A **standalone** handoff for the in-app Help/FAQ/onboarding feature built
@@ -100,3 +100,90 @@ The help **registry/tripwire** (`src/help/registry.ts`, `help.test.ts` — a tes
 when a new feature button has no help article), the two-tier content loader
 (`src/help/content/*`), the What's-New `localStorage` baseline logic, and the status-rename
 data migration. These keep help in sync and drive behavior but need no design treatment.
+
+---
+
+## Entry — 2026-06-06 — Rich subtask editor (slide-in detail panel)
+
+**Context (read first):** This is a **distinct feature from Help/Onboarding above** — it's
+bundled into this handoff per request. Subtasks used to be a flat checklist (one row =
+title + an inline assignee dropdown + a status dropdown). They now become **"mini-tasks":**
+each subtask gets its own **simplified Task Popup**, opened as a **slide-in detail panel that
+replaces the Task modal's body in place** (breadcrumb + Back — **never a second, stacked
+modal**). Nesting is **capped at one level** (subtasks have no subtasks), so the breadcrumb is
+only ever two deep — a deliberate guard against an "overwhelming page-after-page drill-down."
+**Built and live-Playwright-QA'd in light + dark** (admin login); screenshots were working
+artifacts and not retained — states are described below. The simplified popup is the **full
+Task Popup minus** project/sub-project picker, Links, Repeats/recurrence, Monitor,
+Auto-complete, approval banners, comments, and any nested subtasks.
+
+### 1. Subtask list rows — CHANGED look (compact, click-to-open)
+- **What:** inside the Task modal, below the task form, the **"Subtasks (N)"** section. Each row
+  is now a **clickable open-target** on the left (subtask **title** + the assignees' **avatar
+  chips**, plus a small **◇ group indicator** when whole groups are assigned), then a **quick
+  status dropdown** (one-click status change without opening the detail), then a **✕ delete**
+  ghost button. The **quick-add row** ("Add a subtask…" input + **Add** button) stays at the
+  bottom for fast title-only capture. (Previously the row carried an inline *assignee* select +
+  status select; assignment now shows as avatars and is edited in the detail panel.)
+- **Draw:** the section heading with count; 2–3 rows showing title + avatar-initials chips
+  (e.g. "LL") + status select + ✕; the **◇ group-assigned** variant; the quick-add row. The row
+  should read as clickable (hover background / pointer). Light + dark.
+- **Responsive:** rows wrap gracefully; the status select stays tappable at narrow widths;
+  avatars cap at **3** then truncate. Title ellipsizes before pushing the controls off-row.
+- File: `frontend/src/components/SubtaskEditor.tsx`.
+
+### 2. Slide-in subtask detail panel — NEW component (the main one to design)
+- **What:** clicking a subtask row **swaps the Task modal's body in place** — the task form, its
+  footer, and the comments section are hidden, and the subtask editor takes their place. The
+  **modal title stays "Edit task · #ID"** (it does **not** become a new window). A **breadcrumb**
+  row sits at the top: **← Subtasks** (ghost button) · **›** · **{subtask title}** (bold).
+- **Fields (the "simplified Task Popup"), top to bottom:**
+  - **Task name** — full-width input.
+  - Row of two: **Status** (select) | **Priority** (priority arrow-icon + select).
+  - **Assignees** — the **existing AssigneePicker** reused as-is: collapsed chip summary + an
+    **Edit** link that expands to a search box, group-filter, "assign a whole group" buttons, and
+    a checkbox people-list. It is **scoped to the parent task's sub-project**, so people without
+    access there get the muted **"no access"** tag (same as on the full Task Popup).
+  - Row of two: **Details** | **Requirements** — textareas.
+  - Row of two: **Start date** | **Deadline** — date inputs.
+  - Row of two: **Start time** | **End time** — time inputs.
+  - **Footer:** **← Back to subtasks** (ghost, pinned left) · **Delete** (danger) · **Save**
+    (primary).
+- **Draw (states to spec):** (a) the full detail panel with breadcrumb + all field rows +
+  footer; (b) with an assignee chip in the collapsed AssigneePicker (e.g. "LL Lead Lena");
+  (c) AssigneePicker **expanded** (search + group buttons + checklist, incl. a "no access" row);
+  (d) **time validation error** — a red message under the time row reading **"Set both a start
+  and end time, or neither."** (Save blocked, panel stays put); (e) Priority showing the **High**
+  up-arrow icon. **Light + dark.** Same wide width as the Task Popup.
+- **Responsive:** the two-up field rows **stack to a single column** on mobile; footer buttons
+  wrap (keep **Back** reachable); the breadcrumb **truncates a long subtask title with an
+  ellipsis** rather than wrapping.
+- File: `frontend/src/components/SubtaskDetail.tsx`; the in-place body swap lives in
+  `frontend/src/components/TaskModal.tsx`.
+
+### 3. Task ↔ subtask transition — motion (optional, design's call)
+- **What today:** the swap is an **instant in-place replace** (no animation). Parent task edits
+  are **preserved** across the swap (typing in the task form, opening a subtask, and hitting Back
+  returns you to your unsaved edits).
+- **Draw / spec (optional):** a subtle **horizontal slide / crossfade** for the task→subtask and
+  Back transitions would reinforce the "one surface, going one level in" mental model. Because
+  edits survive, the motion should imply **"pushed aside,"** not "closed and reopened." Specify
+  direction (subtask slides in from the right, Back slides it out), duration, and easing.
+
+### Subtask status dot on the parent (already exists — no change, just FYI)
+Saving a subtask refreshes the parent task card's existing **"subtasks by status" dot strip**
+(e.g. "In Progress: 1"). No new design — noting it so the parent-card spec isn't touched.
+
+### Translation flag (not visual)
+**3 new keys**, added to **all 13 locales** with **real translations** (not placeholders):
+`subtask.back` ("Back to subtasks"), `subtask.confirmDelete` ("Delete this subtask?"),
+`subtask.editDetails` ("Edit details" — the row's open tooltip). Every other label **reuses
+existing keys** — `task.{name,status,priority,assignees,details,requirements,startDate,deadline,
+startTime,endTime}` and `common.{save,delete}` — so no new strings to design around.
+
+### NOT design-relevant (internal — ignore for design)
+The backend change (single `assignee` → **multiple `assignees` + `assignee_groups`** M2M with a
+data-preserving migration), the serializer's both-or-neither **time validation**, the **extended
+edit permission** (any assignee — or a member of an assigned group — may edit a subtask even
+without parent-edit rights), and the unit tests. These drive behavior but need no visual
+treatment.
