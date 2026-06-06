@@ -50,3 +50,19 @@ export function useCalendarRange(
   }, [from, to, projectId, subprojectId, refreshKey]);
   return { items, events, holidays };
 }
+
+// One renderable line in a day cell: a user event or a holiday. Events sort
+// first (actionable); holidays last (context). `more` is how many were clipped.
+export interface DayCell { label: string; holiday: boolean; set?: string }
+
+export function dayCells(
+  events: { title: string }[],
+  holidays: { title: string; set: string }[],
+  max: number,
+): { visible: DayCell[]; more: number } {
+  const all: DayCell[] = [
+    ...events.map((e) => ({ label: e.title, holiday: false })),
+    ...holidays.map((h) => ({ label: h.title, holiday: true, set: h.set })),
+  ];
+  return { visible: all.slice(0, max), more: Math.max(0, all.length - max) };
+}
