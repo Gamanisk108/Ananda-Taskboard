@@ -26,3 +26,23 @@ _LINEAGE = [
 
 def ananda_lineage(year):
     return [(date(year, m, d), title) for (m, d), title in _LINEAGE]
+
+
+# ---- US civil observances: nth-weekday rules -------------------------------
+_SUN = 6  # Mon=0 .. Sun=6
+
+
+def _nth_weekday(year, month, weekday, n):
+    """The nth (1-based) `weekday` of `month`."""
+    first = date(year, month, 1)
+    offset = (weekday - first.weekday()) % 7
+    return date(year, month, 1 + offset + (n - 1) * 7)
+
+
+def us_observances(year):
+    return [
+        (_nth_weekday(year, 5, _SUN, 2),  "Mother's Day"),
+        (_nth_weekday(year, 6, _SUN, 3),  "Father's Day"),
+        (_nth_weekday(year, 3, _SUN, 2),  "Daylight Saving begins"),
+        (_nth_weekday(year, 11, _SUN, 1), "Daylight Saving ends"),
+    ]
