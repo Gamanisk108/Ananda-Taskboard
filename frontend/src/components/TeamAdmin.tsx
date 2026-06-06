@@ -7,7 +7,7 @@ import { useSubmitGuard } from "../useSubmitGuard";
 import { useAuth } from "../state/auth";
 import { SEES_ORDER, type Sees } from "../types";
 
-type Tab = "members" | "groups" | "access" | "activity";
+type Tab = "members" | "groups" | "access" | "activity" | "holidays";
 
 interface UserRow { id: number; name: string; email: string; role: string; is_active: boolean; is_admin: boolean; tier: number | null; }
 interface GroupRow { id: number; name: string; member_ids: number[]; }
@@ -65,13 +65,13 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
 
   const labels: Record<Tab, string> = {
     members: tr("tabs.members"), groups: tr("tabs.groups"), access: tr("tabs.access"),
-    activity: tr("tabs.activity"),
+    activity: tr("tabs.activity"), holidays: tr("tabs.holidays"),
   };
 
   return (
     <Modal title={tr("modals.team")} onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
-        {(["members", "groups", "access", "activity"] as Tab[]).map((t) => (
+        {(["members", "groups", "access", "activity", "holidays"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>
         ))}
       </div>
@@ -84,6 +84,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
               projects={projects} reload={() => loadAll(true)} />
           )}
           {tab === "activity" && <Activity rows={audit} />}
+          {tab === "holidays" && <Holidays />}
         </>
       )}
     </Modal>
@@ -529,5 +530,56 @@ function Access({
       )}
       {err && <div style={{ color: "var(--danger)", fontSize: 13, marginTop: 10 }}>{err}</div>}
     </>
+  );
+}
+
+const HOLIDAY_SET_KEYS = [
+  "us_federal", "us_observances", "christian", "hindu_festivals", "ananda_lineage",
+] as const;
+
+function Holidays() {
+  const { t: tr } = useTranslation();
+  const [enabled, setEnabled] = useState<string[]>([]);
+  const [available, setAvailable] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [busy, guard] = useSubmitGuard();
+
+  useEffect(() => {
+    api.get("/api/holidays/settings").then((d: unknown) => {
+      const data = d as { enabled: string[]; available: string[] };
+      setEnabled(data.enabled); setAvailable(data.available); setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  function toggle(key: string) {
+    setSaved(false);
+    setEnabled((e) => (e.includes(key) ? e.filter((k) => k !== key) : [...e, key]));
+  }
+
+  function save() {
+    return guard(async () => {
+      await api.patch("/api/holidays/settings", { enabled });
+      setSaved(true);
+    });
+  }
+
+  if (loading) return <Spinner />;
+  const keys = available.filter((k) => HOLIDAY_SET_KEYS.includes(k as never));
+  return (
+    <div>
+      <h3>{tr("holidays.title")}</h3>
+      <p className="muted">{tr("holidays.help")}</p>
+      {keys.map((k) => (
+        <label key={k} style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0" }}>
+          <input type="checkbox" checked={enabled.includes(k)} onChange={() => toggle(k)} />
+          {tr(`holidays.set.${k}`)}
+        </label>
+      ))}
+      <button className="btn-primary" onClick={save} disabled={busy} style={{ marginTop: 12 }}>
+        {tr("holidays.save")}
+      </button>
+      {saved && <span className="muted" style={{ marginLeft: 10 }}>{tr("holidays.saved")}</span>}
+    </div>
   );
 }
