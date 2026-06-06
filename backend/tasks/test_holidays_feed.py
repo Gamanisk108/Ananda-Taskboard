@@ -53,3 +53,21 @@ def test_good_friday_is_two_days_before_easter():
 def test_christmas_is_fixed():
     days = dict((title, d) for d, title in christian(2030))
     assert days["Christmas Day"] == date(2030, 12, 25)
+
+
+from tasks.holidays_feed import country_pack, us_federal
+
+
+def test_us_federal_includes_thanksgiving_2026():
+    days = {d for d, _ in us_federal(2026)}
+    assert date(2026, 11, 26) in days
+
+
+def test_us_federal_includes_juneteenth():
+    titles = " ".join(t for _, t in us_federal(2026))
+    assert "Juneteenth" in titles
+
+
+def test_country_pack_italy_has_republic_day_june_2():
+    days = {d for d, _ in country_pack("IT")(2026)}
+    assert date(2026, 6, 2) in days  # Festa della Repubblica

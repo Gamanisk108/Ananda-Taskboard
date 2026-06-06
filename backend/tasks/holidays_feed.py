@@ -9,6 +9,7 @@ are table-driven. Results per (set, year) are deterministic and cached.
 from datetime import date, timedelta
 
 from dateutil.easter import easter
+import holidays as pyholidays
 
 # ---- Ananda / SRF lineage: fixed Western-calendar dates --------------------
 # (month, day) -> title. Source: ananda.org/thank-you-god (design/Ananda Holidays.jpeg).
@@ -48,6 +49,19 @@ def us_observances(year):
         (_nth_weekday(year, 3, _SUN, 2),  "Daylight Saving begins"),
         (_nth_weekday(year, 11, _SUN, 1), "Daylight Saving ends"),
     ]
+
+
+# ---- Country packs via the `holidays` library (extensible) -----------------
+def country_pack(code):
+    """A provider for one ISO country code (e.g. 'US', 'IT'). The library
+    handles observed-date shifts automatically."""
+    def provider(year):
+        items = pyholidays.country_holidays(code, years=year)
+        return sorted(items.items())  # [(date, name), ...]
+    return provider
+
+
+us_federal = country_pack("US")
 
 
 # ---- Christian: Easter-derived moveable feasts + fixed ----------------------
