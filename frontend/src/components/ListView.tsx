@@ -8,7 +8,7 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, type MultiSelectOption } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -30,15 +30,16 @@ type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "tim
 export function ListView({ projectId, subprojectId, onEdit, me, showArchived = false }: Props) {
   const { t: tr } = useTranslation();  // aliased: `t` is used below for the task row
   const [q, setQ] = useState("");
-  // combinable filters
-  const [fProject, setFProject] = useState(0);
-  const [fSub, setFSub] = useState(0);
-  const [fAssignee, setFAssignee] = useState(0);     // person id; -1 = unassigned; 0 = any
-  const [fAssigneeGroup, setFAssigneeGroup] = useState(0); // group id; 0 = none (server-side filter)
-  const [fStatus, setFStatus] = useState<string>("");
+  // Combinable multi-select filters (empty array = no filter; OR within a list).
+  const [fProjects, setFProjects] = useState<number[]>([]);
+  const [fSubs, setFSubs] = useState<number[]>([]);
+  // Assignee filter — server-side (needs group-membership expansion the client can't
+  // see). Encoded values: "unassigned" | "u:<personId>" | "g:<groupId>".
+  const [assigneeSel, setAssigneeSel] = useState<string[]>([]);
+  const [fStatuses, setFStatuses] = useState<string[]>([]);
   const [fRecur, setFRecur] = useState<"" | "yes" | "no">("");
   const [fDeadline, setFDeadline] = useState<"" | "pending" | "overdue">("");
-  const [fPriority, setFPriority] = useState(0); // 0 = any, 1..5
+  const [fPriorities, setFPriorities] = useState<number[]>([]);
   const [sortKey, setSortKey] = useState<SortKey>("created");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
 
@@ -50,29 +51,42 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   const statuses = useStatuses();
   const statusOrder = useMemo(() => Object.fromEntries(statuses.map((s, i) => [s.key, i])), [statuses]);
 
-  // Tab scope (project/subproject) is applied server-side; everything else is client-side.
-  // Server-side params (the rest is filtered client-side). The group filter is
-  // server-side too — it needs membership expansion the client can't see.
+  // Tab scope + the assignee/group filter are applied server-side (group needs
+  // membership expansion the client can't see); the rest is filtered client-side.
+  const people = assigneeSel.filter((v) => v.startsWith("u:")).map((v) => v.slice(2));
+  const groups = assigneeSel.filter((v) => v.startsWith("g:")).map((v) => v.slice(2));
+  const unassigned = assigneeSel.includes("unassigned");
   const params = new URLSearchParams();
   if (subprojectId) params.set("subproject", String(subprojectId));
   else if (projectId) params.set("project", String(projectId));
   if (showArchived) params.set("archived", "1");
-  if (fAssigneeGroup) params.set("assignee_group", String(fAssigneeGroup));
+  if (people.length) params.set("member", people.join(","));         // OR across people
+  if (groups.length) params.set("assignee_group", groups.join(","));  // OR across groups
+  if (unassigned) params.set("unassigned", "1");
   const qs = params.toString();
   // bump()'s invalidate (key prefix ["tasks"]) refreshes this after any CRUD; the
-  // query key also re-fetches when the tab scope / archive / group filter changes.
+  // query key also re-fetches when the tab scope / archive / assignee filter changes.
   const { data: tasks = null } = useQuery({
-    queryKey: ["tasks", "list", me.active_org ?? null, projectId ?? null, subprojectId ?? null, showArchived, fAssigneeGroup],
+    queryKey: ["tasks", "list", me.active_org ?? null, projectId ?? null, subprojectId ?? null, showArchived, qs],
     queryFn: () => api.get(`/api/tasks?${qs}`) as Promise<Task[]>,
   });
 
   const assigneeNames = (t: Task) => t.assignees.map((id) => userName(users, id));
 
-  // filter option lists
+  // filter option lists (MultiSelect uses string values)
   const projectOpts = me.tree.projects;
-  const subOpts = fProject
-    ? (projectOpts.find((p) => p.id === fProject)?.subprojects ?? [])
+  const subSource = fProjects.length
+    ? projectOpts.filter((p) => fProjects.includes(p.id)).flatMap((p) => p.subprojects)
     : projectOpts.flatMap((p) => p.subprojects);
+  const projectOptions: MultiSelectOption[] = projectOpts.map((p) => ({ value: String(p.id), label: p.name, color: p.color }));
+  const subOptions: MultiSelectOption[] = subSource.map((s) => ({ value: String(s.id), label: s.name, color: s.color }));
+  const statusOptions: MultiSelectOption[] = statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }));
+  const priorityOptions: MultiSelectOption[] = [5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label }));
+  const assigneeOptions: MultiSelectOption[] = [
+    { value: "unassigned", label: tr("list.unassigned") },
+    ...filterPeople.map((u) => ({ value: `u:${u.id}`, label: u.name || u.email, section: tr("list.people") })),
+    ...me.groups.map((g) => ({ value: `g:${g.id}`, label: `👥 ${g.name}`, section: tr("list.groups") })),
+  ];
 
   function sortVal(t: Task): string | number {
     const info = subs.get(t.subproject);
@@ -93,13 +107,14 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
     else { setSortKey(key); setSortDir(1); }
   }
   function clearFilters() {
-    setQ(""); setFProject(0); setFSub(0); setFAssignee(0); setFAssigneeGroup(0); setFStatus(""); setFRecur(""); setFDeadline(""); setFPriority(0);
+    setQ(""); setFProjects([]); setFSubs([]); setAssigneeSel([]); setFStatuses([]); setFRecur(""); setFDeadline(""); setFPriorities([]);
   }
-  const activeFilters = [q, fProject, fSub, fAssignee, fAssigneeGroup, fStatus, fRecur, fDeadline, fPriority].filter(Boolean).length;
+  const activeFilters = (q ? 1 : 0) + fProjects.length + fSubs.length + assigneeSel.length
+    + fStatuses.length + fPriorities.length + (fRecur ? 1 : 0) + (fDeadline ? 1 : 0);
 
   if (!tasks) return <Spinner />;
 
-  const filters: TaskFilters = { q, fProject, fSub, fAssignee, fStatus, fPriority, fRecur, fDeadline };
+  const filters: TaskFilters = { q, fProjects, fSubs, fStatuses, fPriorities, fRecur, fDeadline };
   const filtered = tasks
     .filter((t) => matchesFilters(t, filters, subs))
     .sort((a, b) => {
@@ -131,40 +146,16 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
           <Search />
           <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
-        <select value={fProject} onChange={(e) => { setFProject(Number(e.target.value)); setFSub(0); }}>
-          <option value={0}>{tr("list.allProjects")}</option>
-          {projectOpts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-        <select value={fSub} onChange={(e) => setFSub(Number(e.target.value))}>
-          <option value={0}>{tr("list.allSubprojects")}</option>
-          {subOpts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-        <select data-testid="filter-assignee"
-          value={fAssigneeGroup ? `g:${fAssigneeGroup}` : fAssignee === -1 ? "unassigned" : fAssignee ? `u:${fAssignee}` : ""}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v.startsWith("g:")) { setFAssigneeGroup(Number(v.slice(2))); setFAssignee(0); }
-            else { setFAssigneeGroup(0); setFAssignee(v === "unassigned" ? -1 : v.startsWith("u:") ? Number(v.slice(2)) : 0); }
-          }}>
-          <option value="">{tr("list.anyAssignee")}</option>
-          <option value="unassigned">{tr("list.unassigned")}</option>
-          <optgroup label={tr("list.people")}>
-            {filterPeople.map((u) => <option key={u.id} value={`u:${u.id}`}>{u.name || u.email}</option>)}
-          </optgroup>
-          {me.groups.length > 0 && (
-            <optgroup label={tr("list.groups")}>
-              {me.groups.map((g) => <option key={g.id} value={`g:${g.id}`}>👥 {g.name}</option>)}
-            </optgroup>
-          )}
-        </select>
-        <select data-testid="filter-priority" value={fPriority} onChange={(e) => setFPriority(Number(e.target.value))}>
-          <option value={0}>{tr("list.anyPriority")}</option>
-          {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
-        </select>
-        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
-          <option value="">{tr("list.anyStatus")}</option>
-          {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-        </select>
+        <MultiSelect placeholder={tr("list.allProjects")} options={projectOptions}
+          selected={fProjects.map(String)} onChange={(v) => { setFProjects(v.map(Number)); setFSubs([]); }} />
+        <MultiSelect placeholder={tr("list.allSubprojects")} options={subOptions}
+          selected={fSubs.map(String)} onChange={(v) => setFSubs(v.map(Number))} />
+        <MultiSelect testId="filter-assignee" placeholder={tr("list.anyAssignee")} options={assigneeOptions}
+          selected={assigneeSel} onChange={setAssigneeSel} />
+        <MultiSelect testId="filter-priority" placeholder={tr("list.anyPriority")} options={priorityOptions}
+          selected={fPriorities.map(String)} onChange={(v) => setFPriorities(v.map(Number))} />
+        <MultiSelect placeholder={tr("list.anyStatus")} options={statusOptions}
+          selected={fStatuses} onChange={setFStatuses} />
         <select value={fDeadline} onChange={(e) => setFDeadline(e.target.value as "" | "pending" | "overdue")}>
           <option value="">{tr("list.deadlineAny")}</option>
           <option value="pending">{tr("list.pendingUpcoming")}</option>

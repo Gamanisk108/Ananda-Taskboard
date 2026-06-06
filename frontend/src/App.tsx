@@ -298,10 +298,20 @@ export default function App() {
       </div>
 
       <main className="content">
-        {view === "list" && <ListView {...viewProps} />}
-        {view === "board" && <KanbanView {...viewProps} />}
-        {view === "weekly" && <WeeklyView {...viewProps} />}
-        {view === "monthly" && <MonthlyView {...viewProps} />}
+        {me.tree.projects.length === 0 && !me.is_admin ? (
+          <div className="empty" style={{ maxWidth: 460, margin: "40px auto", lineHeight: 1.5 }}>
+            <div style={{ fontSize: 34, marginBottom: 8 }}>🌱</div>
+            <h3 style={{ margin: "0 0 6px", color: "var(--text)" }}>{t("onboarding.welcomeTitle", "You're all set up!")}</h3>
+            <p style={{ margin: 0 }}>{t("onboarding.welcomeBody", "An admin hasn't added you to any projects yet. As soon as they add you — or assign you a task — your work will appear right here.")}</p>
+          </div>
+        ) : (
+          <>
+            {view === "list" && <ListView {...viewProps} />}
+            {view === "board" && <KanbanView {...viewProps} />}
+            {view === "weekly" && <WeeklyView {...viewProps} />}
+            {view === "monthly" && <MonthlyView {...viewProps} />}
+          </>
+        )}
       </main>
 
       {editing && (

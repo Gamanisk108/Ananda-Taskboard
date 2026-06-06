@@ -85,13 +85,15 @@ def _subject_ids(user, org):
 
 
 def _tier_sees(tier_id):
-    """A member's View Access breadth = their tier's `default_sees`. No tier → 'own'
-    (Tasks Only): the safe default of seeing only the tasks assigned to them."""
+    """A member's View Access breadth = their tier's `default_sees`. No tier →
+    'subproject' (Sub-Project Only): the established default of seeing the
+    sub-projects you've been added to. Breadth only ever widens WITHIN granted
+    scope — the grant is still the gate — so this never leaks an ungranted area."""
     if not tier_id:
-        return SEES_OWN
+        return SEES_SUBPROJECT
     from accounts.models import Tier
     t = Tier.objects.filter(id=tier_id).only("default_sees").first()
-    return t.default_sees if t else SEES_OWN
+    return t.default_sees if t else SEES_SUBPROJECT
 
 
 def access_map(user, org=None):

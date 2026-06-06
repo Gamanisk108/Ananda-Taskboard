@@ -120,7 +120,8 @@ def test_sees_subproject_shows_all_tasks_in_scope(member, karuna):
 
 
 def test_sees_own_shows_only_assigned(member, other, karuna):
-    grant(user=member, subproject=karuna["marketing"], sees="own")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "own")
     mine = task(karuna["marketing"], "mine", assignees=[member])
     theirs = task(karuna["marketing"], "theirs", assignees=[other])
     assert visible_ids(member) == {mine.id}
@@ -130,7 +131,8 @@ def test_sees_own_shows_only_assigned(member, other, karuna):
 def test_sees_own_includes_group_assigned(member, karuna):
     g = Group.objects.create(name="Seva")
     g.members.add(member)
-    grant(user=member, subproject=karuna["marketing"], sees="own")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "own")
     via_group = task(karuna["marketing"], "group task", groups=[g])
     unrelated = task(karuna["marketing"], "nope")
     assert visible_ids(member) == {via_group.id}

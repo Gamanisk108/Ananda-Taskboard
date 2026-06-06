@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
 import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
@@ -371,6 +373,13 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   return (
     <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide>
       <form onSubmit={save}>
+        {editing && task!.created_at && (
+          <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>
+            {t("task.createdOn", "Created {{date}}", {
+              date: format(new Date(task!.created_at), "MMM d, yyyy", { locale: dfLocale() }),
+            })}
+          </div>
+        )}
         {editing && <ApprovalBanners task={task!} onSaved={onSaved} />}
         {readOnly && (
           <div className="field">

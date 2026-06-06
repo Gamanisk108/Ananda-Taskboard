@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, MultiSelect, type MultiSelectOption } from "./common";
 import { useSubmitGuard } from "../useSubmitGuard";
 import { useAuth } from "../state/auth";
-import { SEES_LABEL, type Sees } from "../types";
+import { SEES_ORDER, type Sees } from "../types";
 
 type Tab = "members" | "groups" | "access" | "activity";
 
@@ -24,9 +24,14 @@ interface AuditRow { id: number; actor: string; action: string; summary: string;
 
 const TIER_DESC: Record<Sees, string> = {
   own: "View assigned tasks only",
-  subproject: "View all tasks in assigned Sub-Project",
-  project: "View all tasks in assigned Project",
+  subproject: "View all tasks in their sub-projects",
+  project: "View all tasks in their projects",
+  org: "View all tasks across the organization",
 };
+
+// View Access dropdown order: narrowest → widest (Tasks Only … Organization).
+function byViewAccess(a: TierRow, b: TierRow) { return SEES_ORDER[a.default_sees] - SEES_ORDER[b.default_sees]; }
+function sortedTiers(tiers: TierRow[]) { return [...tiers].sort(byViewAccess); }
 
 export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t: tr } = useTranslation();  // `t` is used below as the tab loop var
@@ -72,11 +77,11 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
       </div>
       {loading ? <Spinner /> : (
         <>
-          {tab === "members" && <Members users={users} tiers={tiers} reload={() => loadAll(true)} />}
+          {tab === "members" && <Members users={users} tiers={tiers} projects={projects} reload={() => loadAll(true)} />}
           {tab === "groups" && <Groups groups={groups} users={users} reload={() => loadAll(true)} />}
           {tab === "access" && (
             <Access grants={grants} exclusions={exclusions} users={users} groups={groups}
-              tiers={tiers} projects={projects} reload={() => loadAll(true)} />
+              projects={projects} reload={() => loadAll(true)} />
           )}
           {tab === "activity" && <Activity rows={audit} />}
         </>
@@ -90,12 +95,27 @@ interface InviteRow {
   invited_by_name: string | null; created_at: string;
 }
 
-function InvitesSection({ tiers }: { tiers: TierRow[] }) {
+function defaultMemberTier(tiers: TierRow[]): TierRow | undefined {
+  // New members default to "Sub-Project Only" (see the sub-projects they're added
+  // to); falls back to the narrowest if that level was renamed away.
+  return tiers.find((t) => t.default_sees === "subproject") ?? sortedTiers(tiers)[0];
+}
+
+function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[] }) {
   const { t: tr } = useTranslation();
   const [email, setEmail] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState(""); const [err, setErr] = useState(""); const [sent, setSent] = useState("");
+  const [accessSel, setAccessSel] = useState<string[]>([]);  // sub-project ids to grant on accept
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [busy, guard] = useSubmitGuard();
+
+  const tierList = useMemo(() => sortedTiers(tiers), [tiers]);
+  const subOptions: MultiSelectOption[] = useMemo(
+    () => projects.flatMap((p) => p.subprojects.map((s) => ({ value: String(s.id), label: `${p.name} / ${s.name}` }))),
+    [projects],
+  );
+  // Default the View Access once tiers load (no blank option — every member has one).
+  useEffect(() => { if (!tier) { const d = defaultMemberTier(tiers); if (d) setTier(String(d.id)); } }, [tiers]);
 
   async function load() { try { setInvites(await api.get("/api/invitations") as InviteRow[]); } catch { /* ignore */ } }
   useEffect(() => { load(); }, []);
@@ -104,8 +124,9 @@ function InvitesSection({ tiers }: { tiers: TierRow[] }) {
     return guard(async () => {
       setErr(""); setSent("");
       try {
-        await api.post("/api/invitations", { email, role, tier: role === "admin" || !tier ? null : Number(tier) });
-        setSent(tr("invite.sent", { email })); setEmail(""); setRole("member"); setTier(""); load();
+        const access = role === "admin" ? [] : accessSel.map((id) => ({ scope: "subproject", id: Number(id), level: "member" }));
+        await api.post("/api/invitations", { email, role, tier: role === "admin" || !tier ? null : Number(tier), access });
+        setSent(tr("invite.sent", { email })); setEmail(""); setRole("member"); setAccessSel([]); load();
       } catch (e) {
         const d = (e as { data?: { email?: string[] | string } })?.data;
         const m = Array.isArray(d?.email) ? d!.email[0] : (typeof d?.email === "string" ? d.email : tr("invite.error"));
@@ -127,12 +148,19 @@ function InvitesSection({ tiers }: { tiers: TierRow[] }) {
           </select>
         </div>
       </div>
-      <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-        <label>{tr("ta.tier")}</label>
-        <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
-          <option value="">{tr("ta.noTierBlank")}</option>
-          {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
-        </select>
+      <div className="row2">
+        <div className="field">
+          <label>{tr("ta.viewAccess", "View Access")}</label>
+          <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
+            {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>{tr("ta.startingAccess", "Add to projects (optional)")}</label>
+          {role === "admin"
+            ? <div className="muted" style={{ fontSize: 12 }}>{tr("ta.adminSeesAll", "Admins see everything")}</div>
+            : <MultiSelect placeholder={tr("ta.pickSubprojects", "Pick sub-projects")} options={subOptions} selected={accessSel} onChange={setAccessSel} />}
+        </div>
       </div>
       {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
       {sent && <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>{sent}</div>}
@@ -142,7 +170,7 @@ function InvitesSection({ tiers }: { tiers: TierRow[] }) {
         <>
           <h4 style={{ margin: "14px 0 6px" }}>{tr("invite.pending")}</h4>
           <table className="tbl">
-            <thead><tr><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.tier")}</th><th></th></tr></thead>
+            <thead><tr><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "View Access")}</th><th></th></tr></thead>
             <tbody>
               {invites.map((i) => (
                 <tr key={i.id}>
@@ -160,13 +188,16 @@ function InvitesSection({ tiers }: { tiers: TierRow[] }) {
   );
 }
 
-function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[]; reload: () => void }) {
+function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: TierRow[]; projects: Proj[]; reload: () => void }) {
   const { t: tr } = useTranslation();
   const { me } = useAuth();
   const [name, setName] = useState(""); const [email, setEmail] = useState("");
   const [password, setPassword] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState<string>("");
   const [err, setErr] = useState("");
+  const tierList = useMemo(() => sortedTiers(tiers), [tiers]);
+  // No blank option — default new members to "Sub-Project Only".
+  useEffect(() => { if (!tier) { const d = defaultMemberTier(tiers); if (d) setTier(String(d.id)); } }, [tiers]);
   const [busy, guard] = useSubmitGuard();
   // optimistic local copy so role/tier/active changes show instantly (the full
   // reload runs in the background and re-syncs via the effect below).
@@ -178,7 +209,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
     return guard(async () => {
       setErr("");
       try {
-        await api.post("/api/users", { name, email, password, role, tier: tier ? Number(tier) : null });
+        await api.post("/api/users", { name, email, password, role, tier: role === "admin" || !tier ? null : Number(tier) });
         setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
         reload();
       } catch { setErr(tr("ta.errAddMember")); }
@@ -194,7 +225,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
 
   return (
     <>
-      <InvitesSection tiers={tiers} />
+      <InvitesSection tiers={tiers} projects={projects} />
       <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
         <h3 className="section-title">{tr("ta.addMemberTitle")}</h3>
         <div className="row2">
@@ -210,10 +241,9 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
           </div>
         </div>
         <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-          <label>{tr("ta.tier")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.tierHint")}</span></label>
+          <label>{tr("ta.viewAccess", "View Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "how many tasks they can see")}</span></label>
           <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
-            <option value="">{tr("ta.noTierBlank")}</option>
-            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+            {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
           </select>
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
@@ -222,7 +252,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
       </div>
 
       <table className="tbl">
-        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.tier")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
+        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "View Access")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
         <tbody>
           {rows.map((u) => (
             <tr key={u.id}>
@@ -239,8 +269,8 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
               <td>
                 {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
                   <select value={u.tier ?? ""} onChange={(e) => setMemberTier(u, e.target.value)} style={{ width: "auto", maxWidth: 210 }}>
-                    <option value="">{tr("ta.noTier")}</option>
-                    {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+                    {u.tier == null && <option value="">{tr("ta.pickViewAccess", "Pick…")}</option>}
+                    {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
                   </select>
                 )}
               </td>
@@ -317,7 +347,7 @@ function Activity({ rows }: { rows: AuditRow[] }) {
   );
 }
 
-type SubjectType = "user" | "group" | "tier";
+type SubjectType = "user" | "group";
 type ExcType = "user" | "group" | "project" | "subproject" | "task";
 const EXC_FIELD: Record<ExcType, keyof Exclusion> = {
   user: "excluded_user", group: "excluded_group", project: "excluded_project",
@@ -325,20 +355,19 @@ const EXC_FIELD: Record<ExcType, keyof Exclusion> = {
 };
 
 function Access({
-  grants, exclusions, users, groups, tiers, projects, reload,
+  grants, exclusions, users, groups, projects, reload,
 }: {
   grants: Grant[]; exclusions: Exclusion[]; users: UserRow[]; groups: GroupRow[];
-  tiers: TierRow[]; projects: Proj[]; reload: () => void;
+  projects: Proj[]; reload: () => void;
 }) {
   const { t: tr } = useTranslation();
   const [subjectType, setSubjectType] = useState<SubjectType>("user");
   const [subjectId, setSubjectId] = useState<number>(0);
 
-  // grant builder
+  // grant builder (WHERE + edit level; how-much is each member's View Access)
   const [scopeType, setScopeType] = useState<"subproject" | "project">("subproject");
   const [scopeId, setScopeId] = useState<number>(0);
   const [level, setLevel] = useState("member");
-  const [sees, setSees] = useState<Sees>("subproject");
   const [err, setErr] = useState("");
 
   // exclusion builder
@@ -346,8 +375,7 @@ function Access({
   const [excId, setExcId] = useState<string>("");
 
   const subjects = subjectType === "user" ? users.map((u) => ({ id: u.id, label: u.name || u.email }))
-    : subjectType === "group" ? groups.map((g) => ({ id: g.id, label: g.name }))
-    : tiers.map((t) => ({ id: t.id, label: t.name }));
+    : groups.map((g) => ({ id: g.id, label: g.name }));
 
   const subOptions = useMemo(
     () => projects.flatMap((p) => p.subprojects.map((s) => ({ id: s.id, label: `${p.name} / ${s.name}` }))),
@@ -364,14 +392,13 @@ function Access({
   async function addGrant() {
     setErr("");
     if (!subjectId || !scopeId) { setErr(tr("ta.errPickSubjectScope")); return; }
-    const body: Record<string, unknown> = { level, sees };
+    const body: Record<string, unknown> = { level };
     body[subjectType] = subjectId;
     body[scopeType] = scopeId;
     try { await api.post("/api/grants", body); setScopeId(0); reload(); }
     catch { setErr(tr("ta.errAddGrant")); }
   }
   async function revokeGrant(id: number) { await api.del(`/api/grants/${id}`); reload(); }
-  async function changeSees(g: Grant, s: Sees) { await api.patch(`/api/grants/${g.id}`, { sees: s }); reload(); }
 
   async function addExclusion() {
     setErr("");
@@ -411,7 +438,7 @@ function Access({
         <label>{tr("ta.defineAccessFor")}</label>
         <div style={{ display: "flex", gap: 6 }}>
           <select data-testid="access-subject-type" value={subjectType} onChange={(e) => { setSubjectType(e.target.value as SubjectType); setSubjectId(0); }} style={{ width: 110 }}>
-            <option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option><option value="tier">{tr("ta.tier")}</option>
+            <option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option>
           </select>
           <select data-testid="access-subject-id" value={subjectId} onChange={(e) => setSubjectId(Number(e.target.value))}>
             <option value={0}>{tr("ta.select")}</option>
@@ -447,28 +474,19 @@ function Access({
                 </select>
               </div>
             </div>
-            <div className="field" style={{ maxWidth: 280, marginBottom: 0 }}>
-              <label>{tr("ta.sees")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.seesHint")}</span></label>
-              <select data-testid="grant-sees" value={sees} onChange={(e) => setSees(e.target.value as Sees)}>
-                {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
-              </select>
+            <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>
+              {tr("ta.viewAccessNote", "How many tasks they see is set by each member's View Access (on the Members tab).")}
             </div>
-            <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>{tr("ta.ownHint")}</div>
             <button className="btn-primary" data-testid="grant-add" onClick={addGrant}>{tr("ta.grantAccess")}</button>
           </div>
 
           <table className="tbl">
-            <thead><tr><th>{tr("ta.colGrantTo")}</th><th>{tr("ta.level")}</th><th>{tr("ta.sees")}</th><th></th></tr></thead>
+            <thead><tr><th>{tr("ta.colGrantTo")}</th><th>{tr("ta.level")}</th><th></th></tr></thead>
             <tbody>
               {myGrants.map((g) => (
                 <tr key={g.id}>
                   <td>{g.subproject ? subName(g.subproject) : tr("ta.wholeProject", { name: projName(g.project!) })}</td>
                   <td><span className="pill" style={{ background: "var(--surface-sunk)" }}>{g.level}</span></td>
-                  <td>
-                    <select value={g.sees} onChange={(e) => changeSees(g, e.target.value as Sees)} style={{ width: "auto", fontSize: 12 }}>
-                      {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
-                    </select>
-                  </td>
                   <td><button className="btn-ghost" onClick={() => revokeGrant(g.id)}>{tr("ta.revoke")}</button></td>
                 </tr>
               ))}
