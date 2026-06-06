@@ -125,7 +125,15 @@ export interface Subtask {
   title: string;
   status: string;
   order: number;
-  assignee: number | null;
+  priority: number;
+  details: string;
+  requirements: string;
+  timeline_start: string | null;
+  deadline: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  assignees: number[];
+  assignee_groups: number[];
 }
 
 export interface UserLite {

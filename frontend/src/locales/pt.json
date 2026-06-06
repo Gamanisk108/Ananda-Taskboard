@@ -436,7 +436,10 @@
     "done": "Concluído"
   },
   "subtask": {
-    "assignee": "Responsável"
+    "assignee": "Responsável",
+    "back": "Voltar às subtarefas",
+    "confirmDelete": "Excluir esta subtarefa?",
+    "editDetails": "Editar detalhes"
   },
   "import": {
     "button": "Importar ▾",

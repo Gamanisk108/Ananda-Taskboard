@@ -436,7 +436,10 @@
     "done": "થઈ ગયું"
   },
   "subtask": {
-    "assignee": "જવાબદાર"
+    "assignee": "જવાબદાર",
+    "back": "ઉપ-કાર્યો પર પાછા જાઓ",
+    "confirmDelete": "આ ઉપ-કાર્ય કાઢી નાખવું?",
+    "editDetails": "વિગતો સંપાદિત કરો"
   },
   "import": {
     "button": "આયાત ▾",

@@ -10,8 +10,9 @@ import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, PriorityIcon } from "./common";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
+import { SubtaskDetail } from "./SubtaskDetail";
 import { AssigneePicker } from "./AssigneePicker";
-import { PRIORITY_META, type Me, type Recurrence, type Task } from "../types";
+import { PRIORITY_META, type Me, type Recurrence, type Subtask, type Task } from "../types";
 
 interface Props {
   task: Task | null;
@@ -303,6 +304,10 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [shareLabel, setShareLabel] = useState("");
+  // When set, the modal body slides to this subtask's editor in place of the task
+  // form (one window, breadcrumb back — never a stacked modal). Capped at one level:
+  // subtasks have no subtasks, so the breadcrumb is only ever two deep.
+  const [openSub, setOpenSub] = useState<Subtask | null>(null);
   // Synchronous in-flight guard: `busy` (state) updates a tick late, so 2–3 fast
   // clicks could all fire before the button re-renders disabled, creating duplicate
   // tasks (QA 2026-06-05). The ref blocks re-entry immediately.
@@ -368,6 +373,23 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     } catch {
       setErr(t("tm.errDelete"));
     }
+  }
+
+  if (editing && openSub) {
+    return (
+      <Modal title={`${t("task.edit")} · #${task!.id}`} onClose={onClose} wide>
+        <SubtaskDetail
+          subtask={openSub}
+          users={users}
+          groups={groups}
+          statuses={statuses}
+          subproject={task!.subproject}
+          isAdmin={me.is_admin}
+          onBack={() => setOpenSub(null)}
+          onChanged={onChanged}
+        />
+      </Modal>
+    );
   }
 
   return (
@@ -517,7 +539,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />
       </form>
-      {editing && <SubtaskEditor taskId={task!.id} onChanged={onChanged} />}
+      {editing && <SubtaskEditor taskId={task!.id} onOpen={setOpenSub} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}
     </Modal>
   );

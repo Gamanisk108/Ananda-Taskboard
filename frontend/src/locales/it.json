@@ -436,7 +436,10 @@
     "done": "Fatto"
   },
   "subtask": {
-    "assignee": "Assegnatario"
+    "assignee": "Assegnatario",
+    "back": "Torna alle sotto-attività",
+    "confirmDelete": "Eliminare questa sotto-attività?",
+    "editDetails": "Modifica dettagli"
   },
   "import": {
     "button": "Importa ▾",

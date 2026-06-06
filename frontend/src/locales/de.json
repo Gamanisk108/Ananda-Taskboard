@@ -436,7 +436,10 @@
     "done": "Fertig"
   },
   "subtask": {
-    "assignee": "Zuständig"
+    "assignee": "Zuständig",
+    "back": "Zurück zu den Teilaufgaben",
+    "confirmDelete": "Diese Teilaufgabe löschen?",
+    "editDetails": "Details bearbeiten"
   },
   "import": {
     "button": "Import ▾",

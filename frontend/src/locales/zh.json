@@ -436,7 +436,10 @@
     "done": "完成"
   },
   "subtask": {
-    "assignee": "负责人"
+    "assignee": "负责人",
+    "back": "返回子任务",
+    "confirmDelete": "删除此子任务？",
+    "editDetails": "编辑详情"
   },
   "import": {
     "button": "导入 ▾",

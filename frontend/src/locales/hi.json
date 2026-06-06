@@ -436,7 +436,10 @@
     "done": "हो गया"
   },
   "subtask": {
-    "assignee": "जिम्मेदार"
+    "assignee": "जिम्मेदार",
+    "back": "उप-कार्यों पर वापस जाएँ",
+    "confirmDelete": "इस उप-कार्य को हटाएं?",
+    "editDetails": "विवरण संपादित करें"
   },
   "import": {
     "button": "आयात ▾",

@@ -436,7 +436,10 @@
     "done": "Terminé"
   },
   "subtask": {
-    "assignee": "Responsable"
+    "assignee": "Responsable",
+    "back": "Retour aux sous-tâches",
+    "confirmDelete": "Supprimer cette sous-tâche ?",
+    "editDetails": "Modifier les détails"
   },
   "import": {
     "button": "Importer ▾",

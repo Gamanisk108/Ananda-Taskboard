@@ -436,7 +436,10 @@
     "done": "Done"
   },
   "subtask": {
-    "assignee": "Assignee"
+    "assignee": "Assignee",
+    "back": "Back to subtasks",
+    "confirmDelete": "Delete this subtask?",
+    "editDetails": "Edit details"
   },
   "import": {
     "button": "Import ▾",
