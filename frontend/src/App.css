@@ -493,3 +493,49 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
   .filters input, .filters select { min-width: 0; flex: 1 1 130px; }
   .usermenu-pop { right: auto; left: 0; }
 }
+
+/* ---- Help center -------------------------------------------------------- */
+.help-item { border-bottom: 1px solid var(--faint); }
+.help-q {
+  width: 100%; text-align: left; background: none; border: none;
+  padding: 10px 8px; cursor: pointer; display: flex; align-items: center;
+  gap: 8px; color: var(--text); font: inherit; border-radius: 8px;
+  transition: background .12s ease;
+}
+.help-q:hover { background: var(--hover); }
+.help-q-title { flex: 1; font-weight: 600; }
+.help-q-caret { font-size: 12px; }
+.help-a { padding: 2px 8px 12px; line-height: 1.55; }
+
+.help-cat {
+  width: 100%; text-align: left; background: none; border: none;
+  border-bottom: 1px solid var(--faint); padding: 12px 8px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; color: var(--text);
+  font: inherit; font-weight: 700; border-radius: 8px 8px 0 0;
+  transition: background .12s ease;
+}
+.help-cat:hover { background: var(--hover); }
+.help-cat-label { flex: 1; }
+.help-cat-count {
+  font-size: 12px; font-weight: 600; min-width: 20px; text-align: center;
+  padding: 1px 8px; border-radius: 999px; background: var(--faint);
+}
+.help-cat-body { padding-left: 6px; }
+
+.help-chip {
+  font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+  letter-spacing: .03em; flex: none;
+}
+.help-chip-admin { background: var(--faint); color: var(--muted); text-transform: uppercase; }
+.help-chip-new { background: #6d4aff; color: #fff; }
+
+.help-footer {
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--faint);
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.help-contact {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+  color: var(--muted); text-decoration: none; font-size: 13px;
+  padding: 6px 8px; border-radius: 8px; transition: background .12s ease, color .12s ease;
+}
+.help-contact:hover { background: var(--hover); color: var(--text); }

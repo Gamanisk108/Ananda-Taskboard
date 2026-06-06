@@ -173,7 +173,9 @@
     "subtasks": "子任务",
     "addSubtask": "添加子任务…",
     "comments": "评论",
-    "addComment": "添加评论…（输入 @ 提及）"
+    "addComment": "添加评论…（输入 @ 提及）",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "所有项目",
@@ -585,7 +587,8 @@
     "exclusionsHelp": "拒绝始终优先，即使是成员被指派的任务（拒绝 > 分配 > 允许）。请谨慎使用。",
     "noExclusions": "无排除项。",
     "taskIdPh": "任务 ID（例如 318）",
-    "selectHide": "选择要隐藏的内容…"
+    "selectHide": "选择要隐藏的内容…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "删除此评论？",
@@ -604,5 +607,34 @@
     },
     "save": "保存",
     "saved": "已保存"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

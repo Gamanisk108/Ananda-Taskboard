@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown } from "lucide-react";
+import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -28,6 +28,9 @@ import { ImportDialog } from "./components/ImportDialog";
 import { RestorePoints } from "./components/RestorePoints";
 import { History } from "./components/History";
 import { BulkMigrate } from "./components/BulkMigrate";
+import { HelpCenter } from "./components/HelpCenter";
+import { WelcomeCard } from "./components/WelcomeCard";
+import { whatsNew, latestVersion } from "./help/registry";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "board" | "weekly" | "monthly";
@@ -83,6 +86,22 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [showPlatform, setShowPlatform] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  // First-login welcome shows once ever (localStorage "at-onboarded"); "Show welcome
+  // again" in Help re-arms it. What's-New dot compares the latest help version against
+  // the last version the user opened Help at ("at-help-seen").
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("at-onboarded"));
+  // A first-ever browser starts "caught up": What's New then only surfaces features
+  // added AFTER this first load (not every existing feature). Initializing to the
+  // latest version also avoids a dot-flash before the persist effect below runs.
+  const [helpSeen, setHelpSeen] = useState<string | null>(
+    () => localStorage.getItem("at-help-seen") ?? latestVersion(),
+  );
+  useEffect(() => {
+    if (localStorage.getItem("at-help-seen") == null) localStorage.setItem("at-help-seen", latestVersion());
+  }, []);
+  function dismissWelcome() { localStorage.setItem("at-onboarded", "1"); setShowWelcome(false); }
+  function replayWelcome() { localStorage.removeItem("at-onboarded"); setShowHelp(false); setShowWelcome(true); }
   const queryClient = useQueryClient();
   // All task views (List/Board/Weekly/Monthly) + the tab counts now read through
   // TanStack Query under the ["tasks"] key prefix, so one invalidate refreshes them
@@ -179,6 +198,7 @@ export default function App() {
 
   const viewProps = { projectId, subprojectId, onEdit: (t: Task) => setEditing(t), me };
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const hasNewHelp = whatsNew(helpSeen, me.is_admin).length > 0;
 
   return (
     <div className="app">
@@ -223,6 +243,13 @@ export default function App() {
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowManage(true)} title={t("nav.projects")}><LayoutGrid /><span className="lbl">{t("nav.projects")}</span></button>
           )}
+          <button className="btn-ghost" data-testid="open-help" onClick={() => setShowHelp(true)} title={t("help.open")}
+            style={{ position: "relative" }}>
+            <CircleHelp /><span className="lbl">{t("help.open")}</span>
+            {hasNewHelp && (
+              <span aria-hidden style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)" }} />
+            )}
+          </button>
           <span className="sep" />
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
@@ -351,6 +378,17 @@ export default function App() {
       {showHistory && <History onClose={() => setShowHistory(false)} />}
       {showBulk && <BulkMigrate me={me} onClose={() => setShowBulk(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showPlatform && <PlatformStats onClose={() => setShowPlatform(false)} />}
+      {showHelp && (
+        <HelpCenter
+          onClose={() => setShowHelp(false)}
+          isAdmin={me.is_admin}
+          lang={resolveLanguage(me.language)}
+          lastSeen={helpSeen}
+          onSeen={() => setHelpSeen(latestVersion())}
+          onReplayWelcome={replayWelcome}
+        />
+      )}
+      {showWelcome && <WelcomeCard onClose={dismissWelcome} />}
     </div>
   );
 }

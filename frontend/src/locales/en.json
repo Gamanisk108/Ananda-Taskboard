@@ -607,5 +607,34 @@
     },
     "save": "Save",
     "saved": "Saved"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

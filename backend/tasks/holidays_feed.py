@@ -17,14 +17,14 @@ import holidays as pyholidays
 _LINEAGE = [
     ((1, 5),  "Yogananda's Birthday"),
     ((3, 7),  "Yogananda's Mahasamadhi"),
-    ((3, 9),  "Sri Yukteswar's Mahasamadhi"),
-    ((4, 21), "Swami Kriyananda's Mahasamadhi"),
-    ((5, 10), "Sri Yukteswar's Birthday"),
-    ((5, 19), "Swami Kriyananda's Birthday"),
+    ((3, 9),  "Yukteswar's Mahasamadhi"),
+    ((4, 21), "Kriyananda's Mahasamadhi"),
+    ((5, 10), "Yukteswar's Birthday"),
+    ((5, 19), "Kriyananda's Birthday"),
     ((7, 4),  "Founding of Ananda Village"),
-    ((9, 12), "Swami's Discipleship Anniversary"),
-    ((9, 26), "Lahiri Mahasaya's Mahasamadhi"),
-    ((9, 30), "Lahiri Mahasaya's Birthday"),
+    ((9, 12), "Swami's Discipleship"),
+    ((9, 26), "Lahiri's Mahasamadhi"),
+    ((9, 30), "Lahiri's Birthday"),
 ]
 
 
@@ -53,12 +53,27 @@ def us_observances(year):
 
 
 # ---- Country packs via the `holidays` library (extensible) -----------------
+# The library's official names can be long for a calendar chip; shorten a few.
+# Prefix-matched so the "(observed)" variants collapse too. Extend as needed.
+_SHORTEN_PREFIX = {
+    "Juneteenth": "Juneteenth",       # "Juneteenth National Independence Day" -> "Juneteenth"
+    "Martin Luther King": "MLK Day",  # "Martin Luther King Jr. Day" -> "MLK Day"
+}
+
+
+def _shorten(name):
+    for prefix, short in _SHORTEN_PREFIX.items():
+        if name.startswith(prefix):
+            return short
+    return name
+
+
 def country_pack(code):
     """A provider for one ISO country code (e.g. 'US', 'IT'). The library
     handles observed-date shifts automatically."""
     def provider(year):
         items = pyholidays.country_holidays(code, years=year)
-        return sorted(items.items())  # [(date, name), ...]
+        return sorted((d, _shorten(n)) for d, n in items.items())  # [(date, name), ...]
     return provider
 
 
@@ -68,6 +83,8 @@ us_federal = country_pack("US")
 # ---- Hindu / yoga festivals: curated lunisolar table -----------------------
 # (month, day) -> title, per year. Source: drikpanchang.com (US observance).
 # EXTEND 2025, 2027..2040 the same way; spot-check 2-3 dates/year vs source.
+# Krishna's birth; in the Ananda/SRF lineage also observed as Babaji's
+# Commemoration Day, so it carries both names.
 _JANMASHTAMI = "Janmashtami (Babaji Commemoration Day)"
 _HINDU = {
     2026: [

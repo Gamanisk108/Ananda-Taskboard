@@ -173,7 +173,9 @@
     "subtasks": "ઉપ-કાર્યો",
     "addSubtask": "એક ઉપ-કાર્ય ઉમેરો…",
     "comments": "ટિપ્પણીઓ",
-    "addComment": "ટિપ્પણી ઉમેરો… (ઉલ્લેખ કરવા @ ટાઇપ કરો)"
+    "addComment": "ટિપ્પણી ઉમેરો… (ઉલ્લેખ કરવા @ ટાઇપ કરો)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "બધા પ્રોજેક્ટ્સ",
@@ -585,7 +587,8 @@
     "exclusionsHelp": "નકાર હંમેશા જીતે છે, સભ્યને સોંપાયેલ કાર્ય પર પણ (નકાર > સોંપણી > મંજૂરી). સંયમથી વાપરો.",
     "noExclusions": "કોઈ બાકાત નથી.",
     "taskIdPh": "ટાસ્ક ID (દા.ત. 318)",
-    "selectHide": "શું છુપાવવું તે પસંદ કરો…"
+    "selectHide": "શું છુપાવવું તે પસંદ કરો…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "આ ટિપ્પણી કાઢવી?",
@@ -604,5 +607,34 @@
     },
     "save": "સાચવો",
     "saved": "સાચવ્યું"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

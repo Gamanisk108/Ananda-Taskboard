@@ -62,10 +62,56 @@ def test_assignee_viewer_can_edit_own_subtask(admin, sp, task):
     from permissions.models import AccessGrant
     viewer = User.objects.create_user(email="v@example.com", name="Vee", password="pw-strong-123")
     AccessGrant.objects.create(user=viewer, subproject=sp, level="viewer")  # visibility, not member
-    sub = login(admin).post("/api/subtasks", {"task": task.id, "title": "S", "assignee": viewer.id}, format="json").data
+    sub = login(admin).post("/api/subtasks", {"task": task.id, "title": "S", "assignees": [viewer.id]}, format="json").data
     # the assignee (a viewer) may edit their own subtask
     res = login(viewer).patch(f"/api/subtasks/{sub['id']}", {"status": "done"}, format="json")
     assert res.status_code == 200 and res.data["status"] == "done"
+
+
+def test_group_member_can_edit_own_subtask(admin, sp, task):
+    from accounts.models import Group
+    from permissions.models import AccessGrant
+    viewer = User.objects.create_user(email="gm@example.com", name="Gee", password="pw-strong-123")
+    AccessGrant.objects.create(user=viewer, subproject=sp, level="viewer")  # visibility, not member
+    group = Group.objects.create(name="Volunteers")
+    group.members.add(viewer)
+    sub = login(admin).post(
+        "/api/subtasks", {"task": task.id, "title": "S", "assignee_groups": [group.id]}, format="json"
+    ).data
+    # a member of an assigned group may edit the subtask, like a direct assignee
+    res = login(viewer).patch(f"/api/subtasks/{sub['id']}", {"status": "done"}, format="json")
+    assert res.status_code == 200 and res.data["status"] == "done"
+
+
+def test_subtask_rich_fields_persist(admin, task):
+    api = login(admin)
+    payload = {
+        "task": task.id, "title": "Rich", "priority": 4,
+        "details": "do the thing", "requirements": "carefully",
+        "timeline_start": "2026-06-10", "deadline": "2026-06-20",
+        "start_time": "13:00", "end_time": "16:00",
+    }
+    res = api.post("/api/subtasks", payload, format="json")
+    assert res.status_code == 201
+    d = res.data
+    assert d["priority"] == 4 and d["details"] == "do the thing"
+    assert d["requirements"] == "carefully"
+    assert d["timeline_start"] == "2026-06-10" and d["deadline"] == "2026-06-20"
+    assert d["start_time"] == "13:00:00" and d["end_time"] == "16:00:00"
+
+
+def test_subtask_time_must_be_both_or_neither(admin, task):
+    api = login(admin)
+    res = api.post("/api/subtasks", {"task": task.id, "title": "S", "start_time": "13:00"}, format="json")
+    assert res.status_code == 400
+
+
+def test_subtask_end_time_after_start(admin, task):
+    api = login(admin)
+    res = api.post(
+        "/api/subtasks", {"task": task.id, "title": "S", "start_time": "16:00", "end_time": "13:00"}, format="json"
+    )
+    assert res.status_code == 400
 
 
 def test_non_assignee_viewer_cannot_edit(admin, sp, task):

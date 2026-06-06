@@ -333,10 +333,13 @@ class SubtaskViewSet(ModelViewSet):
         serializer.save()
 
     def perform_update(self, serializer):
-        # The subtask's own assignee may edit it (it's already visible to them via
-        # the queryset); otherwise the parent-task member/admin rule applies.
+        # An assignee of the subtask — directly, or via an assigned group — may edit
+        # it (it's already visible to them via the queryset); otherwise the
+        # parent-task member/admin rule applies.
         sub = serializer.instance
-        if sub.assignee_id != self.request.user.id:
+        user = self.request.user
+        is_assignee = sub.assignees.filter(id=user.id).exists() or sub.assignee_groups.filter(members=user).exists()
+        if not is_assignee:
             self._check(sub.task)
         new_task = serializer.validated_data.get("task")
         if new_task and new_task.id != sub.task_id:

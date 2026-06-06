@@ -68,7 +68,7 @@ class Task(SoftDeleteModel):
         TODO = "todo", "To Do"
         IN_PROGRESS = "in_progress", "In Progress"
         DELAYED = "delayed", "Delayed"
-        REVIEW = "review", "Ready for Review"
+        REVIEW = "review", "Review"
         DONE = "done", "Done"
 
     class Approval(models.TextChoices):
@@ -136,19 +136,28 @@ class Task(SoftDeleteModel):
 
 
 class Subtask(models.Model):
-    """A checklist item under a Task, with its own status (same status keys as
-    tasks). Simple and ordered — not a full task (no assignees/dates)."""
+    """A subtask under a Task — a simplified task in its own right: status,
+    priority, multiple assignees/groups, free-text notes, and optional dates/
+    times. Deliberately NOT a full task: no recurrence, auto-complete, approval,
+    comments, or nesting (subtasks never have subtasks of their own)."""
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="subtasks")
     title = models.CharField(max_length=300)
     status = models.CharField(max_length=12, default="todo")  # a Status.key
     order = models.PositiveIntegerField(default=0)
-    # Optional owner of this subtask. The assignee may edit THIS subtask even if
-    # they can't otherwise edit the parent task (as long as they can see it).
-    assignee = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
-        related_name="assigned_subtasks",
-    )
+    priority = models.PositiveSmallIntegerField(choices=Task.Priority.choices, default=Task.Priority.MEDIUM)
+    details = models.TextField(blank=True)
+    requirements = models.TextField(blank=True)
+    timeline_start = models.DateField(null=True, blank=True)
+    deadline = models.DateField(null=True, blank=True)
+    # Optional time-of-day (both-or-neither, enforced by the serializer), same as Task.
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+    # Multiple assignees + groups, mirroring Task. Any assignee (or a member of an
+    # assigned group) may edit THIS subtask even if they can't otherwise edit the
+    # parent task (as long as they can see it).
+    assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="assigned_subtasks")
+    assignee_groups = models.ManyToManyField("accounts.Group", blank=True, related_name="assigned_subtasks")
 
     class Meta:
         ordering = ["order", "id"]

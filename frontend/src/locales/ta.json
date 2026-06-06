@@ -173,7 +173,9 @@
     "subtasks": "துணைப் பணிகள்",
     "addSubtask": "ஒரு துணைப் பணியைச் சேர்…",
     "comments": "கருத்துகள்",
-    "addComment": "ஒரு கருத்தைச் சேர்… (குறிப்பிட @ தட்டச்சு செய்)"
+    "addComment": "ஒரு கருத்தைச் சேர்… (குறிப்பிட @ தட்டச்சு செய்)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "அனைத்து திட்டங்கள்",
@@ -585,7 +587,8 @@
     "exclusionsHelp": "மறுப்பு எப்போதும் வெல்லும், உறுப்பினருக்கு ஒதுக்கப்பட்ட பணியின் மீதும் கூட (மறு > ஒதுக்கீடு > அனுமதி). குறைவாகப் பயன்படுத்தவும்.",
     "noExclusions": "விலக்குகள் இல்லை.",
     "taskIdPh": "பணி ID (எ.கா. 318)",
-    "selectHide": "எதை மறைக்க வேண்டும் என்பதைத் தேர்ந்தெடு…"
+    "selectHide": "எதை மறைக்க வேண்டும் என்பதைத் தேர்ந்தெடு…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "இந்தக் கருத்தை நீக்கவா?",
@@ -604,5 +607,34 @@
     },
     "save": "சேமி",
     "saved": "சேமிக்கப்பட்டது"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

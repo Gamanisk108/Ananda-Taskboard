@@ -16,7 +16,7 @@ const DEFAULTS: TaskStatus[] = [
   { id: -1, key: "todo", label: "To Do", color: "#6b7280", order: 0, is_complete: false, is_initial: true },
   { id: -2, key: "in_progress", label: "In Progress", color: "#2f7d74", order: 1, is_complete: false, is_initial: false },
   { id: -3, key: "delayed", label: "Delayed", color: "#b7791f", order: 2, is_complete: false, is_initial: false },
-  { id: -5, key: "review", label: "Ready for Review", color: "#7A5AA6", order: 3, is_complete: false, is_initial: false },
+  { id: -5, key: "review", label: "Review", color: "#7A5AA6", order: 3, is_complete: false, is_initial: false },
   { id: -4, key: "done", label: "Done", color: "#4f7a3c", order: 4, is_complete: true, is_initial: false },
 ];
 

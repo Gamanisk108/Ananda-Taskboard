@@ -173,7 +173,9 @@
     "subtasks": "ఉప-పనులు",
     "addSubtask": "ఒక ఉప-పనిని జోడించు…",
     "comments": "వ్యాఖ్యలు",
-    "addComment": "ఒక వ్యాఖ్యను జోడించు… (ప్రస్తావించడానికి @ టైప్ చేయి)"
+    "addComment": "ఒక వ్యాఖ్యను జోడించు… (ప్రస్తావించడానికి @ టైప్ చేయి)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "అన్ని ప్రాజెక్టులు",
@@ -585,7 +587,8 @@
     "exclusionsHelp": "నిరాకరణ ఎల్లప్పుడూ గెలుస్తుంది, సభ్యునికి కేటాయించిన పనిపై కూడా (నిరాకరించు > కేటాయింపు > అనుమతించు). పొదుపుగా ఉపయోగించండి.",
     "noExclusions": "మినహాయింపులు లేవు.",
     "taskIdPh": "టాస్క్ ID (ఉదా. 318)",
-    "selectHide": "ఏమి దాచాలో ఎంచుకోండి…"
+    "selectHide": "ఏమి దాచాలో ఎంచుకోండి…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "ఈ వ్యాఖ్యను తొలగించాలా?",
@@ -604,5 +607,34 @@
     },
     "save": "సేవ్ చేయి",
     "saved": "సేవ్ అయింది"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

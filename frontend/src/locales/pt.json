@@ -173,7 +173,9 @@
     "subtasks": "Subtarefas",
     "addSubtask": "Adicionar uma subtarefa…",
     "comments": "Comentários",
-    "addComment": "Adicionar um comentário… (digite @ para mencionar)"
+    "addComment": "Adicionar um comentário… (digite @ para mencionar)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "Todos os projetos",
@@ -585,7 +587,8 @@
     "exclusionsHelp": "Uma negação sempre vence, mesmo sobre uma tarefa atribuída ao membro (negar > atribuição > permitir). Use com moderação.",
     "noExclusions": "Sem exclusões.",
     "taskIdPh": "ID da tarefa (ex.: 318)",
-    "selectHide": "Selecione o que ocultar…"
+    "selectHide": "Selecione o que ocultar…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "Excluir este comentário?",
@@ -604,5 +607,34 @@
     },
     "save": "Salvar",
     "saved": "Salvo"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

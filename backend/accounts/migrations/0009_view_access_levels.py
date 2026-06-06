@@ -32,21 +32,23 @@ def forward(apps, schema_editor):
     Organization = apps.get_model("accounts", "Organization")
     Membership = apps.get_model("accounts", "Membership")
 
-    def rename_and_seed(org):
+    def rename_and_seed(org, seed=True):
         scope = _scope(org)
         for old, new in RENAMES:
             t = Tier.objects.filter(name=old, **scope).first()
             if t and not Tier.objects.filter(name=new, **scope).exists():
                 t.name = new
                 t.save(update_fields=["name"])
-        name, sees = ORG_LEVEL
-        if not Tier.objects.filter(name=name, **scope).exists():
-            Tier.objects.create(name=name, default_sees=sees,
-                                organization=org if org is not None else None)
+        # Only seed the new Organization level for a REAL org. Never create a stray
+        # global (org=None) tier — those rows are legacy-only; here we just rename them.
+        if seed:
+            name, sees = ORG_LEVEL
+            if not Tier.objects.filter(name=name, **scope).exists():
+                Tier.objects.create(name=name, default_sees=sees, organization=org)
 
     for org in Organization.objects.all():
         rename_and_seed(org)
-    rename_and_seed(None)  # legacy/global tiers (org=None)
+    rename_and_seed(None, seed=False)  # legacy/global tiers (org=None): rename only
 
     # Backfill members lacking a View Access → "Sub-Project Only" for their org.
     for m in Membership.objects.filter(role="member", tier__isnull=True):

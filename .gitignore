@@ -31,3 +31,8 @@ vapid_*.json
 .env.*
 !.env.example
 .fallow/
+
+# Claude Code local workspace + MCP/QA tool scratch (ad-hoc, regenerated)
+.claude/
+.playwright-mcp/
+/qa-*.png
