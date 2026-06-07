@@ -5,7 +5,7 @@ import { api } from "../api/client";
 import { useUsers, userName } from "../users";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
-import { Modal, Spinner, StatusPill, PriorityIcon } from "./common";
+import { Modal, Spinner, StatusPill, PriorityIcon, ProjPill } from "./common";
 import { useConfirm } from "./confirm";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -147,7 +147,7 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
                     <td><input type="checkbox" style={{ width: "auto" }} checked={sel.has(t.id)} readOnly /></td>
                     <td title={PRIORITY_META[t.priority].label}><PriorityIcon level={t.priority} /></td>
                     <td>{t.title}</td>
-                    <td className="muted" style={{ fontSize: 12 }}>{info ? `${info.projectName} / ${info.name}` : "—"}</td>
+                    <td>{info ? <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}><ProjPill name={info.projectName} color={info.projectColor} /><ProjPill name={info.name} color={info.color} /></span> : "—"}</td>
                     <td className="muted" style={{ fontSize: 12 }}>{t.assignees.map((id) => userName(users, id)).join(", ") || "—"}</td>
                     <td><StatusPill status={t.status} /></td>
                     <td className="mono" style={{ fontSize: 12 }}>{t.deadline ?? "—"}</td>
