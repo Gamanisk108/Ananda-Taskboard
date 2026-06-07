@@ -163,7 +163,7 @@
     "deadline": "Deadline",
     "startTime": "Start time",
     "endTime": "End time",
-    "links": "Links (one URL per line)",
+    "links": "Links",
     "repeats": "Repeats",
     "monitor": "Monitor — notify admins when this task is moved",
     "autoComplete": "Auto-complete — mark Done automatically after the deadline",

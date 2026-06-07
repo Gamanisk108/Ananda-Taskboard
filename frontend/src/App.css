@@ -464,9 +464,9 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .tcard.overdue { background: var(--overdue-bg); border-color: color-mix(in srgb, var(--danger) 30%, var(--border)); }
 .tcard.due-soon { background: var(--soon-bg); border-color: color-mix(in srgb, var(--ring-soon) 35%, var(--border)); }
 .tcard.done .tcard-title { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--border-strong); }
-.tcard-top { display: flex; align-items: center; gap: 8px; }
-.tcard-title { font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tcard-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tcard-top { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+.tcard-title { font-weight: 600; color: var(--text); flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tcard-meta { display: flex; align-items: center; justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
 /* project / sub-project pill — tinted by the project color (--pc), per design
    (Rule: projects & sub-projects render as proj-pills everywhere, never a bare
    dot+text). Mirrors the .status-pill tinting model. */
