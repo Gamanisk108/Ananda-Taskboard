@@ -179,14 +179,10 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
 }) {
   const { t } = useTranslation();
   if (readOnly) {
-    return (
-      <div className="modal-foot">
-        <button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>
-      </div>
-    );
+    return <button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>;
   }
   return (
-    <div className="modal-foot">
+    <>
       {/* D5: destructive Delete sits far-LEFT in red; Share beside it; Cancel/Save right. */}
       <div style={{ display: "flex", gap: 8, marginRight: "auto" }}>
         {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
@@ -199,8 +195,12 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
         )}
       </div>
       <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
-      <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
-    </div>
+      {/* submits the modal body's <form id="task-form"> even though the footer is rendered
+          outside it (sticky footer, DN11). DN8: new task says "Create task". */}
+      <button type="submit" form="task-form" className="btn-primary" data-testid="task-save" disabled={busy}>
+        {busy ? t("task.saving") : editing ? t("common.save") : t("task.create", "Create task")}
+      </button>
+    </>
   );
 }
 
@@ -400,8 +400,9 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide>
-      <form onSubmit={save}>
+    <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide
+      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />}>
+      <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
           <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>
             {t("task.createdOn", "Created {{date}}", {
@@ -543,8 +544,6 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         </fieldset>
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
-
-        <ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onOpen={setOpenSub} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}

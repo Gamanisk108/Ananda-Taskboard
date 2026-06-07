@@ -162,6 +162,10 @@
 .field { margin-bottom: 13px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
+/* Sticky action bar pinned to the modal bottom (Modal `footer` prop): the body
+   scrolls, this never scrolls out of view. Reusable across long modals. */
+.modal-foot-sticky { flex: none; margin-top: 0; padding: 13px 20px; border-top: 1px solid var(--border);
+  background: var(--surface); border-radius: 0 0 var(--r-card) var(--r-card); }
 .rec-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 12px; margin-bottom: 13px; }
 /* assignee avatar chips (task modal) */
 .m-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }

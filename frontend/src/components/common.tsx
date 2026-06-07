@@ -201,6 +201,7 @@ export function Modal({
   children,
   wide,
   icon,
+  footer,
 }: {
   title: string;
   onClose: () => void;
@@ -208,6 +209,9 @@ export function Modal({
   wide?: boolean;
   /** Optional line-art section-header icon shown before the title (design rule #6). */
   icon?: ReactNode;
+  /** Optional action bar pinned to the modal bottom (sticky; never scrolls out).
+   *  When provided, only `children` scroll. Reuse for any long modal. */
+  footer?: ReactNode;
 }) {
   const { t } = useTranslation();
   // Escape closes the modal (app-wide expectation). Backdrop click closes too
@@ -236,6 +240,7 @@ export function Modal({
           <button className="btn-ghost icon-btn" onClick={onClose} aria-label={t("common.close")}><X size={14} /></button>
         </div>
         <div className="modal-body">{children}</div>
+        {footer && <div className="modal-foot modal-foot-sticky">{footer}</div>}
       </div>
     </div>
   );
