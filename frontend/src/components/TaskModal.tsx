@@ -8,7 +8,7 @@ import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
-import { Modal, StatusPill, PriorityIcon, LinksEditor } from "./common";
+import { Modal, StatusPill, PriorityIcon, LinksEditor, SingleSelect } from "./common";
 import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
@@ -76,10 +76,8 @@ function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStat
       {canChangeStatus ? (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <StatusPill status={curStatus} />
-          <select defaultValue="" onChange={(e) => e.target.value && changeStatus(e.target.value)} style={{ width: "auto" }}>
-            <option value="">{t("task.changeTo")}</option>
-            {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
+          <SingleSelect value="" placeholder={t("task.changeTo")} onChange={(v) => v && changeStatus(v)}
+            options={statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }))} />
         </div>
       ) : editing ? (
         <StatusPill status={curStatus} />
@@ -87,9 +85,8 @@ function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStat
         // DN9: new task gets a Status selector (defaults to To Do) instead of a hint.
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <StatusPill status={curStatus} />
-          <select value={curStatus} onChange={(e) => setStatus(e.target.value)} style={{ width: "auto" }}>
-            {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
+          <SingleSelect value={curStatus} onChange={setStatus}
+            options={statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }))} />
         </div>
       )}
     </div>
@@ -121,11 +118,8 @@ function RecurrenceFields(p: RecurrenceFieldsProps) {
       <div className="row2">
         <div className="field">
           <label>{t("tm.frequency")}</label>
-          <select value={p.freq} onChange={(e) => p.setFreq(e.target.value as Recurrence["freq"])}>
-            {(["daily", "weekly", "monthly", "yearly"] as const).map((f) => (
-              <option key={f} value={f}>{t(`tm.freq${f.charAt(0).toUpperCase()}${f.slice(1)}`)}</option>
-            ))}
-          </select>
+          <SingleSelect width="100%" value={p.freq} onChange={(v) => p.setFreq(v as Recurrence["freq"])}
+            options={(["daily", "weekly", "monthly", "yearly"] as const).map((f) => ({ value: f, label: t(`tm.freq${f.charAt(0).toUpperCase()}${f.slice(1)}`) }))} />
         </div>
         <div className="field">
           <label>{t("tm.everyInterval")}</label>
@@ -153,11 +147,8 @@ function RecurrenceFields(p: RecurrenceFieldsProps) {
         </div>
         <div className="field">
           <label>{t("settings.ends")}</label>
-          <select value={p.endMode} onChange={(e) => p.setEndMode(e.target.value as EndMode)}>
-            <option value="none">{t("settings.endsNever")}</option>
-            <option value="date">{t("tm.endOnDate")}</option>
-            <option value="count">{t("tm.endAfterN")}</option>
-          </select>
+          <SingleSelect width="100%" value={p.endMode} onChange={(v) => p.setEndMode(v as EndMode)}
+            options={[{ value: "none", label: t("settings.endsNever") }, { value: "date", label: t("tm.endOnDate") }, { value: "count", label: t("tm.endAfterN") }]} />
         </div>
       </div>
       {p.endMode === "date" && (
@@ -458,15 +449,13 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <div className="row2">
             <div className="field">
               <label>{t("task.project")}</label>
-              <select value={projectId} onChange={(e) => pickProject(Number(e.target.value))}>
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              <SingleSelect width="100%" value={String(projectId)} onChange={(v) => pickProject(Number(v))}
+                options={projects.map((p) => ({ value: String(p.id), label: p.name }))} />
             </div>
             <div className="field">
               <label>{t("task.subproject")}</label>
-              <select value={subproject} onChange={(e) => setSubproject(Number(e.target.value))}>
-                {subOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <SingleSelect width="100%" value={String(subproject)} onChange={(v) => setSubproject(Number(v))}
+                options={subOptions.map((s) => ({ value: String(s.id), label: s.name }))} />
             </div>
           </div>
         )}
@@ -477,9 +466,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             <label>{t("task.priority")}</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <PriorityIcon level={priority} size={16} />
-              <select data-testid="task-priority-select" value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
-                {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
-              </select>
+              <SingleSelect testId="task-priority-select" width="100%" value={String(priority)} onChange={(v) => setPriority(Number(v))}
+                options={[5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label }))} />
             </div>
           </div>
         </div>

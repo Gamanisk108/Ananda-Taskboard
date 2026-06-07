@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Link2, Plus } from "lucide-react";
+import { X, Link2, Plus, Check } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
@@ -75,6 +75,67 @@ export function MultiSelect({
                   {o.color && <span className="dot" style={{ background: o.color }} />}
                   <span className="ms-opt-label">{o.label}</span>
                 </label>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export interface SingleSelectOption { value: string; label: string; color?: string; section?: string }
+
+/** Custom single-select dropdown: a bordered trigger + popover with a check on
+ *  the selected option (design D2 — no native <select>). Mirrors MultiSelect's
+ *  look/behaviour (click-outside, Escape) and reuses its `.ms*` CSS. */
+export function SingleSelect({
+  options, value, onChange, placeholder, testId, width, disabled,
+}: {
+  options: SingleSelectOption[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  testId?: string;
+  width?: number | string;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const chosen = options.find((o) => o.value === value);
+  let lastSection: string | undefined;
+  return (
+    <div className={`ms ss${chosen ? " on" : ""}${width === "100%" ? " ss-block" : ""}`} ref={ref} data-testid={testId}
+      style={typeof width === "number" ? { width } : undefined}>
+      <button type="button" className="ms-btn" disabled={disabled} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={chosen?.label ?? placeholder}>
+        {chosen?.color && <span className="dot" style={{ background: chosen.color }} />}
+        <span className="ms-label">{chosen ? chosen.label : (placeholder ?? "—")}</span>
+        <span className="ms-caret" aria-hidden>▾</span>
+      </button>
+      {open && (
+        <div className="ms-pop" role="listbox">
+          {options.length === 0 && <div className="ms-empty">—</div>}
+          {options.map((o) => {
+            const header = o.section && o.section !== lastSection ? o.section : null;
+            lastSection = o.section;
+            return (
+              <div key={o.value}>
+                {header && <div className="ms-section">{header}</div>}
+                <button type="button" className="ms-opt ss-opt" role="option" aria-selected={o.value === value}
+                  onClick={() => { onChange(o.value); setOpen(false); }}>
+                  {o.color && <span className="dot" style={{ background: o.color }} />}
+                  <span className="ms-opt-label">{o.label}</span>
+                  {o.value === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
+                </button>
               </div>
             );
           })}
