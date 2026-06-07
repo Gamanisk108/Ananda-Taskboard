@@ -7,7 +7,7 @@ import { api } from "../api/client";
 import { useStatuses, isComplete } from "../statuses";
 import { buildSubLookup, deadlineState } from "../lookup";
 import { useUsers } from "../users";
-import { AvatarStack, PriorityIcon, Spinner, SubtaskBar, DueFlag } from "./common";
+import { AvatarStack, PriorityIcon, Spinner, SubtaskBar, DueFlag, ProjPill } from "./common";
 import type { Me, Task } from "../types";
 
 interface Props {
@@ -97,7 +97,7 @@ export function KanbanView({ projectId, subprojectId, onEdit, me }: Props) {
                     </div>
                     <div className="meta">
                       <span className="left">
-                        {info && <><span className="dot" style={{ background: info.color }} /><span className="nm">{info.name}</span></>}
+                        {info && <ProjPill name={info.name} color={info.color} />}
                         {t.deadline && <span className={`cell-date ${ds === "overdue" ? "od" : ds === "soon" ? "soon" : ""}`} style={{ fontSize: 11 }}>{fmtShort(t.deadline)}</span>}
                       </span>
                       {t.assignees.length > 0 && <AvatarStack ids={t.assignees} users={users} />}

@@ -8,7 +8,7 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, type MultiSelectOption } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, ProjPill, type MultiSelectOption } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -220,8 +220,8 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
                       )}
                     </div>
                   </td>
-                  <td>{info && <span className="cell-proj"><span className="dot" style={{ background: info.projectColor }} /><span className="nm">{info.projectName}</span></span>}</td>
-                  <td>{info && <span className="cell-proj"><span className="dot" style={{ background: info.color }} /><span className="nm">{info.name}</span></span>}</td>
+                  <td>{info && <ProjPill name={info.projectName} color={info.projectColor} />}</td>
+                  <td>{info && <ProjPill name={info.name} color={info.color} />}</td>
                   <td><div className="who"><AvatarStack ids={t.assignees} users={users} /></div></td>
                   <td><StatusPill status={t.status} editable /></td>
                   <td>

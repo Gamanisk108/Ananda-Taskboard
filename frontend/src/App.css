@@ -429,6 +429,21 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .status-pill .caret { font-size: 9px; opacity: .5; margin-left: -1px; }
 .status-pill.static { cursor: default; }
 .status-pill.static:hover { background: color-mix(in srgb, var(--sc) 16%, var(--surface)); }
+/* project / sub-project pill — tinted by the project color (--pc), per design
+   (Rule: projects & sub-projects render as proj-pills everywhere, never a bare
+   dot+text). Mirrors the .status-pill tinting model. */
+.proj-pill {
+  background: color-mix(in srgb, var(--pc) 16%, var(--surface));
+  color: color-mix(in srgb, var(--pc) 78%, var(--text));
+  border-color: color-mix(in srgb, var(--pc) 30%, transparent);
+  font-size: 11.5px; padding: 2px 9px; max-width: 100%;
+}
+.proj-pill .nm { overflow: hidden; text-overflow: ellipsis; }
+html[data-theme="dark"] .proj-pill {
+  background: color-mix(in srgb, var(--pc) 24%, var(--surface));
+  color: color-mix(in srgb, var(--pc) 35%, #fff);
+  border-color: color-mix(in srgb, var(--pc) 42%, transparent);
+}
 /* assignees as colored avatar stack */
 .who { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; cursor: pointer; min-height: 24px; }
 .who .add { color: var(--faint); font-size: 14px; line-height: 1; padding: 0 4px; opacity: 0; transition: opacity .12s; }

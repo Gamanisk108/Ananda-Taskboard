@@ -166,6 +166,17 @@ export function StatusPill({ status, editable }: { status: string; editable?: bo
   );
 }
 
+/** A project / sub-project rendered as a proj-pill, tinted by its color (--pc).
+ *  Design rule: projects & sub-projects are proj-pills everywhere, never bare
+ *  dot+text. */
+export function ProjPill({ name, color }: { name: string; color: string }) {
+  return (
+    <span className="pill proj-pill" style={{ "--pc": color } as CSSProperties} title={name}>
+      <span className="nm">{name}</span>
+    </span>
+  );
+}
+
 /** Overlapping colored circles of assignee initials (design avatar stack),
  *  each with a full-name tooltip. Shows up to `max`, then a +N chip. */
 export function AvatarStack({ ids, users, max = 3 }: { ids: number[]; users: UserLite[]; max?: number }) {
