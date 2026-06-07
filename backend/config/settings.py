@@ -111,7 +111,14 @@ if DATABASE_URL:
             "HOST": u.hostname or "",
             "PORT": str(u.port or ""),
             "OPTIONS": options,
+            # Reuse connections for 10 min, but verify each is still alive at the
+            # start of every request (Django 4.1+). Neon (and other serverless
+            # Postgres) suspend on idle and drop pooled connections; without a
+            # health check the first request after idle hits a dead connection
+            # and 500s (then recovers) — exactly the intermittent /api/statuses
+            # 500 seen on the deploy. CONN_HEALTH_CHECKS reconnects transparently.
             "CONN_MAX_AGE": 600,
+            "CONN_HEALTH_CHECKS": True,
         }
     }
 else:
