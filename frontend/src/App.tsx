@@ -254,19 +254,11 @@ export default function App() {
           {me.is_admin && (
             <button className="btn-ghost" data-testid="open-team" onClick={() => setShowTeam(true)} title={t("nav.team")}><UsersIcon /><span className="lbl">{t("nav.team")}</span></button>
           )}
-          {/* Trash is open to everyone — non-admins see only the tasks they
-              themselves deleted (server-enforced); admins see all org trash. */}
-          <button className="btn-ghost" onClick={() => setShowTrash(true)} title={t("nav.trash")}><Trash2 /><span className="lbl">{t("nav.trash")}</span></button>
+          {/* D15: Trash + Help moved into the account menu; top bar stays lean
+              (Approvals · Team · Projects). */}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowManage(true)} title={t("nav.projects")}><LayoutGrid /><span className="lbl">{t("nav.projects")}</span></button>
           )}
-          <button className="btn-ghost" data-testid="open-help" onClick={() => setShowHelp(true)} title={t("help.open")}
-            style={{ position: "relative" }}>
-            <CircleHelp /><span className="lbl">{t("help.open")}</span>
-            {hasNewHelp && (
-              <span aria-hidden style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)" }} />
-            )}
-          </button>
           <span className="sep" />
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
@@ -282,6 +274,9 @@ export default function App() {
             onRestore={() => setShowRestore(true)}
             onHistory={() => setShowHistory(true)}
             onBulk={() => setShowBulk(true)}
+            onHelp={() => setShowHelp(true)}
+            onTrash={() => setShowTrash(true)}
+            hasNewHelp={hasNewHelp}
             onLogout={logout}
           />
         </div>
@@ -410,10 +405,11 @@ export default function App() {
   );
 }
 
-function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onToggleDailyPush, onSettings, onRestore, onHistory, onBulk, onLogout }: {
+function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onToggleDailyPush, onSettings, onRestore, onHistory, onBulk, onHelp, onTrash, hasNewHelp, onLogout }: {
   name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
   dailyPushEnabled: boolean; onToggleDailyPush: (enabled: boolean) => void;
-  onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void; onLogout: () => void;
+  onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void;
+  onHelp: () => void; onTrash: () => void; hasNewHelp?: boolean; onLogout: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -434,13 +430,21 @@ function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onTog
 
   return (
     <div className="usermenu" onClick={(e) => e.stopPropagation()}>
-      <div className="user usermenu-btn" role="button" tabIndex={0} onClick={() => setOpen((o) => !o)} title={t("menu.account")}>
+      <div className="user usermenu-btn" role="button" tabIndex={0} onClick={() => setOpen((o) => !o)} title={t("menu.account")} style={{ position: "relative" }}>
         <span className="avatar">{initials(name)}</span>
         <span className="lbl">{name}</span>
         <ChevronDown size={14} className="muted" />
+        {/* D15: purple What's-New dot rides the user pill when unseen features exist. */}
+        {hasNewHelp && <span aria-hidden style={{ position: "absolute", top: 2, left: 18, width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)", border: "1.5px solid var(--surface)" }} />}
       </div>
       {open && (
         <div className="usermenu-pop">
+          {/* D15: Help & FAQ at the top of the account menu, available to everyone. */}
+          <button className="usermenu-item" data-testid="open-help" onClick={() => { setOpen(false); onHelp(); }}>
+            <CircleHelp size={15} /> {t("help.open")}
+            {hasNewHelp && <span aria-hidden style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)" }} />}
+          </button>
+          <div className="usermenu-sep" />
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
               <SettingsIcon size={15} /> {t("menu.settings")}
@@ -460,6 +464,11 @@ function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onTog
               deadline on tasks they can edit (enforced server-side). */}
           <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
             <ArrowLeftRight size={15} /> {t("menu.bulkMigrate")}
+          </button>
+          {/* D15: Trash lives in the account menu (everyone; non-admins see only
+              their own deleted items, server-enforced). */}
+          <button className="usermenu-item" onClick={() => { setOpen(false); onTrash(); }}>
+            <Trash2 size={15} /> {t("nav.trash")}
           </button>
           <button className="usermenu-item" onClick={enableNotifications}>
             <Bell size={15} /> {msg || t("menu.notificationsOn")}
