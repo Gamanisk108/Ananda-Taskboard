@@ -9,6 +9,7 @@ import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, PriorityIcon } from "./common";
+import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
@@ -186,15 +187,18 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
   }
   return (
     <div className="modal-foot">
-      {editing && (
-        <button type="button" className="btn-secondary"
-          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
-          style={{ marginRight: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <Share2 size={14} /> {shareLabel || t("task.share")}
-        </button>
-      )}
+      {/* D5: destructive Delete sits far-LEFT in red; Share beside it; Cancel/Save right. */}
+      <div style={{ display: "flex", gap: 8, marginRight: "auto" }}>
+        {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
+        {editing && (
+          <button type="button" className="btn-secondary"
+            onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <Share2 size={14} /> {shareLabel || t("task.share")}
+          </button>
+        )}
+      </div>
       <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
-      {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
       <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
     </div>
   );
@@ -298,6 +302,7 @@ function useRecurrenceState(task: Task | null) {
 
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
@@ -368,7 +373,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   async function del() {
-    if (!confirm(t("tm.confirmDelete"))) return;
+    if (!(await confirm({ body: t("tm.confirmDelete"), danger: true, confirmLabel: t("common.delete") }))) return;
     try {
       await api.del(`/api/tasks/${task!.id}`);
       onSaved();

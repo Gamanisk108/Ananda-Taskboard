@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useUsers } from "../users";
+import { useConfirm } from "./confirm";
 
 interface Comment {
   id: number;
@@ -12,6 +13,7 @@ interface Comment {
 
 export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: number; meId: number; meIsAdmin?: boolean }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,7 +66,7 @@ export function CommentSection({ taskId, meId, meIsAdmin = false }: { taskId: nu
   }
 
   async function del(id: number) {
-    if (!confirm(t("cs.confirmDelete"))) return;
+    if (!(await confirm({ body: t("cs.confirmDelete"), danger: true, confirmLabel: t("common.delete") }))) return;
     await api.del(`/api/comments/${id}`);
     load();
   }

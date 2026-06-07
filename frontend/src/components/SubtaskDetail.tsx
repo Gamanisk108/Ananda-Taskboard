@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
 import { PriorityIcon } from "./common";
+import { useConfirm } from "./confirm";
 import type { TaskStatus } from "../statuses";
 import { PRIORITY_META, type Subtask, type UserLite } from "../types";
 
@@ -22,6 +23,7 @@ interface Props {
  *  shown in place of the task form (breadcrumb back), so editors never stack. */
 export function SubtaskDetail({ subtask, users, groups, statuses, subproject, isAdmin, onBack, onChanged }: Props) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [title, setTitle] = useState(subtask.title);
   const [status, setStatus] = useState(subtask.status);
   const [priority, setPriority] = useState<number>(subtask.priority ?? 3);
@@ -68,7 +70,7 @@ export function SubtaskDetail({ subtask, users, groups, statuses, subproject, is
   }
 
   async function del() {
-    if (!confirm(t("subtask.confirmDelete"))) return;
+    if (!(await confirm({ body: t("subtask.confirmDelete"), danger: true, confirmLabel: t("common.delete") }))) return;
     try {
       await api.del(`/api/subtasks/${subtask.id}`);
       onChanged?.();

@@ -4,6 +4,7 @@ import { X, Users } from "lucide-react";
 import { api } from "../api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Modal, Spinner, MultiSelect, type MultiSelectOption } from "./common";
+import { useConfirm } from "./confirm";
 import { useSubmitGuard } from "../useSubmitGuard";
 import { useAuth } from "../state/auth";
 import { SEES_ORDER, type Sees } from "../types";
@@ -105,6 +106,7 @@ function defaultMemberTier(tiers: TierRow[]): TierRow | undefined {
 
 function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[] }) {
   const { t: tr } = useTranslation();
+  const confirm = useConfirm();
   const [email, setEmail] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState(""); const [err, setErr] = useState(""); const [sent, setSent] = useState("");
   const [accessSel, setAccessSel] = useState<string[]>([]);  // sub-project ids to grant on accept
@@ -136,7 +138,7 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
       }
     });
   }
-  async function revoke(id: number) { if (confirm(tr("invite.confirmRevoke"))) { await api.del(`/api/invitations/${id}`); load(); } }
+  async function revoke(id: number) { if (await confirm({ body: tr("invite.confirmRevoke"), danger: true })) { await api.del(`/api/invitations/${id}`); load(); } }
 
   return (
     <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
@@ -288,10 +290,11 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
 
 function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[]; reload: () => void }) {
   const { t: tr } = useTranslation();
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [busy, guard] = useSubmitGuard();
   function add() { return guard(async () => { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }); }
-  async function del(g: GroupRow) { if (confirm(tr("ta.confirmDeleteGroup", { name: g.name }))) { await api.del(`/api/groups/${g.id}`); reload(); } }
+  async function del(g: GroupRow) { if (await confirm({ body: tr("ta.confirmDeleteGroup", { name: g.name }), danger: true, confirmLabel: tr("common.delete") })) { await api.del(`/api/groups/${g.id}`); reload(); } }
   async function toggleMember(g: GroupRow, uid: number) {
     const ids = g.member_ids.includes(uid) ? g.member_ids.filter((x) => x !== uid) : [...g.member_ids, uid];
     await api.patch(`/api/groups/${g.id}`, { member_ids: ids });

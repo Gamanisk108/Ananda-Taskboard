@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import { X, RotateCcw } from "lucide-react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
+import { useConfirm } from "./confirm";
 
 interface Stats { projects?: number; subprojects?: number; tasks?: number; events?: number; groups?: number; grants?: number; }
 interface Point { id: number; label: string; auto: boolean; stats: Stats; created_at: string; }
 
 export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [points, setPoints] = useState<Point[] | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -23,13 +25,13 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
     finally { setBusy(false); }
   }
   async function restore(p: Point) {
-    if (!confirm(t("restore.confirmRestore", { name: p.label }))) return;
+    if (!(await confirm({ body: t("restore.confirmRestore", { name: p.label }), danger: false, confirmLabel: t("common.confirm", "Confirm") }))) return;
     setBusy(true);
     try { await api.post(`/api/restore-points/${p.id}/restore`, {}); onChanged(); load(); alert(t("restore.restored")); }
     finally { setBusy(false); }
   }
   async function remove(p: Point) {
-    if (!confirm(t("restore.confirmDelete", { name: p.label }))) return;
+    if (!(await confirm({ body: t("restore.confirmDelete", { name: p.label }), danger: true, confirmLabel: t("common.delete") }))) return;
     await api.del(`/api/restore-points/${p.id}`); load();
   }
 

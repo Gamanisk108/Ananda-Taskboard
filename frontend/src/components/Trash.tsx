@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
+import { useConfirm } from "./confirm";
 
 interface Row { id: number; label: string; days_left: number; }
 interface TrashData { projects: Row[]; subprojects: Row[]; tasks: Row[]; }
 
 export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [data, setData] = useState<TrashData | null>(null);
 
   function load() { api.get("/api/trash").then(setData).catch(() => setData(null)); }
@@ -19,7 +21,7 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
     onChanged(); load();
   }
   async function purge(type: string, id: number) {
-    if (!confirm(t("trash.confirmPurge"))) return;
+    if (!(await confirm({ body: t("trash.confirmPurge"), danger: true, confirmLabel: t("trash.deleteForever", "Delete forever") }))) return;
     await api.del("/api/trash/action", { type, id });
     load();
   }

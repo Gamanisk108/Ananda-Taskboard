@@ -45,7 +45,7 @@ const noEmojiIcon = {
 }
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'playwright.config.ts', 'tests/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -59,9 +59,11 @@ export default defineConfig([
     },
     plugins: { local: { rules: { 'no-emoji-icon': noEmojiIcon } } },
     rules: {
-      // 👥 group marker (used by Claude Design too), 🌐 Global Overview tab identity,
-      // and friendly empty/success accents — all intentional, not chrome icons.
-      'local/no-emoji-icon': ['error', { allow: ['👥', '🌐', '🙂', '🎉', '🧹', '🙏', '✅', '📁'] }],
+      // Per Gordon 2026-06-06: the ONLY allowed emoji are project-picker emoji.
+      // 👥 group marker is a "revisit later" exception (design itself uses it; DN7);
+      // 🙂 is the EmojiPicker's own default placeholder (the project picker itself).
+      // Everything else (🌐 🎉 🧹 🙏 ✅ 📁 📋 …) was converted to lucide line-art.
+      'local/no-emoji-icon': ['error', { allow: ['👥', '🙂'] }],
     },
   },
 ])

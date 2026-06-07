@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
+import { useConfirm } from "./confirm";
 import { DeleteWithMove } from "./DeleteWithMove";
 import { EmojiPicker } from "./EmojiPicker";
 
@@ -35,6 +36,7 @@ interface Proj {
 
 export function ManageProjects({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [projects, setProjects] = useState<Proj[] | null>(null);
   const [newProjectName, setNewProjectName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -89,7 +91,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   async function markDone(kind: "project" | "subproject", id: number, name: string) {
-    if (!confirm(t("mp.markDoneConfirm", { name }))) return;
+    if (!(await confirm({ body: t("mp.markDoneConfirm", { name }), danger: false, confirmLabel: t("common.confirm", "Confirm") }))) return;
     const r = await api.post(`/api/${kind}/${id}/mark-done`, {}) as { updated: number };
     alert(t("mp.markDoneResult", { count: r.updated }));
     load(); onChanged();

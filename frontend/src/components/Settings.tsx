@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon } from "lucide-react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
+import { useConfirm } from "./confirm";
 
 interface S { daily_push_hour: number; daily_push_minute: number; timezone: string; }
 
@@ -73,6 +74,7 @@ interface St { id: number; key: string; label: string; color: string; order: num
 
 function StatusManager() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [list, setList] = useState<St[]>([]);
   const [label, setLabel] = useState("");
   const [color, setColor] = useState("#6b7280");
@@ -93,7 +95,7 @@ function StatusManager() {
   async function patch(s: St, changes: Partial<St>) { await api.patch(`/api/statuses/${s.id}`, changes); load(); }
   async function remove(s: St) {
     if (list.length <= 1) { alert(t("settings.keepOneStatus")); return; }
-    if (!confirm(t("settings.confirmDeleteStatus", { name: s.label }))) return;
+    if (!(await confirm({ body: t("settings.confirmDeleteStatus", { name: s.label }), danger: true, confirmLabel: t("common.delete") }))) return;
     await api.del(`/api/statuses/${s.id}`); load();
   }
 
