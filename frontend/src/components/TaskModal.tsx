@@ -61,12 +61,13 @@ function ApprovalBanners({ task, onSaved }: { task: Task; onSaved: () => void })
 
 // Status field: an inline status picker for those who may change it, a read-only
 // pill when editing without permission, or a hint before the task exists.
-function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStatus }: {
+function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStatus, setStatus }: {
   canChangeStatus: boolean;
   editing: boolean;
   curStatus: string;
   statuses: TaskStatus[];
   changeStatus: (s: string) => void;
+  setStatus: (s: string) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -83,7 +84,13 @@ function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStat
       ) : editing ? (
         <StatusPill status={curStatus} />
       ) : (
-        <span className="muted" style={{ fontSize: 13 }}>{t("task.setAfterCreating")}</span>
+        // DN9: new task gets a Status selector (defaults to To Do) instead of a hint.
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <StatusPill status={curStatus} />
+          <select value={curStatus} onChange={(e) => setStatus(e.target.value)} style={{ width: "auto" }}>
+            {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </div>
       )}
     </div>
   );
@@ -259,6 +266,9 @@ function useTaskFields(
       auto_complete: autoComplete,
       links: links.split("\n").map((l) => l.trim()).filter(Boolean),
       recurrence,
+      // DN9: send the chosen status only when creating (edits apply status
+      // immediately via the dedicated status endpoint).
+      ...(editing ? {} : { status: curStatus }),
     };
   }
 
@@ -456,7 +466,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         )}
 
         <div className="row2">
-          <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} />
+          <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} setStatus={setCurStatus} />
           <div className="field">
             <label>{t("task.priority")}</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
