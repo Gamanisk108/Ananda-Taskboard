@@ -166,6 +166,20 @@ export function StatusPill({ status, editable }: { status: string; editable?: bo
   );
 }
 
+/** True when the viewport is at/below `max` px (phone). Drives the responsive
+ *  card layouts that replace dense desktop tables on mobile. */
+export function useIsNarrow(max = 700) {
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia(`(max-width: ${max}px)`).matches);
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${max}px)`);
+    const on = () => setNarrow(mql.matches);
+    on();
+    mql.addEventListener("change", on);
+    return () => mql.removeEventListener("change", on);
+  }, [max]);
+  return narrow;
+}
+
 /** A project / sub-project rendered as a proj-pill, tinted by its color (--pc).
  *  Design rule: projects & sub-projects are proj-pills everywhere, never bare
  *  dot+text. */

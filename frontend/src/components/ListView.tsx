@@ -8,7 +8,7 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, ProjPill, type MultiSelectOption } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, ProjPill, useIsNarrow, type MultiSelectOption } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -74,6 +74,7 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   const assigneeNames = (t: Task) => t.assignees.map((id) => userName(users, id));
 
   // filter option lists (MultiSelect uses string values)
+  const narrow = useIsNarrow();
   const projectOpts = me.tree.projects;
   const subSource = fProjects.length
     ? projectOpts.filter((p) => fProjects.includes(p.id)).flatMap((p) => p.subprojects)
@@ -187,6 +188,34 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
 
       {filtered.length === 0 ? (
         <div className="empty">{activeFilters ? tr("list.noMatch", "No tasks match these filters.") : tr("list.noneYet", "No tasks here yet.")}</div>
+      ) : narrow ? (
+        /* Mobile: task cards (.tcard) instead of the dense side-scrolling table. */
+        <div className="tcards">
+          {filtered.map((t) => {
+            const info = subs.get(t.subproject);
+            const ds = deadlineState(t.deadline, isComplete(t.status));
+            const dcls = ds === "overdue" ? "od" : ds === "soon" ? "soon" : "";
+            const cardCls = [ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : "", isComplete(t.status) ? "done" : ""].filter(Boolean).join(" ");
+            return (
+              <button key={t.id} data-testid="task-row" className={`tcard ${cardCls}`} onClick={() => onEdit(t)}>
+                <div className="tcard-top">
+                  <span title={PRIORITY_META[t.priority].label}><PriorityIcon level={t.priority} /></span>
+                  <span className="tcard-title">{t.title}</span>
+                  {ds === "overdue" && <DueFlag kind="overdue" title={tr("list.missedDeadline")} />}
+                  {ds === "soon" && <DueFlag kind="soon" title={tr("list.dueSoon")} />}
+                  {Object.keys(t.subtask_counts ?? {}).length > 0 && <SubtaskDots counts={t.subtask_counts} />}
+                </div>
+                <div className="tcard-meta">
+                  {info && <ProjPill name={info.projectName} color={info.projectColor} />}
+                  {info && <ProjPill name={info.name} color={info.color} />}
+                  <StatusPill status={t.status} editable />
+                  {t.deadline && <span className={`cell-date ${dcls}`}>{fmtDeadline(t.deadline)}</span>}
+                  {t.assignees.length > 0 && <AvatarStack ids={t.assignees} users={users} />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       ) : (
         <table className="tbl">
           <thead>
