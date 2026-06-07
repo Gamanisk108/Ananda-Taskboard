@@ -494,7 +494,7 @@
     "groupsHint": "(ఈ సమూహాలకు కేటాయించిన పనులు మాత్రమే)",
     "columns": "నిలువు వరుసలు",
     "copyTitle": "TSV గా కాపీ చేయండి — నేరుగా Google Sheet లో అతికించండి",
-    "copySheets": "📋 Google Sheets కోసం కాపీ చేయి",
+    "copySheets": "Google Sheets కోసం కాపీ చేయి",
     "download": "డౌన్‌లోడ్"
   },
   "expcol": {
@@ -635,7 +635,7 @@
     }
   },
   "onboarding": {
-    "title": "Welcome to Ananda Taskboard 🙏",
+    "title": "Welcome to Ananda Taskboard",
     "intro": "Three quick things and you're ready:",
     "b1": "Tap a colored tab to open a project and see its tasks.",
     "b2": "Switch between List, Board, Weekly and Monthly up top.",

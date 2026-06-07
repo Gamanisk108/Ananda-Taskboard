@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { X, Link2, Plus } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
@@ -166,6 +166,46 @@ export function StatusPill({ status, editable }: { status: string; editable?: bo
   );
 }
 
+/** A project / sub-project rendered as a proj-pill, tinted by its color (--pc).
+ *  Design rule: projects & sub-projects are proj-pills everywhere, never bare
+ *  dot+text. */
+export function ProjPill({ name, color }: { name: string; color: string }) {
+  return (
+    <span className="pill proj-pill" style={{ "--pc": color } as CSSProperties} title={name}>
+      <span className="nm">{name}</span>
+    </span>
+  );
+}
+
+/** Links as a structured list of removable rows + "Add link" (design D4), not a
+ *  textarea. Serializes to/from a newline-joined string so callers keep their
+ *  existing `links` state + payload (`links.split("\n")`). */
+export function LinksEditor({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const { t } = useTranslation();
+  const list = value.length ? value.split("\n") : [];
+  const commit = (next: string[]) => onChange(next.join("\n"));
+  return (
+    <div className="links-editor">
+      {list.map((u, i) => (
+        <div className="link-row" key={i}>
+          <Link2 size={14} className="link-ic" aria-hidden />
+          <input className="link-input" value={u} placeholder="https://…" disabled={disabled}
+            onChange={(e) => commit(list.map((v, j) => (j === i ? e.target.value : v)))} />
+          {!disabled && (
+            <button type="button" className="btn-ghost icon-only" aria-label={t("common.remove", "Remove")}
+              onClick={() => commit(list.filter((_, j) => j !== i))}><X size={14} /></button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button type="button" className="btn-ghost add-link" onClick={() => commit([...list, ""])}>
+          <Plus size={14} /> {t("task.addLink", "Add link")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** Overlapping colored circles of assignee initials (design avatar stack),
  *  each with a full-name tooltip. Shows up to `max`, then a +N chip. */
 export function AvatarStack({ ids, users, max = 3 }: { ids: number[]; users: UserLite[]; max?: number }) {
@@ -190,13 +230,17 @@ export function Modal({
   children,
   wide,
   icon,
+  footer,
 }: {
-  title: string;
+  title: ReactNode;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
   /** Optional line-art section-header icon shown before the title (design rule #6). */
   icon?: ReactNode;
+  /** Optional action bar pinned to the modal bottom (sticky; never scrolls out).
+   *  When provided, only `children` scroll. Reuse for any long modal. */
+  footer?: ReactNode;
 }) {
   const { t } = useTranslation();
   // Escape closes the modal (app-wide expectation). Backdrop click closes too
@@ -225,6 +269,7 @@ export function Modal({
           <button className="btn-ghost icon-btn" onClick={onClose} aria-label={t("common.close")}><X size={14} /></button>
         </div>
         <div className="modal-body">{children}</div>
+        {footer && <div className="modal-foot modal-foot-sticky">{footer}</div>}
       </div>
     </div>
   );

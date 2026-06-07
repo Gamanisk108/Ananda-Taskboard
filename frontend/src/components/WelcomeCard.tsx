@@ -33,7 +33,7 @@ export function WelcomeCard({ onClose }: { onClose: () => void }) {
   return (
     <Modal
       icon={<Sparkles />}
-      title={t("onboarding.title", "Welcome to Ananda Taskboard 🙏")}
+      title={t("onboarding.title", "Welcome to Ananda Taskboard")}
       onClose={onClose}
     >
       <div style={{ lineHeight: 1.5 }}>
@@ -70,10 +70,8 @@ export function WelcomeCard({ onClose }: { onClose: () => void }) {
             "You can reopen this anytime from the ? Help button.",
           )}
         </p>
+        {/* D16: web welcome has a single "Got it" (no Skip). */}
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="btn-ghost" onClick={onClose}>
-            {t("onboarding.skip", "Skip")}
-          </button>
           <button
             className="btn-primary"
             data-testid="welcome-gotit"

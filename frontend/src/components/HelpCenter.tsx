@@ -4,7 +4,6 @@ import { Sparkles, ChevronRight, ChevronDown, Mail, CircleHelp } from "lucide-re
 import { Modal } from "./common";
 import {
   articlesForRole,
-  isAdminOnly,
   latestVersion,
   whatsNew,
   CATEGORIES,
@@ -103,14 +102,8 @@ export function HelpCenter({
           aria-expanded={open}
         >
           <span className="help-q-title">{c.title}</span>
-          {isAdminOnly(a) && (
-            <span
-              className="help-chip help-chip-admin"
-              title={t("help.adminOnly", "Admin only")}
-            >
-              {t("help.adminChip", "Admin")}
-            </span>
-          )}
+          {/* D17: the grey "Admin" chip is removed — admin articles live under the
+              "For admins" section and state "admins only" in their body. */}
           {isNew && (
             <span className="help-chip help-chip-new">
               {t("help.newBadge", "New")}
@@ -214,7 +207,7 @@ export function HelpCenter({
           data-testid="replay-welcome"
           onClick={onReplayWelcome}
         >
-          🙏 {t("help.replayWelcome", "Show welcome again")}
+          <Sparkles size={15} aria-hidden style={{ verticalAlign: "-2px", marginRight: 5 }} />{t("help.replayWelcome", "Show welcome again")}
         </button>
         <a
           className="help-contact"

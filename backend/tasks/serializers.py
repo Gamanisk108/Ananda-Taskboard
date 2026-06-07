@@ -116,6 +116,12 @@ class TaskSerializer(serializers.ModelSerializer):
         assignees = validated_data.pop("assignees", [])
         assignee_groups = validated_data.pop("assignee_groups", [])
         task = Task(**validated_data)
+        # DN9: honor an initial status chosen at creation. `status` is read-only
+        # for updates (those go through the dedicated /status endpoint with its
+        # side effects), but a valid initial key may be set when the task is born.
+        initial_status = (self.initial_data or {}).get("status")
+        if initial_status and Status.objects.filter(key=initial_status).exists():
+            task.status = initial_status
         if recurrence_data is not None:
             rule = RecurrenceRule.objects.create(**recurrence_data)
             task.recurrence_rule = rule

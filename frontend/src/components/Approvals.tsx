@@ -55,7 +55,7 @@ export function Approvals({
       {!pending ? (
         <Spinner />
       ) : pending.length === 0 ? (
-        <div className="empty">{tr("empty.approvals")} 🎉</div>
+        <div className="empty"><CircleCheck size={16} aria-hidden style={{ verticalAlign: "-3px", marginRight: 6 }} />{tr("empty.approvals")}</div>
       ) : (
         <>
           <div className="bulkbar">

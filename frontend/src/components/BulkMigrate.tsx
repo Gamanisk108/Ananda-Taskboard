@@ -6,12 +6,14 @@ import { useUsers, userName } from "../users";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
 import { Modal, Spinner, StatusPill, PriorityIcon } from "./common";
+import { useConfirm } from "./confirm";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
 /** Admin bulk-migration tool: a filterable/sortable checklist of tasks; bulk-set
  *  their sub-project, assignees, status, or deadline in one go. */
 export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () => void; onChanged: () => void }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
   const [q, setQ] = useState("");
@@ -124,7 +126,7 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
         )}
         {me.is_admin && (
           <button className="btn-danger" disabled={busy || !sel.size} style={{ marginLeft: "auto" }}
-            onClick={() => { if (confirm(t("bulk.archiveConfirm", { n: sel.size }))) applyBulk("archive", null); }}>{t("bulk.archiveSelected")}</button>
+            onClick={async () => { if (await confirm({ body: t("bulk.archiveConfirm", { n: sel.size }), danger: true, confirmLabel: t("bulk.archiveSelected") })) applyBulk("archive", null); }}>{t("bulk.archiveSelected")}</button>
         )}
       </div>
 

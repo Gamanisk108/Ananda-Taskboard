@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download } from "lucide-react";
+import { Download, ClipboardList } from "lucide-react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { peopleInMyScope, useUsers } from "../users";
@@ -200,7 +200,7 @@ export function ExportDialog({ me }: { me: Me }) {
           <div className="modal-foot">
             <button className="btn-secondary" style={{ marginRight: "auto" }} disabled={selected.length === 0}
               onClick={copyForSheets} data-testid="export-copy-sheets" title={t("export.copyTitle")}>
-              {copied ? t("copy.copied") : t("export.copySheets")}
+              <ClipboardList size={15} aria-hidden style={{ verticalAlign: "-3px", marginRight: 6 }} />{copied ? t("copy.copied") : t("export.copySheets")}
             </button>
             <button className="btn-secondary" onClick={() => setOpen(false)}>{t("common.cancel")}</button>
             <button className="btn-primary" data-testid="export-download" disabled={selected.length === 0} onClick={run}>{t("export.download")}</button>

@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit config — automated AI PR review (workspace CLAUDE.md Rule #12).
+# Reviews every PR into main; address its findings before merge. Complements
+# (does not replace) tests, browser/UX QA, Fallow + lint/format/type-check.
+language: en-US
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  path_filters:
+    - "!**/dist/**"
+    - "!**/node_modules/**"
+    - "!**/venv/**"
+    - "!**/staticfiles/**"
+    - "!**/*.min.js"
+    - "!**/__snapshots__/**"
+    - "!design/**"
+  path_instructions:
+    - path: "frontend/**"
+      instructions: >-
+        React 19 + TypeScript + Vite + TanStack Query. Enforce the design rules:
+        line-art (lucide) icons only — NO emoji except project-picker emoji;
+        custom select trigger+popover (no native <select>); the 5-status pipeline
+        in order To Do · In Progress · Delayed · Review (purple #7a5aa6) · Done;
+        projects/sub-projects render as proj-pills; destructive actions use the
+        styled confirm popup, not window.confirm; dialog Delete is left + red.
+        New UI strings must be added to ALL 13 locale catalogs (i18n parity test).
+    - path: "backend/**"
+      instructions: >-
+        Django + DRF, multi-tenant. Verify org isolation (every query scoped to
+        the request's org), permission/role checks, and input validation. Flag
+        any cross-tenant data exposure.
+chat:
+  auto_reply: true
+tools:
+  ruff:
+    enabled: true

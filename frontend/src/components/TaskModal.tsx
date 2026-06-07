@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Archive, Share2 } from "lucide-react";
+import { Eye, Archive, Share2, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
@@ -8,7 +8,8 @@ import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
-import { Modal, StatusPill, PriorityIcon } from "./common";
+import { Modal, StatusPill, PriorityIcon, LinksEditor } from "./common";
+import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
@@ -60,12 +61,13 @@ function ApprovalBanners({ task, onSaved }: { task: Task; onSaved: () => void })
 
 // Status field: an inline status picker for those who may change it, a read-only
 // pill when editing without permission, or a hint before the task exists.
-function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStatus }: {
+function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStatus, setStatus }: {
   canChangeStatus: boolean;
   editing: boolean;
   curStatus: string;
   statuses: TaskStatus[];
   changeStatus: (s: string) => void;
+  setStatus: (s: string) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -82,7 +84,13 @@ function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStat
       ) : editing ? (
         <StatusPill status={curStatus} />
       ) : (
-        <span className="muted" style={{ fontSize: 13 }}>{t("task.setAfterCreating")}</span>
+        // DN9: new task gets a Status selector (defaults to To Do) instead of a hint.
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <StatusPill status={curStatus} />
+          <select value={curStatus} onChange={(e) => setStatus(e.target.value)} style={{ width: "auto" }}>
+            {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </div>
       )}
     </div>
   );
@@ -178,25 +186,28 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
 }) {
   const { t } = useTranslation();
   if (readOnly) {
-    return (
-      <div className="modal-foot">
-        <button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>
-      </div>
-    );
+    return <button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>;
   }
   return (
-    <div className="modal-foot">
-      {editing && (
-        <button type="button" className="btn-secondary"
-          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
-          style={{ marginRight: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <Share2 size={14} /> {shareLabel || t("task.share")}
-        </button>
-      )}
+    <>
+      {/* D5: destructive Delete sits far-LEFT in red; Share beside it; Cancel/Save right. */}
+      <div style={{ display: "flex", gap: 8, marginRight: "auto" }}>
+        {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
+        {editing && (
+          <button type="button" className="btn-secondary"
+            onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <Share2 size={14} /> {shareLabel || t("task.share")}
+          </button>
+        )}
+      </div>
       <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
-      {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
-      <button className="btn-primary" data-testid="task-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
-    </div>
+      {/* submits the modal body's <form id="task-form"> even though the footer is rendered
+          outside it (sticky footer, DN11). DN8: new task says "Create task". */}
+      <button type="submit" form="task-form" className="btn-primary" data-testid="task-save" disabled={busy}>
+        {busy ? t("task.saving") : editing ? t("common.save") : t("task.create", "Create task")}
+      </button>
+    </>
   );
 }
 
@@ -255,6 +266,9 @@ function useTaskFields(
       auto_complete: autoComplete,
       links: links.split("\n").map((l) => l.trim()).filter(Boolean),
       recurrence,
+      // DN9: send the chosen status only when creating (edits apply status
+      // immediately via the dedicated status endpoint).
+      ...(editing ? {} : { status: curStatus }),
     };
   }
 
@@ -298,6 +312,7 @@ function useRecurrenceState(task: Task | null) {
 
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
@@ -348,6 +363,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     e.preventDefault();
     if (submitting.current) return;        // block double/triple-click duplicates
     setErr("");
+    if (!title.trim()) { setErr(t("tm.errTitle", "Please enter a task name.")); return; }
     if (!subproject) { setErr(t("tm.errPickProject")); return; }
     if (!!startTime !== !!endTime) { setErr(t("tm.errTimes")); return; }
     if (startTime && endTime && endTime <= startTime) { setErr(t("tm.errEndTime")); return; }
@@ -368,7 +384,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   async function del() {
-    if (!confirm(t("tm.confirmDelete"))) return;
+    if (!(await confirm({ body: t("tm.confirmDelete"), danger: true, confirmLabel: t("common.delete") }))) return;
     try {
       await api.del(`/api/tasks/${task!.id}`);
       onSaved();
@@ -395,8 +411,17 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide>
-      <form onSubmit={save}>
+    <Modal onClose={onClose} wide
+      title={/* DN10: the header IS the inline-editable task title + pen + #id chip. */
+        <span className="task-title-head">
+          <input className="task-title-input" data-testid="task-title" value={title}
+            onChange={(e) => setTitle(e.target.value)} disabled={readOnly} autoFocus
+            placeholder={t("task.namePlaceholder")} aria-label={t("task.name")} />
+          {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
+          {editing && <span className="task-id-chip">#{task!.id}</span>}
+        </span>}
+      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />}>
+      <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
           <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>
             {t("task.createdOn", "Created {{date}}", {
@@ -414,10 +439,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         {/* A disabled fieldset makes every control inside read-only in one stroke — so
             a viewer is never shown an editable form that only 403s on Save. */}
         <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
-        <div className="field">
-          <label>{t("task.name")}</label>
-          <input data-testid="task-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder={t("task.namePlaceholder")} />
-        </div>
+        {/* DN10: task name is edited in the modal header (above), not a body field. */}
 
         {readOnly ? (
           // Show the task's REAL project/sub-project. The editable picker is filtered to
@@ -450,7 +472,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         )}
 
         <div className="row2">
-          <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} />
+          <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} setStatus={setCurStatus} />
           <div className="field">
             <label>{t("task.priority")}</label>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -514,7 +536,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="field">
           <label>{t("task.links")}</label>
-          <textarea rows={2} value={links} onChange={(e) => setLinks(e.target.value)} placeholder="https://drive.google.com/…" />
+          <LinksEditor value={links} onChange={setLinks} disabled={readOnly} />
         </div>
 
         <div className="field">
@@ -538,8 +560,6 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         </fieldset>
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
-
-        <ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />
       </form>
       {editing && <SubtaskEditor taskId={task!.id} onOpen={setOpenSub} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}

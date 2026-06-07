@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Upload } from "lucide-react";
+import { Upload, CircleCheck } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { Modal } from "./common";
 
@@ -154,7 +154,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                   </div>
                   {(preview.new_projects.length > 0 || preview.new_subprojects.length > 0) && (
                     <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
-                      {t("import.willCreate", { list: [...preview.new_projects.map((p) => `📁 ${p}`), ...preview.new_subprojects.map((s) => `↳ ${s}`)].join(" · ") })}
+                      {t("import.willCreate", { list: [...preview.new_projects.map((p) => `${p}`), ...preview.new_subprojects.map((s) => `↳ ${s}`)].join(" · ") })}
                     </div>
                   )}
                   {(counts.update ?? 0) > 0 && (
@@ -224,7 +224,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
           {result && (
             <div data-testid="import-result">
               <div className="empty" style={{ background: "#3f7d541a", color: "var(--text)" }}>
-                ✅ {t("import.imported", {
+                <CircleCheck size={16} aria-hidden style={{ verticalAlign: "-3px", marginRight: 6 }} />{t("import.imported", {
                   created: result.created, updated: result.updated,
                   skipped: result.skipped ? t("import.resSkipped", { n: result.skipped }) : "",
                   errored: result.errors ? t("import.resErrored", { n: result.errors }) : "",

@@ -494,7 +494,7 @@
     "groupsHint": "（仅分配给这些组的任务）",
     "columns": "列",
     "copyTitle": "复制为 TSV — 直接粘贴到 Google 表格",
-    "copySheets": "📋 复制到 Google 表格",
+    "copySheets": "复制到 Google 表格",
     "download": "下载"
   },
   "expcol": {
@@ -635,7 +635,7 @@
     }
   },
   "onboarding": {
-    "title": "Welcome to Ananda Taskboard 🙏",
+    "title": "Welcome to Ananda Taskboard",
     "intro": "Three quick things and you're ready:",
     "b1": "Tap a colored tab to open a project and see its tasks.",
     "b2": "Switch between List, Board, Weekly and Monthly up top.",

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
-  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, Contrast, LogOut, Mail } from "lucide-react";
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, LogOut, Mail } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -276,8 +276,6 @@ export default function App() {
             isAdmin={me.is_admin}
             language={resolveLanguage(me.language)}
             onLanguage={changeLanguage}
-            theme={theme}
-            onTheme={changeTheme}
             dailyPushEnabled={me.daily_push_enabled}
             onToggleDailyPush={toggleDailyPush}
             onSettings={() => setShowSettings(true)}
@@ -294,7 +292,7 @@ export default function App() {
           {tree?.show_global_overview && (
             <button className={`ptab ${isGlobal ? "on" : ""}`} style={{ "--pc": "var(--muted)" } as React.CSSProperties}
               onClick={() => { setTopTab("global"); setSubTab(null); }}>
-              <span className="pemoji">🌐</span>{t("nav.globalOverview")} <span className="count">{counts.total}</span>
+              <span className="pemoji" aria-hidden><Globe size={15} /></span>{t("nav.globalOverview")} <span className="count">{counts.total}</span>
             </button>
           )}
           {projects.map((p) => (
@@ -412,9 +410,8 @@ export default function App() {
   );
 }
 
-function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPushEnabled, onToggleDailyPush, onSettings, onRestore, onHistory, onBulk, onLogout }: {
+function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onToggleDailyPush, onSettings, onRestore, onHistory, onBulk, onLogout }: {
   name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
-  theme: string; onTheme: (v: string) => void;
   dailyPushEnabled: boolean; onToggleDailyPush: (enabled: boolean) => void;
   onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void; onLogout: () => void;
 }) {
@@ -484,17 +481,8 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPu
               {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
             </select>
           </label>
-          <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <Contrast size={15} /> {t("menu.theme")}
-            <select data-testid="theme-select" value={theme}
-              onChange={(e) => onTheme(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{ width: "auto", marginLeft: "auto" }}>
-              <option value="system">{t("theme.system")}</option>
-              <option value="light">{t("theme.light")}</option>
-              <option value="dark">{t("theme.dark")}</option>
-            </select>
-          </label>
+          {/* DN6: theme is controlled by the single toggle next to the logo only;
+              the account-menu theme dropdown is removed (no duplicate control). */}
           <div className="usermenu-sep" />
           <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
             <LogOut size={15} /> {t("menu.logout")}

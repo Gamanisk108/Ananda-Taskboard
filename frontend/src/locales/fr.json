@@ -494,7 +494,7 @@
     "groupsHint": "(uniquement les tâches assignées à ces groupes)",
     "columns": "Colonnes",
     "copyTitle": "Copier en TSV — collez directement dans une feuille Google",
-    "copySheets": "📋 Copier pour Google Sheets",
+    "copySheets": "Copier pour Google Sheets",
     "download": "Télécharger"
   },
   "expcol": {
@@ -635,7 +635,7 @@
     }
   },
   "onboarding": {
-    "title": "Welcome to Ananda Taskboard 🙏",
+    "title": "Welcome to Ananda Taskboard",
     "intro": "Three quick things and you're ready:",
     "b1": "Tap a colored tab to open a project and see its tasks.",
     "b2": "Switch between List, Board, Weekly and Monthly up top.",

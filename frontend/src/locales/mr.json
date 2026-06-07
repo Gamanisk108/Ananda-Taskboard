@@ -494,7 +494,7 @@
     "groupsHint": "(फक्त या गटांना नेमलेली कार्ये)",
     "columns": "स्तंभ",
     "copyTitle": "TSV म्हणून कॉपी करा — थेट Google Sheet मध्ये पेस्ट करा",
-    "copySheets": "📋 Google Sheets साठी कॉपी करा",
+    "copySheets": "Google Sheets साठी कॉपी करा",
     "download": "डाउनलोड"
   },
   "expcol": {
@@ -635,7 +635,7 @@
     }
   },
   "onboarding": {
-    "title": "Welcome to Ananda Taskboard 🙏",
+    "title": "Welcome to Ananda Taskboard",
     "intro": "Three quick things and you're ready:",
     "b1": "Tap a colored tab to open a project and see its tasks.",
     "b2": "Switch between List, Board, Weekly and Monthly up top.",

@@ -77,3 +77,20 @@ def test_monitor_field_roundtrips(admin, sp):
     api = login(admin)
     res = api.post("/api/tasks", {"subproject": sp.id, "title": "Watched", "monitor": True}, format="json")
     assert res.status_code == 201 and res.data["monitor"] is True
+
+
+def test_create_honors_initial_status(sp, db):
+    # DN9: a valid status chosen at creation is applied (status is read-only on update).
+    from tasks.serializers import TaskSerializer
+    s = TaskSerializer(data={"subproject": sp.id, "title": "T", "status": "in_progress"})
+    assert s.is_valid(), s.errors
+    task = s.save()
+    assert task.status == "in_progress"
+
+
+def test_create_ignores_invalid_status(sp, db):
+    from tasks.serializers import TaskSerializer
+    s = TaskSerializer(data={"subproject": sp.id, "title": "T2", "status": "bogus-key"})
+    assert s.is_valid(), s.errors
+    task = s.save()
+    assert task.status != "bogus-key"
