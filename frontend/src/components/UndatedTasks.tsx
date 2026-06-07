@@ -21,12 +21,15 @@ export function UndatedTasks({
 
   return (
     <>
-      <button type="button" className="btn-secondary" style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}
+      {/* D6: emphasized "Unscheduled Tasks (N)" button — blue outline + tinted
+          fill + navy count pill; line-art CalendarOff; hidden at 0 (above). */}
+      <button type="button" className="btn-unscheduled" style={{ marginLeft: "auto" }}
         data-testid="undated-button" onClick={() => setOpen(true)}>
-        <CalendarOff size={14} /> {t("cal.noDate", "No date")} ({undated.length})
+        <CalendarOff size={14} /> {t("cal.noDate", "Unscheduled Tasks")}
+        <span className="us-count">{undated.length}</span>
       </button>
       {open && (
-        <Modal icon={<CalendarOff />} title={t("cal.noDateTitle", "No date — {{count}} tasks", { count: undated.length })} onClose={() => setOpen(false)}>
+        <Modal icon={<CalendarOff />} title={t("cal.noDateTitle", "Unscheduled tasks ({{count}})", { count: undated.length })} onClose={() => setOpen(false)}>
           <DayTaskList
             items={undated}
             colorByProject={colorByProject}

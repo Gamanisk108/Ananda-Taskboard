@@ -183,6 +183,13 @@
 .link-row .link-ic { color: var(--muted); flex: none; }
 .link-row .link-input { flex: 1; min-width: 0; }
 .add-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: var(--primary); padding: 4px 6px; }
+/* D6: emphasized "Unscheduled Tasks" calendar-header button + navy count pill. */
+.btn-unscheduled { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px;
+  border: 1px solid var(--primary); border-radius: var(--r-ctl); padding: 6px 11px; white-space: nowrap; cursor: pointer;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--primary); }
+.btn-unscheduled:hover { background: color-mix(in srgb, var(--primary) 16%, var(--surface)); }
+.btn-unscheduled .us-count { font-family: var(--f-mono); font-size: 11px; background: var(--primary); color: var(--primary-ink); border-radius: var(--r-pill); padding: 1px 7px; }
+@media (max-width: 760px) { .btn-unscheduled { width: 100%; justify-content: center; margin: 6px 0 0; } }
 /* assignee avatar chips (task modal) */
 .m-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .m-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--sunk); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 2px 9px 2px 3px; font-size: 12px; font-weight: 500; color: var(--text); }

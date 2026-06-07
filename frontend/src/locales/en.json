@@ -414,8 +414,8 @@
       "fri": "Fri",
       "sat": "Sat"
     },
-    "noDate": "No date",
-    "noDateTitle": "No date — {{count}} tasks"
+    "noDate": "Unscheduled Tasks",
+    "noDateTitle": "Unscheduled tasks ({{count}})"
   },
   "del": {
     "kindProject": "project",
