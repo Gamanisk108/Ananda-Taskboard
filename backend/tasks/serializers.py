@@ -35,7 +35,21 @@ class RecurrenceRuleSerializer(serializers.ModelSerializer):
 class SubtaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtask
-        fields = ["id", "task", "title", "status", "order", "assignee"]
+        fields = [
+            "id", "task", "title", "status", "order", "priority",
+            "details", "requirements", "timeline_start", "deadline",
+            "start_time", "end_time", "assignees", "assignee_groups",
+        ]
+
+    def validate(self, attrs):
+        # Time-of-day is both-or-neither, with end strictly after start (same as Task).
+        start = attrs.get("start_time", getattr(self.instance, "start_time", None))
+        end = attrs.get("end_time", getattr(self.instance, "end_time", None))
+        if bool(start) != bool(end):
+            raise serializers.ValidationError("Set both a start time and an end time, or neither.")
+        if start and end and end <= start:
+            raise serializers.ValidationError("End time must be after the start time.")
+        return attrs
 
 
 class TaskSerializer(serializers.ModelSerializer):

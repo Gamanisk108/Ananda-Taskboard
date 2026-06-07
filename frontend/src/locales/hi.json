@@ -120,6 +120,28 @@
     "role_admin": "व्यवस्थापक",
     "role_member": "सदस्य"
   },
+  "invite": {
+    "title": "किसी को आमंत्रित करें",
+    "hint": "उन्हें इस टीम में शामिल होने के लिए एक ईमेल मिलेगा। नए लोग आमंत्रण से अपना खाता बना सकते हैं।",
+    "send": "आमंत्रण भेजें",
+    "sent": "{{email}} को आमंत्रण भेजा गया।",
+    "error": "आमंत्रण नहीं भेजा जा सका।",
+    "pending": "लंबित आमंत्रण",
+    "revoke": "रद्द करें",
+    "confirmRevoke": "इस आमंत्रण को रद्द करें?"
+  },
+  "accept": {
+    "title": "{{org}} में शामिल हों",
+    "subtitle": "आपको {{org}} में {{role}} के रूप में आमंत्रित किया गया ({{email}})।",
+    "join": "{{org}} में शामिल हों",
+    "joining": "शामिल हो रहे हैं…",
+    "joinedTitle": "{{org}} में आपका स्वागत है",
+    "joinedBody": "आप टीम में शामिल हो गए। शुरू करने के लिए साइन इन करें।",
+    "invalidTitle": "आमंत्रण मान्य नहीं",
+    "invalidBody": "यह आमंत्रण अमान्य है या समाप्त हो गया है। अपने टीम एडमिन से नया भेजने के लिए कहें।",
+    "loading": "लोड हो रहा है…",
+    "error": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
+  },
   "task": {
     "edit": "कार्य संपादित करें",
     "new": "नया कार्य",
@@ -152,7 +174,9 @@
     "subtasks": "उप-कार्य",
     "addSubtask": "एक उप-कार्य जोड़ें…",
     "comments": "टिप्पणियाँ",
-    "addComment": "टिप्पणी जोड़ें… (उल्लेख के लिए @ लिखें)"
+    "addComment": "टिप्पणी जोड़ें… (उल्लेख के लिए @ लिखें)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "सभी परियोजनाएँ",
@@ -198,7 +222,8 @@
     "groups": "समूह",
     "access": "पहुँच",
     "tiers": "स्तर",
-    "activity": "गतिविधि"
+    "activity": "गतिविधि",
+    "holidays": "छुट्टियाँ"
   },
   "empty": {
     "approvals": "अनुमोदन के लिए कुछ भी लंबित नहीं।",
@@ -379,6 +404,7 @@
     "openDay": "इस दिन के कार्य खोलें",
     "noTasksWeek": "इस सप्ताह कोई कार्य नहीं।",
     "thisMonth": "इस महीने",
+    "more": "और",
     "dow": {
       "sun": "रवि",
       "mon": "सोम",
@@ -387,7 +413,9 @@
       "thu": "गुरु",
       "fri": "शुक्र",
       "sat": "शनि"
-    }
+    },
+    "noDate": "कोई तिथि नहीं",
+    "noDateTitle": "कोई तिथि नहीं — {{count}} कार्य"
   },
   "del": {
     "kindProject": "परियोजना",
@@ -412,7 +440,10 @@
     "done": "हो गया"
   },
   "subtask": {
-    "assignee": "जिम्मेदार"
+    "assignee": "जिम्मेदार",
+    "back": "उप-कार्यों पर वापस जाएँ",
+    "confirmDelete": "इस उप-कार्य को हटाएं?",
+    "editDetails": "विवरण संपादित करें"
   },
   "import": {
     "button": "आयात ▾",
@@ -563,11 +594,54 @@
     "exclusionsHelp": "अस्वीकार हमेशा जीतता है, यहाँ तक कि सदस्य को सौंपे गए कार्य पर भी (अस्वीकार > असाइनमेंट > अनुमति)। संयम से उपयोग करें।",
     "noExclusions": "कोई बहिष्करण नहीं।",
     "taskIdPh": "कार्य ID (जैसे 318)",
-    "selectHide": "छिपाने के लिए चुनें…"
+    "selectHide": "छिपाने के लिए चुनें…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "इस टिप्पणी को हटाएँ?",
     "you": "आप",
     "teamMember": "टीम सदस्य"
+  },
+  "holidays": {
+    "title": "इस संगठन के कैलेंडर पर दिखाए जाने वाले छुट्टी के सेट",
+    "help": "दुनियाभर के सदस्य केवल वही देखते हैं जो आप यहाँ सक्षम करते हैं।",
+    "set": {
+      "us_federal": "US संघीय छुट्टियाँ",
+      "us_observances": "US उत्सव (Mother's/Father's Day, डेलाइट सेविंग)",
+      "christian": "ईसाई / धार्मिक",
+      "hindu_festivals": "Hindu / योग त्योहार",
+      "ananda_lineage": "Ananda परंपरा के दिन"
+    },
+    "save": "सहेजें",
+    "saved": "सहेजा गया"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

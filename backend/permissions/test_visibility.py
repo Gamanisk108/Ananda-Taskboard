@@ -43,6 +43,16 @@ def grant(*, user=None, group=None, tier=None, subproject=None, project=None, le
     )
 
 
+def view_access(user, sees):
+    """Set the member's single View Access breadth (own/subproject/project/org) by
+    assigning them a tier with that `default_sees`. This — not per-grant sees — is
+    what the engine reads for how many tasks a member can see."""
+    tier = Tier.objects.create(name=f"VA-{sees}-{user.id}", default_sees=sees)
+    user.tier = tier
+    user.save(update_fields=["tier"])
+    return tier
+
+
 def task(sp, title, *, assignees=(), groups=()):
     t = Task.objects.create(subproject=sp, title=title)
     if assignees:
@@ -76,8 +86,32 @@ def test_no_grant_sees_no_tasks(member, karuna):
     assert visible_ids(member) == set()
 
 
+def test_assignment_alone_confers_visibility(member, karuna):
+    # No grant anywhere, but assigned to a task → must see exactly that task (never an
+    # "orphaned assignment" where someone is handed invisible work).
+    mine = task(karuna["marketing"], "assigned to me", assignees=[member])
+    task(karuna["marketing"], "not mine")
+    assert visible_ids(member) == {mine.id}
+
+
+def test_group_assignment_alone_confers_visibility(member, karuna):
+    g = Group.objects.create(name="Seva")
+    g.members.add(member)
+    via_group = task(karuna["marketing"], "group task", groups=[g])
+    task(karuna["marketing"], "unrelated")
+    assert visible_ids(member) == {via_group.id}
+
+
+def test_assignment_visibility_still_loses_to_deny(member, karuna):
+    # deny > assignment, even with no grant in play.
+    t = task(karuna["marketing"], "assigned but denied", assignees=[member])
+    Exclusion.objects.create(user=member, excluded_task=t)
+    assert visible_ids(member) == set()
+
+
 def test_sees_subproject_shows_all_tasks_in_scope(member, karuna):
-    grant(user=member, subproject=karuna["marketing"], sees="subproject")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "subproject")
     mine = task(karuna["marketing"], "mine", assignees=[member])
     theirs = task(karuna["marketing"], "theirs")
     other_sp = task(karuna["warehouse"], "elsewhere")
@@ -86,7 +120,8 @@ def test_sees_subproject_shows_all_tasks_in_scope(member, karuna):
 
 
 def test_sees_own_shows_only_assigned(member, other, karuna):
-    grant(user=member, subproject=karuna["marketing"], sees="own")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "own")
     mine = task(karuna["marketing"], "mine", assignees=[member])
     theirs = task(karuna["marketing"], "theirs", assignees=[other])
     assert visible_ids(member) == {mine.id}
@@ -96,7 +131,8 @@ def test_sees_own_shows_only_assigned(member, other, karuna):
 def test_sees_own_includes_group_assigned(member, karuna):
     g = Group.objects.create(name="Seva")
     g.members.add(member)
-    grant(user=member, subproject=karuna["marketing"], sees="own")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "own")
     via_group = task(karuna["marketing"], "group task", groups=[g])
     unrelated = task(karuna["marketing"], "nope")
     assert visible_ids(member) == {via_group.id}
@@ -104,8 +140,9 @@ def test_sees_own_includes_group_assigned(member, karuna):
 
 
 def test_sees_project_widens_to_sibling_subprojects(member, karuna):
-    # grant on Marketing with sees=project → can READ tasks in sibling Warehouse too
-    grant(user=member, subproject=karuna["marketing"], sees="project")
+    # member with Full Project view access → can READ tasks in sibling Warehouse too
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "project")
     here = task(karuna["marketing"], "here")
     sibling = task(karuna["warehouse"], "sibling")
     ids = visible_ids(member)
@@ -126,7 +163,8 @@ def test_exclude_task_hides_even_when_assigned(member, karuna):
 
 
 def test_exclude_subproject_hides_tasks_and_tree(member, karuna):
-    grant(user=member, project=karuna["project"], sees="subproject")
+    grant(user=member, project=karuna["project"])
+    view_access(member, "subproject")
     wh_task = task(karuna["warehouse"], "wh")
     mk_task = task(karuna["marketing"], "mk")
     Exclusion.objects.create(user=member, excluded_subproject=karuna["warehouse"])
@@ -144,7 +182,8 @@ def test_exclude_project_hides_whole_project(member, karuna):
 
 
 def test_exclude_assignee_hides_their_tasks(member, other, karuna):
-    grant(user=member, subproject=karuna["marketing"], sees="subproject")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "subproject")
     with_other = task(karuna["marketing"], "co-assigned", assignees=[other])
     clean = task(karuna["marketing"], "clean")
     Exclusion.objects.create(user=member, excluded_user=other)
@@ -155,7 +194,8 @@ def test_exclude_assignee_hides_their_tasks(member, other, karuna):
 def test_exclude_assignee_hides_task_even_when_co_assigned_to_me(member, other, karuna):
     # The M2M-negation trap: a task assigned to BOTH me and an excluded person
     # must still be hidden (deny > assignment), not leak via my own assignee row.
-    grant(user=member, subproject=karuna["marketing"], sees="subproject")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "subproject")
     co = task(karuna["marketing"], "co-assigned to me + other", assignees=[member, other])
     Exclusion.objects.create(user=member, excluded_user=other)
     assert co.id not in visible_ids(member)
@@ -163,7 +203,8 @@ def test_exclude_assignee_hides_task_even_when_co_assigned_to_me(member, other, 
 
 def test_exclude_group_hides_group_assigned_tasks(member, karuna):
     g = Group.objects.create(name="Leadership")
-    grant(user=member, subproject=karuna["marketing"], sees="subproject")
+    grant(user=member, subproject=karuna["marketing"])
+    view_access(member, "subproject")
     grp_task = task(karuna["marketing"], "leadership only", groups=[g])
     normal = task(karuna["marketing"], "normal")
     Exclusion.objects.create(user=member, excluded_group=g)
@@ -194,16 +235,17 @@ def test_tier_exclusion_applies_to_member(member, karuna):
     assert visible_ids(member) == {shown.id}
 
 
-def test_individual_grant_widens_over_tier_own(member, other, karuna):
-    # tier gives "own only"; an individual subproject grant gives "all" → most-permissive wins
-    tier = Tier.objects.create(name="Volunteer", default_sees="own")
-    grant(tier=tier, subproject=karuna["marketing"], sees="own")
-    member.tier = tier
-    member.save(update_fields=["tier"])
+def test_view_access_is_the_single_breadth_control(member, other, karuna):
+    # Breadth comes from the member's ONE View Access level, not per-grant. "own" →
+    # only assigned tasks; widening that level to "subproject" surfaces every task in
+    # reach, live (no new grant needed).
+    grant(user=member, subproject=karuna["marketing"])
+    tier = view_access(member, "own")
     theirs = task(karuna["marketing"], "theirs", assignees=[other])
     assert theirs.id not in visible_ids(member)
-    grant(user=member, subproject=karuna["marketing"], sees="subproject")
-    assert theirs.id in visible_ids(member)  # widened to all
+    tier.default_sees = "subproject"
+    tier.save(update_fields=["default_sees"])
+    assert theirs.id in visible_ids(member)  # breadth widened live
 
 
 # --- admin API smoke --------------------------------------------------------

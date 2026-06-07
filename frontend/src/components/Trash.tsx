@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 
@@ -44,7 +45,7 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
   const empty = data && !data.projects.length && !data.subprojects.length && !data.tasks.length;
 
   return (
-    <Modal title={t("modals.trash")} onClose={onClose} wide>
+    <Modal icon={<Trash2 />} title={t("modals.trash")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("trash.intro")}</p>
       {!data ? <Spinner /> : empty ? (
         <div className="empty">{t("empty.trash")} 🧹</div>

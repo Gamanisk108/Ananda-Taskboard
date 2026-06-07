@@ -120,6 +120,28 @@
     "role_admin": "Admin",
     "role_member": "Member"
   },
+  "invite": {
+    "title": "Invite someone",
+    "hint": "They'll get an email to join this team. New people can create their account from the invite.",
+    "send": "Send invitation",
+    "sent": "Invitation sent to {{email}}.",
+    "error": "Could not send the invitation.",
+    "pending": "Pending invitations",
+    "revoke": "Revoke",
+    "confirmRevoke": "Revoke this invitation?"
+  },
+  "accept": {
+    "title": "Join {{org}}",
+    "subtitle": "You've been invited to {{org}} as {{role}} ({{email}}).",
+    "join": "Join {{org}}",
+    "joining": "Joining…",
+    "joinedTitle": "Welcome to {{org}}",
+    "joinedBody": "You've joined the team. Sign in to get started.",
+    "invalidTitle": "Invitation not valid",
+    "invalidBody": "This invitation is invalid or has expired. Ask your team admin to send a new one.",
+    "loading": "Loading…",
+    "error": "Something went wrong. Please try again."
+  },
   "task": {
     "edit": "Edit task",
     "new": "New task",
@@ -127,6 +149,8 @@
     "namePlaceholder": "e.g. Design spring flyer",
     "project": "Project",
     "subproject": "Sub-project",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task.",
     "status": "Status",
     "statusApplied": "Status (applied immediately)",
     "changeTo": "Change to…",
@@ -198,7 +222,8 @@
     "groups": "Groups",
     "access": "Access",
     "tiers": "Tiers",
-    "activity": "Activity"
+    "activity": "Activity",
+    "holidays": "Holidays"
   },
   "empty": {
     "approvals": "Nothing waiting for approval.",
@@ -379,6 +404,7 @@
     "openDay": "Open this day's tasks",
     "noTasksWeek": "No tasks this week.",
     "thisMonth": "This month",
+    "more": "more",
     "dow": {
       "sun": "Sun",
       "mon": "Mon",
@@ -387,7 +413,9 @@
       "thu": "Thu",
       "fri": "Fri",
       "sat": "Sat"
-    }
+    },
+    "noDate": "No date",
+    "noDateTitle": "No date — {{count}} tasks"
   },
   "del": {
     "kindProject": "project",
@@ -412,7 +440,10 @@
     "done": "Done"
   },
   "subtask": {
-    "assignee": "Assignee"
+    "assignee": "Assignee",
+    "back": "Back to subtasks",
+    "confirmDelete": "Delete this subtask?",
+    "editDetails": "Edit details"
   },
   "import": {
     "button": "Import ▾",
@@ -504,6 +535,7 @@
     "role": "Role",
     "roleMember": "Member",
     "roleAdmin": "Admin",
+    "ownRoleLocked": "You can't change your own admin role.",
     "tier": "Tier",
     "tierHint": "(new member inherits its access)",
     "noTierBlank": "No tier (blank slate)",
@@ -569,5 +601,47 @@
     "confirmDelete": "Delete this comment?",
     "you": "You",
     "teamMember": "Team member"
+  },
+  "holidays": {
+    "title": "Holiday sets shown on this organization's calendars",
+    "help": "Members worldwide see only what you enable here.",
+    "set": {
+      "us_federal": "US Federal holidays",
+      "us_observances": "US observances (Mother's/Father's Day, Daylight Saving)",
+      "christian": "Christian / religious",
+      "hindu_festivals": "Hindu / yoga festivals",
+      "ananda_lineage": "Ananda lineage days"
+    },
+    "save": "Save",
+    "saved": "Saved"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

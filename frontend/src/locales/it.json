@@ -120,6 +120,28 @@
     "role_admin": "Amministratore",
     "role_member": "Membro"
   },
+  "invite": {
+    "title": "Invita qualcuno",
+    "hint": "Riceverà un'email per unirsi a questo team. Le nuove persone possono creare il loro account dall'invito.",
+    "send": "Invia invito",
+    "sent": "Invito inviato a {{email}}.",
+    "error": "Impossibile inviare l'invito.",
+    "pending": "Inviti in sospeso",
+    "revoke": "Revoca",
+    "confirmRevoke": "Revocare questo invito?"
+  },
+  "accept": {
+    "title": "Unisciti a {{org}}",
+    "subtitle": "Sei stato invitato a {{org}} come {{role}} ({{email}}).",
+    "join": "Unisciti a {{org}}",
+    "joining": "Adesione…",
+    "joinedTitle": "Benvenuto in {{org}}",
+    "joinedBody": "Ti sei unito al team. Accedi per iniziare.",
+    "invalidTitle": "Invito non valido",
+    "invalidBody": "Questo invito non è valido o è scaduto. Chiedi al tuo amministratore di inviarne uno nuovo.",
+    "loading": "Caricamento…",
+    "error": "Qualcosa è andato storto. Riprova."
+  },
   "task": {
     "edit": "Modifica attività",
     "new": "Nuova attività",
@@ -152,7 +174,9 @@
     "subtasks": "Sotto-attività",
     "addSubtask": "Aggiungi una sotto-attività…",
     "comments": "Commenti",
-    "addComment": "Aggiungi un commento… (digita @ per menzionare)"
+    "addComment": "Aggiungi un commento… (digita @ per menzionare)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "Tutti i progetti",
@@ -198,7 +222,8 @@
     "groups": "Gruppi",
     "access": "Accesso",
     "tiers": "Livelli",
-    "activity": "Attività"
+    "activity": "Attività",
+    "holidays": "Festività"
   },
   "empty": {
     "approvals": "Nulla in attesa di approvazione.",
@@ -379,6 +404,7 @@
     "openDay": "Apri le attività di questo giorno",
     "noTasksWeek": "Nessuna attività questa settimana.",
     "thisMonth": "Questo mese",
+    "more": "altro",
     "dow": {
       "sun": "Dom",
       "mon": "Lun",
@@ -387,7 +413,9 @@
       "thu": "Gio",
       "fri": "Ven",
       "sat": "Sab"
-    }
+    },
+    "noDate": "Senza data",
+    "noDateTitle": "Senza data — {{count}} attività"
   },
   "del": {
     "kindProject": "progetto",
@@ -412,7 +440,10 @@
     "done": "Fatto"
   },
   "subtask": {
-    "assignee": "Assegnatario"
+    "assignee": "Assegnatario",
+    "back": "Torna alle sotto-attività",
+    "confirmDelete": "Eliminare questa sotto-attività?",
+    "editDetails": "Modifica dettagli"
   },
   "import": {
     "button": "Importa ▾",
@@ -563,11 +594,54 @@
     "exclusionsHelp": "Un divieto vince sempre, anche su un'attività assegnata al membro (nega > assegnazione > consenti). Usa con parsimonia.",
     "noExclusions": "Nessuna esclusione.",
     "taskIdPh": "ID attività (es. 318)",
-    "selectHide": "Seleziona cosa nascondere…"
+    "selectHide": "Seleziona cosa nascondere…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "Eliminare questo commento?",
     "you": "Tu",
     "teamMember": "Membro del team"
+  },
+  "holidays": {
+    "title": "Set di festività mostrati sui calendari di questa organizzazione",
+    "help": "I membri di tutto il mondo vedono solo ciò che abiliti qui.",
+    "set": {
+      "us_federal": "Festività federali degli Stati Uniti",
+      "us_observances": "Ricorrenze statunitensi (Festa della mamma/del papà, Ora legale)",
+      "christian": "Cristiano / religioso",
+      "hindu_festivals": "Hindu / festival dello yoga",
+      "ananda_lineage": "Giorni della tradizione Ananda"
+    },
+    "save": "Salva",
+    "saved": "Salvato"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

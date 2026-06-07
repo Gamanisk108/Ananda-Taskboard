@@ -14,8 +14,9 @@
   --primary:#1e3a6e; --primary-ink:#fbf6ea; --dome:#2c5499; --azure:#7fa8d9;
   --primary-weak:#e9f0f9;
   --gold:#c9a24b; --gold-deep:#7a5c22; --wood:#a9824e;
-  --todo:#6b7280; --doing:#2c64a8; --delayed:#bb3b28; --done:#3f7d54;
+  --todo:#6b7280; --doing:#2c64a8; --delayed:#bb3b28; --review:#7a5aa6; --done:#3f7d54;
   --danger:#b4452f; --warn:#7a5c22; --ring-soon:#d99a1f; --bar-soon:#ffd21e;
+  --holiday:#94886f;  /* muted, warm taupe — icon-and-text color for calendar holidays */
   --flag-od:#e11d1d;  /* vivid warning red for the overdue badge (brighter than terracotta --danger) */
   /* derived row backgrounds */
   --row:var(--surface); --hover:#f2ead6;
@@ -43,15 +44,19 @@ html[data-theme="dark"] {
   --primary:#2c5499; --primary-ink:#f3eedd; --dome:#7fa8d9; --azure:#a9c6ec;
   --primary-weak:#1d3358;
   --gold:#e0be6a; --gold-deep:#e0be6a; --wood:#c79f63;
-  --todo:#9aa3b2; --doing:#6aa2e0; --delayed:#e3705a; --done:#5fb27a;
+  --todo:#9aa3b2; --doing:#6aa2e0; --delayed:#e3705a; --review:#b08cd6; --done:#5fb27a;
   --danger:#e07a63; --warn:#e0be6a; --ring-soon:#e0be6a; --bar-soon:#ffd21e;
+  --holiday:#8b94a8;  /* muted holiday color for the dark canvas */
   --flag-od:#ff4d45;  /* vivid warning red (brighter for contrast on the navy canvas) */
   --row:var(--surface); --hover:#1b2d4d;
   --overdue-bg:#e0634a33; --soon-bg:#e0b04a2e;
-  --wk-today:#ffffff; --wk-today-line:var(--azure);
+  /* Today highlight: keep the column/cell BODY dark (a faint azure wash), let the
+     --wk-today-line border frame + light header do the signposting. A solid white
+     fill here was the dark-mode "white block" bug. */
+  --wk-today:color-mix(in srgb,var(--azure) 12%,var(--surface)); --wk-today-line:var(--azure);
   --wk-past:color-mix(in srgb,#6f7c93 40%,transparent);
   --wk-future:color-mix(in srgb,#cbb06a 26%,transparent);
-  --mo-today:#ffffff; --mo-soon:color-mix(in srgb,var(--bar-soon) 26%,var(--surface));
+  --mo-today:color-mix(in srgb,var(--azure) 14%,var(--surface)); --mo-soon:color-mix(in srgb,var(--bar-soon) 26%,var(--surface));
   --wk-divider:rgba(255,255,255,.05);
   --shadow-1:0 1px 2px rgba(0,0,0,.3);
   --shadow-2:0 6px 22px rgba(0,0,0,.45);
@@ -89,8 +94,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Display serif for top-level headings; UI sans elsewhere is set per-component. */
-h1, h2, h3 { font-family: var(--f-display); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
+/* Headings use the UI sans (same as the Weekly date display, e.g. "May 31 – Jun 6,
+   2026"). The display serif (--f-display) is reserved for the brand title +
+   "Love & Blessings…" subtitle, which set it explicitly in App.css. */
+h1, h2, h3 { font-family: var(--f-ui); font-weight: 600; margin: 0; letter-spacing: -0.012em; line-height: 1.15; }
 h1 { font-size: 1.6rem; }
 h2 { font-size: 1.2rem; }
 h3 { font-size: 1rem; }

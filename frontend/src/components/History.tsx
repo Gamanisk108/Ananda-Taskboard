@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Clock } from "lucide-react";
 import { api } from "../api/client";
 import { todayISO } from "../lookup";
 import { ColorDot, StatusPill, Spinner } from "./common";
@@ -49,7 +50,7 @@ export function History({ onClose }: { onClose: () => void }) {
   }, [rows]);
 
   return (
-    <Modal title={t("modals.history")} onClose={onClose} wide>
+    <Modal icon={<Clock />} title={t("modals.history")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("history.intro")}</p>
       <div className="bulkbar">
         <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, -1))}>{t("history.prevDay")}</button>

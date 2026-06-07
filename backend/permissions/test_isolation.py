@@ -44,7 +44,8 @@ def test_member_sees_only_their_org(two_orgs):
     _, spb = project_with_sub(b, "B")
     ta = Task.objects.create(subproject=spa, title="task A")
     Task.objects.create(subproject=spb, title="task B")
-    m = make_member("m@x.com", a)
+    sub_va = Tier.objects.create(organization=a, name="Sub-Project Only", default_sees="subproject")
+    m = make_member("m@x.com", a, tier=sub_va)
     AccessGrant.objects.create(user=m, subproject=spa, level="member", sees="subproject")
     assert spa.id in access_map(m, a)
     assert vis(m, a) == {ta.id}

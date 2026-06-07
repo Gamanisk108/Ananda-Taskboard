@@ -8,9 +8,9 @@ class SubProjectSerializer(serializers.ModelSerializer):
         model = SubProject
         fields = [
             "id", "project", "name", "color", "description",
-            "members_post_without_approval", "is_default",
+            "members_post_without_approval", "is_default", "created_at",
         ]
-        read_only_fields = ["is_default"]
+        read_only_fields = ["is_default", "created_at"]
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -19,4 +19,4 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "color", "emoji", "display_emoji", "description", "subprojects"]
+        fields = ["id", "name", "color", "emoji", "display_emoji", "description", "subprojects", "created_at"]

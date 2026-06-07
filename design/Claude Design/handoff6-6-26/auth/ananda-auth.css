@@ -1,0 +1,202 @@
+/* =============================================================
+   Ananda Taskboard — AUTH (sign-in + password reset)
+   Temple of Light tokens (ported from desktop/mobile), scoped to .atheme
+   so each artboard frame can carry its own theme. A global toggle flips
+   html[data-mt]; frames pinned with data-theme="light|dark" ignore it.
+   ============================================================= */
+
+/* ---- tokens: light (default) ---- */
+.atheme{
+  --bg:#f6efde; --canvas:#fbf6ea; --surface:#fffdf8; --surface-2:#faf5e8;
+  --sunk:#efe5cc; --border:#e4d8bb; --border-strong:#d8c89e;
+  --text:#23262b; --muted:#5a6172; --faint:#8a8270;
+  --primary:#1e3a6e; --primary-ink:#fbf6ea; --dome:#2c5499; --azure:#7fa8d9;
+  --primary-weak:#e9f0f9;
+  --gold:#c9a24b; --gold-deep:#7a5c22; --wood:#a9824e;
+  --doing:#2c64a8; --delayed:#bb3b28; --done:#3f7d54;
+  --danger:#b4452f; --warn:#7a5c22;
+  --shadow-1:0 1px 2px rgba(30,58,110,.07);
+  --shadow-2:0 6px 22px rgba(30,58,110,.13);
+  --shadow-card:0 18px 50px -22px rgba(30,58,110,.34),0 2px 6px rgba(30,58,110,.06);
+  --r-card:14px; --r-ctl:10px; --r-pill:999px;
+  --f-display:"Fraunces",Georgia,serif;
+  --f-ui:"Instrument Sans",system-ui,sans-serif;
+  --f-mono:"Red Hat Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+/* ---- tokens: dark ---- */
+.atheme[data-theme="dark"],
+html[data-mt="dark"] .atheme:not([data-theme]){
+  --bg:#0c1526; --canvas:#0f1b30; --surface:#15223b; --surface-2:#172642;
+  --sunk:#1c2c49; --border:#27395b; --border-strong:#32466b;
+  --text:#eaf0fb; --muted:#9fb0cc; --faint:#7e8ca6;
+  --primary:#2c5499; --primary-ink:#f3eedd; --dome:#7fa8d9; --azure:#a9c6ec;
+  --primary-weak:#1d3358;
+  --gold:#e0be6a; --gold-deep:#e0be6a; --wood:#c79f63;
+  --doing:#6aa2e0; --delayed:#e3705a; --done:#5fb27a;
+  --danger:#e07a63; --warn:#e0be6a;
+  --shadow-1:0 1px 2px rgba(0,0,0,.3);
+  --shadow-2:0 6px 22px rgba(0,0,0,.45);
+  --shadow-card:0 22px 60px -24px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+
+.aframe{width:100%;height:100%;display:block}
+.atheme,.atheme *{box-sizing:border-box}
+.atheme{font-family:var(--f-ui);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.45}
+.atheme button{font-family:var(--f-ui);cursor:pointer;border:none;background:none;color:inherit}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* =============================================================  FRAMES  */
+/* web: the card centered on the full soft canvas (the whole login viewport) */
+.webframe{position:relative;width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb,var(--gold) 8%,transparent), transparent 60%),
+    var(--canvas);
+  padding:40px}
+.webframe .footnote{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);display:flex;align-items:center;gap:8px}
+.webframe .footnote .glyph{font-family:var(--f-display);font-style:italic;font-size:12px;letter-spacing:.01em;
+  text-transform:none;color:var(--gold-deep)}
+
+/* phone: slim iOS shell, card centered on canvas */
+.phone{position:relative;width:100%;height:100%;display:flex;flex-direction:column;
+  background:var(--canvas);overflow:hidden}
+.phone .statusbar{flex:none;height:46px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px 0 26px;font-family:var(--f-ui);font-weight:600;font-size:14px;color:var(--text);background:var(--canvas)}
+.phone .statusbar .sb-r{display:flex;align-items:center;gap:6px}
+.phone .statusbar svg{display:block}
+.phone .pbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:18px 20px 30px;overflow-y:auto;scrollbar-width:none}
+.phone .pbody::-webkit-scrollbar{display:none}
+.phone .homebar{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:130px;height:5px;
+  border-radius:3px;background:var(--text);opacity:.8}
+
+/* =============================================================  THE CARD  */
+.authcard{width:100%;max-width:392px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);box-shadow:var(--shadow-card);padding:34px 32px 30px}
+.phone .authcard{box-shadow:var(--shadow-1);padding:30px 24px 26px}
+
+/* brand row: lotus mark + wordmark */
+.brandrow{display:flex;align-items:center;gap:11px;margin-bottom:22px}
+.brandrow .mark{width:36px;height:36px;object-fit:contain;flex:none}
+.brandrow .brandcol{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.brandrow .nm{font-family:var(--f-display);font-weight:600;font-size:17px;letter-spacing:-.015em;color:var(--text);line-height:1.1;white-space:nowrap}
+.brandrow .bytag{font-family:var(--f-display);font-style:italic;font-size:11px;color:var(--gold-deep);line-height:1.25;margin-top:2px;white-space:nowrap}
+.brandrow .nm b{color:var(--primary);font-weight:600}
+.atheme[data-theme="dark"] .brandrow .nm b,
+html[data-mt="dark"] .atheme:not([data-theme]) .brandrow .nm b{color:var(--azure)}
+
+/* heading block */
+.authcard h1{font-family:var(--f-display);font-weight:600;font-size:23px;letter-spacing:-.015em;
+  color:var(--text);margin:0 0 6px;line-height:1.18;text-wrap:balance}
+.authcard .lede{font-size:13.5px;color:var(--muted);margin:0 0 22px;line-height:1.5;text-wrap:pretty}
+.authcard .lede b{color:var(--text);font-weight:600}
+
+/* status glyph (check-email / success / expired) */
+.glyphbadge{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:16px;
+  background:var(--primary-weak);color:var(--dome)}
+.glyphbadge svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.glyphbadge.ok{background:color-mix(in srgb,var(--done) 16%,var(--surface));color:var(--done)}
+.glyphbadge.warn{background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger)}
+
+/* fields */
+.afield{margin-bottom:15px}
+.afield>label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.afield .inwrap{position:relative;display:flex;align-items:center}
+.atheme input{width:100%;font-family:var(--f-ui);font-size:14.5px;color:var(--text);
+  background-color:var(--surface);border:1px solid var(--border);border-radius:var(--r-ctl);padding:11px 12px}
+.atheme input::placeholder{color:var(--faint)}
+.atheme input:focus{outline:none;border-color:var(--dome);box-shadow:0 0 0 3px var(--primary-weak)}
+.atheme input[readonly]{background-color:var(--surface-2);color:var(--muted);cursor:default}
+.atheme input[readonly]:focus{border-color:var(--border);box-shadow:none}
+.afield .inwrap input{padding-right:42px}
+.afield .peek{position:absolute;right:4px;width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
+.afield .peek svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.afield .hint{font-size:12px;color:var(--faint);margin-top:6px;line-height:1.4}
+
+/* primary full-width button */
+.atheme .btn-full{width:100%;background:var(--primary);color:var(--primary-ink);border-radius:var(--r-ctl);
+  padding:13px 0;font-weight:600;font-size:14.5px;letter-spacing:.005em;
+  transition:box-shadow .14s,filter .14s;box-shadow:var(--shadow-1)}
+.atheme .btn-full:hover{box-shadow:0 6px 16px -4px rgba(30,58,110,.4);filter:saturate(1.05) brightness(1.04)}
+.btn-row{margin-top:6px}
+
+/* text links */
+.linkline{text-align:center;margin-top:16px}
+.linkline .pre{font-size:13px;color:var(--muted)}
+.atheme .linkbtn{font-size:13px;font-weight:600;color:var(--dome);background:none;border:none;padding:4px 6px;border-radius:6px;
+  display:inline-flex;align-items:center;gap:6px}
+.atheme[data-theme="dark"] .linkbtn,
+html[data-mt="dark"] .atheme:not([data-theme]) .linkbtn{color:var(--azure)}
+.linkbtn:hover{text-decoration:underline}
+.linkbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* quiet fallback callout */
+.callout{margin-top:20px;padding:12px 14px;background:var(--sunk);border-radius:var(--r-ctl);
+  font-size:12.5px;color:var(--muted);line-height:1.5;text-align:center}
+.callout b{color:var(--text);font-weight:600}
+
+/* =============================================================  EMAIL  */
+/* generic email-client chrome (neutral, NOT temple-tokened) */
+.mailframe{position:relative;width:100%;height:100%;display:flex;flex-direction:column;
+  background:#eceae5;padding:30px;align-items:center;justify-content:center}
+html[data-mt="dark"] .atheme:not([data-theme]) .mailframe,
+.atheme[data-theme="dark"] .mailframe{background:#1a1e26}
+.mailclient{width:100%;max-width:580px;background:var(--mc-surface,#ffffff);border:1px solid var(--mc-border,#e2ded7);
+  border-radius:14px;box-shadow:0 18px 50px -24px rgba(20,24,32,.4);overflow:hidden;
+  --mc-surface:#ffffff;--mc-border:#e6e2da;--mc-text:#23262b;--mc-muted:#6b7180;--mc-sunk:#f4f1ea}
+html[data-mt="dark"] .atheme:not([data-theme]) .mailclient,
+.atheme[data-theme="dark"] .mailclient{--mc-surface:#21262f;--mc-border:#333a45;--mc-text:#e9ecf1;--mc-muted:#9aa3b2;--mc-sunk:#1a1e26}
+.mailclient{background:var(--mc-surface)}
+.mailhead{padding:16px 22px;border-bottom:1px solid var(--mc-border);background:var(--mc-sunk)}
+.mailhead .subj{font-family:var(--f-ui);font-weight:700;font-size:15.5px;color:var(--mc-text);letter-spacing:-.01em}
+.mailhead .meta{display:flex;align-items:center;gap:10px;margin-top:9px}
+.mailhead .mav{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;background:#1e3a6e;overflow:hidden}
+.mailhead .mav img{width:22px;height:22px;object-fit:contain}
+.mailhead .mfrom{font-family:var(--f-ui);font-size:13px;color:var(--mc-text)}
+.mailhead .mfrom .addr{color:var(--mc-muted);font-size:12px}
+.mailhead .mto{margin-left:auto;font-size:11.5px;color:var(--mc-muted);font-family:var(--f-mono)}
+
+/* the actual message body — branded (temple surface) */
+.mailbody{padding:30px 30px 34px;background:var(--surface);color:var(--text);font-family:var(--f-ui)}
+.mailbody .brandrow{margin-bottom:24px}
+.mailbody p{margin:0 0 14px;font-size:14px;line-height:1.6;color:var(--text)}
+.mailbody p.greet{font-size:15px}
+.mailbody .mbtn-wrap{margin:24px 0 22px}
+.mailbody .mbtn{display:inline-block;background:var(--primary);color:var(--primary-ink);text-decoration:none;
+  font-weight:600;font-size:14.5px;padding:14px 30px;border-radius:var(--r-ctl);box-shadow:var(--shadow-1)}
+.mailbody .expire{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--gold-deep);font-weight:600}
+.mailbody .expire svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mailbody .fine{font-size:12.5px;color:var(--muted);line-height:1.55}
+.mailbody .mlink{color:var(--dome);word-break:break-all}
+.atheme[data-theme="dark"] .mailbody .mlink,html[data-mt="dark"] .mailbody .mlink{color:var(--azure)}
+.mailbody .sign{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted)}
+.mailbody .sign .tag{font-family:var(--f-display);font-style:italic;color:var(--gold-deep)}
+
+/* mobile mail variant inside phone */
+.phone .mailmsg{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+  box-shadow:var(--shadow-1);overflow:hidden}
+.phone .mailmsg .mhead{padding:14px 16px;border-bottom:1px solid var(--border)}
+.phone .mailmsg .subj{font-weight:700;font-size:15px;letter-spacing:-.01em;line-height:1.3}
+.phone .mailmsg .meta{display:flex;align-items:center;gap:9px;margin-top:9px}
+.phone .mailmsg .mav{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;background:#1e3a6e;overflow:hidden}
+.phone .mailmsg .mav img{width:19px;height:19px;object-fit:contain}
+.phone .mailmsg .mfrom{font-size:12.5px}
+.phone .mailmsg .mfrom .addr{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
+
+/* =============================================================  ANNOTATION CARD (notes)  */
+.specs{width:100%;min-height:100%;background:#fffdf8;border:1px solid #e4d8bb;padding:22px 22px;overflow:hidden;
+  font-family:"Instrument Sans",system-ui,sans-serif;color:#23262b}
+.specs h3{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:21px;margin:0 0 3px;letter-spacing:-.01em}
+.specs .sub{font-size:13px;color:#5a6172;margin-bottom:18px}
+.specs ol{margin:0;padding:0;list-style:none;counter-reset:n}
+.specs li{counter-increment:n;position:relative;padding:0 0 15px 34px;font-size:13.5px;line-height:1.5;color:#2b2f36}
+.specs li::before{content:counter(n);position:absolute;left:0;top:0;width:23px;height:23px;border-radius:50%;
+  background:#1e3a6e;color:#fbf6ea;font-family:"Red Hat Mono",monospace;font-size:12px;font-weight:600;
+  display:grid;place-items:center}
+.specs li b{font-weight:700}
+.specs li .k{font-family:"Red Hat Mono",monospace;font-size:12px;background:#efe5cc;border-radius:5px;padding:1px 6px;color:#7a5c22}
+.specs .tip{margin-top:16px;padding:12px 13px;background:#e9f0f9;border-radius:10px;font-size:12.5px;line-height:1.5;color:#1e3a6e}
+.specs .tip b{font-weight:700}

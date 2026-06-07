@@ -120,6 +120,28 @@
     "role_admin": "நிர்வாகி",
     "role_member": "உறுப்பினர்"
   },
+  "invite": {
+    "title": "ஒருவரை அழைக்கவும்",
+    "hint": "இந்தக் குழுவில் சேர அவர்களுக்கு ஒரு மின்னஞ்சல் கிடைக்கும். புதியவர்கள் அழைப்பிலிருந்து தங்கள் கணக்கை உருவாக்கலாம்.",
+    "send": "அழைப்பை அனுப்பு",
+    "sent": "{{email}}-க்கு அழைப்பு அனுப்பப்பட்டது.",
+    "error": "அழைப்பை அனுப்ப முடியவில்லை.",
+    "pending": "நிலுவையில் உள்ள அழைப்புகள்",
+    "revoke": "ரத்து செய்",
+    "confirmRevoke": "இந்த அழைப்பை ரத்து செய்யவா?"
+  },
+  "accept": {
+    "title": "{{org}}-இல் சேரவும்",
+    "subtitle": "உங்களை {{org}}-இல் {{role}} ஆக அழைத்துள்ளனர் ({{email}}).",
+    "join": "{{org}}-இல் சேரவும்",
+    "joining": "சேர்கிறது…",
+    "joinedTitle": "{{org}}-க்கு வரவேற்கிறோம்",
+    "joinedBody": "நீங்கள் குழுவில் சேர்ந்துவிட்டீர்கள். தொடங்க உள்நுழையவும்.",
+    "invalidTitle": "அழைப்பு செல்லாது",
+    "invalidBody": "இந்த அழைப்பு செல்லாது அல்லது காலாவதியாகிவிட்டது. புதியதை அனுப்ப உங்கள் குழு நிர்வாகியிடம் கேளுங்கள்.",
+    "loading": "ஏற்றுகிறது…",
+    "error": "ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்."
+  },
   "task": {
     "edit": "பணியைத் திருத்து",
     "new": "புதிய பணி",
@@ -152,7 +174,9 @@
     "subtasks": "துணைப் பணிகள்",
     "addSubtask": "ஒரு துணைப் பணியைச் சேர்…",
     "comments": "கருத்துகள்",
-    "addComment": "ஒரு கருத்தைச் சேர்… (குறிப்பிட @ தட்டச்சு செய்)"
+    "addComment": "ஒரு கருத்தைச் சேர்… (குறிப்பிட @ தட்டச்சு செய்)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "அனைத்து திட்டங்கள்",
@@ -198,7 +222,8 @@
     "groups": "குழுக்கள்",
     "access": "அணுகல்",
     "tiers": "நிலைகள்",
-    "activity": "செயல்பாடு"
+    "activity": "செயல்பாடு",
+    "holidays": "விடுமுறை நாட்கள்"
   },
   "empty": {
     "approvals": "ஒப்புதலுக்கு எதுவும் காத்திருக்கவில்லை.",
@@ -379,6 +404,7 @@
     "openDay": "இந்த நாளின் பணிகளைத் திற",
     "noTasksWeek": "இந்த வாரம் பணிகள் இல்லை.",
     "thisMonth": "இந்த மாதம்",
+    "more": "மேலும்",
     "dow": {
       "sun": "ஞா",
       "mon": "திং",
@@ -387,7 +413,9 @@
       "thu": "வி",
       "fri": "வெ",
       "sat": "ச"
-    }
+    },
+    "noDate": "தேதி இல்லை",
+    "noDateTitle": "தேதி இல்லை — {{count}} பணிகள்"
   },
   "del": {
     "kindProject": "திட்டம்",
@@ -412,7 +440,10 @@
     "done": "முடிந்தது"
   },
   "subtask": {
-    "assignee": "பொறுப்பாளர்"
+    "assignee": "பொறுப்பாளர்",
+    "back": "துணைப் பணிகளுக்குத் திரும்பு",
+    "confirmDelete": "இந்த துணைப் பணியை நீக்கவா?",
+    "editDetails": "விவரங்களைத் திருத்து"
   },
   "import": {
     "button": "இறக்குமதி ▾",
@@ -563,11 +594,54 @@
     "exclusionsHelp": "மறுப்பு எப்போதும் வெல்லும், உறுப்பினருக்கு ஒதுக்கப்பட்ட பணியின் மீதும் கூட (மறு > ஒதுக்கீடு > அனுமதி). குறைவாகப் பயன்படுத்தவும்.",
     "noExclusions": "விலக்குகள் இல்லை.",
     "taskIdPh": "பணி ID (எ.கா. 318)",
-    "selectHide": "எதை மறைக்க வேண்டும் என்பதைத் தேர்ந்தெடு…"
+    "selectHide": "எதை மறைக்க வேண்டும் என்பதைத் தேர்ந்தெடு…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "இந்தக் கருத்தை நீக்கவா?",
     "you": "நீங்கள்",
     "teamMember": "குழு உறுப்பினர்"
+  },
+  "holidays": {
+    "title": "இந்த அமைப்பின் நாட்காட்டிகளில் காட்டப்படும் விடுமுறை தொகுப்புகள்",
+    "help": "உலகெங்கிலும் உள்ள உறுப்பினர்கள் நீங்கள் இங்கே இயக்குவதை மட்டுமே காண்கிறார்கள்.",
+    "set": {
+      "us_federal": "US கூட்டாட்சி விடுமுறை நாட்கள்",
+      "us_observances": "US அனுஷ்டானங்கள் (Mother's/Father's Day, பகல் நேர சேமிப்பு)",
+      "christian": "கிறிஸ்தவ / மத",
+      "hindu_festivals": "Hindu / யோகா விழாக்கள்",
+      "ananda_lineage": "Ananda மரபு நாட்கள்"
+    },
+    "save": "சேமி",
+    "saved": "சேமிக்கப்பட்டது"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

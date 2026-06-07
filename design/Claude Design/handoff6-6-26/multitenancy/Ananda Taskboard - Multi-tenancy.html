@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Multi-tenancy · Org switcher · Invites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="ananda-mt.css" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .seg{display:inline-flex;background:#efe5cc;border-radius:999px;padding:3px;gap:2px}
+  #toolbar .seg button{border:none;border-radius:999px;padding:5px 14px;background:transparent;color:#5a6172;
+    font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  #toolbar .seg button.on{background:#fffdf8;color:#23262b;box-shadow:0 1px 2px rgba(30,58,110,.12)}
+  #toolbar .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:900px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Multi-tenancy</span></div>
+  <span class="sep"></span>
+  <div class="seg" id="themeSeg">
+    <button data-mt="light" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>Light</button>
+    <button data-mt="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark</button>
+  </div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="mt-screens.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="mt-canvas.jsx"></script>
+
+<script type="text/babel">
+const A = window.MT;
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      {/* ---------- ORG SWITCHER ---------- */}
+      <DCSection id="org-web" title="Org switcher — web" subtitle="A compact pill in the topbar, beside the brand. The dropdown lists every org you belong to, with your role; the active one is checked and never hidden.">
+        {Web({ id: 'os-web', label: 'Superuser view', html: A.webOrgSwitcher(true), h: 640 })}
+        {Web({ id: 'os-web-member', label: 'Member view — no Platform overview', html: A.webOrgSwitcher(false), h: 600 })}
+        {Note({ id: 'os-note', label: 'Notes', title: 'Org switcher', sub: 'Topbar · shown only when you belong to >1 org', items: [
+          'Sits <b>between the brand and the action cluster</b> as a pill: org glyph + a ' + k + 'ORGANIZATION</span> mono micro-label + the org name + caret. Always visible so "which org am I in" is never in doubt.',
+          'The dropdown shows each org with its <b>glyph, name, city, and your role</b> (' + k + 'Admin</span>/' + k + 'Member</span> pill). The active org carries a navy check and a tinted row.',
+          '<b>Platform overview only renders for superusers</b> — a regular member never sees it (compare the two dropdowns). The switcher itself shows for <b>anyone in &gt;1 org</b>; switching reloads the board in that org\u2019s context.',
+          'Hidden entirely for single-org users — no empty chrome.',
+        ], tip: 'Glyph color is per-org (navy / teal / violet here), reused everywhere the org appears.' })}
+      </DCSection>
+
+      <DCSection id="org-mobile" title="Org switcher — mobile" subtitle="The topbar collapses; the active org becomes the app-bar title. Tapping it opens a bottom sheet.">
+        {Mob({ id: 'os-mob', label: 'App bar + switch sheet', html: A.phoneOrgSwitcher() })}
+        {Note({ id: 'os-mob-note', label: 'Notes', title: 'Org switcher · mobile', sub: 'Active org is the app-bar title', items: [
+          'The app bar leads with the <b>org glyph + active org name + caret</b>; "Ananda Taskboard" drops to a mono sub-label. The org is never hidden.',
+          'Tap the title → a <b>bottom sheet</b> lists your orgs (glyph, name, role pill, check). Tap to switch.',
+          'Superuser gets <b>Platform overview</b> below a divider — a regular member never sees it. <b>+ New task</b> stays in the app bar so it\u2019s always one tap away.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- PLATFORM OVERVIEW ---------- */}
+      <DCSection id="plat-web" title="Platform overview — web" subtitle="Superuser-only org directory. Per org: location, a stat row, admin contacts, and a member roster — metadata only, never task contents.">
+        {Web({ id: 'pl-web', label: 'Org directory (modal)', html: A.webPlatform(), h: 1180 })}
+        {Note({ id: 'pl-note', label: 'Notes', title: 'Platform overview', sub: 'Superuser · the dialog shell, scaled up', items: [
+          'A standard <b>wide dialog</b> (760px) over the dimmed app. A summary strip totals orgs / projects / tasks / members.',
+          'Each <b>org card</b>: glyph + name + city ( + a dashed <b>Pending verification</b> card and gold tag when inactive), a 4-up stat row, and the <b>admin contacts</b>.',
+          'The <b>Member roster</b> is a <b>collapsible section</b> per org (rotating chevron + count) — same affordance as the mobile list and the app\u2019s Trash rows. Expand to reveal the Member · Email · Role · Tier table.',
+          'A persistent <b>' + k + 'Metadata only</span></b> note sits on every roster header — the superuser sees structure and people, <b>never</b> task contents.',
+        ] })}
+      </DCSection>
+
+      <DCSection id="plat-mobile" title="Platform overview — mobile" subtitle="The wide roster table reflows into stacked label/value cards.">
+        {Mob({ id: 'pl-mob', label: 'List → expand', html: A.phonePlatform(), h: 1360 })}
+        {Note({ id: 'pl-mob-note', label: 'Notes', title: 'Platform overview · mobile', sub: 'A list of orgs that expand', items: [
+          'Opens as a <b>full-screen route</b> (X to close). Orgs are a <b>collapsed list</b> — glyph, name, location, and member count — so the whole platform scans at a glance.',
+          'Tap a row to <b>expand</b> it (rotating chevron, same affordance as Trash) revealing the stat line, admin contacts, and the roster.',
+          'Inside an expanded org the roster <b>reflows to stacked cards</b> — one per member, each a column of label : value rows (Email, Role, Tier).',
+          'The <b>Metadata only</b> guarantee rides along at the top and on each roster.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- TEAM → INVITE ---------- */}
+      <DCSection id="invite-web" title="Team → Invite — web" subtitle="A new ‘Invite someone’ card and a Pending-invitations list sit above the existing Add-member and Members table.">
+        {Web({ id: 'iv-web', label: 'Invite + pending', html: A.webInvite(), h: 1040 })}
+        {Note({ id: 'iv-note', label: 'Notes', title: 'Invite section', sub: 'Inside Team & Permissions', items: [
+          '<b>Invite someone</b> card: Email + Role, then a full-width <b>Tier</b> select whose options spell out the visibility scope — <b>Volunteer</b> (assigned tasks only), <b>Coordinator</b> (their sub-project), <b>Lead</b> (their project). <b>Tier disables when Role = Admin</b> (admins see everything). A green <b>"Invitation sent to {email}"</b> line confirms.',
+          '<b>Pending invitations</b> list: each row is Email (with a sent-ago hint) · Role · Tier · <b>Revoke</b>. A small gold dot flags the section.',
+          'Sits <b>above</b> the existing "Add member directly" card and the Members table — invites are the primary path; direct-add is the fallback.',
+          'All controls reuse the dialog\u2019s field, pill, and table styles — custom select carets, no native chrome.',
+        ] })}
+      </DCSection>
+
+      <DCSection id="invite-mobile" title="Team → Invite — mobile" subtitle="Fields stack full-width; the pending list becomes stacked rows.">
+        {Mob({ id: 'iv-mob', label: 'Invite + pending', html: A.phoneInvite(), h: 1040 })}
+        {Note({ id: 'iv-mob-note', label: 'Notes', title: 'Invite · mobile', sub: 'Form stacks; ≥16px inputs', items: [
+          'Email / Role / Tier <b>stack full-width</b>; the send button is full-width near the thumb. Inputs hold ≥16px to avoid iOS zoom.',
+          'Each pending invite is a <b>card</b>: email on top with Revoke, role + tier + sent-ago below.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- ACCEPT INVITATION ---------- */}
+      <DCSection id="accept-web" title="Accept invitation — web" subtitle="From the invite email link. The same centered auth card, with an org identity banner. Three paths: existing account, new person, and the dead-end states.">
+        {Web({ id: 'ac-existing', label: '1 · Existing account', html: A.webAccept('existing'), h: 680 })}
+        {Web({ id: 'ac-new', label: '2 · New person', html: A.webAccept('newperson'), h: 680 })}
+        {Web({ id: 'ac-welcome', label: '3 · Welcome', html: A.webAccept('welcome'), h: 680 })}
+        {Web({ id: 'ac-invalid', label: 'Invalid / expired', html: A.webAccept('invalid'), h: 680 })}
+        {Note({ id: 'ac-note', label: 'Notes', title: 'Accept invitation', sub: 'Reuses the auth card system', items: [
+          'An <b>org banner</b> (glyph + name + role pill + email) makes the invite unmistakable: "Join {Org} as {role} ({email})".',
+          '<b>Existing account</b> → one <b>Join {Org}</b> button (already signed in) → <b>Welcome to {Org}</b>.',
+          '<b>New person</b> → name + password, then <b>Join {Org}</b> logs them straight in.',
+          '<b>Invalid / expired</b> uses the calm warn-glyph + a quiet "back to sign in" — same no-dead-end tone as the rest of auth.',
+        ], tip: 'Email + role come from the invite token, so the email field is fixed (read-only) — the person can\u2019t change who was invited.' })}
+      </DCSection>
+
+      <DCSection id="accept-mobile" title="Accept invitation — mobile" subtitle="The identical card, centered in the phone viewport.">
+        {Mob({ id: 'ac-m-existing', label: '1 · Existing account', html: A.phoneAccept('existing') })}
+        {Mob({ id: 'ac-m-new', label: '2 · New person', html: A.phoneAccept('newperson') })}
+        {Mob({ id: 'ac-m-welcome', label: '3 · Welcome', html: A.phoneAccept('welcome') })}
+        {Mob({ id: 'ac-m-invalid', label: 'Invalid / expired', html: A.phoneAccept('invalid') })}
+      </DCSection>
+
+      {/* ---------- PARITY ---------- */}
+      <DCSection id="parity" title="Light + dark parity" subtitle="Every surface ships both themes from the same tokens.">
+        {Web({ id: 'p-os-d', label: 'Org switcher · dark', html: A.webOrgSwitcher(), theme: 'dark', h: 640 })}
+        {Web({ id: 'p-iv-d', label: 'Invite · dark', html: A.webInvite(), theme: 'dark', h: 1040 })}
+        {Mob({ id: 'p-pl-d', label: 'Platform · dark', html: A.phonePlatform(), theme: 'dark', h: 1360 })}
+        {Mob({ id: 'p-ac-d', label: 'Accept · dark', html: A.phoneAccept('existing'), theme: 'dark' })}
+        {Note({ id: 'p-note', label: 'Notes', title: 'One token set', sub: 'Light + dark, no forks', items: [
+          'Org glyphs, role/tier pills, the dialog shell, and the auth card all read from the same <b>Temple-of-Light</b> variables — dark is a token swap, not a separate design.',
+          'Native controls follow via ' + k + 'color-scheme</span>; selects keep the <b>custom caret</b> in both themes.',
+        ] })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<template id="__bundler_thumbnail" data-bg-color="#0f1b30">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0f1b30"/>
+    <g transform="translate(600 400)">
+      <rect x="-150" y="-150" width="300" height="300" rx="48" fill="#1e3a6e"/>
+      <text x="0" y="40" font-family="Red Hat Mono, monospace" font-size="120" font-weight="700" fill="#fbf6ea" text-anchor="middle">LA</text>
+    </g>
+  </svg>
+</template>
+</body>
+</html>

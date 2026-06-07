@@ -4,12 +4,14 @@ import { addDays, addMonths, format, getDay, getDaysInMonth, startOfMonth, start
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
-import { useCalendarRange, type CalendarViewProps } from "../calendar";
-import { Modal, Spinner, DueFlag } from "./common";
+import { dayCells, useCalendarRange, type CalendarViewProps } from "../calendar";
+import { Modal, Spinner, DueFlag, CalAnnounceIcon, CalHolidayIcon } from "./common";
+import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
-import { EVENT_ICON, type CalendarInstance, type EventSpan, type Task } from "../types";
+import { UndatedTasks } from "./UndatedTasks";
+import { type CalendarInstance, type EventSpan, type Holiday, type Task } from "../types";
 
-export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
+export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [dayOpen, setDayOpen] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
   const gridStart = startOfWeek(month, { weekStartsOn: 0 });
   const from = format(gridStart, "yyyy-MM-dd");
   const to = format(addDays(gridStart, 41), "yyyy-MM-dd");
-  const { items, events } = useCalendarRange(from, to, projectId, subprojectId, refreshKey);
+  const { items, events, holidays, undated } = useCalendarRange(from, to, projectId, subprojectId);
 
   const eventsByDate = useMemo(() => {
     const m = new Map<string, EventSpan[]>();
@@ -36,6 +38,15 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
     }
     return m;
   }, [events, from, to]);
+
+  const holidaysByDate = useMemo(() => {
+    const m = new Map<string, Holiday[]>();
+    for (const h of holidays) {
+      if (!m.has(h.start)) m.set(h.start, []);
+      m.get(h.start)!.push(h);
+    }
+    return m;
+  }, [holidays]);
 
   const byDate = useMemo(() => {
     const m = new Map<string, CalendarInstance[]>();
@@ -77,6 +88,7 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
           <button className="btn-secondary icon-btn" onClick={() => setMonth(addMonths(month, 1))} aria-label={t("cal.next")}><ChevronRight /></button>
         </div>
         <h2>{format(month, "MMMM yyyy", { locale: dfLocale() })}</h2>
+        <UndatedTasks undated={undated} colorByProject={colorByProject} onOpen={open} />
       </div>
       {!items ? (
         <Spinner />
@@ -100,16 +112,22 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
               const cls = isToday ? "today" : hasOverdue ? "has-overdue" : hasSoon ? "has-soon" : iso < today ? "past" : "future";
               return (
                 <button key={iso} className={`mcell ${cls}`} data-date={iso}
-                  onClick={() => (dayItems.length || dayEvents.length) && setDayOpen(iso)}>
+                  onClick={() => (dayItems.length || dayEvents.length || (holidaysByDate.get(iso)?.length)) && setDayOpen(iso)}>
                   <div className="dh">
                     <span className="day-num">{dayNum}</span>
                     {isToday && <span className="today-tag">{t("cal.today", "Today")}</span>}
                     {hasOverdue && <DueFlag kind="overdue" size={13} title={t("list.missedDeadline")} />}
                     {!hasOverdue && hasSoon && <DueFlag kind="soon" size={13} title={t("list.dueSoon")} />}
                   </div>
-                  {dayEvents.map((e, k) => (
-                    <div key={`ev-${k}`} className="mev" title={e.title}>{EVENT_ICON[e.kind]} {e.title}</div>
-                  ))}
+                  <DayCellLines
+                    {...dayCells(
+                      dayEvents.map((e) => ({ title: e.title })),
+                      holidaysByDate.get(iso) ?? [],
+                      3,
+                    )}
+                    cls="mev"
+                    moreLabel={t("cal.more", "more")}
+                  />
                   {dayItems.length > 0 && (
                     <div className="badges">
                       {countsByColor(dayItems).map(([c, n]) => (
@@ -125,7 +143,14 @@ export function MonthlyView({ projectId, subprojectId, refreshKey, onEdit }: Cal
           {dayOpen && (
             <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
               {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
-                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>{EVENT_ICON[e.kind]} {e.title}</div>
+                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>
+                  <CalAnnounceIcon size={14} /><span className="cal-line-txt">{e.title}</span>
+                </div>
+              ))}
+              {(holidaysByDate.get(dayOpen) ?? []).map((h, k) => (
+                <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>
+                  <CalHolidayIcon size={14} /><span className="cal-line-txt">{h.title}</span>
+                </div>
               ))}
               <DayTaskList items={byDate.get(dayOpen) ?? []} colorByProject={colorByProject} onOpen={open} />
             </Modal>

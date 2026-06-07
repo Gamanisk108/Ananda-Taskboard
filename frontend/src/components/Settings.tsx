@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon } from "lucide-react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 
@@ -25,7 +26,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title={t("modals.settings")} onClose={onClose}>
+    <Modal icon={<SettingsIcon />} title={t("modals.settings")} onClose={onClose}>
       {!s ? <Spinner /> : (
         <>
           <h3 className="section-title">{t("settings.pushTime")}</h3>
@@ -110,7 +111,7 @@ function StatusManager() {
           <label className="muted" style={{ display: "flex", gap: 4, alignItems: "center", margin: 0, whiteSpace: "nowrap" }}>
             <input type="checkbox" style={{ width: "auto" }} checked={s.is_complete} onChange={(e) => patch(s, { is_complete: e.target.checked })} /> {t("settings.complete")}
           </label>
-          <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(s)} disabled={idx === 0}>✕</button>
+          <button type="button" className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => remove(s)} disabled={idx === 0}><X size={16} /></button>
         </div>
       ))}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -141,7 +142,11 @@ const WD_TOGGLES = [
 ];
 // date-fns weekday() order Mon=0..Sun=6 → catalog day-of-week keys.
 const WD_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-const KIND_ICON: Record<EvKind, string> = { single: "📍", yearly: "🎂", range: "📌", repeating: "🔁" };
+// Line-art marker per event kind (design rule #5 — no emoji icons).
+function KindIcon({ kind }: { kind: EvKind }) {
+  const Icon = kind === "yearly" ? Cake : kind === "range" ? CalendarRange : kind === "repeating" ? Repeat : Calendar;
+  return <Icon size={14} style={{ verticalAlign: "-2px", color: "var(--muted)" }} />;
+}
 
 type EndMode = "never" | "weeks" | "until";
 
@@ -242,10 +247,10 @@ function EventsManager() {
 
       {list.map((e) => (
         <div key={e.id} className="assignee-row" style={{ justifyContent: "space-between" }}>
-          <span>{KIND_ICON[e.kind]} <strong>{e.title}</strong> · <span className="muted">{summarize(e)}</span></span>
+          <span><KindIcon kind={e.kind} /> <strong>{e.title}</strong> · <span className="muted">{summarize(e)}</span></span>
           <span style={{ display: "flex", gap: 4 }}>
             <button type="button" className="btn-ghost" onClick={() => startEdit(e)}>{t("common.edit")}</button>
-            <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(e.id)}>✕</button>
+            <button type="button" className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => remove(e.id)}><X size={16} /></button>
           </span>
         </div>
       ))}

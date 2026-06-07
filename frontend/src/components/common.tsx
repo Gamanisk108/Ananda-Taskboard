@@ -1,11 +1,87 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
 
 export function ColorDot({ color }: { color: string }) {
   return <span className="dot" style={{ background: color }} />;
+}
+
+export interface MultiSelectOption {
+  value: string;        // stable key (e.g. a stringified id or status key)
+  label: string;
+  color?: string;       // optional leading dot
+  section?: string;     // optional group header (e.g. "People" / "Groups")
+}
+
+/** A checkbox-dropdown filter. Closed button shows the first pick + "+N"; the open
+ *  popover is a checkbox list (optionally grouped by `section`). Multi-select with
+ *  OR semantics is up to the caller. Closes on outside-click / Escape. */
+export function MultiSelect({
+  options, selected, onChange, placeholder, testId, width,
+}: {
+  options: MultiSelectOption[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+  placeholder: string;
+  testId?: string;
+  width?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const selectedSet = new Set(selected);
+  const chosen = options.filter((o) => selectedSet.has(o.value));
+  const label = chosen.length === 0 ? placeholder
+    : chosen.length === 1 ? chosen[0].label
+    : `${chosen[0].label} +${chosen.length - 1}`;
+
+  function toggle(v: string) {
+    onChange(selectedSet.has(v) ? selected.filter((x) => x !== v) : [...selected, v]);
+  }
+
+  // Preserve option order while inserting a header whenever the section changes.
+  let lastSection: string | undefined;
+
+  return (
+    <div className={`ms${chosen.length ? " on" : ""}`} ref={ref} data-testid={testId} style={width ? { width } : undefined}>
+      <button type="button" className="ms-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} title={label}>
+        <span className="ms-label">{label}</span>
+        <span className="ms-caret" aria-hidden>▾</span>
+      </button>
+      {open && (
+        <div className="ms-pop" role="listbox">
+          {options.length === 0 && <div className="ms-empty">—</div>}
+          {options.map((o) => {
+            const header = o.section && o.section !== lastSection ? o.section : null;
+            lastSection = o.section;
+            return (
+              <div key={o.value}>
+                {header && <div className="ms-section">{header}</div>}
+                <label className="ms-opt">
+                  <input type="checkbox" checked={selectedSet.has(o.value)} onChange={() => toggle(o.value)} />
+                  {o.color && <span className="dot" style={{ background: o.color }} />}
+                  <span className="ms-opt-label">{o.label}</span>
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Chevron-based priority badge (own SVG paths — not Jira's icons). Double
@@ -53,6 +129,31 @@ export function DueFlag({ kind, size = 14, title }: { kind: "overdue" | "soon"; 
   );
 }
 
+/** Calendar announcement (user event) marker — line-art megaphone (design spec).
+ *  Holidays use CalHolidayIcon. Both inherit `currentColor` so the parent
+ *  .mev / .ev color rule tints them. */
+export function CalAnnounceIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"
+      style={{ flex: "none" }} aria-hidden="true">
+      <path d="M3 11v2a2 2 0 0 0 2 2h2l8 5V4L7 9H5a2 2 0 0 0-2 2z" />
+      <path d="M16.8 8.6a4 4 0 0 1 0 6.8" />
+    </svg>
+  );
+}
+
+/** Calendar holiday marker — line-art star (design spec). */
+export function CalHolidayIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"
+      style={{ flex: "none" }} aria-hidden="true">
+      <path d="M12 3 14.6 8.6 20.7 9.4 16.2 13.6 17.4 19.7 12 16.7 6.6 19.7 7.8 13.6 3.3 9.4 9.4 8.6 Z" />
+    </svg>
+  );
+}
+
 export function StatusPill({ status, editable }: { status: string; editable?: boolean }) {
   const c = statusColor(status);
   return (
@@ -88,23 +189,40 @@ export function Modal({
   onClose,
   children,
   wide,
+  icon,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Optional line-art section-header icon shown before the title (design rule #6). */
+  icon?: ReactNode;
 }) {
   const { t } = useTranslation();
+  // Escape closes the modal (app-wide expectation). Backdrop click closes too
+  // (onClick below); the inner card stops propagation so clicks inside don't.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="card modal sheet rise"
         style={{ maxWidth: wide ? 760 : 520 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         <div className="modal-head">
-          <h2 style={{ fontSize: 18 }}>{title}</h2>
-          <button className="btn-ghost" onClick={onClose} aria-label={t("common.close")}>✕</button>
+          <h2 style={{ fontSize: 18 }}>
+            {icon && <span className="sh-icn">{icon}</span>}
+            {title}
+          </h2>
+          <button className="btn-ghost icon-btn" onClick={onClose} aria-label={t("common.close")}><X size={14} /></button>
         </div>
         <div className="modal-body">{children}</div>
       </div>

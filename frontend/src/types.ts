@@ -1,13 +1,16 @@
 export type Level = "member" | "viewer";
 export type Approval = "pending" | "approved" | "rejected";
 
-/** How many tasks in an accessible scope a grant lets the holder SEE. */
-export type Sees = "own" | "subproject" | "project";
+/** A member's "Access" — how many tasks they can SEE. */
+export type Sees = "own" | "subproject" | "project" | "org";
 export const SEES_LABEL: Record<Sees, string> = {
-  own: "Own tasks only",
-  subproject: "All tasks in the sub-project",
-  project: "All tasks in the project",
+  own: "Tasks Only",
+  subproject: "Sub-Project Only",
+  project: "Full Project",
+  org: "Organization",
 };
+/** Dropdown / ranking order: narrowest → widest. */
+export const SEES_ORDER: Record<Sees, number> = { own: 1, subproject: 2, project: 3, org: 4 };
 
 export interface SubProjectNode {
   id: number;
@@ -15,6 +18,7 @@ export interface SubProjectNode {
   color: string;
   is_default: boolean;
   level: Level;
+  created_at?: string;
 }
 export interface ProjectNode {
   id: number;
@@ -22,6 +26,7 @@ export interface ProjectNode {
   color: string;
   show_project_overview: boolean;
   subprojects: SubProjectNode[];
+  created_at?: string;
 }
 export interface Tree {
   projects: ProjectNode[];
@@ -122,7 +127,15 @@ export interface Subtask {
   title: string;
   status: string;
   order: number;
-  assignee: number | null;
+  priority: number;
+  details: string;
+  requirements: string;
+  timeline_start: string | null;
+  deadline: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  assignees: number[];
+  assignee_groups: number[];
 }
 
 export interface UserLite {
@@ -166,6 +179,10 @@ export interface EventSpan {
   end: string;
 }
 
-export const EVENT_ICON: Record<EventKind, string> = {
-  single: "📍", yearly: "🎂", range: "📌", repeating: "🔁",
-};
+export interface Holiday {
+  title: string;
+  set: string;
+  holiday: true;
+  start: string; // YYYY-MM-DD
+  end: string;   // == start (holidays are single-day)
+}

@@ -28,22 +28,38 @@ export function isLoggedIn(): boolean {
   return !!accessToken || !!getRefresh();
 }
 
+// Single-flight: when several requests 401 at once (access token expired mid-
+// session), they share ONE refresh round-trip instead of each firing their own
+// (which spammed the console with refresh noise — QA 2026-06-05).
+let refreshing: Promise<boolean> | null = null;
+
+function doRefresh(): Promise<boolean> {
+  return (async () => {
+    const refresh = getRefresh();
+    if (!refresh) return false;
+    const res = await fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
+    if (!res.ok) {
+      setTokens(null, null);
+      return false;
+    }
+    const data = await res.json();
+    accessToken = data.access;
+    if (data.refresh) localStorage.setItem(REFRESH_KEY, data.refresh);
+    return true;
+  })();
+}
+
 async function refreshAccess(): Promise<boolean> {
-  const refresh = getRefresh();
-  if (!refresh) return false;
-  const res = await fetch("/api/auth/refresh", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh }),
-  });
-  if (!res.ok) {
-    setTokens(null, null);
-    return false;
+  if (!refreshing) refreshing = doRefresh();
+  try {
+    return await refreshing;
+  } finally {
+    refreshing = null;
   }
-  const data = await res.json();
-  accessToken = data.access;
-  if (data.refresh) localStorage.setItem(REFRESH_KEY, data.refresh);
-  return true;
 }
 
 export class ApiError extends Error {
@@ -114,6 +130,28 @@ export const api = {
     });
     if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
     return res.json().catch(() => null);
+  },
+  /** Public, token-gated: what an invitation is for (sign-up vs join). */
+  async previewInvite(id: string, token: string) {
+    const res = await fetch(`/api/invitations/${id}/preview?token=${encodeURIComponent(token)}`);
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    return res.json();
+  },
+  /** Accept an invitation. For a brand-new account the server returns tokens, so
+   *  we log the user straight in and scope them to the org they joined. */
+  async acceptInvite(id: string, body: { token: string; name?: string; password?: string }) {
+    const res = await fetch(`/api/invitations/${id}/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    const data = await res.json();
+    if (data.access) {
+      setTokens(data.access, data.refresh);
+      if (data.org_id) setActiveOrg(data.org_id);
+    }
+    return data;
   },
   /** Confirm an email-verification link (uid+token from the signup email). */
   async verifyEmail(uid: string, token: string) {

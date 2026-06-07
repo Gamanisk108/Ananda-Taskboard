@@ -1,7 +1,20 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import Group, Tier, User
+from .models import Group, Invitation, Tier, User
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    tier_name = serializers.CharField(source="tier.name", read_only=True, default=None)
+    invited_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Invitation
+        fields = ["id", "email", "role", "tier", "tier_name", "access", "status", "invited_by_name", "created_at"]
+        read_only_fields = ["status", "created_at"]
+
+    def get_invited_by_name(self, obj):
+        return (obj.invited_by.name or obj.invited_by.email) if obj.invited_by else None
 
 
 class TierSerializer(serializers.ModelSerializer):

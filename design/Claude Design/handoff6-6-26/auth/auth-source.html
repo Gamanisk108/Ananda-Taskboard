@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Login · Sign up · Forgot password</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="ananda-auth.css" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .seg{display:inline-flex;background:#efe5cc;border-radius:999px;padding:3px;gap:2px}
+  #toolbar .seg button{border:none;border-radius:999px;padding:5px 14px;background:transparent;color:#5a6172;
+    font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  #toolbar .seg button.on{background:#fffdf8;color:#23262b;box-shadow:0 1px 2px rgba(30,58,110,.12)}
+  #toolbar .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:820px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Login &amp; sign up</span></div>
+  <span class="sep"></span>
+  <div class="seg" id="themeSeg">
+    <button data-mt="light" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>Light</button>
+    <button data-mt="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark</button>
+  </div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="auth-screens.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="auth-canvas.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  return (
+    <DesignCanvas>
+
+      {/* ---------- LOGIN + FORGOT PASSWORD ---------- */}
+      <DCSection id="signin-web" title="Login & forgot password — web" subtitle="One centered card on the soft canvas. Sign in, then the whole reset path.">
+        {Web({ id:"w-login", label:"1 · Sign in", state:"login" })}
+        {Web({ id:"w-request", label:"2 · Request reset", state:"request" })}
+        {Web({ id:"w-check", label:"3 · Check your email", state:"check" })}
+        {Web({ id:"w-setnew", label:"4 · Choose a new password", state:"setnew" })}
+        {Web({ id:"w-success", label:"4a · Updated", state:"success" })}
+        {Web({ id:"w-expired", label:"4b · Link expired", state:"expired" })}
+        {Note({ id:"signin-web-notes", label:"Notes", title:"One card, every state", sub:"Login + forgot password", items:[
+          'Every screen is the <b>same centered card</b> — brand row, optional title, labelled fields, one <b>full-width primary</b> button. The flow feels like one place.',
+          '<b>Sign in</b> has Email + Password and a small <b>Forgot password?</b> link under the button.',
+          '<b>Request reset</b> → <b>Check your email</b> shows the <b>same confirmation whether or not the account exists</b> — no account-leak. The email is echoed in <b>bold</b>.',
+          'Copy is <b>short and label-driven</b> so it survives translation into all 13 languages — titles balance, ledes wrap with ' + k + 'text-wrap:pretty</span>.',
+        ], tip:'This is a standalone auth surface — the board/list app lives in the Web & Responsive files.' })}
+      </DCSection>
+
+      <DCSection id="signin-mobile" title="Login & forgot password — responsive" subtitle="The identical card, centered in the phone viewport.">
+        {Mob({ id:"m-login", label:"1 · Sign in", state:"login" })}
+        {Mob({ id:"m-request", label:"2 · Request reset", state:"request" })}
+        {Mob({ id:"m-check", label:"3 · Check your email", state:"check" })}
+        {Mob({ id:"m-setnew", label:"4 · Choose a new password", state:"setnew" })}
+        {Mob({ id:"m-success", label:"4a · Updated", state:"success" })}
+        {Mob({ id:"m-expired", label:"4b · Link expired", state:"expired" })}
+        {Note({ id:"signin-mob-notes", label:"Notes", title:"Same card, phone width", sub:"Responsive auth", items:[
+          'The <b>same HTML/CSS card</b>, centered in the phone body (' + k + 'max-width:392</span>) — web and mobile never drift apart.',
+          'Inputs and the primary button are <b>full-width with ≥44px touch targets</b>; the password field has a tap-to-reveal <b>eye</b>.',
+          '<b>Back to sign in</b> uses an arrow link, never a top nav bar, so screens stay self-contained and translatable.',
+        ], tip:'Responsive web today; the same markup drops into a PWA / native shell later.' })}
+      </DCSection>
+
+      {/* ---------- SIGN UP ---------- */}
+      <DCSection id="signup-web" title="Sign up — web" subtitle="Invite-based join: admins provision members, the new teammate sets their own password.">
+        {Web({ id:"w-signup", label:"1 · Create account", state:"signup" })}
+        {Web({ id:"w-verify", label:"2 · Verify your email", state:"verify" })}
+        {Web({ id:"w-welcome", label:"3 · You're all set", state:"welcome" })}
+        {Web({ id:"w-invexp", label:"Invite expired", state:"inviteexpired" })}
+        {Note({ id:"signup-web-notes", label:"Notes", title:"Invite, not open sign-up", sub:"Sign up", items:[
+          'This is an <b>internal team taskboard</b>, so sign-up is <b>invite-based</b> — it mirrors the reset flow\u2019s “contact your team admin” model. No social login.',
+          'From the invite link: <b>Email is pre-filled and read-only</b> (“From your invitation”), so the teammate only adds their <b>name</b> and a <b>password</b> (≥8 characters).',
+          'Exactly the <b>same card</b> as sign-in. <b>Verify your email</b> reuses the check-email pattern; <b>You\u2019re all set</b> confirms with a green check and one <b>“Go to taskboard”</b> action.',
+          'A stale link shows <b>Invite expired</b> (invites last 7 days) — same calm, no-dead-end tone.',
+        ], tip:'Prefer open sign-up (anyone with an email can join)? Say so and I\u2019ll make Email editable and drop the invite framing.' })}
+      </DCSection>
+
+      <DCSection id="signup-mobile" title="Sign up — responsive" subtitle="The identical sign-up card, centered in the phone viewport.">
+        {Mob({ id:"ms-signup", label:"1 · Create account", state:"signup" })}
+        {Mob({ id:"ms-verify", label:"2 · Verify your email", state:"verify" })}
+        {Mob({ id:"ms-welcome", label:"3 · You're all set", state:"welcome" })}
+        {Mob({ id:"ms-invexp", label:"Invite expired", state:"inviteexpired" })}
+      </DCSection>
+
+      {/* ---------- EMAILS ---------- */}
+      <DCSection id="emails" title="The emails" subtitle="Reset + invite, as they arrive in the inbox and on a phone.">
+        {Raw({ id:"e-reset-web", label:"Reset email · client", html:window.A.emailWeb(), w:660, h:700 })}
+        {Raw({ id:"e-reset-mob", label:"Reset email · phone", html:window.A.emailMobile(), w:390, h:844 })}
+        {Raw({ id:"e-invite-web", label:"Invite email · client", html:window.A.inviteWeb(), w:660, h:680 })}
+        {Raw({ id:"e-invite-mob", label:"Invite email · phone", html:window.A.inviteMobile(), w:390, h:844 })}
+        {Note({ id:"email-notes", label:"Notes", title:"Two emails, one voice", sub:"Reset & invite", items:[
+          '<b>Reset</b> — subject “Reset your Ananda Taskboard password”; one greeting, a prominent <b>Reset password</b> button, <b>expires in 1 hour</b>, and “if you didn\u2019t request this, ignore it.”',
+          '<b>Invite</b> — subject “You\u2019re invited to Ananda Taskboard”; one line, an <b>Accept invite</b> button, <b>expires in 7 days</b>, and the same ignore-if-not-you safety line.',
+          'Both carry a plain-text <b>fallback link</b> for clients that strip buttons, the lotus avatar, and the <b>Love &amp; Blessings</b> sign-off.',
+          'Rendered on the temple surface so they feel like the app — but the surrounding <b>client chrome is neutral</b> (real inboxes aren\u2019t themed).',
+        ], tip:'Flip the canvas to dark to preview both emails in a dark inbox.' })}
+      </DCSection>
+
+      {/* ---------- PARITY ---------- */}
+      <DCSection id="parity" title="Light + dark parity" subtitle="Every screen ships both themes from the same tokens.">
+        {Web({ id:"d-login", label:"Sign in · dark", state:"login", theme:"dark" })}
+        {Web({ id:"d-signup", label:"Create account · dark", state:"signup", theme:"dark" })}
+        {Mob({ id:"d-check", label:"Check email · dark", state:"check", theme:"dark" })}
+        {Mob({ id:"d-welcome", label:"All set · dark", state:"welcome", theme:"dark" })}
+        {Raw({ id:"d-email", label:"Reset email · dark", html:window.A.emailWeb(), theme:"dark", w:660, h:700 })}
+        {Note({ id:"parity-notes", label:"Notes", title:"Both themes, one token set", sub:"Light + dark", items:[
+          'Everything renders in light and dark from the same CSS variables — the navy <b>Temple of Light</b> ramp, gold accents, the blue ' + k + '--dome</span> link/focus colour.',
+          'In dark, the wordmark and links shift to <b>azure</b>; the read-only Email stays legibly muted; the gold expiry line holds.',
+          'Focus rings use ' + k + '--primary-weak</span> so keyboard / tab navigation is visible in both themes.',
+        ], tip:'The toolbar Light / Dark switch flips the whole canvas; these frames are pinned for side-by-side comparison.' })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<template id="__bundler_thumbnail" data-bg-color="#0f1b30">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0f1b30"/>
+    <circle cx="600" cy="330" r="120" fill="none" stroke="#c9a24b" stroke-width="10"/>
+    <path d="M600 240 C660 300 660 380 600 420 C540 380 540 300 600 240 Z" fill="#2c5499" stroke="#c9a24b" stroke-width="8"/>
+    <rect x="480" y="520" width="240" height="54" rx="12" fill="none" stroke="#7fa8d9" stroke-width="6"/>
+    <rect x="480" y="600" width="240" height="54" rx="12" fill="#2c64a8"/>
+    <text x="600" y="730" font-family="Georgia,serif" font-size="46" fill="#eaf0fb" text-anchor="middle">Sign in</text>
+  </svg>
+</template>
+</body>
+</html>

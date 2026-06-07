@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { packLanes } from "./calendar";
 
 describe("packLanes", () => {
@@ -51,4 +51,32 @@ describe("packLanes", () => {
     const { packed } = packLanes([{ startCol: 1, endCol: 1, title: "x" }]);
     expect(packed[0]).toMatchObject({ startCol: 1, endCol: 1, title: "x", lane: 0 });
   });
+});
+
+import { dayCells } from "./calendar";
+import type { EventSpan, Holiday } from "./types";
+
+const ev = (title: string): EventSpan =>
+  ({ id: 1, title, kind: "single", yearly: false, start: "2026-01-01", end: "2026-01-01" });
+const hol = (title: string): Holiday =>
+  ({ title, set: "ananda_lineage", holiday: true, start: "2026-01-01", end: "2026-01-01" });
+
+test("events sort before holidays", () => {
+  const { visible } = dayCells([ev("Retreat")], [hol("Yogananda's Birthday")], 5);
+  expect(visible[0].label).toBe("Retreat");
+  expect(visible[0].holiday).toBe(false);
+  expect(visible[1].holiday).toBe(true);
+});
+
+test("caps to max and reports overflow count", () => {
+  const events = [ev("A"), ev("B"), ev("C")];
+  const holidays = [hol("D"), hol("E")];
+  const { visible, more } = dayCells(events, holidays, 3);
+  expect(visible).toHaveLength(3);
+  expect(more).toBe(2);
+});
+
+test("no overflow when within cap", () => {
+  const { more } = dayCells([ev("A")], [hol("B")], 3);
+  expect(more).toBe(0);
 });

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Check, X, CircleCheck } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../state/auth";
 import { buildSubLookup } from "../lookup";
@@ -49,7 +50,7 @@ export function Approvals({
   }
 
   return (
-    <Modal title={tr("modals.approvals")} onClose={onClose} wide>
+    <Modal icon={<CircleCheck />} title={tr("modals.approvals")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{tr("approvals.intro")}</p>
       {!pending ? (
         <Spinner />
@@ -91,8 +92,8 @@ export function Approvals({
                     <td className="mono" style={{ fontSize: 12 }}>{t.deadline ?? "—"}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       <button className="btn-ghost" onClick={() => onOpen(t)}>{tr("approvals.open")}</button>
-                      <button className="btn-ghost" style={{ color: "var(--success)" }} onClick={() => act(t.id, "approve")}>✓</button>
-                      <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => act(t.id, "reject")}>✕</button>
+                      <button className="btn-ghost icon-only" style={{ color: "var(--success)" }} title={tr("approvals.approve", "Approve")} onClick={() => act(t.id, "approve")}><Check size={16} /></button>
+                      <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={tr("approvals.reject", "Reject")} onClick={() => act(t.id, "reject")}><X size={16} /></button>
                     </td>
                   </tr>
                 );

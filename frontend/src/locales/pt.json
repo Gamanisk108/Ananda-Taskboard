@@ -120,6 +120,28 @@
     "role_admin": "Administrador",
     "role_member": "Membro"
   },
+  "invite": {
+    "title": "Convidar alguém",
+    "hint": "Essa pessoa receberá um e-mail para entrar nesta equipe. Novos usuários podem criar a conta pelo convite.",
+    "send": "Enviar convite",
+    "sent": "Convite enviado para {{email}}.",
+    "error": "Não foi possível enviar o convite.",
+    "pending": "Convites pendentes",
+    "revoke": "Revogar",
+    "confirmRevoke": "Revogar este convite?"
+  },
+  "accept": {
+    "title": "Entrar em {{org}}",
+    "subtitle": "Você foi convidado para {{org}} como {{role}} ({{email}}).",
+    "join": "Entrar em {{org}}",
+    "joining": "Entrando…",
+    "joinedTitle": "Bem-vindo a {{org}}",
+    "joinedBody": "Você entrou na equipe. Faça login para começar.",
+    "invalidTitle": "Convite inválido",
+    "invalidBody": "Este convite é inválido ou expirou. Peça ao administrador para enviar um novo.",
+    "loading": "Carregando…",
+    "error": "Algo deu errado. Tente novamente."
+  },
   "task": {
     "edit": "Editar tarefa",
     "new": "Nova tarefa",
@@ -152,7 +174,9 @@
     "subtasks": "Subtarefas",
     "addSubtask": "Adicionar uma subtarefa…",
     "comments": "Comentários",
-    "addComment": "Adicionar um comentário… (digite @ para mencionar)"
+    "addComment": "Adicionar um comentário… (digite @ para mencionar)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "Todos os projetos",
@@ -198,7 +222,8 @@
     "groups": "Grupos",
     "access": "Acesso",
     "tiers": "Níveis",
-    "activity": "Atividade"
+    "activity": "Atividade",
+    "holidays": "Feriados"
   },
   "empty": {
     "approvals": "Nada aguardando aprovação.",
@@ -379,6 +404,7 @@
     "openDay": "Abrir as tarefas deste dia",
     "noTasksWeek": "Nenhuma tarefa esta semana.",
     "thisMonth": "Este mês",
+    "more": "mais",
     "dow": {
       "sun": "Dom",
       "mon": "Seg",
@@ -387,7 +413,9 @@
       "thu": "Qui",
       "fri": "Sex",
       "sat": "Sáb"
-    }
+    },
+    "noDate": "Sem data",
+    "noDateTitle": "Sem data — {{count}} tarefas"
   },
   "del": {
     "kindProject": "projeto",
@@ -412,7 +440,10 @@
     "done": "Concluído"
   },
   "subtask": {
-    "assignee": "Responsável"
+    "assignee": "Responsável",
+    "back": "Voltar às subtarefas",
+    "confirmDelete": "Excluir esta subtarefa?",
+    "editDetails": "Editar detalhes"
   },
   "import": {
     "button": "Importar ▾",
@@ -563,11 +594,54 @@
     "exclusionsHelp": "Uma negação sempre vence, mesmo sobre uma tarefa atribuída ao membro (negar > atribuição > permitir). Use com moderação.",
     "noExclusions": "Sem exclusões.",
     "taskIdPh": "ID da tarefa (ex.: 318)",
-    "selectHide": "Selecione o que ocultar…"
+    "selectHide": "Selecione o que ocultar…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "Excluir este comentário?",
     "you": "Você",
     "teamMember": "Membro da equipe"
+  },
+  "holidays": {
+    "title": "Conjuntos de feriados exibidos nos calendários desta organização",
+    "help": "Membros do mundo inteiro veem apenas o que você habilita aqui.",
+    "set": {
+      "us_federal": "Feriados federais dos EUA",
+      "us_observances": "Datas comemorativas dos EUA (Dia das Mães/Pais, Horário de verão)",
+      "christian": "Cristão / religioso",
+      "hindu_festivals": "Hindu / festivais de yoga",
+      "ananda_lineage": "Dias da tradição Ananda"
+    },
+    "save": "Salvar",
+    "saved": "Salvo"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

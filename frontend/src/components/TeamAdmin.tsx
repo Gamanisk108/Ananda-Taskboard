@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X, Users } from "lucide-react";
 import { api } from "../api/client";
-import { invalidateUsers } from "../users";
-import { Modal, Spinner } from "./common";
-import { SEES_LABEL, type Sees } from "../types";
+import { useQueryClient } from "@tanstack/react-query";
+import { Modal, Spinner, MultiSelect, type MultiSelectOption } from "./common";
+import { useSubmitGuard } from "../useSubmitGuard";
+import { useAuth } from "../state/auth";
+import { SEES_ORDER, type Sees } from "../types";
 
-type Tab = "members" | "groups" | "access" | "activity";
+type Tab = "members" | "groups" | "access" | "activity" | "holidays";
 
 interface UserRow { id: number; name: string; email: string; role: string; is_active: boolean; is_admin: boolean; tier: number | null; }
 interface GroupRow { id: number; name: string; member_ids: number[]; }
@@ -22,12 +25,18 @@ interface AuditRow { id: number; actor: string; action: string; summary: string;
 
 const TIER_DESC: Record<Sees, string> = {
   own: "View assigned tasks only",
-  subproject: "View all tasks in assigned Sub-Project",
-  project: "View all tasks in assigned Project",
+  subproject: "View all tasks in their sub-projects",
+  project: "View all tasks in their projects",
+  org: "View all tasks across the organization",
 };
+
+// Access dropdown order: narrowest → widest (Tasks Only … Organization).
+function byViewAccess(a: TierRow, b: TierRow) { return SEES_ORDER[a.default_sees] - SEES_ORDER[b.default_sees]; }
+function sortedTiers(tiers: TierRow[]) { return [...tiers].sort(byViewAccess); }
 
 export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const { t: tr } = useTranslation();  // `t` is used below as the tab loop var
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("members");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [groups, setGroups] = useState<GroupRow[]>([]);
@@ -48,57 +57,165 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
     setProjects(p as Proj[]); setGrants(gr as Grant[]); setExclusions(ex as Exclusion[]);
     setAudit(au as AuditRow[]);
     setLoading(false);
-    invalidateUsers();
+    // refresh the shared TanStack caches the roster/groups feed elsewhere (pickers)
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+    queryClient.invalidateQueries({ queryKey: ["groups"] });
     if (signal) onChanged();
   }
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
 
   const labels: Record<Tab, string> = {
     members: tr("tabs.members"), groups: tr("tabs.groups"), access: tr("tabs.access"),
-    activity: tr("tabs.activity"),
+    activity: tr("tabs.activity"), holidays: tr("tabs.holidays"),
   };
 
   return (
-    <Modal title={tr("modals.team")} onClose={onClose} wide>
+    <Modal icon={<Users />} title={tr("modals.team")} onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
-        {(["members", "groups", "access", "activity"] as Tab[]).map((t) => (
+        {(["members", "groups", "access", "activity", "holidays"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>
         ))}
       </div>
       {loading ? <Spinner /> : (
         <>
-          {tab === "members" && <Members users={users} tiers={tiers} reload={() => loadAll(true)} />}
+          {tab === "members" && <Members users={users} tiers={tiers} projects={projects} reload={() => loadAll(true)} />}
           {tab === "groups" && <Groups groups={groups} users={users} reload={() => loadAll(true)} />}
           {tab === "access" && (
             <Access grants={grants} exclusions={exclusions} users={users} groups={groups}
-              tiers={tiers} projects={projects} reload={() => loadAll(true)} />
+              projects={projects} reload={() => loadAll(true)} />
           )}
           {tab === "activity" && <Activity rows={audit} />}
+          {tab === "holidays" && <Holidays />}
         </>
       )}
     </Modal>
   );
 }
 
-function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[]; reload: () => void }) {
+interface InviteRow {
+  id: number; email: string; role: string; tier: number | null; tier_name: string | null;
+  invited_by_name: string | null; created_at: string;
+}
+
+function defaultMemberTier(tiers: TierRow[]): TierRow | undefined {
+  // New members default to "Sub-Project Only" (see the sub-projects they're added
+  // to); falls back to the narrowest if that level was renamed away.
+  return tiers.find((t) => t.default_sees === "subproject") ?? sortedTiers(tiers)[0];
+}
+
+function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[] }) {
   const { t: tr } = useTranslation();
+  const [email, setEmail] = useState(""); const [role, setRole] = useState("member");
+  const [tier, setTier] = useState(""); const [err, setErr] = useState(""); const [sent, setSent] = useState("");
+  const [accessSel, setAccessSel] = useState<string[]>([]);  // sub-project ids to grant on accept
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [busy, guard] = useSubmitGuard();
+
+  const tierList = useMemo(() => sortedTiers(tiers), [tiers]);
+  const subOptions: MultiSelectOption[] = useMemo(
+    () => projects.flatMap((p) => p.subprojects.map((s) => ({ value: String(s.id), label: `${p.name} / ${s.name}` }))),
+    [projects],
+  );
+  // Default the Access once tiers load (no blank option — every member has one).
+  useEffect(() => { if (!tier) { const d = defaultMemberTier(tiers); if (d) setTier(String(d.id)); } }, [tiers]);
+
+  async function load() { try { setInvites(await api.get("/api/invitations") as InviteRow[]); } catch { /* ignore */ } }
+  useEffect(() => { load(); }, []);
+
+  function send() {
+    return guard(async () => {
+      setErr(""); setSent("");
+      try {
+        const access = role === "admin" ? [] : accessSel.map((id) => ({ scope: "subproject", id: Number(id), level: "member" }));
+        await api.post("/api/invitations", { email, role, tier: role === "admin" || !tier ? null : Number(tier), access });
+        setSent(tr("invite.sent", { email })); setEmail(""); setRole("member"); setAccessSel([]); load();
+      } catch (e) {
+        const d = (e as { data?: { email?: string[] | string } })?.data;
+        const m = Array.isArray(d?.email) ? d!.email[0] : (typeof d?.email === "string" ? d.email : tr("invite.error"));
+        setErr(m);
+      }
+    });
+  }
+  async function revoke(id: number) { if (confirm(tr("invite.confirmRevoke"))) { await api.del(`/api/invitations/${id}`); load(); } }
+
+  return (
+    <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
+      <h3 className="section-title">{tr("invite.title")}</h3>
+      <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>{tr("invite.hint")}</div>
+      <div className="row2">
+        <div className="field"><label>{tr("login.email")}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        <div className="field"><label>{tr("ta.role")}</label>
+          <select value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
+          </select>
+        </div>
+      </div>
+      <div className="row2">
+        <div className="field">
+          <label>{tr("ta.viewAccess", "Access")}</label>
+          <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
+            {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>{tr("ta.startingAccess", "Add to projects (optional)")}</label>
+          {role === "admin"
+            ? <div className="muted" style={{ fontSize: 12 }}>{tr("ta.adminSeesAll", "Admins see everything")}</div>
+            : <MultiSelect placeholder={tr("ta.pickSubprojects", "Pick sub-projects")} options={subOptions} selected={accessSel} onChange={setAccessSel} />}
+        </div>
+      </div>
+      {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
+      {sent && <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>{sent}</div>}
+      <button className="btn-primary" onClick={send} disabled={busy}>{tr("invite.send")}</button>
+
+      {invites.length > 0 && (
+        <>
+          <h4 style={{ margin: "14px 0 6px" }}>{tr("invite.pending")}</h4>
+          <table className="tbl">
+            <thead><tr><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "Access")}</th><th></th></tr></thead>
+            <tbody>
+              {invites.map((i) => (
+                <tr key={i.id}>
+                  <td className="muted">{i.email}</td>
+                  <td>{tr(i.role === "admin" ? "ta.roleAdmin" : "ta.roleMember")}</td>
+                  <td className="muted">{i.tier_name || "—"}</td>
+                  <td><button className="btn-ghost" onClick={() => revoke(i.id)}>{tr("invite.revoke")}</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: TierRow[]; projects: Proj[]; reload: () => void }) {
+  const { t: tr } = useTranslation();
+  const { me } = useAuth();
   const [name, setName] = useState(""); const [email, setEmail] = useState("");
   const [password, setPassword] = useState(""); const [role, setRole] = useState("member");
   const [tier, setTier] = useState<string>("");
   const [err, setErr] = useState("");
+  const tierList = useMemo(() => sortedTiers(tiers), [tiers]);
+  // No blank option — default new members to "Sub-Project Only".
+  useEffect(() => { if (!tier) { const d = defaultMemberTier(tiers); if (d) setTier(String(d.id)); } }, [tiers]);
+  const [busy, guard] = useSubmitGuard();
   // optimistic local copy so role/tier/active changes show instantly (the full
   // reload runs in the background and re-syncs via the effect below).
   const [rows, setRows] = useState(users);
   useEffect(() => setRows(users), [users]);
   const patch = (id: number, p: Partial<UserRow>) => setRows((rs) => rs.map((u) => (u.id === id ? { ...u, ...p } : u)));
 
-  async function add() {
-    setErr("");
-    try {
-      await api.post("/api/users", { name, email, password, role, tier: tier ? Number(tier) : null });
-      setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
-      reload();
-    } catch { setErr(tr("ta.errAddMember")); }
+  function add() {
+    return guard(async () => {
+      setErr("");
+      try {
+        await api.post("/api/users", { name, email, password, role, tier: role === "admin" || !tier ? null : Number(tier) });
+        setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
+        reload();
+      } catch { setErr(tr("ta.errAddMember")); }
+    });
   }
   async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r, is_admin: r === "admin" }); try { await api.patch(`/api/users/${u.id}`, { role: r }); } catch { patch(u.id, { role: u.role }); } }
   async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); } catch { patch(u.id, { tier: u.tier }); } }
@@ -110,6 +227,7 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
 
   return (
     <>
+      <InvitesSection tiers={tiers} projects={projects} />
       <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
         <h3 className="section-title">{tr("ta.addMemberTitle")}</h3>
         <div className="row2">
@@ -125,34 +243,36 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
           </div>
         </div>
         <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-          <label>{tr("ta.tier")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.tierHint")}</span></label>
+          <label>{tr("ta.viewAccess", "Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "how many tasks they can see")}</span></label>
           <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
-            <option value="">{tr("ta.noTierBlank")}</option>
-            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+            {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
           </select>
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
-        <button className="btn-primary" onClick={add}>{tr("ta.addMember")}</button>
+        <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addMember")}</button>
         <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{tr("ta.shareHint")}</div>
       </div>
 
       <table className="tbl">
-        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.tier")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
+        <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "Access")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
         <tbody>
           {rows.map((u) => (
             <tr key={u.id}>
               <td>{u.name || "—"}</td>
               <td className="muted">{u.email}</td>
               <td>
-                <select value={u.role} onChange={(e) => setMemberRole(u, e.target.value)} style={{ width: "auto" }}>
+                {/* You can't demote your own admin account (backend blocks it) — disable
+                    the select rather than let it fail-on-use (QA 2026-06-05). */}
+                <select value={u.role} onChange={(e) => setMemberRole(u, e.target.value)} style={{ width: "auto" }}
+                  disabled={u.id === me?.id} title={u.id === me?.id ? tr("ta.ownRoleLocked") : undefined}>
                   <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
                 </select>
               </td>
               <td>
                 {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
                   <select value={u.tier ?? ""} onChange={(e) => setMemberTier(u, e.target.value)} style={{ width: "auto", maxWidth: 210 }}>
-                    <option value="">{tr("ta.noTier")}</option>
-                    {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
+                    {u.tier == null && <option value="">{tr("ta.pickViewAccess", "Pick…")}</option>}
+                    {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
                   </select>
                 )}
               </td>
@@ -169,7 +289,8 @@ function Members({ users, tiers, reload }: { users: UserRow[]; tiers: TierRow[];
 function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[]; reload: () => void }) {
   const { t: tr } = useTranslation();
   const [name, setName] = useState("");
-  async function add() { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }
+  const [busy, guard] = useSubmitGuard();
+  function add() { return guard(async () => { if (name.trim()) { await api.post("/api/groups", { name: name.trim() }); setName(""); reload(); } }); }
   async function del(g: GroupRow) { if (confirm(tr("ta.confirmDeleteGroup", { name: g.name }))) { await api.del(`/api/groups/${g.id}`); reload(); } }
   async function toggleMember(g: GroupRow, uid: number) {
     const ids = g.member_ids.includes(uid) ? g.member_ids.filter((x) => x !== uid) : [...g.member_ids, uid];
@@ -180,7 +301,7 @@ function Groups({ groups, users, reload }: { groups: GroupRow[]; users: UserRow[
     <>
       <div className="field" style={{ display: "flex", gap: 8 }}>
         <input placeholder={tr("ta.newGroupPh")} value={name} onChange={(e) => setName(e.target.value)} />
-        <button className="btn-primary" onClick={add}>{tr("ta.addGroup")}</button>
+        <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addGroup")}</button>
       </div>
       {groups.map((g) => (
         <div key={g.id} className="card" style={{ padding: 12, marginBottom: 10 }}>
@@ -228,7 +349,7 @@ function Activity({ rows }: { rows: AuditRow[] }) {
   );
 }
 
-type SubjectType = "user" | "group" | "tier";
+type SubjectType = "user" | "group";
 type ExcType = "user" | "group" | "project" | "subproject" | "task";
 const EXC_FIELD: Record<ExcType, keyof Exclusion> = {
   user: "excluded_user", group: "excluded_group", project: "excluded_project",
@@ -236,20 +357,19 @@ const EXC_FIELD: Record<ExcType, keyof Exclusion> = {
 };
 
 function Access({
-  grants, exclusions, users, groups, tiers, projects, reload,
+  grants, exclusions, users, groups, projects, reload,
 }: {
   grants: Grant[]; exclusions: Exclusion[]; users: UserRow[]; groups: GroupRow[];
-  tiers: TierRow[]; projects: Proj[]; reload: () => void;
+  projects: Proj[]; reload: () => void;
 }) {
   const { t: tr } = useTranslation();
   const [subjectType, setSubjectType] = useState<SubjectType>("user");
   const [subjectId, setSubjectId] = useState<number>(0);
 
-  // grant builder
+  // grant builder (WHERE + edit level; how-much is each member's Access)
   const [scopeType, setScopeType] = useState<"subproject" | "project">("subproject");
   const [scopeId, setScopeId] = useState<number>(0);
   const [level, setLevel] = useState("member");
-  const [sees, setSees] = useState<Sees>("subproject");
   const [err, setErr] = useState("");
 
   // exclusion builder
@@ -257,8 +377,7 @@ function Access({
   const [excId, setExcId] = useState<string>("");
 
   const subjects = subjectType === "user" ? users.map((u) => ({ id: u.id, label: u.name || u.email }))
-    : subjectType === "group" ? groups.map((g) => ({ id: g.id, label: g.name }))
-    : tiers.map((t) => ({ id: t.id, label: t.name }));
+    : groups.map((g) => ({ id: g.id, label: g.name }));
 
   const subOptions = useMemo(
     () => projects.flatMap((p) => p.subprojects.map((s) => ({ id: s.id, label: `${p.name} / ${s.name}` }))),
@@ -275,14 +394,13 @@ function Access({
   async function addGrant() {
     setErr("");
     if (!subjectId || !scopeId) { setErr(tr("ta.errPickSubjectScope")); return; }
-    const body: Record<string, unknown> = { level, sees };
+    const body: Record<string, unknown> = { level };
     body[subjectType] = subjectId;
     body[scopeType] = scopeId;
     try { await api.post("/api/grants", body); setScopeId(0); reload(); }
     catch { setErr(tr("ta.errAddGrant")); }
   }
   async function revokeGrant(id: number) { await api.del(`/api/grants/${id}`); reload(); }
-  async function changeSees(g: Grant, s: Sees) { await api.patch(`/api/grants/${g.id}`, { sees: s }); reload(); }
 
   async function addExclusion() {
     setErr("");
@@ -322,7 +440,7 @@ function Access({
         <label>{tr("ta.defineAccessFor")}</label>
         <div style={{ display: "flex", gap: 6 }}>
           <select data-testid="access-subject-type" value={subjectType} onChange={(e) => { setSubjectType(e.target.value as SubjectType); setSubjectId(0); }} style={{ width: 110 }}>
-            <option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option><option value="tier">{tr("ta.tier")}</option>
+            <option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option>
           </select>
           <select data-testid="access-subject-id" value={subjectId} onChange={(e) => setSubjectId(Number(e.target.value))}>
             <option value={0}>{tr("ta.select")}</option>
@@ -358,28 +476,19 @@ function Access({
                 </select>
               </div>
             </div>
-            <div className="field" style={{ maxWidth: 280, marginBottom: 0 }}>
-              <label>{tr("ta.sees")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.seesHint")}</span></label>
-              <select data-testid="grant-sees" value={sees} onChange={(e) => setSees(e.target.value as Sees)}>
-                {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
-              </select>
+            <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>
+              {tr("ta.viewAccessNote", "How many tasks they see is set by each member's Access (on the Members tab).")}
             </div>
-            <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>{tr("ta.ownHint")}</div>
             <button className="btn-primary" data-testid="grant-add" onClick={addGrant}>{tr("ta.grantAccess")}</button>
           </div>
 
           <table className="tbl">
-            <thead><tr><th>{tr("ta.colGrantTo")}</th><th>{tr("ta.level")}</th><th>{tr("ta.sees")}</th><th></th></tr></thead>
+            <thead><tr><th>{tr("ta.colGrantTo")}</th><th>{tr("ta.level")}</th><th></th></tr></thead>
             <tbody>
               {myGrants.map((g) => (
                 <tr key={g.id}>
                   <td>{g.subproject ? subName(g.subproject) : tr("ta.wholeProject", { name: projName(g.project!) })}</td>
                   <td><span className="pill" style={{ background: "var(--surface-sunk)" }}>{g.level}</span></td>
-                  <td>
-                    <select value={g.sees} onChange={(e) => changeSees(g, e.target.value as Sees)} style={{ width: "auto", fontSize: 12 }}>
-                      {(Object.keys(SEES_LABEL) as Sees[]).map((s) => <option key={s} value={s}>{SEES_LABEL[s]}</option>)}
-                    </select>
-                  </td>
                   <td><button className="btn-ghost" onClick={() => revokeGrant(g.id)}>{tr("ta.revoke")}</button></td>
                 </tr>
               ))}
@@ -397,7 +506,7 @@ function Access({
               {myExclusions.map((e) => (
                 <span key={e.id} className="pill" style={{ background: "#b4452f12", color: "var(--danger)", border: "1px solid #b4452f55" }}>
                   {excLabel(e)}
-                  <button className="btn-ghost" style={{ padding: "0 4px", color: "var(--danger)" }} onClick={() => removeExclusion(e.id)}>✕</button>
+                  <button className="btn-ghost icon-only" style={{ padding: "0 4px", color: "var(--danger)" }} title={tr("common.remove", "Remove")} onClick={() => removeExclusion(e.id)}><X size={12} /></button>
                 </span>
               ))}
               {myExclusions.length === 0 && <span className="muted" style={{ fontSize: 12 }}>{tr("ta.noExclusions")}</span>}
@@ -422,5 +531,56 @@ function Access({
       )}
       {err && <div style={{ color: "var(--danger)", fontSize: 13, marginTop: 10 }}>{err}</div>}
     </>
+  );
+}
+
+const HOLIDAY_SET_KEYS = [
+  "us_federal", "us_observances", "christian", "hindu_festivals", "ananda_lineage",
+] as const;
+
+function Holidays() {
+  const { t: tr } = useTranslation();
+  const [enabled, setEnabled] = useState<string[]>([]);
+  const [available, setAvailable] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [busy, guard] = useSubmitGuard();
+
+  useEffect(() => {
+    api.get("/api/holidays/settings").then((d: unknown) => {
+      const data = d as { enabled: string[]; available: string[] };
+      setEnabled(data.enabled); setAvailable(data.available); setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  function toggle(key: string) {
+    setSaved(false);
+    setEnabled((e) => (e.includes(key) ? e.filter((k) => k !== key) : [...e, key]));
+  }
+
+  function save() {
+    return guard(async () => {
+      await api.patch("/api/holidays/settings", { enabled });
+      setSaved(true);
+    });
+  }
+
+  if (loading) return <Spinner />;
+  const keys = available.filter((k) => HOLIDAY_SET_KEYS.includes(k as never));
+  return (
+    <div>
+      <h3>{tr("holidays.title")}</h3>
+      <p className="muted">{tr("holidays.help")}</p>
+      {keys.map((k) => (
+        <label key={k} style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0" }}>
+          <input type="checkbox" checked={enabled.includes(k)} onChange={() => toggle(k)} />
+          {tr(`holidays.set.${k}`)}
+        </label>
+      ))}
+      <button className="btn-primary" onClick={save} disabled={busy} style={{ marginTop: 12 }}>
+        {tr("holidays.save")}
+      </button>
+      {saved && <span className="muted" style={{ marginLeft: 10 }}>{tr("holidays.saved")}</span>}
+    </div>
   );
 }

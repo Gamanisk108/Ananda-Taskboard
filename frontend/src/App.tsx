@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown } from "lucide-react";
+import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, Contrast, LogOut, Mail } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -8,6 +10,7 @@ import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
 import { ResetPassword } from "./components/ResetPassword";
 import { VerifyEmail } from "./components/VerifyEmail";
+import { AcceptInvite } from "./components/AcceptInvite";
 import { PlatformStats } from "./components/PlatformStats";
 import { Spinner, ColorDot } from "./components/common";
 import { ListView } from "./components/ListView";
@@ -26,6 +29,9 @@ import { ImportDialog } from "./components/ImportDialog";
 import { RestorePoints } from "./components/RestorePoints";
 import { History } from "./components/History";
 import { BulkMigrate } from "./components/BulkMigrate";
+import { HelpCenter } from "./components/HelpCenter";
+import { WelcomeCard } from "./components/WelcomeCard";
+import { whatsNew, latestVersion } from "./help/registry";
 import type { ProjectNode, Task } from "./types";
 
 type ViewMode = "list" | "board" | "weekly" | "monthly";
@@ -38,6 +44,15 @@ export default function App() {
   useEffect(() => {
     i18n.changeLanguage(resolveLanguage(me?.language));
   }, [me?.language]);
+
+  // Keep <html lang> in sync with the active language (a11y/spellcheck/SEO). Driven
+  // by i18next's own event so it updates regardless of what triggered the switch.
+  useEffect(() => {
+    const sync = (lng: string) => { document.documentElement.lang = lng; };
+    sync(i18n.language);
+    i18n.on("languageChanged", sync);
+    return () => { i18n.off("languageChanged", sync); };
+  }, []);
 
   async function changeLanguage(lang: string) {
     await i18n.changeLanguage(lang);
@@ -88,8 +103,27 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [showPlatform, setShowPlatform] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const bump = () => setRefreshKey((k) => k + 1);
+  const [showHelp, setShowHelp] = useState(false);
+  // First-login welcome shows once ever (localStorage "at-onboarded"); "Show welcome
+  // again" in Help re-arms it. What's-New dot compares the latest help version against
+  // the last version the user opened Help at ("at-help-seen").
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("at-onboarded"));
+  // A first-ever browser starts "caught up": What's New then only surfaces features
+  // added AFTER this first load (not every existing feature). Initializing to the
+  // latest version also avoids a dot-flash before the persist effect below runs.
+  const [helpSeen, setHelpSeen] = useState<string | null>(
+    () => localStorage.getItem("at-help-seen") ?? latestVersion(),
+  );
+  useEffect(() => {
+    if (localStorage.getItem("at-help-seen") == null) localStorage.setItem("at-help-seen", latestVersion());
+  }, []);
+  function dismissWelcome() { localStorage.setItem("at-onboarded", "1"); setShowWelcome(false); }
+  function replayWelcome() { localStorage.removeItem("at-onboarded"); setShowHelp(false); setShowWelcome(true); }
+  const queryClient = useQueryClient();
+  // All task views (List/Board/Weekly/Monthly) + the tab counts now read through
+  // TanStack Query under the ["tasks"] key prefix, so one invalidate refreshes them
+  // all after any create/edit/delete/status/move/event change.
+  const bump = () => queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
   const tree = me?.tree;
   const projects = tree?.projects ?? [];
@@ -115,24 +149,25 @@ export default function App() {
     if (me) import("./statuses").then((m) => m.fetchStatuses(true));
   }, [me?.id]);
 
-  // Per-project task counts for the tab badges (design shows a count per tab).
-  const [counts, setCounts] = useState<{ total: number; byProject: Record<number, number> }>({ total: 0, byProject: {} });
-  useEffect(() => {
-    if (!me) return;
-    let alive = true;
-    api.get("/api/tasks").then((ts) => {
-      if (!alive) return;
-      const sub2proj = new Map<number, number>();
-      for (const p of projects) for (const s of p.subprojects) sub2proj.set(s.id, p.id);
-      const byProject: Record<number, number> = {};
-      for (const tk of ts as Task[]) {
-        const pid = sub2proj.get(tk.subproject);
-        if (pid != null) byProject[pid] = (byProject[pid] ?? 0) + 1;
-      }
-      setCounts({ total: (ts as Task[]).length, byProject });
-    }).catch(() => {});
-    return () => { alive = false; };
-  }, [me?.id, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Per-project task counts for the tab badges (design shows a count per tab). The
+  // unfiltered task list is fetched via TanStack Query (key prefix ["tasks"], so
+  // bump()'s invalidate refreshes it); counts are derived from the cached data.
+  const { data: allTasks } = useQuery({
+    queryKey: ["tasks", "all", me?.active_org ?? null],
+    queryFn: () => api.get("/api/tasks") as Promise<Task[]>,
+    enabled: !!me,
+  });
+  const counts = useMemo(() => {
+    const ts = allTasks ?? [];
+    const sub2proj = new Map<number, number>();
+    for (const p of projects) for (const s of p.subprojects) sub2proj.set(s.id, p.id);
+    const byProject: Record<number, number> = {};
+    for (const tk of ts) {
+      const pid = sub2proj.get(tk.subproject);
+      if (pid != null) byProject[pid] = (byProject[pid] ?? 0) + 1;
+    }
+    return { total: ts.length, byProject };
+  }, [allTasks, projects]);
 
   // Deep-link IN: on first login, honor ?project / ?sub / ?view / ?task in the URL.
   useEffect(() => {
@@ -166,6 +201,8 @@ export default function App() {
   if (new URLSearchParams(window.location.search).has("reset")) return <ResetPassword />;
   // Signup verification deep-link (?verify&uid=…&token=…) — also pre-auth.
   if (new URLSearchParams(window.location.search).has("verify")) return <VerifyEmail />;
+  // Invitation accept deep-link (?invite=<id>&token=…) — also pre-auth.
+  if (new URLSearchParams(window.location.search).has("invite")) return <AcceptInvite />;
   if (loading) return <Spinner />;
   if (!me) return <Login />;
 
@@ -176,8 +213,9 @@ export default function App() {
   const canCreate =
     me.is_admin || projects.some((p) => p.subprojects.some((s) => s.level === "member"));
 
-  const viewProps = { projectId, subprojectId, refreshKey, onEdit: (t: Task) => setEditing(t), me };
+  const viewProps = { projectId, subprojectId, onEdit: (t: Task) => setEditing(t), me };
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const hasNewHelp = whatsNew(helpSeen, me.is_admin).length > 0;
 
   return (
     <div className="app">
@@ -208,7 +246,7 @@ export default function App() {
             </select>
           )}
           {me.is_superuser && (
-            <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}>🌐<span className="lbl">{t("platform.nav")}</span></button>
+            <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}><Globe /><span className="lbl">{t("platform.nav")}</span></button>
           )}
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}><CircleCheck /><span className="lbl">{t("nav.approvals")}</span></button>
@@ -222,6 +260,13 @@ export default function App() {
           {me.is_admin && (
             <button className="btn-ghost" onClick={() => setShowManage(true)} title={t("nav.projects")}><LayoutGrid /><span className="lbl">{t("nav.projects")}</span></button>
           )}
+          <button className="btn-ghost" data-testid="open-help" onClick={() => setShowHelp(true)} title={t("help.open")}
+            style={{ position: "relative" }}>
+            <CircleHelp /><span className="lbl">{t("help.open")}</span>
+            {hasNewHelp && (
+              <span aria-hidden style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)" }} />
+            )}
+          </button>
           <span className="sep" />
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
@@ -299,10 +344,20 @@ export default function App() {
       </div>
 
       <main className="content">
-        {view === "list" && <ListView {...viewProps} />}
-        {view === "board" && <KanbanView {...viewProps} />}
-        {view === "weekly" && <WeeklyView {...viewProps} />}
-        {view === "monthly" && <MonthlyView {...viewProps} />}
+        {me.tree.projects.length === 0 && !me.is_admin ? (
+          <div className="empty" style={{ maxWidth: 460, margin: "40px auto", lineHeight: 1.5 }}>
+            <img src="/ananda-empty.svg" alt="" width={140} height={136} style={{ display: "block", margin: "0 auto 10px" }} />
+            <h3 style={{ margin: "0 0 6px", color: "var(--text)" }}>{t("onboarding.welcomeTitle", "You're all set up!")}</h3>
+            <p style={{ margin: 0 }}>{t("onboarding.welcomeBody", "An admin hasn't added you to any projects yet. As soon as they add you — or assign you a task — your work will appear right here.")}</p>
+          </div>
+        ) : (
+          <>
+            {view === "list" && <ListView {...viewProps} />}
+            {view === "board" && <KanbanView {...viewProps} />}
+            {view === "weekly" && <WeeklyView {...viewProps} />}
+            {view === "monthly" && <MonthlyView {...viewProps} />}
+          </>
+        )}
       </main>
 
       {editing && (
@@ -342,6 +397,17 @@ export default function App() {
       {showHistory && <History onClose={() => setShowHistory(false)} />}
       {showBulk && <BulkMigrate me={me} onClose={() => setShowBulk(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showPlatform && <PlatformStats onClose={() => setShowPlatform(false)} />}
+      {showHelp && (
+        <HelpCenter
+          onClose={() => setShowHelp(false)}
+          isAdmin={me.is_admin}
+          lang={resolveLanguage(me.language)}
+          lastSeen={helpSeen}
+          onSeen={() => setHelpSeen(latestVersion())}
+          onReplayWelcome={replayWelcome}
+        />
+      )}
+      {showWelcome && <WelcomeCard onClose={dismissWelcome} />}
     </div>
   );
 }
@@ -380,29 +446,29 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPu
         <div className="usermenu-pop">
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
-              <span>⚙️</span> {t("menu.settings")}
+              <SettingsIcon size={15} /> {t("menu.settings")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onHistory(); }}>
-              <span>🕰️</span> {t("menu.history")}
+              <HistoryIcon size={15} /> {t("menu.history")}
             </button>
           )}
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onRestore(); }}>
-              <span>↻</span> {t("menu.restorePoints")}
+              <RotateCcw size={15} /> {t("menu.restorePoints")}
             </button>
           )}
           {/* Bulk actions are open to everyone; members are limited to status/
               deadline on tasks they can edit (enforced server-side). */}
           <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
-            <span>↔</span> {t("menu.bulkMigrate")}
+            <ArrowLeftRight size={15} /> {t("menu.bulkMigrate")}
           </button>
           <button className="usermenu-item" onClick={enableNotifications}>
-            <span>🔔</span> {msg || t("menu.notificationsOn")}
+            <Bell size={15} /> {msg || t("menu.notificationsOn")}
           </button>
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <span>📨</span> {t("menu.dailyPush")}
+            <Mail size={15} /> {t("menu.dailyPush")}
             <input type="checkbox" style={{ width: "auto", marginLeft: "auto" }}
               checked={dailyPushEnabled}
               onChange={(e) => onToggleDailyPush(e.target.checked)}
@@ -410,7 +476,7 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPu
           </label>
           <div className="usermenu-sep" />
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <span>🌐</span> {t("menu.language")}
+            <Globe size={15} /> {t("menu.language")}
             <select data-testid="language-select" value={language}
               onChange={(e) => onLanguage(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -419,7 +485,7 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPu
             </select>
           </label>
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <span>🌗</span> {t("menu.theme")}
+            <Contrast size={15} /> {t("menu.theme")}
             <select data-testid="theme-select" value={theme}
               onChange={(e) => onTheme(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -431,7 +497,7 @@ function UserMenu({ name, isAdmin, language, onLanguage, theme, onTheme, dailyPu
           </label>
           <div className="usermenu-sep" />
           <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
-            <span>🚪</span> {t("menu.logout")}
+            <LogOut size={15} /> {t("menu.logout")}
           </button>
         </div>
       )}

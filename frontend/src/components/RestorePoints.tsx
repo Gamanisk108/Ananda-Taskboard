@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X, RotateCcw } from "lucide-react";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 
@@ -40,7 +41,7 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
   }
 
   return (
-    <Modal title={t("modals.restore")} onClose={onClose} wide>
+    <Modal icon={<RotateCcw />} title={t("modals.restore")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("restore.intro")}</p>
       <div className="bulkbar">
         <button className="btn-primary" onClick={save} disabled={busy}>{t("restore.saveNow")}</button>
@@ -61,7 +62,7 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
                 <td className="muted" style={{ fontSize: 12 }}>{summary(p.stats)}</td>
                 <td style={{ whiteSpace: "nowrap" }}>
                   <button className="btn-secondary" onClick={() => restore(p)} disabled={busy}>{t("restore.restore")}</button>
-                  <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(p)}>✕</button>
+                  <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => remove(p)}><X size={16} /></button>
                 </td>
               </tr>
             ))}

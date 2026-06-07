@@ -4,12 +4,14 @@ import { addDays, addWeeks, format, startOfWeek } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
-import { packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
+import { dayCells, packLanes, useCalendarRange, type CalendarViewProps } from "../calendar";
 import { isComplete } from "../statuses";
 import { useUsers, userInitials, userName, avatarColor } from "../users";
 import { Modal, Spinner, DueFlag } from "./common";
+import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
-import { EVENT_ICON, type CalendarInstance, type Task } from "../types";
+import { UndatedTasks } from "./UndatedTasks";
+import { type CalendarInstance, type Task } from "../types";
 
 interface Bar {
   task_id: number;
@@ -24,7 +26,7 @@ interface Bar {
   lane: number;
 }
 
-export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: CalendarViewProps) {
+export function WeeklyView({ projectId, subprojectId, onEdit }: CalendarViewProps) {
   const { t } = useTranslation();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const users = useUsers();
@@ -37,7 +39,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
   const todayIdx = dayIso.indexOf(today);
   const [dayOpen, setDayOpen] = useState<string | null>(null);
 
-  const { items, events } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId, refreshKey);
+  const { items, events, holidays, undated } = useCalendarRange(dayIso[0], dayIso[6], projectId, subprojectId);
 
   async function open(id: number) {
     const task = (await api.get(`/api/tasks/${id}`)) as Task;
@@ -74,11 +76,14 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
     return { bars: packed, laneCount: Math.max(2, laneCount) };
   }, [items, dayIso, colorByProject, today, tomorrow]);
 
-  // Events that cover each day (rendered as a line under the day header, per design).
-  const eventsByDay = useMemo(() => {
-    return dayIso.map((iso) =>
-      events.filter((e) => e.start <= iso && e.end >= iso).map((e) => `${EVENT_ICON[e.kind]} ${e.title}`));
-  }, [events, dayIso]);
+  // Per-day merged cells: user events first, holidays after, capped with "+N".
+  const cellsByDay = useMemo(() => {
+    return dayIso.map((iso) => {
+      const dayEvents = events.filter((e) => e.start <= iso && e.end >= iso);
+      const dayHols = holidays.filter((h) => h.start === iso);
+      return dayCells(dayEvents.map((e) => ({ title: e.title })), dayHols, 2);
+    });
+  }, [events, holidays, dayIso]);
 
   function warnIcon(b: Bar) {
     if (b.overdue) return <DueFlag kind="overdue" size={13} />;
@@ -100,6 +105,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
           <button className="btn-secondary icon-btn" onClick={() => setWeekStart(addWeeks(weekStart, 1))} aria-label={t("cal.next")}><ChevronRight /></button>
         </div>
         <h2>{format(weekStart, "MMM d", { locale: dfLocale() })} – {format(addDays(weekStart, 6), "MMM d, yyyy", { locale: dfLocale() })}</h2>
+        <UndatedTasks undated={undated} colorByProject={colorByProject} onOpen={open} />
       </div>
       {!items ? (
         <Spinner />
@@ -117,7 +123,7 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
                     {iso === today && <span className="today-tag">{t("cal.today", "Today")}</span>}
                     <span className="dnum">{format(d, "MMM d", { locale: dfLocale() })}</span>
                   </div>
-                  {eventsByDay[idx].length > 0 && <div className="ev" title={eventsByDay[idx].join(", ")}>{eventsByDay[idx][0]}</div>}
+                  <DayCellLines {...cellsByDay[idx]} cls="ev" moreLabel={t("cal.more", "more")} />
                 </div>
               );
             })}
@@ -170,6 +176,9 @@ export function WeeklyView({ projectId, subprojectId, refreshKey, onEdit }: Cale
       )}
       {dayOpen && (
         <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
+          {holidays.filter((h) => h.start === dayOpen).map((h, k) => (
+            <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>{h.title}</div>
+          ))}
           <DayTaskList
             items={(items ?? []).filter((i) => i.date === dayOpen)}
             colorByProject={colorByProject}

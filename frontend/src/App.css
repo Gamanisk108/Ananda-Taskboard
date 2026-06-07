@@ -28,6 +28,9 @@
 .tabs {
   display: flex; gap: 6px; padding: 9px 16px; background: var(--surface);
   border-bottom: 1px solid var(--border); overflow-x: auto; flex-wrap: wrap; align-items: center; flex: none;
+  /* Bound the wrap: with many projects the pills wrapped unboundedly and ate the
+     viewport (QA 2026-06-05). Cap at ~3 rows, then scroll within the rail. */
+  max-height: 124px; overflow-y: auto;
 }
 .tab {
   position: relative; display: inline-flex; align-items: center; gap: 7px;
@@ -103,6 +106,35 @@
 .filters { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
 .filters input, .filters select { width: auto; min-width: 130px; font-size: 12.5px; padding: 6px 9px; }
 
+/* multi-select checkbox filter — matches the sizing of .filters select */
+.ms { position: relative; display: inline-block; }
+.ms-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-width: 130px; max-width: 220px; font-size: 12.5px; padding: 6px 9px;
+  background: var(--surface); color: var(--text); font-family: var(--f-ui);
+  border: 1px solid var(--border); border-radius: var(--r-ctl); cursor: pointer;
+}
+.ms-btn:hover { border-color: var(--border-strong); }
+.ms.on .ms-btn { border-color: var(--dome); font-weight: 600; }
+.ms-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-caret { flex: none; color: var(--faint); font-size: 10px; }
+.ms-pop {
+  position: absolute; z-index: 50; top: calc(100% + 4px); left: 0;
+  min-width: 100%; width: max-content; max-width: 280px; max-height: 320px; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-card); box-shadow: var(--shadow-2); padding: 5px;
+}
+.ms-opt {
+  display: flex; align-items: center; gap: 8px; margin: 0; padding: 6px 8px;
+  border-radius: var(--r-ctl); font-size: 12.5px; font-weight: 500; color: var(--text);
+  cursor: pointer; white-space: nowrap;
+}
+.ms-opt:hover { background: var(--hover); }
+.ms-opt input { width: auto; margin: 0; cursor: pointer; }
+.ms-opt-label { overflow: hidden; text-overflow: ellipsis; }
+.ms-section { padding: 7px 8px 3px; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ms-empty { padding: 8px; color: var(--muted); font-size: 12px; }
+
 .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
 .section-title { font-family: var(--f-ui); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
 .bulkbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
@@ -113,11 +145,20 @@
   position: fixed; inset: 0; z-index: 120; background: rgba(13,21,38,.5);
   display: flex; justify-content: center; align-items: flex-start; padding: 32px 16px; overflow-y: auto;
 }
-.modal { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--shadow-pop); }
+.modal { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--shadow-pop);
+  display: flex; flex-direction: column; max-height: calc(100dvh - 64px); }
 .modal.wide { max-width: 760px; }
-.modal-head { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); }
-.modal-head h2 { font-size: 19px; white-space: nowrap; }
-.modal-body { padding: 18px 20px 20px; }
+/* Header stays put; the body scrolls. Without the bounded height + scroll, tall
+   modals pushed the ✕ close button off-screen ("trapped" — QA 2026-06-05). */
+.modal-head { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); border-radius: var(--r-card) var(--r-card) 0 0; }
+.modal-head h2 { font-size: 19px; white-space: nowrap; display: inline-flex; align-items: center; gap: 9px; }
+/* Section-header icon before a dialog title (design rule #6): muted line-art, 19px. */
+.modal-head h2 .sh-icn { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); flex: none; }
+.modal-head h2 .sh-icn svg { width: 19px; height: 19px; display: block; }
+/* Modal close X is a 28×28 circular hover target around a 14px icon (design rule #9). */
+.modal-head .icon-btn { padding: 4px; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; flex: none; }
+.modal-head .icon-btn svg { width: 14px; height: 14px; }
+.modal-body { padding: 18px 20px 20px; overflow-y: auto; }
 .field { margin-bottom: 13px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
@@ -197,7 +238,7 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 
 .day-num { font-family: var(--f-mono); }
 .chip-initials { font-family: var(--f-mono); font-size: 10px; background: rgba(255,255,255,.28); border-radius: var(--r-pill); padding: 0 5px; flex: none; }
-.cal-event { margin: 4px 5px; font-size: 11px; color: var(--dome); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-event { margin: 4px 5px; font-size: 11px; color: var(--gold-deep); font-weight: 600; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mcell .cal-event { margin: 3px 0 0; }
 .mcell .ev-bar { display: block; font-size: 11px; font-weight: 600; color: var(--dome); background: var(--primary-weak); border: 1px solid var(--gold); border-radius: var(--r-ctl); padding: 1px 5px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -221,7 +262,14 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .badge { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-mono); font-size: 10.5px; color: #fff; border-radius: var(--r-pill); padding: 1px 7px; font-weight: 600; }
 .mcell .dh { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .mcell .dh .today-tag { margin-left: auto; }
-.mev { font-size: 11px; color: var(--dome); font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mev { font-size: 11px; color: var(--gold-deep); font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The label text shrinks/ellipsizes; the leading line-art marker stays full size. */
+.cal-line-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Holidays: muted, icon-less, read as background context (not tasks). */
+.mev.holiday { color: var(--holiday); font-weight: 500; }
+.wk-hcell .ev.holiday { color: var(--holiday); font-weight: 500; }
+.cal-event.holiday { color: var(--holiday); font-weight: 500; }
+.mcell .more, .wk-hcell .more { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ============================================================= KANBAN */
 .kanban { display: flex; gap: 13px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; min-height: 100%; }
@@ -270,6 +318,7 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .usermenu-pop { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--shadow-pop); min-width: 200px; padding: 6px; z-index: 30; }
 .usermenu-item { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; background: transparent; border: none; padding: 9px 10px; border-radius: var(--r-ctl); color: var(--text); }
 .usermenu-item:hover { background: var(--sunk); }
+.usermenu-item > svg { flex: none; }
 .usermenu-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
 /* ============================================================= POPOVER (inline pickers) */
@@ -296,6 +345,8 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .topbar-actions button svg, .viewbar .right button svg { width: 17px; height: 17px; flex: none; }
 .viewbar .right button svg { width: 15px; height: 15px; }
 .icon-btn svg { width: 18px; height: 18px; }
+/* Ghost buttons that hold a single line-art glyph (approve/reject/delete rows). */
+.btn-ghost.icon-only { display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; }
 .user {
   display: flex; align-items: center; gap: 7px; background: var(--surface-2);
   border: 1px solid var(--border); border-radius: var(--r-pill);
@@ -437,7 +488,7 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
 
   /* Modals fill the screen and scroll */
   .modal-backdrop { padding: 10px; }
-  .modal { max-width: 100% !important; }
+  .modal { max-width: 100% !important; max-height: calc(100dvh - 20px); }
   .modal-body { padding: 14px; }
   .row2 { grid-template-columns: 1fr; }
   .modal-foot { flex-wrap: wrap; }
@@ -453,3 +504,49 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
   .filters input, .filters select { min-width: 0; flex: 1 1 130px; }
   .usermenu-pop { right: auto; left: 0; }
 }
+
+/* ---- Help center -------------------------------------------------------- */
+.help-item { border-bottom: 1px solid var(--faint); }
+.help-q {
+  width: 100%; text-align: left; background: none; border: none;
+  padding: 10px 8px; cursor: pointer; display: flex; align-items: center;
+  gap: 8px; color: var(--text); font: inherit; border-radius: 8px;
+  transition: background .12s ease;
+}
+.help-q:hover { background: var(--hover); }
+.help-q-title { flex: 1; font-weight: 600; }
+.help-q-caret { font-size: 12px; }
+.help-a { padding: 2px 8px 12px; line-height: 1.55; }
+
+.help-cat {
+  width: 100%; text-align: left; background: none; border: none;
+  border-bottom: 1px solid var(--faint); padding: 12px 8px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; color: var(--text);
+  font: inherit; font-weight: 700; border-radius: 8px 8px 0 0;
+  transition: background .12s ease;
+}
+.help-cat:hover { background: var(--hover); }
+.help-cat-label { flex: 1; }
+.help-cat-count {
+  font-size: 12px; font-weight: 600; min-width: 20px; text-align: center;
+  padding: 1px 8px; border-radius: 999px; background: var(--faint);
+}
+.help-cat-body { padding-left: 6px; }
+
+.help-chip {
+  font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+  letter-spacing: .03em; flex: none;
+}
+.help-chip-admin { background: var(--faint); color: var(--muted); text-transform: uppercase; }
+.help-chip-new { background: #6d4aff; color: #fff; }
+
+.help-footer {
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--faint);
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.help-contact {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+  color: var(--muted); text-decoration: none; font-size: 13px;
+  padding: 6px 8px; border-radius: 8px; transition: background .12s ease, color .12s ease;
+}
+.help-contact:hover { background: var(--hover); color: var(--text); }

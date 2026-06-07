@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Upload } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { Modal } from "./common";
 
@@ -110,7 +111,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
     <>
       <button className="btn-secondary" data-testid="import-button" onClick={() => setOpen(true)}>{t("import.button")}</button>
       {open && (
-        <Modal title={t("modals.importTasks")} onClose={close} wide>
+        <Modal icon={<Upload />} title={t("modals.importTasks")} onClose={close} wide>
           {!result && (
             <>
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>

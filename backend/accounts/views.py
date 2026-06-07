@@ -16,9 +16,19 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from permissions.drf import IsAdmin, IsSuperUser
 
-from .models import SUPPORTED_LANGUAGES, Group, Membership, Organization, Tier, User, ensure_default_tiers
+from .models import (
+    SUPPORTED_LANGUAGES,
+    Group,
+    Invitation,
+    Membership,
+    Organization,
+    Tier,
+    User,
+    ensure_default_tiers,
+)
 from .serializers import (
     GroupSerializer,
+    InvitationSerializer,
     SignupSerializer,
     TierSerializer,
     UserSerializer,
@@ -250,26 +260,13 @@ def _user_from_uid(uid, *, active_only=True):
 
 
 def _send_reset_email(user):
-    """Email a one-hour reset link pointing at the SPA's ?reset deep-link."""
+    """Email a one-hour reset link pointing at the SPA's ?reset deep-link.
+    Localized to the user's stored language (English fallback)."""
+    from .emails import send_reset
+
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
-    link = f"{settings.FRONTEND_URL}/?reset&uid={uid}&token={token}"
-    greeting = f"Hello {user.name}," if user.name else "Hello,"
-    body = (
-        f"{greeting}\n\n"
-        "We received a request to reset your Ananda Taskboard password.\n"
-        "Use the link below to choose a new one (it expires in 1 hour):\n\n"
-        f"{link}\n\n"
-        "If you didn't request this, you can safely ignore this email — "
-        "your password won't change.\n"
-    )
-    send_mail(
-        "Reset your Ananda Taskboard password",
-        body,
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        fail_silently=True,
-    )
+    send_reset(user, f"{settings.FRONTEND_URL}/?reset&uid={uid}&token={token}")
 
 
 class PasswordResetRequestView(APIView):
@@ -417,6 +414,165 @@ class PlatformStatsView(APIView):
                 },
                 "members": members,
             })
+        return Response(out)
+
+
+# ── Org invitations ────────────────────────────────────────────────────────────
+# An org admin invites an email at a role + tier. The emailed token authorizes
+# acceptance, which creates the Membership (and the User, if new). Localized to
+# the recipient's language when they already have an account.
+
+def _send_invite_email(inv):
+    from .emails import send_invite
+
+    link = f"{settings.FRONTEND_URL}/?invite={inv.id}&token={inv.token}"
+    existing = User.objects.filter(email=inv.email).first()
+    send_invite(
+        inv, link,
+        recipient_name=(existing.name if existing else ""),
+        recipient_lang=(existing.language if existing else ""),
+    )
+
+
+class InvitationViewSet(viewsets.ModelViewSet):
+    """Org admin: create / list / revoke invitations for the active org."""
+
+    serializer_class = InvitationSerializer
+    permission_classes = [IsAdmin]
+    http_method_names = ["get", "post", "delete", "options"]
+
+    def get_queryset(self):
+        org = getattr(self.request, "org", None)
+        if org is None:
+            return Invitation.objects.none()
+        return (
+            Invitation.objects.filter(organization=org, status=Invitation.Status.PENDING)
+            .select_related("tier", "invited_by")
+        )
+
+    def create(self, request, *args, **kwargs):
+        from .models import _invite_token
+
+        org = getattr(request, "org", None)
+        if org is None:
+            return Response({"detail": "No active organization."}, status=400)
+        email = (request.data.get("email") or "").strip().lower()
+        if not email:
+            raise ValidationError({"email": "Email is required."})
+        role = request.data.get("role") or Membership.Role.MEMBER
+        if role not in (Membership.Role.ADMIN, Membership.Role.MEMBER):
+            raise ValidationError({"role": "Invalid role."})
+        tier_id = request.data.get("tier")
+        if role == Membership.Role.ADMIN:
+            tier_id = None  # admins ignore tiers
+        elif tier_id and not Tier.objects.filter(id=tier_id, organization=org).exists():
+            raise ValidationError({"tier": "Unknown tier for this organization."})
+        if Membership.objects.filter(user__email=email, organization=org, is_active=True).exists():
+            raise ValidationError({"email": "That person is already a member of this organization."})
+
+        inv, _ = Invitation.objects.update_or_create(
+            organization=org, email=email, status=Invitation.Status.PENDING,
+            defaults={"role": role, "tier_id": tier_id, "invited_by": request.user, "token": _invite_token()},
+        )
+        _send_invite_email(inv)
+        return Response(InvitationSerializer(inv).data, status=201)
+
+    def perform_destroy(self, instance):
+        instance.status = Invitation.Status.REVOKED
+        instance.save(update_fields=["status"])
+
+
+def _valid_invite(pk, token):
+    inv = Invitation.objects.select_related("organization", "tier").filter(pk=pk).first()
+    if not inv or inv.token != token or inv.status != Invitation.Status.PENDING or inv.is_expired:
+        return None
+    return inv
+
+
+class InvitationPreviewView(APIView):
+    """Public, token-gated: what an invite is for, so the accept screen can choose
+    sign-up (no account) vs join (existing account)."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        inv = _valid_invite(pk, request.query_params.get("token") or "")
+        if inv is None:
+            return Response({"detail": "invalid"}, status=400)
+        return Response({
+            "organization": inv.organization.name,
+            "email": inv.email,
+            "role": inv.role,
+            "account_exists": User.objects.filter(email=inv.email).exists(),
+        })
+
+
+def _grant_invite_access(user, inv):
+    """Create the invite's initial AccessGrants so the new member lands with
+    something to see. Each entry: {"scope": "subproject"|"project", "id", "level"}.
+    Entries outside the invite's org are ignored (hard isolation)."""
+    from permissions.models import AccessGrant
+    from projects.models import Project, SubProject
+
+    for entry in (inv.access or []):
+        if not isinstance(entry, dict):
+            continue
+        scope, sid = entry.get("scope"), entry.get("id")
+        level = "viewer" if entry.get("level") == "viewer" else "member"
+        if not sid:
+            continue
+        if scope == "subproject" and SubProject.objects.filter(
+            id=sid, project__organization=inv.organization
+        ).exists():
+            AccessGrant.objects.get_or_create(user=user, subproject_id=sid, defaults={"level": level})
+        elif scope == "project" and Project.objects.filter(
+            id=sid, organization=inv.organization
+        ).exists():
+            AccessGrant.objects.get_or_create(user=user, project_id=sid, defaults={"level": level})
+
+
+class InvitationAcceptView(APIView):
+    """Public, token-gated: accept an invite → create the Membership (and the User,
+    if new — which auto-logs them in since they just set a password)."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request, pk):
+        inv = _valid_invite(pk, request.data.get("token") or "")
+        if inv is None:
+            return Response({"detail": "invalid"}, status=400)
+        user = User.objects.filter(email=inv.email).first()
+        new_account = user is None
+        if new_account:
+            name = (request.data.get("name") or "").strip()
+            if not name:
+                raise ValidationError({"name": "Name is required."})
+            password = request.data.get("password") or ""
+            try:
+                validate_password(password)
+            except DjangoValidationError as exc:
+                return Response({"password": list(exc.messages)}, status=400)
+            user = User.objects.create_user(email=inv.email, name=name, password=password, is_active=True)
+
+        Membership.objects.get_or_create(
+            user=user, organization=inv.organization,
+            defaults={"role": inv.role, "tier": inv.tier, "is_active": True},
+        )
+        _grant_invite_access(user, inv)
+        from django.utils import timezone
+        inv.status = Invitation.Status.ACCEPTED
+        inv.accepted_at = timezone.now()
+        inv.save(update_fields=["status", "accepted_at"])
+
+        out = {"detail": "ok", "account_exists": not new_account,
+               "email": inv.email, "org_id": inv.organization_id}
+        if new_account:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            out["access"] = str(refresh.access_token)
+            out["refresh"] = str(refresh)
         return Response(out)
 
 

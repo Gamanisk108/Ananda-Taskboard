@@ -29,7 +29,9 @@ def _instance(task, on_date, today, is_deadline):
     return {
         "task_id": task.id,
         "title": task.title,
-        "date": on_date.isoformat(),
+        # Undated tasks (surfaced as a standalone list) carry "" — they never land
+        # on a calendar day; the day-list rows ignore the field anyway.
+        "date": on_date.isoformat() if on_date else "",
         "status": task.status,
         "is_recurring": task.is_recurring,
         "is_deadline": is_deadline,  # the actual due day of a multi-day span
@@ -83,19 +85,19 @@ class CalendarView(APIView):
                 for d in occurrence_dates(task.recurrence_rule, start, end):
                     out.append(_instance(task, d, today, is_deadline=True))
                 continue
-            # Non-recurring span → shows on every day up to the deadline.
-            # Start = explicit Start date; else (deadline only) the creation date,
-            # so a deadline'd task spans from when it was made to its due date.
-            span_end = task.deadline or task.timeline_start
-            if not span_end:
-                continue  # no dates → only in the list view, not the calendar
+            # Non-recurring tasks on the calendar:
+            #  - With a Start date → span Start..deadline (or just the Start day if
+            #    there's no deadline yet).
+            #  - Deadline only (no Start) → show ONLY on the deadline day; a bare
+            #    due-date is a single point, not a span from when it was created.
+            #  - Neither date → list view only, never the calendar.
             if task.timeline_start:
                 span_start = task.timeline_start
-            elif task.deadline and task.created_at:
-                created = task.created_at.date()
-                span_start = min(created, task.deadline)  # if created after the deadline, just the day
+                span_end = task.deadline or task.timeline_start
+            elif task.deadline:
+                span_start = span_end = task.deadline
             else:
-                span_start = span_end
+                continue
             if span_start > span_end:
                 span_start, span_end = span_end, span_start
             d = max(span_start, start)
@@ -104,4 +106,41 @@ class CalendarView(APIView):
                 out.append(_instance(task, d, today, is_deadline=(d == task.deadline)))
                 d += timedelta(days=1)
         out.sort(key=lambda i: (i["date"], i["project_name"], i["title"]))
+        return Response(out)
+
+
+class UndatedTasksView(APIView):
+    """Tasks with no start date, no deadline, and no recurrence — they never land
+    on a calendar day, so the month/week views surface them as a standalone list.
+    Same filters as the calendar feed: approved, not archived, not complete, and
+    visibility-scoped; project/sub-project filterable. Shaped like calendar
+    instances so the day-list component renders them unchanged."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import complete_status_keys
+
+        user = request.user
+        org = getattr(request, "org", None)
+        qs = (
+            Task.objects.filter(
+                approval_state=Task.Approval.APPROVED,
+                archived_at__isnull=True,
+                timeline_start__isnull=True,
+                deadline__isnull=True,
+                recurrence_rule__isnull=True,
+            )
+            .exclude(status__in=complete_status_keys())  # done tasks never appear
+            .select_related("subproject__project")
+            .prefetch_related("assignees")
+        )
+        qs = qs.filter(visible_tasks_q(user, org)).distinct()
+        for key, field in (("project", "subproject__project_id"), ("subproject", "subproject_id")):
+            if request.query_params.get(key):
+                qs = qs.filter(**{field: request.query_params[key]})
+
+        today = date.today()
+        out = [_instance(task, None, today, is_deadline=False) for task in qs]
+        out.sort(key=lambda i: (i["project_name"], i["title"]))
         return Response(out)

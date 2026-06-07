@@ -3,6 +3,8 @@ Accounts: a custom email-login User, and Group (named collections of users used
 for bulk permission grants — distinct from django.contrib.auth.Group).
 """
 
+import secrets
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -97,6 +99,9 @@ class Organization(models.Model):
     # False until the creator verifies their email (self-serve signup gate).
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Holiday sets shown on this org's calendars (keys from tasks.holidays_feed).
+    # Empty list → the app falls back to DEFAULT_SETS at read time.
+    enabled_holiday_sets = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["name"]
@@ -167,24 +172,31 @@ class Group(models.Model):
 # How much of an accessible scope a grant lets the holder SEE (orthogonal to the
 # member/viewer edit level). Lives here (no app deps) so both Tier and the
 # permissions app's AccessGrant can share it without a circular import.
+# "View Access" levels — how many tasks a member can SEE. This is now the member's
+# single visibility control (set per member via their tier); the widest wins on
+# conflict. Labels here are the user-facing View Access names.
 SEES_OWN = "own"
 SEES_SUBPROJECT = "subproject"
 SEES_PROJECT = "project"
+SEES_ORG = "org"
 SEES_CHOICES = [
-    (SEES_OWN, "Own tasks only"),
-    (SEES_SUBPROJECT, "All tasks in the sub-project"),
-    (SEES_PROJECT, "All tasks in the project"),
+    (SEES_OWN, "Tasks Only"),               # only tasks assigned to them
+    (SEES_SUBPROJECT, "Sub-Project Only"),  # all tasks in their sub-projects
+    (SEES_PROJECT, "Full Project"),         # all tasks in their projects
+    (SEES_ORG, "Organization"),             # all tasks across the whole org
 ]
-# Higher = wider. Used so the most-permissive grant wins on conflict.
-SEES_RANK = {SEES_OWN: 1, SEES_SUBPROJECT: 2, SEES_PROJECT: 3}
+# Higher = wider. Used so the most-permissive level wins on conflict.
+SEES_RANK = {SEES_OWN: 1, SEES_SUBPROJECT: 2, SEES_PROJECT: 3, SEES_ORG: 4}
 
 
 class Tier(models.Model):
-    """A reusable permission template (e.g. 'Volunteer', 'Coordinator', 'Lead').
+    """A member's "View Access" level (Tasks Only / Sub-Project Only / Full Project
+    / Organization). Internally still called Tier; the UI label is "View Access".
 
-    A member assigned to a tier inherits that tier's access grants + exclusions
-    LIVE (editing a tier instantly affects its members — no copy/re-apply step).
-    `default_sees` is just the visibility pre-filled when adding the tier's grants.
+    `default_sees` IS the member's visibility breadth — applied live everywhere they
+    can reach (see permissions/engine.py). A member assigned to a tier also inherits
+    any access grants/exclusions that target the tier (editing it affects members
+    immediately — no copy/re-apply step).
     """
 
     organization = models.ForeignKey(
@@ -204,13 +216,15 @@ class Tier(models.Model):
         return self.name
 
 
-# The standard tier set seeded for every organization. The tier-customization UI
-# was removed, so this fixed set is what admins assign members to (access per tier
-# is still granted via the Access tab). Order = increasing visibility.
+# The standard "View Access" set seeded for every organization. A member is
+# assigned exactly one; it is their single visibility control (how many tasks they
+# can see). WHERE they can act is still set via the Access tab. Order = increasing
+# visibility, which is also the dropdown order.
 DEFAULT_TIERS = [
-    ("Volunteer", SEES_OWN),           # own tasks only
-    ("Coordinator", SEES_SUBPROJECT),  # all tasks in the sub-project
-    ("Lead", SEES_PROJECT),            # all tasks in the project
+    ("Tasks Only", SEES_OWN),               # only tasks assigned to them
+    ("Sub-Project Only", SEES_SUBPROJECT),  # all tasks in their sub-projects
+    ("Full Project", SEES_PROJECT),         # all tasks in their projects
+    ("Organization", SEES_ORG),             # all tasks across the whole org
 ]
 
 
@@ -222,3 +236,54 @@ def ensure_default_tiers(org):
         Tier.objects.get_or_create(
             organization=org, name=name, defaults={"default_sees": sees}
         )
+
+
+def _invite_token():
+    return secrets.token_urlsafe(32)
+
+
+class Invitation(models.Model):
+    """A pending invite for an email to join ONE org at a role + tier. The emailed
+    token is the secret that authorizes acceptance; accepting creates the
+    Membership (and the User, if the invitee has no account yet)."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ACCEPTED = "accepted", "Accepted"
+        REVOKED = "revoked", "Revoked"
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="invitations")
+    email = models.EmailField()
+    role = models.CharField(max_length=10, choices=Membership.Role.choices, default=Membership.Role.MEMBER)
+    tier = models.ForeignKey(Tier, null=True, blank=True, on_delete=models.SET_NULL, related_name="invitations")
+    # Optional initial access granted on acceptance so a new member lands with
+    # something to see (no limbo). List of
+    # {"scope": "subproject"|"project", "id": <int>, "level": "member"|"viewer"}.
+    access = models.JSONField(default=list, blank=True)
+    token = models.CharField(max_length=64, default=_invite_token, db_index=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    invited_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name="sent_invitations")
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "email"],
+                condition=models.Q(status="pending"),
+                name="one_pending_invite_per_org_email",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.email} → {self.organization} [{self.role}/{self.status}]"
+
+    @property
+    def is_expired(self):
+        from datetime import timedelta
+
+        from django.conf import settings
+        from django.utils import timezone
+
+        return timezone.now() > self.created_at + timedelta(days=getattr(settings, "INVITE_TIMEOUT_DAYS", 14))

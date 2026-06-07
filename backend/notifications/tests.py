@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 from accounts.models import User
 from notifications.daily import build_payload, local_today, run_daily_push, tasks_for_user
 from notifications.models import PushSubscription
-from permissions.models import AccessGrant
+from permissions.models import AccessGrant, Exclusion
 from projects.models import Project, SubProject
 from tasks.models import RecurrenceRule, Task
 
@@ -230,13 +230,19 @@ def test_group_assigned_task_in_member_daily(member, sp):
     assert "Crew task" in due_today
 
 
-def test_assigned_but_no_access_excluded_from_push(member, sp):
-    """Security: assignment alone must not leak a task the user can't see."""
+def test_assigned_task_in_push_until_excluded(member, sp):
+    """Policy (confirmed 2026-06-06): assignment alone confers visibility, so an
+    assignee is reminded of their task even without a sub-project grant. An Exclusion
+    (deny > assignment) is what removes it from the push."""
     today = local_today()
-    t = Task.objects.create(subproject=sp, title="Hidden assigned", deadline=today)
-    t.assignees.add(member)  # assigned, but member has NO grant to sp
+    t = Task.objects.create(subproject=sp, title="Assigned to me", deadline=today)
+    t.assignees.add(member)  # assigned, no grant → still visible under the policy
     due_today, overdue = tasks_for_user(member, today)
-    assert "Hidden assigned" not in due_today and "Hidden assigned" not in overdue
+    assert "Assigned to me" in due_today
+    # deny > assignment: an Exclusion cuts it from the push too.
+    Exclusion.objects.create(user=member, excluded_task=t)
+    due_today2, overdue2 = tasks_for_user(member, today)
+    assert "Assigned to me" not in due_today2 and "Assigned to me" not in overdue2
 
 
 # --- app settings (admin, in-app) ------------------------------------------

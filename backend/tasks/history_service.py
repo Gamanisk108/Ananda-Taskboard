@@ -48,6 +48,7 @@ def build_day_instances(day):
         rows.append({
             "title": t.title,
             "status": t.status,
+            "organization_id": proj.organization_id,  # so history can be org-scoped on read
             "project_name": proj.name,
             "project_color": proj.color,
             "subproject_name": sp.name,
@@ -89,10 +90,15 @@ class HistoryView(APIView):
         end = _parse(request.query_params.get("to"), "to")
         from .models import HistoryDay
 
+        org = getattr(request, "org", None)
         out = []
         for h in HistoryDay.objects.filter(date__gte=start, date__lte=end):
             iso = h.date.isoformat()
             for inst in h.instances:
+                # Org-scoped: only this org's snapshot rows (older rows lacking the
+                # org tag are excluded rather than leaked).
+                if org is not None and inst.get("organization_id") != org.id:
+                    continue
                 out.append({**inst, "date": iso})
         return Response(out)
 

@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Check, X, LayoutGrid } from "lucide-react";
+import { format } from "date-fns";
+import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { Modal, Spinner } from "./common";
 import { DeleteWithMove } from "./DeleteWithMove";
 import { EmojiPicker } from "./EmojiPicker";
+
+/** "Jun 5, 2026" from an ISO timestamp, or null when missing/unparseable. */
+function fmtCreated(d?: string): string | null {
+  if (!d) return null;
+  const dt = new Date(d);
+  return Number.isNaN(dt.getTime()) ? null : format(dt, "MMM d, yyyy", { locale: dfLocale() });
+}
 
 interface Sub {
   id: number;
@@ -12,6 +22,7 @@ interface Sub {
   color: string;
   members_post_without_approval: boolean;
   is_default: boolean;
+  created_at?: string;
 }
 interface Proj {
   id: number;
@@ -19,6 +30,7 @@ interface Proj {
   color: string;
   emoji: string;
   subprojects: Sub[];
+  created_at?: string;
 }
 
 export function ManageProjects({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
@@ -99,7 +111,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   return (
-    <Modal title={t("modals.projects")} onClose={onClose} wide>
+    <Modal icon={<LayoutGrid />} title={t("modals.projects")} onClose={onClose} wide>
       <div className="field" style={{ display: "flex", gap: 8 }}>
         <input placeholder={t("mp.newProjectPh")} value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} />
         <button className="btn-primary" onClick={addProject} disabled={busy}>{t("mp.addProject")}</button>
@@ -139,6 +151,11 @@ function ProjectEditor({
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>{t("common.save")}</button>
         <button className="btn-ghost" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
         <button className="btn-danger" onClick={() => onDeleteProject(project)}>{t("common.delete")}</button>
+        {fmtCreated(project.created_at) && (
+          <span className="muted" style={{ marginLeft: "auto", fontSize: 12, whiteSpace: "nowrap" }}>
+            {t("mp.created", "Created {{date}}", { date: fmtCreated(project.created_at) })}
+          </span>
+        )}
       </div>
 
       <div style={{ paddingLeft: 8 }}>
@@ -169,8 +186,13 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
         {t("mp.trusted")}
       </label>
       <button className="btn-ghost" onClick={() => onSave(s)}>{t("common.save")}</button>
-      <button className="btn-ghost" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}>✓</button>
-      {!s.is_default && <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => onDelete(sub)}>✕</button>}
+      <button className="btn-ghost icon-only" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}><Check size={16} /></button>
+      {!s.is_default && <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>}
+      {fmtCreated(sub.created_at) && (
+        <span className="muted" style={{ marginLeft: "auto", fontSize: 11, whiteSpace: "nowrap" }}>
+          {t("mp.created", "Created {{date}}", { date: fmtCreated(sub.created_at) })}
+        </span>
+      )}
     </div>
   );
 }

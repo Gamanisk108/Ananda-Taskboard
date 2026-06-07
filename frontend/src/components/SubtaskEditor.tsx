@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
-import { useUsers } from "../users";
+import { avatarColor, userInitials, useUsers } from "../users";
 import type { Subtask } from "../types";
 
-/** Subtasks of a task: a simple list, each with a changeable status dropdown,
- *  plus add / delete. Calls onChanged so the List card's status dots refresh. */
-export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged?: () => void }) {
+/** Compact list of a task's subtasks. Each row shows title · quick status · who's
+ *  assigned, and opens the full subtask editor (SubtaskDetail) on click. Quick-add
+ *  by title stays inline for fast capture. Calls onChanged so the parent's status
+ *  dots refresh. */
+export function SubtaskEditor({
+  taskId, onOpen, onChanged,
+}: { taskId: number; onOpen: (s: Subtask) => void; onChanged?: () => void }) {
   const { t } = useTranslation();
   const [subs, setSubs] = useState<Subtask[]>([]);
   const [title, setTitle] = useState("");
@@ -39,11 +44,6 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
     onChanged?.();
   }
 
-  async function setAssignee(id: number, assignee: number | null) {
-    setSubs((cur) => cur.map((s) => (s.id === id ? { ...s, assignee } : s)));
-    await api.patch(`/api/subtasks/${id}`, { assignee });
-  }
-
   async function remove(id: number) {
     await api.del(`/api/subtasks/${id}`);
     load();
@@ -55,16 +55,25 @@ export function SubtaskEditor({ taskId, onChanged }: { taskId: number; onChanged
       <h3 className="section-title">{t("task.subtasks")} ({subs.length})</h3>
       {subs.map((s) => (
         <div key={s.id} data-testid="subtask-row" style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-          <span style={{ flex: 1 }}>{s.title}</span>
-          <select data-testid="subtask-assignee" value={s.assignee ?? ""} onChange={(e) => setAssignee(s.id, e.target.value ? Number(e.target.value) : null)}
-            style={{ width: "auto", maxWidth: 130 }} title={t("subtask.assignee")}>
-            <option value="">{t("list.unassigned")}</option>
-            {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
-          </select>
+          <button type="button" data-testid="subtask-open" className="btn-ghost subtask-open"
+            onClick={() => onOpen(s)} title={t("subtask.editDetails")}
+            style={{ flex: 1, textAlign: "left", padding: "4px 6px", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ flex: 1 }}>{s.title}</span>
+            <span style={{ display: "flex", gap: 2 }}>
+              {(s.assignees ?? []).slice(0, 3).map((id) => (
+                <span key={id} className="av" style={{ background: avatarColor(id) }} title={userInitials(users, id)}>
+                  {userInitials(users, id)}
+                </span>
+              ))}
+              {(s.assignee_groups ?? []).length > 0 && (
+                <span className="av" style={{ background: "var(--primary-weak)", color: "var(--dome)" }} title={t("ap.assignGroup")}>◇</span>
+              )}
+            </span>
+          </button>
           <select data-testid="subtask-status" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto" }}>
             {statuses.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
           </select>
-          <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => remove(s.id)}>✕</button>
+          <button type="button" className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => remove(s.id)}><X size={16} /></button>
         </div>
       ))}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>

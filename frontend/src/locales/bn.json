@@ -120,6 +120,28 @@
     "role_admin": "প্রশাসক",
     "role_member": "সদস্য"
   },
+  "invite": {
+    "title": "কাউকে আমন্ত্রণ জানান",
+    "hint": "তারা এই দলে যোগ দিতে একটি ইমেল পাবেন। নতুন ব্যক্তিরা আমন্ত্রণ থেকে তাদের অ্যাকাউন্ট তৈরি করতে পারেন।",
+    "send": "আমন্ত্রণ পাঠান",
+    "sent": "{{email}}-এ আমন্ত্রণ পাঠানো হয়েছে।",
+    "error": "আমন্ত্রণ পাঠানো যায়নি।",
+    "pending": "মুলতুবি আমন্ত্রণ",
+    "revoke": "প্রত্যাহার",
+    "confirmRevoke": "এই আমন্ত্রণ প্রত্যাহার করবেন?"
+  },
+  "accept": {
+    "title": "{{org}}-তে যোগ দিন",
+    "subtitle": "আপনাকে {{org}}-তে {{role}} হিসেবে আমন্ত্রণ জানানো হয়েছে ({{email}})।",
+    "join": "{{org}}-তে যোগ দিন",
+    "joining": "যোগ দেওয়া হচ্ছে…",
+    "joinedTitle": "{{org}}-তে স্বাগতম",
+    "joinedBody": "আপনি দলে যোগ দিয়েছেন। শুরু করতে সাইন ইন করুন।",
+    "invalidTitle": "আমন্ত্রণ বৈধ নয়",
+    "invalidBody": "এই আমন্ত্রণটি অবৈধ বা মেয়াদ শেষ হয়েছে। নতুন পাঠাতে আপনার দল প্রশাসককে বলুন।",
+    "loading": "লোড হচ্ছে…",
+    "error": "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।"
+  },
   "task": {
     "edit": "কাজ সম্পাদনা",
     "new": "নতুন কাজ",
@@ -152,7 +174,9 @@
     "subtasks": "উপ-কাজ",
     "addSubtask": "একটি উপ-কাজ যোগ করুন…",
     "comments": "মন্তব্য",
-    "addComment": "একটি মন্তব্য যোগ করুন… (উল্লেখ করতে @ লিখুন)"
+    "addComment": "একটি মন্তব্য যোগ করুন… (উল্লেখ করতে @ লিখুন)",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "সব প্রকল্প",
@@ -198,7 +222,8 @@
     "groups": "গোষ্ঠী",
     "access": "অ্যাক্সেস",
     "tiers": "স্তর",
-    "activity": "কার্যকলাপ"
+    "activity": "কার্যকলাপ",
+    "holidays": "ছুটির দিন"
   },
   "empty": {
     "approvals": "অনুমোদনের জন্য কিছু অপেক্ষমাণ নেই।",
@@ -379,6 +404,7 @@
     "openDay": "এই দিনের কাজ খুলুন",
     "noTasksWeek": "এই সপ্তাহে কোনো কাজ নেই।",
     "thisMonth": "এই মাস",
+    "more": "আরও",
     "dow": {
       "sun": "রবি",
       "mon": "সোম",
@@ -387,7 +413,9 @@
       "thu": "বৃহ",
       "fri": "শুক্র",
       "sat": "শনি"
-    }
+    },
+    "noDate": "তারিখ নেই",
+    "noDateTitle": "তারিখ নেই — {{count}}টি কাজ"
   },
   "del": {
     "kindProject": "প্রকল্প",
@@ -412,7 +440,10 @@
     "done": "সম্পন্ন"
   },
   "subtask": {
-    "assignee": "দায়িত্বপ্রাপ্ত"
+    "assignee": "দায়িত্বপ্রাপ্ত",
+    "back": "সাবটাস্কে ফিরে যান",
+    "confirmDelete": "এই সাবটাস্কটি মুছবেন?",
+    "editDetails": "বিবরণ সম্পাদনা করুন"
   },
   "import": {
     "button": "আমদানি ▾",
@@ -563,11 +594,54 @@
     "exclusionsHelp": "অস্বীকার সবসময় জেতে, এমনকি সদস্যকে বরাদ্দ করা কাজের উপরও (অস্বীকার > বরাদ্দ > অনুমতি)। কম ব্যবহার করুন।",
     "noExclusions": "কোনো বর্জন নেই।",
     "taskIdPh": "টাস্ক ID (যেমন ৩১৮)",
-    "selectHide": "কী লুকাতে হবে নির্বাচন করুন…"
+    "selectHide": "কী লুকাতে হবে নির্বাচন করুন…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "এই মন্তব্যটি মুছবেন?",
     "you": "আপনি",
     "teamMember": "টিম সদস্য"
+  },
+  "holidays": {
+    "title": "এই সংস্থার ক্যালেন্ডারে দেখানো ছুটির সেট",
+    "help": "বিশ্বজুড়ে সদস্যরা কেবল সেটাই দেখতে পান যা আপনি এখানে সক্ষম করেন।",
+    "set": {
+      "us_federal": "US ফেডারেল ছুটির দিন",
+      "us_observances": "US পালন (মা দিবস/বাবা দিবস, ডেলাইট সেভিং)",
+      "christian": "খ্রিস্টান / ধর্মীয়",
+      "hindu_festivals": "Hindu / যোগ উৎসব",
+      "ananda_lineage": "Ananda পরম্পরার দিন"
+    },
+    "save": "সংরক্ষণ",
+    "saved": "সংরক্ষিত"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

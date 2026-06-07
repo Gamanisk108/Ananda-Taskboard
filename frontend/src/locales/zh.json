@@ -120,6 +120,28 @@
     "role_admin": "管理员",
     "role_member": "成员"
   },
+  "invite": {
+    "title": "邀请成员",
+    "hint": "对方将收到加入此团队的邮件。新用户可通过邀请创建账户。",
+    "send": "发送邀请",
+    "sent": "邀请已发送至 {{email}}。",
+    "error": "无法发送邀请。",
+    "pending": "待处理的邀请",
+    "revoke": "撤销",
+    "confirmRevoke": "撤销此邀请？"
+  },
+  "accept": {
+    "title": "加入 {{org}}",
+    "subtitle": "你被邀请以{{role}}身份加入 {{org}}（{{email}}）。",
+    "join": "加入 {{org}}",
+    "joining": "加入中…",
+    "joinedTitle": "欢迎加入 {{org}}",
+    "joinedBody": "你已加入团队。登录即可开始。",
+    "invalidTitle": "邀请无效",
+    "invalidBody": "此邀请无效或已过期。请让团队管理员重新发送。",
+    "loading": "加载中…",
+    "error": "出了点问题。请重试。"
+  },
   "task": {
     "edit": "编辑任务",
     "new": "新建任务",
@@ -152,7 +174,9 @@
     "subtasks": "子任务",
     "addSubtask": "添加子任务…",
     "comments": "评论",
-    "addComment": "添加评论…（输入 @ 提及）"
+    "addComment": "添加评论…（输入 @ 提及）",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You have view-only access to this task."
   },
   "list": {
     "allProjects": "所有项目",
@@ -198,7 +222,8 @@
     "groups": "群组",
     "access": "访问权限",
     "tiers": "层级",
-    "activity": "活动"
+    "activity": "活动",
+    "holidays": "节假日"
   },
   "empty": {
     "approvals": "没有待审批的内容。",
@@ -379,6 +404,7 @@
     "openDay": "打开这一天的任务",
     "noTasksWeek": "本周没有任务。",
     "thisMonth": "本月",
+    "more": "更多",
     "dow": {
       "sun": "日",
       "mon": "一",
@@ -387,7 +413,9 @@
       "thu": "四",
       "fri": "五",
       "sat": "六"
-    }
+    },
+    "noDate": "无日期",
+    "noDateTitle": "无日期 — {{count}} 个任务"
   },
   "del": {
     "kindProject": "项目",
@@ -412,7 +440,10 @@
     "done": "完成"
   },
   "subtask": {
-    "assignee": "负责人"
+    "assignee": "负责人",
+    "back": "返回子任务",
+    "confirmDelete": "删除此子任务？",
+    "editDetails": "编辑详情"
   },
   "import": {
     "button": "导入 ▾",
@@ -563,11 +594,54 @@
     "exclusionsHelp": "拒绝始终优先，即使是成员被指派的任务（拒绝 > 分配 > 允许）。请谨慎使用。",
     "noExclusions": "无排除项。",
     "taskIdPh": "任务 ID（例如 318）",
-    "selectHide": "选择要隐藏的内容…"
+    "selectHide": "选择要隐藏的内容…",
+    "ownRoleLocked": "You can't change your own admin role."
   },
   "cs": {
     "confirmDelete": "删除此评论？",
     "you": "你",
     "teamMember": "团队成员"
+  },
+  "holidays": {
+    "title": "显示在此组织日历上的节假日集合",
+    "help": "全球成员只能看到您在此处启用的内容。",
+    "set": {
+      "us_federal": "美国联邦节假日",
+      "us_observances": "美国纪念日（Mother's/Father's Day、夏令时）",
+      "christian": "基督教 / 宗教节日",
+      "hindu_festivals": "Hindu / 瑜伽节日",
+      "ananda_lineage": "Ananda 传承纪念日"
+    },
+    "save": "保存",
+    "saved": "已保存"
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "open": "Help",
+    "search": "Search help…",
+    "whatsNew": "What's new",
+    "newBadge": "New",
+    "replayWelcome": "Show welcome again",
+    "noResults": "No help found. Try another word.",
+    "adminChip": "Admin",
+    "adminOnly": "Admin only",
+    "contact": "Contact us",
+    "cat": {
+      "views": "Getting around",
+      "tasks": "Everyday tasks",
+      "account": "Your account",
+      "admin": "For admins",
+      "faq": "Common questions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Ananda Taskboard 🙏",
+    "intro": "Three quick things and you're ready:",
+    "b1": "Tap a colored tab to open a project and see its tasks.",
+    "b2": "Switch between List, Board, Weekly and Monthly up top.",
+    "b3": "Tap the big + New task button to add something to do.",
+    "help": "You can reopen this anytime from the ? Help button.",
+    "gotIt": "Got it",
+    "skip": "Skip"
   }
 }

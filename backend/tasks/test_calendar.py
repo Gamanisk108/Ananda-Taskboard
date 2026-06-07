@@ -49,19 +49,17 @@ def test_task_spans_start_to_deadline(admin, sp):
     assert deadline_days == ["2026-06-05"]
 
 
-def test_deadline_only_spans_from_creation(admin, sp):
-    # No start date → the calendar spans from the creation date up to the deadline.
+def test_deadline_only_shows_only_on_deadline(admin, sp):
+    # No start date → a bare due-date is a single point: it appears ONLY on the
+    # deadline day, never spanning back to the creation date.
     from datetime import date as _date, timedelta
     today = _date.today()
     deadline = today + timedelta(days=3)
     Task.objects.create(subproject=sp, title="DueSoon", deadline=deadline)
     res = login(admin).get(f"/api/calendar?from={(today - timedelta(days=2)).isoformat()}&to={(today + timedelta(days=10)).isoformat()}")
     dates = sorted(i["date"] for i in res.data)
-    # robust to UTC/local date offset: span ends on the deadline, covers >1 day,
-    # and the deadline day is flagged.
-    assert dates[-1] == deadline.isoformat()
-    assert len(dates) >= 2
-    assert any(i["is_deadline"] and i["date"] == deadline.isoformat() for i in res.data)
+    assert dates == [deadline.isoformat()]
+    assert res.data[0]["is_deadline"]
 
 
 def test_span_clipped_to_window(admin, sp):
@@ -98,8 +96,37 @@ def test_pending_excluded(admin, sp):
     assert res.data == []
 
 
+def test_undated_endpoint_returns_only_undated_open_tasks(admin, sp):
+    Task.objects.create(subproject=sp, title="NoDate")                                   # included
+    Task.objects.create(subproject=sp, title="HasDeadline", deadline=date(2026, 6, 5))   # excluded (dated)
+    Task.objects.create(subproject=sp, title="HasStart", timeline_start=date(2026, 6, 5))  # excluded (dated)
+    Task.objects.create(subproject=sp, title="DoneNoDate", status="done")                # excluded (complete)
+    rule = RecurrenceRule.objects.create(freq="weekly", interval=1, anchor=date(2026, 6, 1))
+    Task.objects.create(subproject=sp, title="RecurNoDate", recurrence_rule=rule)         # excluded (recurring)
+    res = login(admin).get("/api/calendar/undated")
+    assert res.status_code == 200
+    assert [i["title"] for i in res.data] == ["NoDate"]
+    assert res.data[0]["date"] == ""  # undated marker
+
+
+def test_undated_endpoint_respects_visibility(member, sp):
+    hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Hidden")
+    from accounts.models import Tier
+    member.tier = Tier.objects.create(name="Sub-Project Only", default_sees="subproject")
+    member.save(update_fields=["tier"])
+    AccessGrant.objects.create(user=member, subproject=sp, level="viewer")
+    Task.objects.create(subproject=sp, title="MineUndated")
+    Task.objects.create(subproject=hidden, title="NotMineUndated")
+    res = login(member).get("/api/calendar/undated")
+    titles = {i["title"] for i in res.data}
+    assert "MineUndated" in titles and "NotMineUndated" not in titles
+
+
 def test_member_calendar_respects_visibility(member, sp):
     hidden = SubProject.objects.create(project=Project.objects.create(name="H"), name="Hidden")
+    from accounts.models import Tier
+    member.tier = Tier.objects.create(name="Sub-Project Only", default_sees="subproject")
+    member.save(update_fields=["tier"])
     AccessGrant.objects.create(user=member, subproject=sp, level="viewer")
     Task.objects.create(subproject=sp, title="Mine", deadline=date(2026, 6, 5))
     Task.objects.create(subproject=hidden, title="NotMine", deadline=date(2026, 6, 5))
