@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
+import emojiRegex from 'emoji-regex'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 // Design hard-rule #5: UI icons must be line-art SVG (lucide-react), never emoji.
@@ -22,14 +23,18 @@ const noEmojiIcon = {
   },
   create(context) {
     const allow = new Set(context.options[0]?.allow ?? [])
-    // Colorful pictographs (📋⚙️🎉…) plus the symbol/dingbat glyphs we converted to
-    // icons (✓ ✔ ✕ ✖ ✗ ↻ ↺ ↔), which are NOT \p{Extended_Pictographic}.
-    const RE = /\p{Extended_Pictographic}|[✓✔✕✖✗↻↺↔]/gu
+    // emoji-regex handles full emoji (incl. ZWJ sequences, skin tones, flags).
+    // The extra set catches symbol/dingbat glyphs we converted to icons
+    // (✓ ✔ ✕ ✖ ✗ ↻ ↺ ↔) that are NOT classified as emoji.
+    const extraGlyphs = /[✓✔✕✖✗↻↺↔]/u
+    const report = (node, ch) => context.report({ node, messageId: 'emoji', data: { ch } })
     const check = (node, text) => {
       if (!text) return
-      for (const m of text.matchAll(RE)) {
-        if (!allow.has(m[0])) { context.report({ node, messageId: 'emoji', data: { ch: m[0] } }); break }
+      for (const m of text.matchAll(emojiRegex())) {
+        if (!allow.has(m[0])) { report(node, m[0]); return }
       }
+      const g = text.match(extraGlyphs)
+      if (g && !allow.has(g[0])) report(node, g[0])
     }
     return {
       JSXText: (n) => check(n, n.value),
