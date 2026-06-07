@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Archive, Share2 } from "lucide-react";
+import { Eye, Archive, Share2, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
@@ -363,6 +363,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     e.preventDefault();
     if (submitting.current) return;        // block double/triple-click duplicates
     setErr("");
+    if (!title.trim()) { setErr(t("tm.errTitle", "Please enter a task name.")); return; }
     if (!subproject) { setErr(t("tm.errPickProject")); return; }
     if (!!startTime !== !!endTime) { setErr(t("tm.errTimes")); return; }
     if (startTime && endTime && endTime <= startTime) { setErr(t("tm.errEndTime")); return; }
@@ -410,7 +411,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal title={editing ? `${t("task.edit")} · #${task!.id}` : t("task.new")} onClose={onClose} wide
+    <Modal onClose={onClose} wide
+      title={/* DN10: the header IS the inline-editable task title + pen + #id chip. */
+        <span className="task-title-head">
+          <input className="task-title-input" data-testid="task-title" value={title}
+            onChange={(e) => setTitle(e.target.value)} disabled={readOnly} autoFocus
+            placeholder={t("task.namePlaceholder")} aria-label={t("task.name")} />
+          {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
+          {editing && <span className="task-id-chip">#{task!.id}</span>}
+        </span>}
       footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />}>
       <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
@@ -430,10 +439,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
         {/* A disabled fieldset makes every control inside read-only in one stroke — so
             a viewer is never shown an editable form that only 403s on Save. */}
         <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
-        <div className="field">
-          <label>{t("task.name")}</label>
-          <input data-testid="task-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder={t("task.namePlaceholder")} />
-        </div>
+        {/* DN10: task name is edited in the modal header (above), not a body field. */}
 
         {readOnly ? (
           // Show the task's REAL project/sub-project. The editable picker is filtered to

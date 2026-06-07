@@ -151,9 +151,19 @@
 /* Header stays put; the body scrolls. Without the bounded height + scroll, tall
    modals pushed the ✕ close button off-screen ("trapped" — QA 2026-06-05). */
 .modal-head { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); border-radius: var(--r-card) var(--r-card) 0 0; }
-.modal-head h2 { font-size: 19px; white-space: nowrap; display: inline-flex; align-items: center; gap: 9px; }
+.modal-head h2 { font-size: 19px; white-space: nowrap; display: inline-flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
 /* Section-header icon before a dialog title (design rule #6): muted line-art, 19px. */
 .modal-head h2 .sh-icn { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); flex: none; }
+/* DN10: inline-editable task title in the modal header (input + pen + #id chip). */
+.task-title-head { display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.task-title-input { font: inherit; color: var(--text); background: transparent; border: 1px solid transparent;
+  border-radius: 6px; padding: 2px 6px; min-width: 0; flex: 1 1 auto; }
+.task-title-input:hover:not(:disabled) { border-color: var(--border); }
+.task-title-input:focus { border-color: var(--primary); background: var(--surface); outline: none; }
+.task-title-input:disabled { color: var(--text); opacity: 1; }
+.task-title-pen { color: var(--muted); flex: none; }
+.task-id-chip { font-family: var(--f-mono); font-size: 12px; color: var(--muted); background: var(--sunk);
+  border-radius: var(--r-pill); padding: 1px 8px; flex: none; font-weight: 500; }
 .modal-head h2 .sh-icn svg { width: 19px; height: 19px; display: block; }
 /* Modal close X is a 28×28 circular hover target around a 14px icon (design rule #9). */
 .modal-head .icon-btn { padding: 4px; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; flex: none; }

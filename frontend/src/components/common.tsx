@@ -203,7 +203,7 @@ export function Modal({
   icon,
   footer,
 }: {
-  title: string;
+  title: ReactNode;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
