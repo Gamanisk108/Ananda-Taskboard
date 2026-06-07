@@ -177,6 +177,12 @@
 .modal-foot-sticky { flex: none; margin-top: 0; padding: 13px 20px; border-top: 1px solid var(--border);
   background: var(--surface); border-radius: 0 0 var(--r-card) var(--r-card); }
 .rec-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 12px; margin-bottom: 13px; }
+/* D4: Links as a row list (chain icon · URL · ✕) + "Add link", not a textarea. */
+.links-editor { display: flex; flex-direction: column; gap: 6px; }
+.link-row { display: flex; align-items: center; gap: 8px; }
+.link-row .link-ic { color: var(--muted); flex: none; }
+.link-row .link-input { flex: 1; min-width: 0; }
+.add-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: var(--primary); padding: 4px 6px; }
 /* assignee avatar chips (task modal) */
 .m-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .m-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--sunk); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 2px 9px 2px 3px; font-size: 12px; font-weight: 500; color: var(--text); }

@@ -8,7 +8,7 @@ import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
-import { Modal, StatusPill, PriorityIcon } from "./common";
+import { Modal, StatusPill, PriorityIcon, LinksEditor } from "./common";
 import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
@@ -536,7 +536,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         <div className="field">
           <label>{t("task.links")}</label>
-          <textarea rows={2} value={links} onChange={(e) => setLinks(e.target.value)} placeholder="https://drive.google.com/…" />
+          <LinksEditor value={links} onChange={setLinks} disabled={readOnly} />
         </div>
 
         <div className="field">

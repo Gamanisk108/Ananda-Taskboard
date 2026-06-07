@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { X, Link2, Plus } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
@@ -174,6 +174,35 @@ export function ProjPill({ name, color }: { name: string; color: string }) {
     <span className="pill proj-pill" style={{ "--pc": color } as CSSProperties} title={name}>
       <span className="nm">{name}</span>
     </span>
+  );
+}
+
+/** Links as a structured list of removable rows + "Add link" (design D4), not a
+ *  textarea. Serializes to/from a newline-joined string so callers keep their
+ *  existing `links` state + payload (`links.split("\n")`). */
+export function LinksEditor({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const { t } = useTranslation();
+  const list = value.length ? value.split("\n") : [];
+  const commit = (next: string[]) => onChange(next.join("\n"));
+  return (
+    <div className="links-editor">
+      {list.map((u, i) => (
+        <div className="link-row" key={i}>
+          <Link2 size={14} className="link-ic" aria-hidden />
+          <input className="link-input" value={u} placeholder="https://…" disabled={disabled}
+            onChange={(e) => commit(list.map((v, j) => (j === i ? e.target.value : v)))} />
+          {!disabled && (
+            <button type="button" className="btn-ghost icon-only" aria-label={t("common.remove", "Remove")}
+              onClick={() => commit(list.filter((_, j) => j !== i))}><X size={14} /></button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <button type="button" className="btn-ghost add-link" onClick={() => commit([...list, ""])}>
+          <Plus size={14} /> {t("task.addLink", "Add link")}
+        </button>
+      )}
+    </div>
   );
 }
 
