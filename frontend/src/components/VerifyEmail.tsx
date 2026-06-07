@@ -28,7 +28,7 @@ export function VerifyEmail() {
     <div className="login-wrap">
       <div className="card login-card rise">
         <div className="login-brand">
-          <span className="dot" style={{ background: "var(--primary)", width: 12, height: 12 }} />
+          <img src="/logo.png" alt="" style={{ width: 26, height: 26, objectFit: "contain" }} />
           <h1 style={{ fontSize: 22 }}>{title}</h1>
         </div>
         {status === "ok" && (

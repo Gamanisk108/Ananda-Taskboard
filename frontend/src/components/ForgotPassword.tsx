@@ -36,7 +36,7 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
       <div className="login-wrap">
         <div className="card login-card rise">
           <div className="login-brand">
-            <span className="dot" style={{ background: "var(--primary)", width: 12, height: 12 }} />
+            <img src="/logo.png" alt="" style={{ width: 26, height: 26, objectFit: "contain" }} />
             <h1 style={{ fontSize: 22 }}>{t("reset.sentTitle")}</h1>
           </div>
           <p className="muted" style={{ marginTop: 0 }}>{t("reset.sentBody", { email })}</p>
@@ -53,7 +53,7 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
     <div className="login-wrap">
       <form className="card login-card rise" onSubmit={submit}>
         <div className="login-brand">
-          <span className="dot" style={{ background: "var(--primary)", width: 12, height: 12 }} />
+          <img src="/logo.png" alt="" style={{ width: 26, height: 26, objectFit: "contain" }} />
           <h1 style={{ fontSize: 22 }}>{t("reset.requestTitle")}</h1>
         </div>
         <p className="muted" style={{ marginTop: 0 }}>{t("reset.requestSubtitle")}</p>
