@@ -40,6 +40,7 @@
     "history": "Cronologia",
     "restorePoints": "Punti di ripristino",
     "notificationsOn": "Attiva le notifiche",
+    "dailyPush": "Promemoria giornaliero",
     "logout": "Esci",
     "language": "Lingua",
     "theme": "Tema",
@@ -254,6 +255,7 @@
     "noMatch": "Nessuna attività corrisponde.",
     "colWhere": "Progetto / sotto-progetto",
     "updated": "{{n}} attività aggiornate",
+    "updatedSkipped": "{{n}} aggiornati · {{skipped}} ignorati (nessun accesso in modifica)",
     "error": "Impossibile applicare — controlla il valore.",
     "archiveConfirm": "Archiviare {{n}} attività?"
   },

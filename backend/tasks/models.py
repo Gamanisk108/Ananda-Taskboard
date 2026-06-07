@@ -109,6 +109,12 @@ class Task(SoftDeleteModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="created_tasks"
     )
+    # Who soft-deleted this task → powers self-service Trash (a member restores
+    # only their OWN deletions). Null for system/cascade/legacy deletes.
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="trashed_tasks",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # Completed tasks auto-archive after a few days: hidden from board/calendar but

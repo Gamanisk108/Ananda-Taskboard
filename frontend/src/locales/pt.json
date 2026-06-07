@@ -40,6 +40,7 @@
     "history": "Histórico",
     "restorePoints": "Pontos de restauração",
     "notificationsOn": "Ativar notificações",
+    "dailyPush": "Lembrete diário",
     "logout": "Sair",
     "language": "Idioma",
     "theme": "Tema",
@@ -254,6 +255,7 @@
     "noMatch": "Nenhuma tarefa corresponde.",
     "colWhere": "Projeto / subprojeto",
     "updated": "{{n}} tarefas atualizadas",
+    "updatedSkipped": "{{n}} atualizadas · {{skipped}} ignoradas (sem acesso de edição)",
     "error": "Não foi possível aplicar — verifique o valor.",
     "archiveConfirm": "Arquivar {{n}} tarefas?"
   },

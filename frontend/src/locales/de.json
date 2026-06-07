@@ -40,6 +40,7 @@
     "history": "Verlauf",
     "restorePoints": "Wiederherstellungspunkte",
     "notificationsOn": "Benachrichtigungen aktivieren",
+    "dailyPush": "Tägliche Erinnerung",
     "logout": "Abmelden",
     "language": "Sprache",
     "theme": "Design",
@@ -254,6 +255,7 @@
     "noMatch": "Keine Aufgaben gefunden.",
     "colWhere": "Projekt / Unterprojekt",
     "updated": "{{n}} Aufgaben aktualisiert",
+    "updatedSkipped": "{{n}} aktualisiert · {{skipped}} übersprungen (kein Bearbeitungszugriff)",
     "error": "Konnte nicht angewendet werden — Wert prüfen.",
     "archiveConfirm": "{{n}} Aufgaben archivieren?"
   },

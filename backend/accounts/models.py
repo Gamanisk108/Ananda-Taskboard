@@ -51,6 +51,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)  # Django admin access
     # Preferred UI language (interface translation). Blank = auto-detect/English.
     language = models.CharField(max_length=10, blank=True, default="")
+    # Personal UI theme (e.g. "light"/"dark"); blank = follow the app default.
+    # Self-service via PATCH /api/me — distinct from admin-only app settings.
+    theme = models.CharField(max_length=20, blank=True, default="")
+    # Personal opt-out of the daily push. The app-wide push *schedule* stays
+    # admin-controlled; this only governs whether THIS user receives one.
+    daily_push_enabled = models.BooleanField(default=True)
     # Optional permission tier: a reusable template a member inherits grants +
     # default visibility from (admins ignore tiers — they see everything).
     tier = models.ForeignKey(

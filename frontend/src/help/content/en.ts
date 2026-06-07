@@ -49,6 +49,10 @@ export const EN: Record<string, HelpContent> = {
     title: "Turn on notifications",
     body: "Open your name menu (top right) and tap the bell to turn on notifications.\n\nYour device will ask permission once — tap Allow — and then you'll be told when a task is assigned to you or changes.",
   },
+  "daily-push": {
+    title: "Daily reminder",
+    body: "Open your name menu (top right) and tick \"Daily reminder\" to get one summary notification each day of what's on your plate.\n\nIt's separate from the per-task notifications above — turn either on or off independently. Your choice is remembered per account.",
+  },
   language: {
     title: "Change the language",
     body: "Open your name menu (top right) and pick a language from the list.\n\nThe whole app switches straight away, and it remembers your choice next time.",

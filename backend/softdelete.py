@@ -36,14 +36,24 @@ class SoftDeleteModel(models.Model):
         abstract = True
 
     def delete(self, using=None, keep_parents=False):
-        """Soft delete (mark). Use hard_delete() to actually remove."""
+        """Soft delete (mark). Use hard_delete() to actually remove.
+
+        If the concrete model tracks `deleted_by` (e.g. Task) and the caller set
+        it before deleting, that attribution is persisted too."""
         if self.deleted_at is None:
             self.deleted_at = timezone.now()
-            self.save(update_fields=["deleted_at"])
+            fields = ["deleted_at"]
+            if hasattr(self, "deleted_by_id") and self.deleted_by_id is not None:
+                fields.append("deleted_by")
+            self.save(update_fields=fields)
 
     def hard_delete(self, using=None, keep_parents=False):
         super().delete(using=using, keep_parents=keep_parents)
 
     def restore(self):
         self.deleted_at = None
-        self.save(update_fields=["deleted_at"])
+        fields = ["deleted_at"]
+        if hasattr(self, "deleted_by_id"):
+            self.deleted_by = None  # clear attribution once it's live again
+            fields.append("deleted_by")
+        self.save(update_fields=fields)

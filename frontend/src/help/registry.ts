@@ -64,6 +64,7 @@ export const ARTICLES: HelpArticle[] = [
 
   // ---- Your account --------------------------------------------------------
   { id: "notifications", category: "account", surface: "menu.notificationsOn" },
+  { id: "daily-push", category: "account", surface: "menu.dailyPush" },
   { id: "language", category: "account", surface: "menu.language" },
   { id: "theme", category: "account", surface: "menu.theme" },
 

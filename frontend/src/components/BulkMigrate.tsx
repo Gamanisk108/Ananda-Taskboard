@@ -43,7 +43,7 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
   });
 
   function toggle(id: number) {
-    const n = new Set(sel); n.has(id) ? n.delete(id) : n.add(id); setSel(n);
+    const n = new Set(sel); if (n.has(id)) n.delete(id); else n.add(id); setSel(n);
   }
   const allShown = filtered.length > 0 && filtered.every((t) => sel.has(t.id));
   function toggleAll() {
@@ -54,8 +54,8 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
     if (sel.size === 0) return;
     setBusy(true); setMsg("");
     try {
-      const r = await api.post("/api/tasks/bulk", { ids: [...sel], action, value }) as { updated: number };
-      setMsg(t("bulk.updated", { n: r.updated }));
+      const r = await api.post("/api/tasks/bulk", { ids: [...sel], action, value }) as { updated: number; skipped?: number };
+      setMsg(r.skipped ? t("bulk.updatedSkipped", { n: r.updated, skipped: r.skipped }) : t("bulk.updated", { n: r.updated }));
       onChanged(); load();
     } catch { setMsg(t("bulk.error")); }
     finally { setBusy(false); }
@@ -86,14 +86,16 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
 
       {/* bulk action bar */}
       <div className="card" style={{ padding: 10, marginBottom: 12, background: "var(--surface-sunk)", display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end", opacity: sel.size ? 1 : 0.55 }}>
-        <div className="field" style={{ margin: 0 }}><label>{t("bulk.moveTo")}</label>
-          <div style={{ display: "flex", gap: 6 }}>
-            <select value={moveTo} onChange={(e) => setMoveTo(Number(e.target.value))} style={{ width: "auto" }}>
-              <option value={0}>{t("bulk.subprojectPh")}</option>{subOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-            </select>
-            <button className="btn-secondary" disabled={busy || !sel.size || !moveTo} onClick={() => applyBulk("move", moveTo)}>{t("bulk.apply")}</button>
+        {me.is_admin && (
+          <div className="field" style={{ margin: 0 }}><label>{t("bulk.moveTo")}</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              <select value={moveTo} onChange={(e) => setMoveTo(Number(e.target.value))} style={{ width: "auto" }}>
+                <option value={0}>{t("bulk.subprojectPh")}</option>{subOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+              <button className="btn-secondary" disabled={busy || !sel.size || !moveTo} onClick={() => applyBulk("move", moveTo)}>{t("bulk.apply")}</button>
+            </div>
           </div>
-        </div>
+        )}
         <div className="field" style={{ margin: 0 }}><label>{t("bulk.setStatus")}</label>
           <div style={{ display: "flex", gap: 6 }}>
             <select value={setTo} onChange={(e) => setSetTo(e.target.value)} style={{ width: "auto" }}>
@@ -108,18 +110,22 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
             <button className="btn-secondary" disabled={busy || !sel.size} onClick={() => applyBulk("deadline", due)}>{t("bulk.apply")}</button>
           </div>
         </div>
-        <div className="field" style={{ margin: 0 }}><label>{t("bulk.reassignTo")}</label>
-          <div style={{ display: "flex", gap: 6 }}>
-            <select value={assignee} onChange={(e) => setAssignee(Number(e.target.value))} style={{ width: "auto", maxWidth: 150 }}>
-              <option value={0}>{t("bulk.personPh")}</option><option value={-1}>{t("list.unassigned")}</option>
-              {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
-            </select>
-            <button className="btn-secondary" disabled={busy || !sel.size || !assignee}
-              onClick={() => applyBulk("assign", assignee === -1 ? [] : [assignee])}>{t("bulk.apply")}</button>
+        {me.is_admin && (
+          <div className="field" style={{ margin: 0 }}><label>{t("bulk.reassignTo")}</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              <select value={assignee} onChange={(e) => setAssignee(Number(e.target.value))} style={{ width: "auto", maxWidth: 150 }}>
+                <option value={0}>{t("bulk.personPh")}</option><option value={-1}>{t("list.unassigned")}</option>
+                {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
+              </select>
+              <button className="btn-secondary" disabled={busy || !sel.size || !assignee}
+                onClick={() => applyBulk("assign", assignee === -1 ? [] : [assignee])}>{t("bulk.apply")}</button>
+            </div>
           </div>
-        </div>
-        <button className="btn-danger" disabled={busy || !sel.size} style={{ marginLeft: "auto" }}
-          onClick={() => { if (confirm(t("bulk.archiveConfirm", { n: sel.size }))) applyBulk("archive", null); }}>{t("bulk.archiveSelected")}</button>
+        )}
+        {me.is_admin && (
+          <button className="btn-danger" disabled={busy || !sel.size} style={{ marginLeft: "auto" }}
+            onClick={() => { if (confirm(t("bulk.archiveConfirm", { n: sel.size }))) applyBulk("archive", null); }}>{t("bulk.archiveSelected")}</button>
+        )}
       </div>
 
       {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 8 }}>{msg}</div>}

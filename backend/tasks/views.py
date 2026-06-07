@@ -195,6 +195,7 @@ class TaskViewSet(ModelViewSet):
         org = _org(self.request)
         if not (is_org_admin(self.request.user, org) or can_act_as_member(self.request.user, instance.subproject_id, org)):
             raise PermissionDenied("Not allowed.")
+        instance.deleted_by = self.request.user  # for self-service Trash restore
         instance.delete()
 
     @action(detail=True, methods=["post"])

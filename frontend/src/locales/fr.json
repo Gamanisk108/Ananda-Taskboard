@@ -40,6 +40,7 @@
     "history": "Historique",
     "restorePoints": "Points de restauration",
     "notificationsOn": "Activer les notifications",
+    "dailyPush": "Rappel quotidien",
     "logout": "Se déconnecter",
     "language": "Langue",
     "theme": "Thème",
@@ -254,6 +255,7 @@
     "noMatch": "Aucune tâche ne correspond.",
     "colWhere": "Projet / sous-projet",
     "updated": "{{n}} tâches mises à jour",
+    "updatedSkipped": "{{n}} mis à jour · {{skipped}} ignorés (pas d'accès en édition)",
     "error": "Impossible d'appliquer — vérifiez la valeur.",
     "archiveConfirm": "Archiver {{n}} tâches ?"
   },
