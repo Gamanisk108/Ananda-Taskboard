@@ -294,7 +294,7 @@ export default function App() {
           {tree?.show_global_overview && (
             <button className={`ptab ${isGlobal ? "on" : ""}`} style={{ "--pc": "var(--muted)" } as React.CSSProperties}
               onClick={() => { setTopTab("global"); setSubTab(null); }}>
-              <span className="pemoji">🌐</span>{t("nav.globalOverview")} <span className="count">{counts.total}</span>
+              <span className="pemoji" aria-hidden><Globe size={15} /></span>{t("nav.globalOverview")} <span className="count">{counts.total}</span>
             </button>
           )}
           {projects.map((p) => (

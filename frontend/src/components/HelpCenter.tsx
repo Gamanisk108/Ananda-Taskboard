@@ -214,7 +214,7 @@ export function HelpCenter({
           data-testid="replay-welcome"
           onClick={onReplayWelcome}
         >
-          🙏 {t("help.replayWelcome", "Show welcome again")}
+          <Sparkles size={15} aria-hidden style={{ verticalAlign: "-2px", marginRight: 5 }} />{t("help.replayWelcome", "Show welcome again")}
         </button>
         <a
           className="help-contact"

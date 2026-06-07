@@ -33,7 +33,7 @@ export function WelcomeCard({ onClose }: { onClose: () => void }) {
   return (
     <Modal
       icon={<Sparkles />}
-      title={t("onboarding.title", "Welcome to Ananda Taskboard 🙏")}
+      title={t("onboarding.title", "Welcome to Ananda Taskboard")}
       onClose={onClose}
     >
       <div style={{ lineHeight: 1.5 }}>

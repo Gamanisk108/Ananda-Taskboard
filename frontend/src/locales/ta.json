@@ -494,7 +494,7 @@
     "groupsHint": "(இந்தக் குழுக்களுக்கு ஒதுக்கப்பட்ட பணிகள் மட்டும்)",
     "columns": "நெடுவரிசைகள்",
     "copyTitle": "TSV ஆக நகலெடு — நேரடியாக Google Sheet இல் ஒட்டவும்",
-    "copySheets": "📋 Google Sheets க்காக நகலெடு",
+    "copySheets": "Google Sheets க்காக நகலெடு",
     "download": "பதிவிறக்கு"
   },
   "expcol": {
@@ -635,7 +635,7 @@
     }
   },
   "onboarding": {
-    "title": "Welcome to Ananda Taskboard 🙏",
+    "title": "Welcome to Ananda Taskboard",
     "intro": "Three quick things and you're ready:",
     "b1": "Tap a colored tab to open a project and see its tasks.",
     "b2": "Switch between List, Board, Weekly and Monthly up top.",
