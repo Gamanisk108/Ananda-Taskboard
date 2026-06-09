@@ -91,7 +91,7 @@ export interface SingleSelectOption { value: string; label: string; color?: stri
  *  the selected option (design D2 — no native <select>). Mirrors MultiSelect's
  *  look/behaviour (click-outside, Escape) and reuses its `.ms*` CSS. */
 export function SingleSelect({
-  options, value, onChange, placeholder, testId, width, disabled,
+  options, value, onChange, placeholder, testId, width, disabled, portal,
 }: {
   options: SingleSelectOption[];
   value: string;
@@ -100,12 +100,33 @@ export function SingleSelect({
   testId?: string;
   width?: number | string;
   disabled?: boolean;
+  /** Render the popover to <body> with fixed positioning so it can't be clipped
+   *  by a scroll-container ancestor (e.g. a preview table). */
+  portal?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const [popStyle, setPopStyle] = useState<CSSProperties>({});
+  // Position the portaled popover under the trigger; reposition on scroll/resize.
+  useEffect(() => {
+    if (!open || !portal) return;
+    const place = () => {
+      const r = ref.current?.getBoundingClientRect();
+      if (r) setPopStyle({ position: "fixed", top: r.bottom + 4, left: r.left, minWidth: r.width, zIndex: 200 });
+    };
+    place();
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => { window.removeEventListener("scroll", place, true); window.removeEventListener("resize", place); };
+  }, [open, portal]);
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (ref.current?.contains(t) || popRef.current?.contains(t)) return;
+      setOpen(false);
+    };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
@@ -114,6 +135,26 @@ export function SingleSelect({
 
   const chosen = options.find((o) => o.value === value);
   let lastSection: string | undefined;
+  const popContent = (
+    <div className="ms-pop" role="listbox" ref={popRef} style={portal ? popStyle : undefined}>
+      {options.length === 0 && <div className="ms-empty">—</div>}
+      {options.map((o) => {
+        const header = o.section && o.section !== lastSection ? o.section : null;
+        lastSection = o.section;
+        return (
+          <div key={o.value}>
+            {header && <div className="ms-section">{header}</div>}
+            <button type="button" className="ms-opt ss-opt" role="option" aria-selected={o.value === value}
+              onClick={() => { onChange(o.value); setOpen(false); }}>
+              {o.color && <span className="dot" style={{ background: o.color }} />}
+              <span className="ms-opt-label">{o.label}</span>
+              {o.value === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
   // A falsy value (e.g. a filter's "Any" default) still shows its label but is
   // not styled active — mirrors MultiSelect's unfiltered look in the filter bar.
   return (
@@ -125,26 +166,7 @@ export function SingleSelect({
         <span className="ms-label">{chosen ? chosen.label : (placeholder ?? "—")}</span>
         <span className="ms-caret" aria-hidden>▾</span>
       </button>
-      {open && (
-        <div className="ms-pop" role="listbox">
-          {options.length === 0 && <div className="ms-empty">—</div>}
-          {options.map((o) => {
-            const header = o.section && o.section !== lastSection ? o.section : null;
-            lastSection = o.section;
-            return (
-              <div key={o.value}>
-                {header && <div className="ms-section">{header}</div>}
-                <button type="button" className="ms-opt ss-opt" role="option" aria-selected={o.value === value}
-                  onClick={() => { onChange(o.value); setOpen(false); }}>
-                  {o.color && <span className="dot" style={{ background: o.color }} />}
-                  <span className="ms-opt-label">{o.label}</span>
-                  {o.value === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {open && (portal ? createPortal(popContent, document.body) : popContent)}
     </div>
   );
 }

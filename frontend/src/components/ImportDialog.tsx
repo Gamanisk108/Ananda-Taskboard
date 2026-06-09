@@ -182,20 +182,20 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                               <td>
                                 {r.action === "error" ? <span className="muted" style={{ fontSize: 12 }}>{t("import.skipped")}</span>
                                   : r.action === "update" ? (
-                                    <select style={{ width: "auto", fontSize: 12 }}
-                                      value={decisions[String(r.row)] ?? "overwrite"}
-                                      onChange={(e) => setDecision(r, e.target.value as Decision)}>
-                                      <option value="overwrite">{t("import.optOverwrite")}</option>
-                                      <option value="create">{t("import.optCreateNew")}</option>
-                                      <option value="skip">{t("import.optSkip")}</option>
-                                    </select>
+                                    <SingleSelect portal width={150} value={decisions[String(r.row)] ?? "overwrite"}
+                                      onChange={(v) => setDecision(r, v as Decision)}
+                                      options={[
+                                        { value: "overwrite", label: t("import.optOverwrite") },
+                                        { value: "create", label: t("import.optCreateNew") },
+                                        { value: "skip", label: t("import.optSkip") },
+                                      ]} />
                                   ) : (
-                                    <select style={{ width: "auto", fontSize: 12 }}
-                                      value={decisions[String(r.row)] ?? "create"}
-                                      onChange={(e) => setDecision(r, e.target.value as Decision)}>
-                                      <option value="create">{t("import.optCreate")}</option>
-                                      <option value="skip">{t("import.optSkip")}</option>
-                                    </select>
+                                    <SingleSelect portal width={150} value={decisions[String(r.row)] ?? "create"}
+                                      onChange={(v) => setDecision(r, v as Decision)}
+                                      options={[
+                                        { value: "create", label: t("import.optCreate") },
+                                        { value: "skip", label: t("import.optSkip") },
+                                      ]} />
                                   )}
                               </td>
                             </tr>
