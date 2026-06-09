@@ -60,8 +60,13 @@
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
   padding: 10px 18px 0; flex-wrap: wrap; background: var(--canvas); flex: none; min-width: 0;
 }
-.seg { display: inline-flex; background: var(--sunk); border-radius: var(--r-pill); padding: 3px; gap: 2px; flex: none; }
-.seg-on, .seg-off { border: none; border-radius: var(--r-pill); padding: 5px 15px; font-weight: 500; font-size: 13px; }
+/* A segmented control scrolls horizontally when its tabs don't fit (e.g. the
+   5-tab Team modal at phone widths) rather than spilling a tab off the edge
+   (D36 — no clipping). Controls that fit (the 4-tab viewbar) never scroll. */
+.seg { display: inline-flex; background: var(--sunk); border-radius: var(--r-pill); padding: 3px; gap: 2px; flex: none;
+  max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg-on, .seg-off { border: none; border-radius: var(--r-pill); padding: 5px 15px; font-weight: 500; font-size: 13px; white-space: nowrap; flex: none; }
 .seg-off { background: transparent; color: var(--muted); }
 .seg-off:hover { color: var(--text); }
 .seg-on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow-1); }
