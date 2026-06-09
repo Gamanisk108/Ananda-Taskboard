@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "notifications",
     "exporting",
     "events",
+    "translations",
+    "feedback",
 ]
 
 MIDDLEWARE = [

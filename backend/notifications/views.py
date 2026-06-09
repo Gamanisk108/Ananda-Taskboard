@@ -91,6 +91,9 @@ class DailyPushJobView(APIView):
         from tasks.history_service import snapshot_history_day
 
         snapshot_history_day()  # record today's board for the History view
+        from feedback.models import purge_old_screenshots
+
+        result["screenshots_purged"] = purge_old_screenshots()  # 90-day report-image retention
         rp = daily_autosave()
         result["restore_point"] = rp.id
         return Response(result)
