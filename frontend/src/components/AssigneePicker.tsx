@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { avatarColor, userInitials } from "../users";
-import { SingleSelect } from "./common";
+import { SingleSelect, BottomSheet, useIsNarrow } from "./common";
 import type { UserLite } from "../types";
 
 export interface GroupLite {
@@ -25,6 +25,7 @@ export function AssigneePicker({
   users, groups, assignees, setAssignees, assigneeGroups, setAssigneeGroups, subproject, isAdmin,
 }: Props) {
   const { t } = useTranslation();
+  const narrow = useIsNarrow();
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState<number>(0); // 0 = all people
@@ -51,79 +52,101 @@ export function AssigneePicker({
     return list;
   }, [users, groups, groupFilter, query]);
 
-  // Collapsed summary
-  if (!editing) {
-    const groupNames = assigneeGroups.map((id) => groups.find((g) => g.id === id)?.name).filter(Boolean);
-    const none = assignees.length === 0 && groupNames.length === 0;
-    return (
-      <div className="field">
-        <label>{t("task.assignees")}</label>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          {none ? (
-            <span className="muted">{t("ap.none")}</span>
-          ) : (
-            <span className="m-chips">
-              {assignees.map((id) => (
-                <span key={id} className="m-chip" title={name(id)}>
-                  <span className="av" style={{ background: avatarColor(id) }}>{userInitials(users, id)}</span>
-                  {name(id)}
-                </span>
-              ))}
-              {groupNames.map((n) => (
-                <span key={n} className="m-chip" style={{ background: "var(--primary-weak)", color: "var(--dome)" }}>◇ {n}</span>
-              ))}
-            </span>
-          )}
-          <button type="button" className="btn-ghost" onClick={() => setEditing(true)}>{t("common.edit")}</button>
-        </div>
+  // Collapsed summary (chips + Edit) — always the resting state.
+  const groupNames = assigneeGroups.map((id) => groups.find((g) => g.id === id)?.name).filter(Boolean);
+  const none = assignees.length === 0 && groupNames.length === 0;
+  const collapsedView = (
+    <div className="field">
+      <label>{t("task.assignees")}</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        {none ? (
+          <span className="muted">{t("ap.none")}</span>
+        ) : (
+          <span className="m-chips">
+            {assignees.map((id) => (
+              <span key={id} className="m-chip" title={name(id)}>
+                <span className="av" style={{ background: avatarColor(id) }}>{userInitials(users, id)}</span>
+                {name(id)}
+              </span>
+            ))}
+            {groupNames.map((n) => (
+              <span key={n} className="m-chip" style={{ background: "var(--primary-weak)", color: "var(--dome)" }}>◇ {n}</span>
+            ))}
+          </span>
+        )}
+        <button type="button" className="btn-ghost" onClick={() => setEditing(true)}>{t("common.edit")}</button>
       </div>
+    </div>
+  );
+
+  // The editor body (search · group filter · group buttons · people checklist),
+  // shared by the inline desktop editor and the mobile bottom sheet.
+  const editorBody = (
+    <>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <input placeholder={t("ap.searchByName")} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
+        {isAdmin && groups.length > 0 && (
+          <SingleSelect width={170} value={groupFilter ? String(groupFilter) : ""} placeholder={t("ap.filterGroup")}
+            onChange={(v) => setGroupFilter(Number(v) || 0)}
+            options={groups.map((g) => ({ value: String(g.id), label: g.name }))} />
+        )}
+      </div>
+
+      {isAdmin && groups.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>{t("ap.assignGroup")}</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {groups.map((g) => (
+              <button key={g.id} type="button"
+                className={assigneeGroups.includes(g.id) ? "btn-primary" : "btn-secondary"}
+                style={{ padding: "3px 9px", fontSize: 12 }}
+                onClick={() => toggleGroup(g.id)}>
+                👥 {g.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="assignee-list">
+        {filtered.length === 0 && <span className="muted">{t("ap.noMatches")}</span>}
+        {filtered.map((u) => {
+          const access = hasAccess(u);
+          return (
+            <label key={u.id} className={`assignee-row ${access ? "" : "no-access"}`}
+              title={access ? "" : t("ap.noAccessTitle")}>
+              <input type="checkbox" style={{ width: "auto" }} checked={assignees.includes(u.id)} onChange={() => toggle(u.id)} />
+              <span>{u.name || u.email}</span>
+              {!access && <span className="noaccess-tag">{t("ap.noAccessTag")}</span>}
+            </label>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  if (!editing) return collapsedView;
+
+  // On phones the editor opens as a bottom sheet over the collapsed chips, rather
+  // than expanding inline inside the (already full-height) task modal.
+  if (narrow) {
+    return (
+      <>
+        {collapsedView}
+        <BottomSheet title={t("task.assignees")} onClose={() => setEditing(false)}
+          footer={<button type="button" className="btn-primary" style={{ flex: 1 }} onClick={() => setEditing(false)}>{t("ap.done")}</button>}>
+          {editorBody}
+        </BottomSheet>
+      </>
     );
   }
 
-  // Expanded editor
+  // Desktop: inline expanded editor.
   return (
     <div className="field">
       <label>{t("task.assignees")}</label>
       <div className="card" style={{ padding: 10, background: "var(--surface-sunk)" }}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <input placeholder={t("ap.searchByName")} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
-          {isAdmin && groups.length > 0 && (
-            <SingleSelect width={170} value={groupFilter ? String(groupFilter) : ""} placeholder={t("ap.filterGroup")}
-              onChange={(v) => setGroupFilter(Number(v) || 0)}
-              options={groups.map((g) => ({ value: String(g.id), label: g.name }))} />
-          )}
-        </div>
-
-        {isAdmin && groups.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>{t("ap.assignGroup")}</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {groups.map((g) => (
-                <button key={g.id} type="button"
-                  className={assigneeGroups.includes(g.id) ? "btn-primary" : "btn-secondary"}
-                  style={{ padding: "3px 9px", fontSize: 12 }}
-                  onClick={() => toggleGroup(g.id)}>
-                  👥 {g.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="assignee-list">
-          {filtered.length === 0 && <span className="muted">{t("ap.noMatches")}</span>}
-          {filtered.map((u) => {
-            const access = hasAccess(u);
-            return (
-              <label key={u.id} className={`assignee-row ${access ? "" : "no-access"}`}
-                title={access ? "" : t("ap.noAccessTitle")}>
-                <input type="checkbox" style={{ width: "auto" }} checked={assignees.includes(u.id)} onChange={() => toggle(u.id)} />
-                <span>{u.name || u.email}</span>
-                {!access && <span className="noaccess-tag">{t("ap.noAccessTag")}</span>}
-              </label>
-            );
-          })}
-        </div>
+        {editorBody}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
           <button type="button" className="btn-secondary" onClick={() => setEditing(false)}>{t("ap.done")}</button>
         </div>

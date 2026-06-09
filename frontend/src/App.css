@@ -163,7 +163,7 @@
 /* DN10: inline-editable task title in the modal header (input + pen + #id chip). */
 .task-title-head { display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
 .task-title-input { font: inherit; color: var(--text); background: transparent; border: 1px solid transparent;
-  border-radius: 6px; padding: 2px 6px; min-width: 0; flex: 1 1 auto; }
+  border-radius: 6px; padding: 2px 6px; min-width: 0; flex: 1 1 auto; text-overflow: ellipsis; }
 .task-title-input:hover:not(:disabled) { border-color: var(--border); }
 .task-title-input:focus { border-color: var(--primary); background: var(--surface); outline: none; }
 .task-title-input:disabled { color: var(--text); opacity: 1; }
@@ -514,7 +514,9 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .field.in-error input { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent); }
 
 /* ── Bottom sheet (mobile design): scrim + panel rising from the bottom ─────── */
-.sheet-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(13, 21, 38, .45);
+/* Above modals (z 120) so a sheet opened from inside a modal — e.g. the assignee
+   picker in the task popup — sits on top, not behind it. */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 130; background: rgba(13, 21, 38, .45);
   display: flex; align-items: flex-end; }
 .sheet-panel { width: 100%; max-height: 88vh; display: flex; flex-direction: column;
   background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: var(--shadow-2);

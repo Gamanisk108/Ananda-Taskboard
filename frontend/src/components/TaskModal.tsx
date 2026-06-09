@@ -426,9 +426,12 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     <Modal onClose={onClose} wide
       title={/* DN10: the header IS the inline-editable task title + pen + #id chip. */
         <span className="task-title-head">
+          {/* Only autofocus when CREATING (so a long existing title stays blurred
+              and shows its ellipsis instead of the cursor-pinned clipped start);
+              title attr surfaces the full name on hover. Never hard-clips. */}
           <input className="task-title-input" data-testid="task-title" value={title}
-            onChange={(e) => setTitle(e.target.value)} disabled={readOnly} autoFocus
-            placeholder={t("task.namePlaceholder")} aria-label={t("task.name")} />
+            onChange={(e) => setTitle(e.target.value)} disabled={readOnly} autoFocus={!editing}
+            title={title} placeholder={t("task.namePlaceholder")} aria-label={t("task.name")} />
           {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
           {editing && <span className="task-id-chip">#{task!.id}</span>}
         </span>}
