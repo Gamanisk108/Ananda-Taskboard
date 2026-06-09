@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import {
+  useFloating, autoUpdate, offset, flip, shift, size,
+  useClick, useDismiss, useRole, useInteractions, FloatingPortal,
+} from "@floating-ui/react";
 import { useTranslation } from "react-i18next";
 import { X, Link2, Plus, Check } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
@@ -158,7 +162,7 @@ export interface SingleSelectOption { value: string; label: string; color?: stri
  *  the selected option (design D2 — no native <select>). Mirrors MultiSelect's
  *  look/behaviour (click-outside, Escape) and reuses its `.ms*` CSS. */
 export function SingleSelect({
-  options, value, onChange, placeholder, testId, width, disabled, portal,
+  options, value, onChange, placeholder, testId, width, disabled,
 }: {
   options: SingleSelectOption[];
   value: string;
@@ -167,73 +171,68 @@ export function SingleSelect({
   testId?: string;
   width?: number | string;
   disabled?: boolean;
-  /** Render the popover to <body> with fixed positioning so it can't be clipped
-   *  by a scroll-container ancestor (e.g. a preview table). */
-  portal?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const popRef = useRef<HTMLDivElement>(null);
-  const [popStyle, setPopStyle] = useState<CSSProperties>({});
-  // Position the portaled popover under the trigger; reposition on scroll/resize.
-  useEffect(() => {
-    if (!open || !portal) return;
-    const place = () => {
-      const r = ref.current?.getBoundingClientRect();
-      if (r) setPopStyle({ position: "fixed", top: r.bottom + 4, left: r.left, minWidth: r.width, zIndex: 200 });
-    };
-    place();
-    window.addEventListener("scroll", place, true);
-    window.addEventListener("resize", place);
-    return () => { window.removeEventListener("scroll", place, true); window.removeEventListener("resize", place); };
-  }, [open, portal]);
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (ref.current?.contains(t) || popRef.current?.contains(t)) return;
-      setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
-  }, [open]);
+  // Floating UI: anchor the popover to the trigger, portaled to <body> (never
+  // clipped by a scroll-container), with flip (open upward when no room below),
+  // shift (stay in the viewport), and size (match trigger width, cap height).
+  const { refs, floatingStyles, context } = useFloating({
+    open, onOpenChange: setOpen, placement: "bottom-start",
+    middleware: [
+      offset(4), flip({ padding: 8 }), shift({ padding: 8 }),
+      size({ padding: 8, apply({ rects, elements, availableHeight }) {
+        Object.assign(elements.floating.style, {
+          minWidth: `${rects.reference.width}px`,
+          maxHeight: `${Math.min(320, Math.max(140, availableHeight - 8))}px`,
+        });
+      } }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useClick(context, { enabled: !disabled }),
+    useDismiss(context),
+    useRole(context, { role: "listbox" }),
+  ]);
 
   const chosen = options.find((o) => o.value === value);
   let lastSection: string | undefined;
-  const popContent = (
-    <div className="ms-pop" role="listbox" ref={popRef} style={portal ? popStyle : undefined}>
-      {options.length === 0 && <div className="ms-empty">—</div>}
-      {options.map((o) => {
-        const header = o.section && o.section !== lastSection ? o.section : null;
-        lastSection = o.section;
-        return (
-          <div key={o.value}>
-            {header && <div className="ms-section">{header}</div>}
-            <button type="button" className="ms-opt ss-opt" role="option" aria-selected={o.value === value}
-              onClick={() => { onChange(o.value); setOpen(false); }}>
-              {o.color && <span className="dot" style={{ background: o.color }} />}
-              <span className="ms-opt-label">{o.label}</span>
-              {o.value === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
   // A falsy value (e.g. a filter's "Any" default) still shows its label but is
   // not styled active — mirrors MultiSelect's unfiltered look in the filter bar.
   return (
-    <div className={`ms ss${chosen && value ? " on" : ""}${width === "100%" ? " ss-block" : ""}`} ref={ref} data-testid={testId}
+    <div className={`ms ss${chosen && value ? " on" : ""}${width === "100%" ? " ss-block" : ""}`} data-testid={testId}
       style={typeof width === "number" ? { width } : undefined}>
-      <button type="button" className="ms-btn" disabled={disabled} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={chosen?.label ?? placeholder}
+      <button type="button" ref={refs.setReference} {...getReferenceProps()} className="ms-btn" disabled={disabled}
+        aria-expanded={open} title={chosen?.label ?? placeholder}
         style={typeof width === "number" ? { width: "100%", minWidth: 0, maxWidth: "none" } : undefined}>
         {chosen?.color && <span className="dot" style={{ background: chosen.color }} />}
         <span className="ms-label">{chosen ? chosen.label : (placeholder ?? "—")}</span>
         <span className="ms-caret" aria-hidden>▾</span>
       </button>
-      {open && (portal ? createPortal(popContent, document.body) : popContent)}
+      {open && (
+        <FloatingPortal>
+          {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter, not a React .current ref */}
+          <div ref={refs.setFloating} {...getFloatingProps()} className="ms-pop ss-float" role="listbox"
+            style={{ ...floatingStyles, zIndex: 200 }}>
+            {options.length === 0 && <div className="ms-empty">—</div>}
+            {options.map((o) => {
+              const header = o.section && o.section !== lastSection ? o.section : null;
+              lastSection = o.section;
+              return (
+                <div key={o.value}>
+                  {header && <div className="ms-section">{header}</div>}
+                  <button type="button" className="ms-opt ss-opt" role="option" aria-selected={o.value === value}
+                    onClick={() => { onChange(o.value); setOpen(false); }}>
+                    {o.color && <span className="dot" style={{ background: o.color }} />}
+                    <span className="ms-opt-label">{o.label}</span>
+                    {o.value === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </FloatingPortal>
+      )}
     </div>
   );
 }

@@ -137,6 +137,10 @@
 .ms-opt:hover { background: var(--hover); }
 /* single-select option rendered as a button (D2 custom popover) */
 .ms-opt.ss-opt { width: 100%; text-align: left; background: none; border: none; font-family: var(--f-ui); }
+/* Floating-UI popover is portaled to <body>; reset the .ms-pop min-width:100%
+   (which would be 100vw against body) — Floating UI's size middleware sets the
+   real min-width to the trigger's width. */
+.ms-pop.ss-float { min-width: 0; }
 .ms-btn:disabled { opacity: .6; cursor: default; }
 /* full-width single-select for form fields (Project/Sub-project/Priority/Status) */
 .ms.ss-block { display: block; }

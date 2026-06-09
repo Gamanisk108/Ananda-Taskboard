@@ -182,7 +182,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                               <td>
                                 {r.action === "error" ? <span className="muted" style={{ fontSize: 12 }}>{t("import.skipped")}</span>
                                   : r.action === "update" ? (
-                                    <SingleSelect portal width={150} value={decisions[String(r.row)] ?? "overwrite"}
+                                    <SingleSelect width={150} value={decisions[String(r.row)] ?? "overwrite"}
                                       onChange={(v) => setDecision(r, v as Decision)}
                                       options={[
                                         { value: "overwrite", label: t("import.optOverwrite") },
@@ -190,7 +190,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                                         { value: "skip", label: t("import.optSkip") },
                                       ]} />
                                   ) : (
-                                    <SingleSelect portal width={150} value={decisions[String(r.row)] ?? "create"}
+                                    <SingleSelect width={150} value={decisions[String(r.row)] ?? "create"}
                                       onChange={(v) => setDecision(r, v as Decision)}
                                       options={[
                                         { value: "create", label: t("import.optCreate") },
