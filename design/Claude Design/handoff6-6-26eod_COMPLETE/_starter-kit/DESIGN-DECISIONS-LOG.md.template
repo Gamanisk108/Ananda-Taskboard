@@ -1,0 +1,18 @@
+# DESIGN DECISIONS LOG — <PRODUCT NAME>
+> Per **RULE #1** (`CLAUDE.md`): every decision from a session is recorded here so it can be
+> applied **retroactively** to older modules. Single source of truth for cross-cutting changes.
+> When starting work, read this and bring stale surfaces up to date.
+>
+> Format per entry — **what changed (before → after) · exact spec · affected surfaces**.
+> Surface keys: define your own (e.g. APP = canonical app, MOB = mobile, AUTH = auth, …).
+
+---
+
+## GLOBAL conventions (apply to EVERY module)
+
+### D1 · <short title>
+- Before → After: …
+- Spec (exact values/markup): …
+- Surfaces: APP ☐ · MOB ☐ · … (✅ when applied, ☐ when still stale)
+
+<!-- copy the D-block above for each new decision; never delete old entries, mark them applied -->

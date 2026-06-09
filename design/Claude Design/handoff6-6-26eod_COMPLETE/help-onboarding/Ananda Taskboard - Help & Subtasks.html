@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Help &amp; Onboarding · Subtasks · No-date list</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="ananda-help.css?v=34" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .seg{display:inline-flex;background:#efe5cc;border-radius:999px;padding:3px;gap:2px}
+  #toolbar .seg button{border:none;border-radius:999px;padding:5px 14px;background:transparent;color:#5a6172;
+    font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  #toolbar .seg button.on{background:#fffdf8;color:#23262b;box-shadow:0 1px 2px rgba(30,58,110,.12)}
+  #toolbar .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:980px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Help &amp; Subtasks</span></div>
+  <span class="sep"></span>
+  <div class="seg" id="themeSeg">
+    <button data-mt="light" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>Light</button>
+    <button data-mt="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark</button>
+  </div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="help-screens.js?v=32"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="help-canvas.jsx?v=4"></script>
+
+<script type="text/babel">
+const A = window.HELP;
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      {/* ---------- HELP IN ACCOUNT MENU ---------- */}
+      <DCSection id="help-btn" title="Help in the account menu — web" subtitle="Help &amp; FAQ lives at the top of the account menu (the Admin Ada ▾ pane), keeping the top bar uncluttered. A purple What's-New dot rides the user pill, then the Help item, when unseen features exist.">
+        {Web({ id: 'hb-shell', label: 'In context — account menu open', html: A.webHelpButtonShell(), h: 660 })}
+        {Web({ id: 'hb-detail', label: 'Menu-item states', html: A.webHelpButtonDetail(), w: 470, h: 360 })}
+        {Note({ id: 'hb-note', label: 'Notes', title: 'Help in the account menu', sub: 'Admin Ada ▾ · everyone (not admin-gated)', items: [
+          'A <b>line-art Help &amp; FAQ item</b> sits at the <b>top of the account menu</b>, above Settings / History / etc. The top bar stays lean — <b>Approvals · Team · Projects</b> — so it doesn\u2019t feel cluttered. Available to everyone, not admin-gated.',
+          'When unseen <b>What\u2019s-New</b> features exist, a small <b>purple ' + k + '--new</span></b> dot rides the <b>user pill</b>; opening the menu carries it to the <b>Help &amp; FAQ</b> row. Seeing the panel clears it.',
+          '<b>Trash</b> moved here too (grouped with Settings · History · Archive · Restore points), so admin tools live in one place rather than separate top-bar buttons.',
+          '<b>Line-art, not emoji.</b> The dev hand-off\u2019s 📋 / ✨ / 🙏 placeholders are elevated to the stroked icon set throughout.',
+        ], tip: 'Selecting Help &amp; FAQ opens the Help center (next sections).' })}
+      </DCSection>
+
+      {/* ---------- WELCOME CARD ---------- */}
+      <DCSection id="welcome" title="Welcome card — web" subtitle="A dismissible, once-ever onboarding modal on first login. Three bullets, a helper line, and a Got it button.">
+        {Web({ id: 'wc-web', label: 'First-login welcome', html: A.webWelcome(), h: 700 })}
+        {Note({ id: 'wc-note', label: 'Notes', title: 'Welcome card', sub: 'First login · localStorage once-ever', items: [
+          'A centered ~520px modal: a quiet brand badge, a Fraunces <b>“Welcome to Ananda Taskboard”</b> title, a one-line intro, then <b>3 bullets</b> — open a project tab · switch List/Board/Weekly/Monthly · the <b>+ New task</b> button.',
+          'Each bullet leads with a <b>line-art icon tile</b> (replacing the hand-off\u2019s 🗂️ 🔀 ➕ emoji) so the card matches the rest of the chrome. The + New task bullet shows the real navy pill inline.',
+          'A muted helper line — <b>“Need a hand later? Find Help in your account menu”</b> — then a single <b>Got it</b> (primary). Dismisses; shown once ever.',
+        ], tip: 'Title drops the 🙏 emoji — dialog titles stay clean Fraunces, consistent with every other modal.' })}
+      </DCSection>
+
+      {/* ---------- HELP CENTER ---------- */}
+      <DCSection id="help-center" title="Help &amp; FAQ center — web" subtitle="Help &amp; FAQ opens a wide modal: a search box, a What's-New block, then collapsible counted sub-sections. The deliberate fix for an earlier ‘wall of text’.">
+        {Web({ id: 'hc-landing', label: '1 · Landing (collapsed)', html: A.webHelpCenter('landing'), h: 1010 })}
+        {Web({ id: 'hc-section', label: '2 · Section expanded', html: A.webHelpCenter('section'), h: 940 })}
+        {Web({ id: 'hc-article', label: '3 · Article expanded', html: A.webHelpCenter('article'), h: 980 })}
+        {Web({ id: 'hc-search', label: '4 · Flat search results', html: A.webHelpCenter('search'), h: 720 })}
+        {Web({ id: 'hc-empty', label: '5 · No results', html: A.webHelpCenter('empty'), h: 560 })}
+        {Note({ id: 'hc-note', label: 'Notes', title: 'Help &amp; FAQ', sub: 'Wide modal · scannable, not a wall of text', items: [
+          '<b>Landing:</b> an autofocus search box, then sections <b>collapsed by default</b> — each a row with a right/down chevron, a section icon, a bold label and a mono <b>count pill</b>. Order &amp; counts: Getting around (4) · Everyday tasks (4) · Your account (3) · For admins (9) · Common questions (5).',
+          '<b>Expand</b> a section → its article rows; expand an <b>article row</b> → 1–2 short paragraphs. Both have hover backgrounds; the open section header gets a subtle active tint.',
+          '<b>What\u2019s new</b> renders <b>above</b> the sections, listing unseen dated features with a purple <b>New</b> pill. <b>Admin-only tools are no longer chip-tagged</b> — they sit under the <b>For admins</b> section and each article states it\u2019s admins-only in its body; typing <b>“admin”</b> in search surfaces every admin ticket.',
+          '<b>Search</b> filters across all sections into a flat result list (category label + snippet); empty query restores sections; no matches → a muted empty state. <b>Footer:</b> “Show welcome again” (left) · “Contact us” mailto (right).',
+        ], tip: 'Status copy now reads “Review” (purple) everywhere — the rename from “Ready for Review”.' })}
+      </DCSection>
+
+      {/* ---------- SUBTASK EDITOR ---------- */}
+      <DCSection id="subtasks" title="Subtask editor — web" subtitle="Subtasks become mini-tasks. The compact list lives in the Task popup; tapping a row swaps the modal body in place for a simplified detail panel (breadcrumb + Back — never a stacked modal).">
+        {Web({ id: 'st-list', label: '1 · Subtask list (full Task Popup)', html: A.webSubtaskList(), h: 1460 })}
+        {Web({ id: 'st-detail', label: '2 · Detail panel (priority popover open)', html: A.webSubtaskDetail('default'), h: 1000 })}
+        {Web({ id: 'st-time', label: '3 · Time validation error', html: A.webSubtaskDetail('timeerror'), h: 980 })}
+        {Note({ id: 'st-note', label: 'Notes', title: 'Subtasks as mini-tasks', sub: 'In the Task popup · capped one level deep', items: [
+          '<b>Rows (changed look):</b> a clickable open-target on the left (title + assignee <b>avatar chips</b>, capped at 3; a <b>◇ group indicator</b> when whole groups are assigned), then a <b>quick status</b> dropdown, then a <b>✕ delete</b>. A title-only <b>quick-add</b> row stays at the bottom.',
+          '<b>Detail panel:</b> clicking a row <b>swaps the modal body in place</b> — never a stacked modal. A breadcrumb header replaces the title: <b>← Back · Design spring flyer #142 › Lay out A4 master #142.2</b> (subtasks take a <b>parent.index</b> ID).',
+          'Fields mirror the Task Popup exactly: Sub-task name · Status (pill + “Change to…”) | Priority (custom popover) · <b>Assignees</b> (the same chip + “+ Add person or group…” control as the parent) · Details | Requirements · Start date | Deadline · Start time | End time · <b>Links</b>.',
+          '<b>Time validation:</b> a red “Set both a start and end time, or neither.” under the time row blocks Save and the panel stays put. Footer: ← Back to subtasks (left) · Delete (danger) · Save (primary).',
+        ], tip: 'Nesting is capped at one level (subtasks have no subtasks) so the breadcrumb is only ever two deep.' })}
+      </DCSection>
+
+      {/* ---------- NO DATE ---------- */}
+      <DCSection id="nodate" title="“Unscheduled Tasks” — Monthly &amp; Weekly (web)" subtitle="Built on the app’s real Monthly grid and Weekly bar-calendar. Tasks with no date never land on a day, so a right-aligned header button surfaces them; it hides entirely at zero. Done tasks no longer appear on these views.">
+        {Web({ id: 'nd-month', label: 'Monthly — Unscheduled button', html: A.webNoDateCal('monthly'), h: 760 })}
+        {Web({ id: 'nd-week', label: 'Weekly — Unscheduled button', html: A.webNoDateCal('weekly'), h: 760 })}
+        {Web({ id: 'nd-modal', label: 'Unscheduled tasks modal', html: A.webNoDateModal(), h: 760 })}
+        {Note({ id: 'nd-note', label: 'Notes', title: '“Unscheduled Tasks” surfacing', sub: 'Monthly &amp; Weekly calendar header', items: [
+          'These reuse the app’s actual calendar views: Monthly is the 7-col <b>.month</b> grid (per-project count badges, today/overdue/soon cell rings, muted holiday lines); Weekly is the <b>.wk</b> bar-calendar (pill task-bars spanning days, the blue Today bracket, overdue/soon rings).',
+          'A right-aligned <b>“Unscheduled Tasks (N)”</b> button sits in the calendar header beside the ‹ / This week|month / › nav, on both views. It is <b>hidden entirely when N = 0</b>. On narrow widths the header wraps it to a full-width second line.',
+          '<b>Icon:</b> a <b>line-art CalendarOff</b> (not the hand-off\u2019s 📋 emoji), matching the header\u2019s lucide chevrons.',
+          'Clicking it opens a standard modal <b>“Unscheduled tasks (N)”</b> using the app\u2019s <b>standard compact task row</b> (the day-detail card): priority icon · project color dot · “All day” · title · assignees · status pill, with a sort dropdown. A row opens the full Task editor.',
+          '<b>Done is hidden</b> from Monthly/Weekly, the Unscheduled list, and Copy Summary.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- MOBILE: HELP + ONBOARDING ---------- */}
+      <DCSection id="m-help" title="Help &amp; onboarding — mobile" subtitle="The welcome card centers in the phone; Help opens as a full-screen route with the same search, What's-New and collapsible sections.">
+        {Mob({ id: 'm-welcome', label: 'Welcome card', html: A.phoneWelcome() })}
+        {Mob({ id: 'm-hc-landing', label: 'Help — landing', html: A.phoneHelpCenter('landing'), h: 1120 })}
+        {Mob({ id: 'm-hc-section', label: 'Help — section + article', html: A.phoneHelpCenter('section'), h: 1040 })}
+        {Mob({ id: 'm-hc-search', label: 'Help — search results', html: A.phoneHelpCenter('search'), h: 760 })}
+        {Note({ id: 'm-help-note', label: 'Notes', title: 'Help · mobile', sub: 'Full-screen route + ? in the app bar', items: [
+          'The <b>? Help</b> button joins the app bar (with the same purple What\u2019s-New dot); tapping it opens a <b>full-screen Help route</b> — search, the What\u2019s-New block, then the collapsible counted sections, exactly mirroring the web modal.',
+          'The <b>welcome card</b> centers in the viewport over a dimmed board on first launch; same 3 line-art bullets and Skip / Got it.',
+          'Sections &amp; article rows expand inline; the footer (Show welcome again · Contact us) sticks to the bottom. Inputs hold ≥16px to avoid iOS zoom.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- MOBILE: SUBTASKS ---------- */}
+      <DCSection id="m-subtasks" title="Subtask editor — mobile" subtitle="The list sits in the task sheet; tapping a row pushes in the detail panel with the two-up field rows stacked to one column.">
+        {Mob({ id: 'm-st-list', label: 'Subtask list', html: A.phoneSubtaskList(), h: 780 })}
+        {Mob({ id: 'm-st-detail', label: 'Detail panel', html: A.phoneSubtaskDetail('default'), h: 1160 })}
+        {Mob({ id: 'm-st-time', label: 'Time validation error', html: A.phoneSubtaskDetail('timeerror'), h: 1160 })}
+        {Note({ id: 'm-st-note', label: 'Notes', title: 'Subtasks · mobile', sub: 'Rows wrap; fields stack', items: [
+          'Each subtask is a <b>card</b>: title + avatar chips (cap 3) + the ◇ group label, a tappable quick-status select, and a ✕ delete. The quick-add stays at the bottom.',
+          'Opening a row <b>pushes in the detail panel</b> (title becomes the subtask name, back-arrow returns). The two-up rows <b>stack to a single column</b>; footer buttons wrap but Back stays reachable.',
+          'The assignee, status and priority controls are identical to the Task Popup’s. Time error blocks Save with the red both-or-neither message.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- MOBILE: NO DATE ---------- */}
+      <DCSection id="m-nodate" title="“Unscheduled Tasks” — mobile" subtitle="The header button wraps full-width; the list opens as a bottom sheet of the app’s standard compact task rows.">
+        {Mob({ id: 'm-nd-month', label: 'Monthly — Unscheduled button', html: A.phoneNoDate('monthly'), h: 780 })}
+        {Mob({ id: 'm-nd-sheet', label: 'Unscheduled bottom sheet', html: A.phoneNoDateModal(), h: 780 })}
+        {Note({ id: 'm-nd-note', label: 'Notes', title: '“Unscheduled Tasks” · mobile', sub: 'Bottom sheet, compact rows', items: [
+          'On the cramped calendar header the <b>“Unscheduled Tasks (N)”</b> button drops to a <b>full-width</b> second line (CalendarOff icon), hidden at zero.',
+          'Tapping it opens a <b>bottom sheet</b> “Unscheduled tasks (N)” with the sort control and the app\u2019s standard compact task rows (priority · color dot · All day · title · assignees · status). A row closes the sheet and opens the full Task editor.',
+        ] })}
+      </DCSection>
+
+      {/* ---------- PARITY ---------- */}
+      <DCSection id="parity" title="Light + dark parity" subtitle="Every new surface ships both themes from the same Temple-of-Light tokens — dark is a token swap, not a separate design.">
+        {Web({ id: 'p-hc-d', label: 'Help center · dark', html: A.webHelpCenter('section'), theme: 'dark', h: 940 })}
+        {Web({ id: 'p-st-d', label: 'Subtask detail · dark', html: A.webSubtaskDetail('default'), theme: 'dark', h: 940 })}
+        {Web({ id: 'p-nd-d', label: 'Unscheduled modal · dark', html: A.webNoDateModal(), theme: 'dark', h: 760 })}
+        {Mob({ id: 'p-wc-d', label: 'Welcome · dark', html: A.phoneWelcome(), theme: 'dark' })}
+        {Note({ id: 'p-note', label: 'Notes', title: 'One token set', sub: 'Light + dark, no forks', items: [
+          'The What\u2019s-New purple, the grey Admin chip, the help section/article rows, the subtask detail panel, the calendar and the No-date list all read from the shared variables.',
+          'Native controls follow via ' + k + 'color-scheme</span>; every select keeps its <b>custom caret</b> in both themes, and the status purple stays the same semantic <b>Review</b> hue.',
+        ] })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<template id="__bundler_thumbnail" data-bg-color="#0f1b30">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0f1b30"/>
+    <g transform="translate(600 400)" fill="none" stroke="#7fa8d9" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="0" cy="-30" r="150"/>
+      <path d="M-66 -50a2.6 2.6 0 0 1 5-1.9c0 3.5-5 4.4-5 7.4"/>
+      <path d="M-61 -2h.02" stroke-width="30"/>
+    </g>
+    <text x="600" y="690" font-family="Fraunces, Georgia, serif" font-size="58" font-weight="600" fill="#eaf0fb" text-anchor="middle">Help &amp; Subtasks</text>
+  </svg>
+</template>
+</body>
+</html>

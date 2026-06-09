@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="ananda-mobile.css" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .seg{display:inline-flex;background:#efe5cc;border-radius:999px;padding:3px;gap:2px}
+  #toolbar .seg button{border:none;border-radius:999px;padding:5px 14px;background:transparent;color:#5a6172;
+    font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  #toolbar .seg button.on{background:#fffdf8;color:#23262b;box-shadow:0 1px 2px rgba(30,58,110,.12)}
+  #toolbar .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:680px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Mobile</span></div>
+  <span class="sep"></span>
+  <div class="seg" id="themeSeg">
+    <button data-mt="light" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>Light</button>
+    <button data-mt="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark</button>
+  </div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="screens-views.js"></script>
+<script src="screens-flows.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const SCREEN = 844, W = 390;
+const M = window.M;
+const k = '<span class="k">';
+
+// theme toggle → flips html[data-mt]; pinned frames carry their own data-theme
+document.querySelectorAll('#themeSeg button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#themeSeg button').forEach(x => x.classList.toggle('on', x === b));
+  if (b.dataset.mt === 'dark') document.documentElement.setAttribute('data-mt', 'dark');
+  else document.documentElement.removeAttribute('data-mt');
+});
+
+function Phone({ html, theme }) {
+  return <div className="phone" {...(theme ? { 'data-theme': theme } : {})}
+    dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function Notes({ title, sub, items, tip }) {
+  return (
+    <div className="specs"
+      dangerouslySetInnerHTML={{ __html:
+        `<h3>${title}</h3><div class="sub">${sub}</div><ol>${items.map(i => `<li>${i}</li>`).join('')}</ol>`
+        + (tip ? `<div class="tip">${tip}</div>` : '') }} />
+  );
+}
+
+// NB / NoteB are FUNCTIONS we CALL — they return real <DCArtboard> elements so
+// DCSection's type-based walk finds them. (Used as JSX <NB/>, the artboards
+// would be hidden behind a custom component type and never render.)
+const NB = ({ id, label, w = W, h = SCREEN, theme, build }) =>
+  <DCArtboard key={id} id={id} label={label} width={w} height={h}>
+    <Phone html={build()} theme={theme} />
+  </DCArtboard>;
+
+const NoteB = ({ id, label, ...p }) =>
+  <DCArtboard key={id} id={id} label={label} width={400} height={760} style={{ height: 'auto' }}>
+    <Notes {...p} />
+  </DCArtboard>;
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      <DCSection id="nav" title="Navigation patterns" subtitle="How the dense desktop chrome collapses to a phone — two directions to compare">
+        {NB({ id:"nav-a", label:"Top segmented + overflow  (selected)", build:M.listCompact })}
+        {NB({ id:"nav-overflow", label:"Overflow menu (⋯)", build:M.overflowScreen })}
+        {NB({ id:"new-member-empty", label:"New member · empty state", build:M.newMemberEmpty })}
+        {NoteB({ id:"nav-notes", label:"Notes", title:"Navigation", sub:"Top segmented + overflow (selected)", items:[
+          'Views (List / Board / Weekly / Monthly) sit in a <b>segmented control</b> just under the project chips — desktop-parity, always visible.',
+          'App bar stays <b>one line</b>: logo + project · 🔍 · <b>＋ New task</b> (blue) · <b>⋯</b> overflow.',
+          'The <b>⋯ overflow</b> holds everything secondary: New task, Share, Copy summary, Export, Approvals, Team, Projects, Trash, Notification time, Settings, theme, plus the signed-in account + Log out.',
+          'A <b>filter</b> button sits at the right of the segmented row → opens the filter sheet.',
+          'No bottom bar, no FAB — the phone layout reads like the desktop app, scaled down.',
+        ], tip:'Bottom-tabs + FAB was the alternative; you chose this top-segmented direction, so every screen below now uses it.' })}
+        {NoteB({ id:"native-notes", label:"Roadmap", title:"Web now → native later", sub:"You mentioned push notifications", items:[
+          'These are <b>responsive-web</b> mockups — one HTML/CSS codebase. Claude Code adds breakpoints to your existing file; nothing forks.',
+          'The IA here (bottom tabs · drawer · sheets · FAB) is already <b>native-shaped</b>, so wrapping it in a native shell later is mostly mechanical.',
+          '<b>Push</b> needs native or a PWA + web-push. Your existing ' + k + 'Daily notification time</span> setting is the hook — it lives in the ⋯ overflow → Notification time.',
+          'Suggested phase 2: <b>PWA install + web-push</b> for due-soon / overdue / @mention before committing to a full native app.',
+        ], tip:'Responsive web today does not block the native path — it sets it up.' })}
+      </DCSection>
+
+      <DCSection id="list" title="List view" subtitle="The wide multi-column table → compact rows">
+        {NB({ id:"list-a", label:"Compact rows  (selected)", build:M.listCompact })}
+        {NoteB({ id:"list-notes", label:"Notes", title:"List", sub:"Table → compact rows", items:[
+          'Each table row collapses to a <b>compact row</b>: status rail + name, then <b>project → sub-project</b>, deadline, recurrence, assignees, chevron.',
+          'A <b>priority chevron</b> leads the name — Highest / High (up), Medium (equals), Low / Lowest (down), same icons as desktop.',
+          'Rows group under <b>day dividers</b> — Overdue / Today / Due soon / This week / Later / Done.',
+          'Overdue rows take a <b>red tint</b> (' + k + '--overdue-bg</span>), due-soon a <b>yellow tint</b> (' + k + '--soon-bg</span>) to the right of the full-height status bar — with the desktop <b>warning</b> / <b>clock</b> icon on the name.',
+          'Done rows keep the <b>strike-through</b> + muted name.',
+          'Tap a row → full-screen Task detail. Long-press → the quick status popover (ported from desktop).',
+        ], tip:'You selected the compact-row layout. A roomier one-card-per-task density can be added later as a per-user toggle if it’s ever wanted.' })}
+      </DCSection>
+
+      <DCSection id="board" title="Board view" subtitle="Kanban at phone width">
+        {NB({ id:"board-a", label:"Horizontal snap columns", build:M.boardScreen })}
+        {NoteB({ id:"board-notes", label:"Notes", title:"Board", sub:"Kanban → horizontal snap", items:[
+          'Columns scroll horizontally with <b>scroll-snap</b>; each is ~84% of the viewport so the next column peeks (discoverable).',
+          'Column header keeps the 3px status top-border + the count badge.',
+          'Cards keep the subtask <b>segmented progress bar</b> and the overdue/soon ring.',
+          'Move between columns: <b>long-press to lift</b> a card, drag to a column edge to auto-advance (native build).',
+        ], tip:'On web this is the literal desktop board with momentum scroll; native adds long-press drag + haptics.' })}
+      </DCSection>
+
+      <DCSection id="weekly" title="Weekly view" subtitle="The 7-column bar grid can't fit a phone — it becomes an agenda">
+        {NB({ id:"weekly-a", label:"Vertical day agenda", build:M.weeklyScreen })}
+        {NoteB({ id:"weekly-notes", label:"Notes", title:"Weekly", sub:"Grid → day agenda", items:[
+          'The 7-column timeline <b>does not fit</b> a phone, so it collapses to a vertical <b>day agenda</b>.',
+          'Each day = a header (weekday + date), then its tasks as the <b>same compact rows</b> as List — priority, project → sub, status rail, assignees.',
+          '<b>Timed tasks</b> (e.g. 8:00–10:00 AM) sort to the <b>top of the day in chronological order</b>; untimed tasks follow.',
+          'Overdue / due-soon keep the red / yellow tint + warning / clock icon; <b>Today</b> is tagged.',
+          'Calendar events (🎂) and <b>auto-holidays</b> (muted, icon-less) show on the day header — user events first, holidays after, capped with a <b>+N more</b>.',
+        ], tip:'Keep the desktop 7-day grid as an optional <b>landscape / tablet</b> layout at ≥720px.' })}
+      </DCSection>
+
+      <DCSection id="monthly" title="Monthly view" subtitle="Calendar fits — tap a day for detail">
+        {NB({ id:"monthly-a", label:"Calendar grid", build:M.monthlyScreen })}
+        {NB({ id:"monthly-day", label:"Day sheet (tap a day)", build:M.daySheet })}
+        {NoteB({ id:"monthly-notes", label:"Notes", title:"Monthly", sub:"Calendar + day sheet", items:[
+          'The month grid <b>does</b> fit at phone width — 7 columns of square-ish cells.',
+          'Tasks reduce to <b>status dots</b> per day; overdue days tint red, due-soon amber, today gets the ring.',
+          'Tap a day → a <b>bottom sheet</b> listing that day\u2019s tasks (right frame).',
+          'Calendar events render as the emoji in-cell; <b>holidays</b> add a small muted tick — tap the day to see them named (muted) above the task list in the sheet.',
+        ], tip:'Dots cap at ~4 then show a count; the full list lives in the day sheet.' })}
+      </DCSection>
+
+      <DCSection id="filters" title="Filters & search" subtitle="The filter row becomes a sheet; search gets its own bar">
+        {NB({ id:"filters-a", label:"Filter bottom sheet", build:M.filterSheet })}
+        {NB({ id:"assignee-picker", label:"Assignee picker (grouped + search)", build:M.assigneePicker })}
+        {NB({ id:"search-a", label:"Search (scoped)", build:M.searchScreen })}
+        {NoteB({ id:"filters-notes", label:"Notes", title:"Filters & search", sub:"Row → sheet", items:[
+          'The desktop filter row becomes a <b>bottom sheet</b> from the filter button on the view bar.',
+          'Status &amp; Priority are <b>checkbox multi-selects</b> (Status now includes <b>Review</b>, purple); deadline &amp; recurrence stay <b>single-select dropdowns</b> — each with the <b>custom chevron</b>, never a native caret. <i>(select rule)</i>',
+          'Assignee opens a <b>grouped, searchable picker</b> — <b>Groups</b> (e.g. Seva Team) on top, then <b>Individuals</b>; tap to choose.',
+          'Sticky footer: <b>Clear</b> + <b>Show N tasks</b> with a live count.',
+          '<b>Search</b> is scoped to the current project/sub-project by default, with a <b>This project / Everywhere</b> toggle — so header search is never ambiguously global.',
+        ], tip:'Selects keep padding-right so the custom caret never overlaps text; the assignee picker reuses the people rows from Team.' })}
+      </DCSection>
+
+      <DCSection id="detail" title="Task detail & New task" subtitle="The 720px modal becomes a full-screen route">
+        {NB({ id:"detail-a", label:"Task detail", h:1700, build:M.taskDetail })}
+        {NB({ id:"new-a", label:"New task", h:1180, build:M.newTask })}
+        {NoteB({ id:"detail-notes", label:"Notes", title:"Task detail", sub:"Modal → full screen", items:[
+          'The 720px modal becomes a <b>full-screen route</b>: back · <b>editable name</b> (pen) · ' + k + '#id</span> · Save.',
+          'Order: <b>Project / Sub-project</b>, then <b>Status</b> (left) + <b>Priority</b> (right) as dropdowns — priority shows its chevron icon.',
+          '<b>Monitor / Auto-complete / Repeats</b> are toggle rows; the Pending-approval banner carries over.',
+          '<b>Subtasks</b> show a <b>progress bar</b> (blue doing · red delayed · green done · empty to-do) and per-row <b>priority · assignee · status dropdown · ✕ delete</b>.',
+          '<b>New task</b> is the same shell minus subtasks/comments, ending in a primary <b>Create task</b> button.',
+        ], tip:'The ' + k + '#id</span> chip keeps the share-link affordance from desktop.' })}
+      </DCSection>
+
+      <DCSection id="sheets" title="Team · Projects · Trash · Approvals" subtitle="Drawer destinations and their workflows">
+        {NB({ id:"team-a", label:"Team · Members", build:M.teamScreen })}
+        {NB({ id:"person-detail", label:"Team · member detail", build:M.personDetail })}
+        {NB({ id:"add-member", label:"Team · add member", build:M.addMember })}
+        {NB({ id:"team-groups", label:"Team · Groups", build:M.teamGroups })}
+        {NB({ id:"team-access", label:"Team · Access", build:M.teamAccess })}
+        {NB({ id:"team-access-table", label:"Team · Access · grants table", build:M.teamAccessTable })}
+        {NB({ id:"team-access-filter", label:"Team · Access · filter open", build:M.teamAccessFilter })}
+        {NB({ id:"projects-a", label:"Projects", build:M.projectsScreen })}
+        {NB({ id:"project-detail", label:"Project detail", build:M.projectDetail })}
+        {NB({ id:"new-project", label:"New project", build:M.newProject })}
+        {NB({ id:"trash-a", label:"Trash", build:M.trashScreen })}
+        {NB({ id:"approvals-a", label:"Approvals", build:M.approvalsScreen })}
+        {NoteB({ id:"sheets-notes", label:"Notes", title:"Lists & workflows", sub:"Team · Projects · Trash · Approvals", items:[
+          'Each opens as a <b>full-screen route</b> from the <b>⋯ overflow</b> (back arrow returns).',
+          '<b>Team</b> mirrors the web: <b>Members / Groups / Access</b> tabs. Each member has an <b>Access</b> level (Tasks Only · Sub-Project Only · Full Project · Organization). Tap a member for their profile — role, status, View Access, reset password, project access, assigned tasks. ＋ → <b>Add member</b> (now sets View Access + starting projects). Holidays moved to <b>Settings</b> (admin) — enables which holiday sets show on everyone’s calendars.',
+          '<b>Groups</b> = reusable people sets (checkbox membership); <b>Access</b> = grant a person/group <b>member</b> or <b>viewer</b> rights to a project or sub-project.',
+          '<b>Projects → project</b>: sub-projects (with counts), members, Archive. ＋ → <b>New project</b> with the <b>circle color swatches</b> + the robust emoji <b>icon picker</b>. <i>(swatch rule)</i>',
+          '<b>Trash</b>: deleted tasks keep priority · name · status · assignee; per-row Restore + Empty trash (with <b>confirm popup</b>). <i>(destructive-action rule)</i>',
+          '<b>Approvals</b>: each card carries the full task formatting — priority · name · project → sub · status · assignees — with small Approve / Reject; the overflow badge shows the count.',
+        ], tip:'Empty-trash / delete-forever and Remove member must open the confirmation popup explaining what will happen.' })}
+      </DCSection>
+
+      <DCSection id="settings" title="Settings (admin)" subtitle="Admin-only configuration — calendar holiday packs, push-notification time, status columns">
+        {NB({ id:"settings-holidays", label:"Settings · Holidays", build:M.settingsHolidays })}
+        {NoteB({ id:"settings-notes", label:"Notes", title:"Settings", sub:"Admin scope", items:[
+          '<b>Holidays</b> lives in <b>Settings</b> (not Team — it’s a calendar concern, not a permission one). Admin only.',
+          'Each set is a checkbox card with a quiet description; tapping <b>Save</b> applies for the whole organization.',
+          'Holidays render as <b>icon-less context</b> on Weekly / Monthly — never as tasks. Star marker on the monthly cell, gray text in the day sheet.',
+        ]})}
+      </DCSection>
+
+      <DCSection id="parity" title="Light + dark parity" subtitle="Every screen ships both themes from the same tokens">
+        {NB({ id:"par-list-l", label:"List · light", theme:"light", build:M.listCompact })}
+        {NB({ id:"par-list-d", label:"List · dark", theme:"dark", build:M.listCompact })}
+        {NB({ id:"par-board-d", label:"Board · dark", theme:"dark", build:M.boardScreen })}
+        {NB({ id:"par-detail-d", label:"Task detail · dark", theme:"dark", h:1700, build:M.taskDetail })}
+        {NoteB({ id:"parity-notes", label:"Notes", title:"Light + dark", sub:"Both themes, one token set", items:[
+          'Every screen renders in both themes from the same CSS variables — the theme toggle lives in the ⋯ overflow.',
+          'Status colors hold across themes: To Do gray · In Progress <b>blue</b> · Delayed <b>red</b> · Done green.',
+          'Dark uses the navy surface ramp; gold + status accents lift for contrast (same values as desktop dark).',
+        ], tip:'Flip the whole canvas with the <b>Light / Dark</b> switch top-left — pinned frames here stay fixed for comparison.' })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<template id="__bundler_thumbnail" data-bg-color="#0f1b30">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0f1b30"/>
+    <circle cx="600" cy="350" r="120" fill="none" stroke="#c9a24b" stroke-width="10"/>
+    <path d="M600 260 C660 320 660 400 600 440 C540 400 540 320 600 260 Z" fill="#2c5499" stroke="#c9a24b" stroke-width="8"/>
+    <rect x="430" y="520" width="150" height="90" rx="12" fill="#c8762f"/>
+    <rect x="620" y="520" width="150" height="90" rx="12" fill="#2c64a8"/>
+    <text x="600" y="700" font-family="Georgia,serif" font-size="54" fill="#eaf0fb" text-anchor="middle">Ananda Taskboard</text>
+  </svg>
+</template>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# Project notes — <PRODUCT NAME>
+> Drop this file (renamed `CLAUDE.md`) at the root of any new Claude project. It is read at
+> the start of every conversation in that project, so these rules apply automatically.
+> Fill in the <PLACEHOLDERS> for your product. Keep `DESIGN-DECISIONS-LOG.md` alongside it.
+
+## RULE #0 — Fidelity first (process; non-negotiable)
+**When building any mockup/variation on top of designs that already exist for this product,
+FIRST recreate the previously-agreed-upon design with 100% fidelity — exact markup, classes,
+structure, fields, spacing, fonts and behavior — by reading the real source file and copying
+it. Only then add the new feature on top.** Never ship a simplified, approximate, or
+"lighter" version of an existing surface. If unsure how something currently looks, open the
+source and match it — do not guess. Approximations waste time and are unacceptable.
+
+## RULE #1 — Log every design decision (process; non-negotiable)
+**Every decision made in a session — a change, rename, restyle, behavior rule, or new
+convention — MUST be recorded in `DESIGN-DECISIONS-LOG.md` at the project root**, the moment
+it's agreed, with: date, what changed (before → after), the exact spec (values/markup), and
+**every surface/file it affects** (so it can be applied retroactively to older modules). The
+log is the single source of truth for cross-cutting changes; when starting work, read it and
+bring stale surfaces up to date. If a decision isn't in the log, it's considered lost.
+
+## RULE #2 — Source of truth
+- The canonical design lives in `<SOURCE FILE(S)>`. Every other module/surface must stay
+  consistent with it. List the modules here (e.g. web app, mobile, auth, …).
+
+## Brand / design system
+- Aesthetic: <ONE LINE>. Fonts: <UI FONT> for UI + titles; <MONO> for numbers;
+  <DISPLAY FONT> ONLY for <where>.
+- Logo / mark: `<path>`.
+- Color tokens, status model, spacing, radii: <link or short list>. Define once; reuse.
+
+## Hard UI rules (apply to ALL work here)
+- <Recurring correction 1 — e.g. control styling, caret handling>
+- <Recurring correction 2 — e.g. destructive actions need a confirm popup>
+- <Recurring correction 3 — e.g. header never wraps>
+- Light + dark both ship from the same tokens (if applicable).
+
+## Handoff
+- The complete cross-module developer handoff lives in `design_handoff_COMPLETE/` with a
+  `MASTER-HANDOFF.md` (the exact command + per-module spec + acceptance checklist).
