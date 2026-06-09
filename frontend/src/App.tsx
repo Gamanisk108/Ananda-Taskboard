@@ -364,7 +364,11 @@ export default function App() {
               {actionsOpen && (
                 <>
                   <div className="vo-scrim" onClick={() => setActionsOpen(false)} />
-                  <div className="vo-pop" onClick={() => setActionsOpen(false)}>{actions}</div>
+                  {/* Don't close (unmount) the menu on an item click: ExportDialog /
+                      ImportDialog keep their modal in their OWN state, so unmounting
+                      them here would destroy the modal before it shows. The scrim
+                      dismisses the menu; their modals open over it. */}
+                  <div className="vo-pop">{actions}</div>
                 </>
               )}
             </div>
