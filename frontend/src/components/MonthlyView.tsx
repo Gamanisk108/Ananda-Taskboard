@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { dayCells, useCalendarRange, type CalendarViewProps } from "../calendar";
-import { Modal, Spinner, DueFlag, CalAnnounceIcon, CalHolidayIcon } from "./common";
+import { Modal, BottomSheet, Spinner, DueFlag, CalAnnounceIcon, CalHolidayIcon, useIsNarrow } from "./common";
 import { DayCellLines } from "./DayCellLines";
 import { DayTaskList } from "./DayTaskList";
 import { UndatedTasks } from "./UndatedTasks";
@@ -15,6 +15,7 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [dayOpen, setDayOpen] = useState<string | null>(null);
+  const narrow = useIsNarrow();
   const today = format(new Date(), "yyyy-MM-dd");
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
   const colorByProject = !projectId;
@@ -140,21 +141,28 @@ export function MonthlyView({ projectId, subprojectId, onEdit }: CalendarViewPro
             })}
           </div>
 
-          {dayOpen && (
-            <Modal title={format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() })} onClose={() => setDayOpen(null)}>
-              {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
-                <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>
-                  <CalAnnounceIcon size={14} /><span className="cal-line-txt">{e.title}</span>
-                </div>
-              ))}
-              {(holidaysByDate.get(dayOpen) ?? []).map((h, k) => (
-                <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>
-                  <CalHolidayIcon size={14} /><span className="cal-line-txt">{h.title}</span>
-                </div>
-              ))}
-              <DayTaskList items={byDate.get(dayOpen) ?? []} colorByProject={colorByProject} onOpen={open} />
-            </Modal>
-          )}
+          {dayOpen && (() => {
+            const dayTitle = format(new Date(`${dayOpen}T00:00:00`), "EEEE, MMM d, yyyy", { locale: dfLocale() });
+            const dayContent = (
+              <>
+                {(eventsByDate.get(dayOpen) ?? []).map((e, k) => (
+                  <div key={`ev-${k}`} className="cal-event" style={{ margin: "0 0 8px" }}>
+                    <CalAnnounceIcon size={14} /><span className="cal-line-txt">{e.title}</span>
+                  </div>
+                ))}
+                {(holidaysByDate.get(dayOpen) ?? []).map((h, k) => (
+                  <div key={`h${k}`} className="cal-event holiday" style={{ margin: "0 0 8px" }}>
+                    <CalHolidayIcon size={14} /><span className="cal-line-txt">{h.title}</span>
+                  </div>
+                ))}
+                <DayTaskList items={byDate.get(dayOpen) ?? []} colorByProject={colorByProject} onOpen={open} />
+              </>
+            );
+            // On phones the day detail is a bottom sheet (design); desktop = modal.
+            return narrow
+              ? <BottomSheet title={dayTitle} onClose={() => setDayOpen(null)}>{dayContent}</BottomSheet>
+              : <Modal title={dayTitle} onClose={() => setDayOpen(null)}>{dayContent}</Modal>;
+          })()}
         </>
       )}
     </div>
