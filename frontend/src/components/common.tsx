@@ -25,36 +25,23 @@ const COLOR_PALETTE = [
 export function ColorPicker({ value, onChange, title }: { value: string; onChange: (hex: string) => void; title?: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLButtonElement>(null);
-  const popRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<CSSProperties>({});
-  useEffect(() => {
-    if (!open) return;
-    const place = () => {
-      const r = ref.current?.getBoundingClientRect();
-      if (r) setPos({ position: "fixed", top: r.bottom + 6, left: Math.max(8, Math.min(r.left, window.innerWidth - 244)), zIndex: 200 });
-    };
-    place();
-    const onDoc = (e: MouseEvent) => { const tg = e.target as Node; if (ref.current?.contains(tg) || popRef.current?.contains(tg)) return; setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    window.addEventListener("scroll", place, true);
-    window.addEventListener("resize", place);
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("scroll", place, true);
-      window.removeEventListener("resize", place);
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  const { refs, floatingStyles, context } = useFloating({
+    open, onOpenChange: setOpen, placement: "bottom-start",
+    middleware: [offset(6), flip({ padding: 8 }), shift({ padding: 8 })],
+    whileElementsMounted: autoUpdate,
+  });
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useClick(context), useDismiss(context), useRole(context, { role: "dialog" }),
+  ]);
   return (
     <>
-      <button type="button" ref={ref} className="swatch-btn" style={{ background: value }}
-        title={title ?? value} aria-label={t("common.color", "Color")} onClick={() => setOpen((o) => !o)} />
-      {open && createPortal(
-        <div className="color-pop" ref={popRef} style={pos}>
-          <div className="color-grid">
+      <button type="button" ref={refs.setReference} {...getReferenceProps()} className="swatch-btn" style={{ background: value }}
+        title={title ?? value} aria-label={t("common.color", "Color")} />
+      {open && (
+        <FloatingPortal>
+          {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter, not a React .current ref */}
+          <div className="color-pop" ref={refs.setFloating} {...getFloatingProps()} style={{ ...floatingStyles, zIndex: 200 }}>
+            <div className="color-grid">
             {COLOR_PALETTE.map((c) => (
               <button key={c} type="button" className="color-cell" style={{ background: c }} title={c}
                 aria-label={c} onClick={() => { onChange(c); setOpen(false); }} />
@@ -70,8 +57,8 @@ export function ColorPicker({ value, onChange, title }: { value: string; onChang
             <input type="text" value={value} spellCheck={false} onChange={(e) => onChange(e.target.value)}
               style={{ width: 84, fontFamily: "var(--f-mono)", textTransform: "uppercase" }} aria-label={t("common.hex", "Hex") } />
           </div>
-        </div>,
-        document.body,
+          </div>
+        </FloatingPortal>
       )}
     </>
   );

@@ -122,3 +122,21 @@ test.describe("SingleSelect popover (floating-ui)", () => {
     expect(box.y + box.height).toBeLessThanOrEqual(viewport!.height + 1);
   });
 });
+
+test.describe("ColorPicker popover (floating-ui)", () => {
+  test("palette opens, portals, in viewport", async ({ page, viewport }) => {
+    test.skip(!viewport || viewport.width < 900, "desktop-scoped (Projects nav is a top-bar button)");
+    await login(page);
+    await gotoView(page, "list");
+    await page.locator('.topbar-actions button[title="Projects"]').click();
+    await page.locator(".modal").first().waitFor({ timeout: 8000 });
+    await page.locator(".modal .swatch-btn").first().click();
+    const pop = page.locator(".color-pop");
+    await expect(pop).toBeVisible();
+    await expect(pop.locator(".color-cell")).toHaveCount(12);
+    const box = (await pop.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(-1);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport!.width + 1);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport!.height + 1);
+  });
+});
