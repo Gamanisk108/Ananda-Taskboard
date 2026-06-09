@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import { api } from "../api/client";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, ProjPill } from "./common";
 import { useConfirm } from "./confirm";
 
-interface Row { id: number; label: string; days_left: number; }
+interface PillInfo { name: string; color: string; }
+interface Row { id: number; label: string; days_left: number; project?: PillInfo; subproject?: PillInfo; }
 interface TrashData { projects: Row[]; subprojects: Row[]; tasks: Row[]; }
 
 export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
@@ -32,9 +33,14 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
       <div style={{ marginBottom: 14 }}>
         <h3 className="section-title">{title}</h3>
         {rows.map((r) => (
-          <div key={`${type}-${r.id}`} className="assignee-row" style={{ justifyContent: "space-between" }}>
-            <span>{r.label} <span className="muted" style={{ fontSize: 12 }}>· {t("trash.daysLeft", { n: r.days_left })}</span></span>
-            <span style={{ display: "flex", gap: 6 }}>
+          <div key={`${type}-${r.id}`} className="assignee-row" style={{ justifyContent: "space-between", gap: 8 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0, flexWrap: "wrap" }}>
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
+              {r.project && <ProjPill name={r.project.name} color={r.project.color} />}
+              {r.subproject && <ProjPill name={r.subproject.name} color={r.subproject.color} />}
+              <span className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>· {t("trash.daysLeft", { n: r.days_left })}</span>
+            </span>
+            <span style={{ display: "flex", gap: 6, flex: "none" }}>
               <button type="button" className="btn-secondary" onClick={() => restore(type, r.id)}>{t("trash.restore")}</button>
               <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => purge(type, r.id)}>{t("trash.deleteForever")}</button>
             </span>

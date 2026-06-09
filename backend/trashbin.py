@@ -111,10 +111,19 @@ class TrashView(APIView):
         def row(obj, label):
             return {"id": obj.id, "label": label, "deleted_at": obj.deleted_at, "days_left": _days_left(obj.deleted_at)}
 
+        def task_row(t):
+            # Include the task's project + sub-project so the UI can show proj-pills
+            # (projects/sub-projects render as proj-pills everywhere they're listed).
+            sp = t.subproject
+            r = row(t, t.title)
+            r["project"] = {"name": sp.project.name, "color": sp.project.color}
+            r["subproject"] = {"name": sp.name, "color": sp.color}
+            return r
+
         if is_org_admin(request.user, org):
             projects = Project.all_objects.dead()
             subs = SubProject.all_objects.dead().select_related("project")
-            tasks = Task.all_objects.dead()
+            tasks = Task.all_objects.dead().select_related("subproject__project")
             if org is not None:  # tenant isolation: only this org's trash
                 projects = projects.filter(organization=org)
                 subs = subs.filter(project__organization=org)
@@ -122,7 +131,7 @@ class TrashView(APIView):
             return Response({
                 "projects": [row(p, p.name) for p in projects],
                 "subprojects": [row(s, f"{s.project.name} / {s.name}") for s in subs],
-                "tasks": [row(t, t.title) for t in tasks],
+                "tasks": [task_row(t) for t in tasks],
             })
 
         own = Task.all_objects.dead().filter(deleted_by=request.user)
@@ -131,7 +140,7 @@ class TrashView(APIView):
         return Response({
             "projects": [],
             "subprojects": [],
-            "tasks": [row(t, t.title) for t in own.select_related("subproject__project")],
+            "tasks": [task_row(t) for t in own.select_related("subproject__project")],
         })
 
 
