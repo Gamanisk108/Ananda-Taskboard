@@ -416,16 +416,39 @@ export function BottomSheet({
   resetLabel?: string;
 }) {
   const { t } = useTranslation();
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Escape to close, lock background scroll, move focus into the sheet and trap it
+  // there, and restore focus to the opener on close (a11y — what a sheet lib gives
+  // you for free; done here without the dependency).
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const prevFocus = document.activeElement as HTMLElement | null;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Tab" && panelRef.current) {
+        const f = panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (f.length === 0) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      prevFocus?.focus?.();
+    };
   }, [onClose]);
   // Portal to <body> so a transformed ancestor (e.g. an entrance-animated view)
   // can't trap our position:fixed scrim/panel.
   return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="sheet-panel" ref={panelRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="sheet-grab"><i /></div>
         <div className="sheet-head">
           <h2>{title}</h2>
