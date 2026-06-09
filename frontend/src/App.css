@@ -709,4 +709,12 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
 @media (max-width: 700px) {
   .viewbar { flex-direction: row; align-items: center; }
   .viewbar > div { flex-wrap: nowrap; }
+  /* Project picker: a single horizontal-scroll chip rail instead of ~3 wrapped
+     rows, reclaiming vertical space on phones. */
+  .tabs { flex-wrap: nowrap; max-height: none; overflow-y: hidden; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  /* Summary strip scrolls horizontally rather than overflowing/clipping. */
+  .summary { overflow-x: auto; scrollbar-width: none; }
+  .summary::-webkit-scrollbar { display: none; }
 }
