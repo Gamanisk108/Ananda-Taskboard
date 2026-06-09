@@ -180,7 +180,7 @@ export default function App() {
     if (proj === "global") setTopTab("global");
     else if (proj) setTopTab(Number(proj));
     if (sub) setSubTab(Number(sub));
-    if (v === "list" || v === "weekly" || v === "monthly") setView(v);
+    if (v === "list" || v === "board" || v === "weekly" || v === "monthly") setView(v);
     if (task) {
       import("./api/client").then(({ api }) =>
         api.get(`/api/tasks/${task}`).then((t) => setEditing(t as Task)).catch(() => {})
