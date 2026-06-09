@@ -136,6 +136,7 @@ export interface Subtask {
   end_time: string | null;
   assignees: number[];
   assignee_groups: number[];
+  links: string[];
 }
 
 export interface UserLite {

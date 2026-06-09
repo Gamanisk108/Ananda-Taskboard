@@ -230,6 +230,53 @@ export function StatusPill({ status, editable }: { status: string; editable?: bo
   );
 }
 
+/** A status pill that IS a dropdown: the colored pill is the trigger and opens a
+ *  popover of the five statuses (check on the current one) for inline change —
+ *  used in subtask rows (design D11). Stops click propagation so the row's own
+ *  click (open detail) doesn't also fire. */
+export function StatusPillSelect({
+  value, statuses, onChange, testId,
+}: {
+  value: string;
+  statuses: { key: string; label: string; color: string }[];
+  onChange: (key: string) => void;
+  testId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  const c = statusColor(value);
+  return (
+    <span className="ms ss" ref={ref} data-testid={testId} onClick={(e) => e.stopPropagation()}>
+      <button type="button" className="pill status-pill" style={{ "--sc": c } as CSSProperties}
+        aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <span className="dot" style={{ background: c }} />
+        {statusLabel(value)}
+        <span className="caret">▾</span>
+      </button>
+      {open && (
+        <div className="ms-pop" role="listbox">
+          {statuses.map((s) => (
+            <button key={s.key} type="button" className="ms-opt ss-opt" role="option" aria-selected={s.key === value}
+              onClick={() => { onChange(s.key); setOpen(false); }}>
+              <span className="dot" style={{ background: s.color }} />
+              <span className="ms-opt-label">{s.label}</span>
+              {s.key === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
 /** True when the viewport is at/below `max` px (phone). Drives the responsive
  *  card layouts that replace dense desktop tables on mobile. */
 export function useIsNarrow(max = 700) {
@@ -380,7 +427,8 @@ export function SubtaskBar({ counts }: { counts: Record<string, number> }) {
   return (
     <div className="segbar" title={`${done} / ${total}`}>
       <div className="segbar-track">
-        {entries.map(([k, n]) => (
+        {/* To-Do is the empty track remainder (design D11) — no segment drawn. */}
+        {entries.filter(([k]) => k !== "todo").map(([k, n]) => (
           <span key={k} style={{ width: `${(n / total) * 100}%`, background: statusColor(k) }} />
         ))}
       </div>

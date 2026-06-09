@@ -462,6 +462,52 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .status-pill .caret { font-size: 9px; opacity: .5; margin-left: -1px; }
 .status-pill.static { cursor: default; }
 .status-pill.static:hover { background: color-mix(in srgb, var(--sc) 16%, var(--surface)); }
+
+/* ── Subtasks (design D11/D12) ─────────────────────────────────────────────
+   Header: title + status-count dots + a done/total progress bar (To-Do = empty
+   track). Rows are mini-tasks: priority · title · aligned avatar column ·
+   status pill+popover · delete. Detail panel header = breadcrumb (#parent.index)
+   replacing the title + Share. */
+.sub-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 9px; }
+.sub-head h3 { margin: 0; }
+.sub-counts { display: inline-flex; gap: 9px; align-items: center; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.sub-counts .c { display: inline-flex; align-items: center; gap: 4px; }
+.sub-prog { margin-left: auto; width: 170px; }
+.sub-prog .segbar { margin-top: 0; }
+.st-rows { display: flex; flex-direction: column; gap: 2px; }
+.st-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: var(--r-ctl);
+  border: 1px solid transparent; cursor: pointer; background: none; width: 100%; text-align: left; }
+.st-row:hover { background: var(--surface-2); border-color: var(--border); }
+.st-row .st-prio { flex: none; display: flex; width: 18px; justify-content: center; }
+.st-row .st-open { flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0; }
+.st-row .st-title { font-weight: 600; font-size: 13.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-row .st-avs { display: inline-flex; align-items: center; flex: none; width: 92px; justify-content: flex-start; }
+.st-row .st-avs .av { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--f-mono); font-size: 9px; font-weight: 600; color: #fff; border: 2px solid var(--surface); margin-left: -7px; }
+.st-row .st-avs .av:first-child { margin-left: 0; }
+.st-row .st-avs .grp { margin-left: -7px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--surface);
+  background: var(--sunk); color: var(--muted); display: grid; place-items: center; font-size: 11px; }
+.st-row .st-avs .av:first-child.grp, .st-row .st-avs .grp:first-child { margin-left: 0; }
+.st-row .st-avs .more { margin-left: 5px; font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+.st-row .st-stat { flex: none; width: 120px; position: relative; display: flex; justify-content: flex-start; }
+.st-row .st-del { flex: none; width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center;
+  color: var(--faint); background: none; border: none; cursor: pointer; }
+.st-row .st-del:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+.st-add { display: flex; gap: 8px; margin-top: 10px; }
+/* Subtask detail — breadcrumb header replaces the title (#parent.index ids) */
+.sd-crumb { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-weight: 400; }
+.sd-back { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted);
+  padding: 5px 9px 5px 7px; border-radius: 7px; flex: none; background: none; border: none; cursor: pointer; }
+.sd-back:hover { background: var(--sunk); color: var(--text); }
+.sd-crumb .sep { color: var(--faint); flex: none; display: grid; place-items: center; }
+.sd-crumb .cr { font-size: 13px; color: var(--muted); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.sd-crumb .cur { font-weight: 700; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.id-pill { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); background: var(--sunk);
+  border-radius: var(--r-pill); padding: 1px 9px; font-weight: 500; flex: none; }
+.time-error { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--danger); }
+.field.in-error input { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent); }
+
 /* Mobile task cards (.tcard) — replace the dense table on phones (design mobile List). */
 .tcards { display: flex; flex-direction: column; gap: 8px; }
 .tcard { display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left;
@@ -480,9 +526,9 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
   background: color-mix(in srgb, var(--pc) 16%, var(--surface));
   color: color-mix(in srgb, var(--pc) 78%, var(--text));
   border-color: color-mix(in srgb, var(--pc) 30%, transparent);
-  font-size: 11.5px; padding: 2px 9px; max-width: 100%;
+  font-size: 11.5px; padding: 2px 9px; max-width: 100%; white-space: nowrap;
 }
-.proj-pill .nm { overflow: hidden; text-overflow: ellipsis; }
+.proj-pill .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme="dark"] .proj-pill {
   background: color-mix(in srgb, var(--pc) 24%, var(--surface));
   color: color-mix(in srgb, var(--pc) 35%, #fff);

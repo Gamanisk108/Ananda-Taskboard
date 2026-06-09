@@ -159,6 +159,7 @@ class Subtask(models.Model):
     # Optional time-of-day (both-or-neither, enforced by the serializer), same as Task.
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
+    links = models.JSONField(default=list, blank=True)  # list of URL strings (mirrors Task)
     # Multiple assignees + groups, mirroring Task. Any assignee (or a member of an
     # assigned group) may edit THIS subtask even if they can't otherwise edit the
     # parent task (as long as they can see it).

@@ -38,8 +38,13 @@ class SubtaskSerializer(serializers.ModelSerializer):
         fields = [
             "id", "task", "title", "status", "order", "priority",
             "details", "requirements", "timeline_start", "deadline",
-            "start_time", "end_time", "assignees", "assignee_groups",
+            "start_time", "end_time", "assignees", "assignee_groups", "links",
         ]
+
+    def validate_links(self, value):
+        if not isinstance(value, list) or not all(isinstance(u, str) for u in value):
+            raise serializers.ValidationError("links must be a list of URL strings.")
+        return value
 
     def validate(self, attrs):
         # Time-of-day is both-or-neither, with end strictly after start (same as Task).

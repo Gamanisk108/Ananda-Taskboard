@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Clock } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
-import { PriorityIcon } from "./common";
+import { PriorityIcon, StatusPill, SingleSelect, LinksEditor } from "./common";
 import { useConfirm } from "./confirm";
 import type { TaskStatus } from "../statuses";
 import { PRIORITY_META, type Subtask, type UserLite } from "../types";
@@ -18,9 +19,11 @@ interface Props {
   onChanged?: () => void; // refresh the parent list + status counts
 }
 
-/** The simplified Task Popup for one subtask: status, priority, assignees/groups,
- *  notes and optional dates/times. No repeating, no auto-complete, no nesting —
- *  shown in place of the task form (breadcrumb back), so editors never stack. */
+/** The simplified Task Popup for one subtask (design D12): fields mirror the
+ *  parent — Sub-task name · Status (pill + "Change to…") | Priority · Assignees ·
+ *  Details | Requirements · dates · times (both-or-neither) · Links. The
+ *  breadcrumb header (#parent.index) + Share live in the modal head (TaskModal);
+ *  the footer is Delete-left + Save (the breadcrumb Back replaces a Back button). */
 export function SubtaskDetail({ subtask, users, groups, statuses, subproject, isAdmin, onBack, onChanged }: Props) {
   const { t } = useTranslation();
   const confirm = useConfirm();
@@ -35,9 +38,13 @@ export function SubtaskDetail({ subtask, users, groups, statuses, subproject, is
   const [deadline, setDeadline] = useState(subtask.deadline ?? "");
   const [startTime, setStartTime] = useState(subtask.start_time ?? "");
   const [endTime, setEndTime] = useState(subtask.end_time ?? "");
+  const [links, setLinks] = useState((subtask.links ?? []).join("\n"));
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
+
+  // D13: time-of-day is both-or-neither; flag the time fields when only one is set.
+  const timeErr = !!startTime !== !!endTime;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +64,7 @@ export function SubtaskDetail({ subtask, users, groups, statuses, subproject, is
         deadline: deadline || null,
         start_time: startTime || null,
         end_time: endTime || null,
+        links: links.split("\n").map((s) => s.trim()).filter(Boolean),
       });
       onChanged?.();
       onBack();
@@ -82,31 +90,27 @@ export function SubtaskDetail({ subtask, users, groups, statuses, subproject, is
 
   return (
     <form onSubmit={save}>
-      <div className="subtask-crumb" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, fontSize: 14 }}>
-        <button type="button" className="btn-ghost" onClick={onBack} style={{ padding: "2px 6px" }}>← {t("task.subtasks")}</button>
-        <span className="muted">›</span>
-        <span style={{ fontWeight: 600 }}>{title || subtask.title}</span>
-      </div>
-
       <div className="field">
-        <label>{t("task.name")}</label>
+        <label>{t("subtask.name", "Sub-task name")}</label>
         <input data-testid="subtask-detail-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
       </div>
 
       <div className="row2">
         <div className="field">
           <label>{t("task.status")}</label>
-          <select data-testid="subtask-detail-status" value={status} onChange={(e) => setStatus(e.target.value)}>
-            {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <StatusPill status={status} />
+            <SingleSelect testId="subtask-detail-status" value="" placeholder={t("task.changeTo")}
+              onChange={(v) => v && setStatus(v)}
+              options={statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }))} />
+          </div>
         </div>
         <div className="field">
           <label>{t("task.priority")}</label>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <PriorityIcon level={priority} size={16} />
-            <select value={priority} onChange={(e) => setPriority(Number(e.target.value))}>
-              {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
-            </select>
+            <SingleSelect width="100%" value={String(priority)} onChange={(v) => setPriority(Number(v))}
+              options={[5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label }))} />
           </div>
         </div>
       </div>
@@ -145,21 +149,26 @@ export function SubtaskDetail({ subtask, users, groups, statuses, subproject, is
       </div>
 
       <div className="row2">
-        <div className="field">
+        <div className={`field${timeErr ? " in-error" : ""}`} style={{ marginBottom: 6 }}>
           <label>{t("task.startTime")}</label>
           <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         </div>
-        <div className="field">
+        <div className={`field${timeErr ? " in-error" : ""}`} style={{ marginBottom: 6 }}>
           <label>{t("task.endTime")}</label>
           <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
         </div>
+      </div>
+      {timeErr && <div className="time-error"><Clock size={15} /> {t("tm.errTimes")}</div>}
+
+      <div className="field">
+        <label>{t("task.links")}</label>
+        <LinksEditor value={links} onChange={setLinks} />
       </div>
 
       {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
 
       <div className="modal-foot">
-        <button type="button" className="btn-secondary" style={{ marginRight: "auto" }} onClick={onBack}>← {t("subtask.back")}</button>
-        <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>
+        <button type="button" className="btn-danger" style={{ marginRight: "auto" }} onClick={del}>{t("common.delete")}</button>
         <button className="btn-primary" data-testid="subtask-detail-save" disabled={busy}>{busy ? t("task.saving") : t("common.save")}</button>
       </div>
     </form>

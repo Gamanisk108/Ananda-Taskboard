@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { avatarColor, userInitials, useUsers } from "../users";
-import type { Subtask } from "../types";
+import { PriorityIcon, StatusPillSelect, SubtaskDots, SubtaskBar } from "./common";
+import { PRIORITY_META, type Subtask } from "../types";
 
-/** Compact list of a task's subtasks. Each row shows title · quick status · who's
- *  assigned, and opens the full subtask editor (SubtaskDetail) on click. Quick-add
- *  by title stays inline for fast capture. Calls onChanged so the parent's status
- *  dots refresh. */
+/** A task's subtasks rendered as mini-tasks (design D11): the header carries
+ *  status-count dots + a done/total progress bar; each row shows priority ·
+ *  title · an aligned avatar column · a status pill+popover · delete, and opens
+ *  the full subtask detail (SubtaskDetail) on click. Quick-add stays inline.
+ *  Calls onChanged so the parent's status dots refresh. */
 export function SubtaskEditor({
   taskId, onOpen, onChanged,
-}: { taskId: number; onOpen: (s: Subtask) => void; onChanged?: () => void }) {
+}: { taskId: number; onOpen: (s: Subtask, index: number) => void; onChanged?: () => void }) {
   const { t } = useTranslation();
   const [subs, setSubs] = useState<Subtask[]>([]);
   const [title, setTitle] = useState("");
@@ -24,6 +26,12 @@ export function SubtaskEditor({
     api.get(`/api/subtasks?task=${taskId}`).then(setSubs).catch(() => setSubs([]));
   }
   useEffect(load, [taskId]);
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const s of subs) c[s.status] = (c[s.status] ?? 0) + 1;
+    return c;
+  }, [subs]);
 
   async function add() {
     if (!title.trim()) return;
@@ -52,31 +60,43 @@ export function SubtaskEditor({
 
   return (
     <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">{t("task.subtasks")} ({subs.length})</h3>
-      {subs.map((s) => (
-        <div key={s.id} data-testid="subtask-row" style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-          <button type="button" data-testid="subtask-open" className="btn-ghost subtask-open"
-            onClick={() => onOpen(s)} title={t("subtask.editDetails")}
-            style={{ flex: 1, textAlign: "left", padding: "4px 6px", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ flex: 1 }}>{s.title}</span>
-            <span style={{ display: "flex", gap: 2 }}>
-              {(s.assignees ?? []).slice(0, 3).map((id) => (
-                <span key={id} className="av" style={{ background: avatarColor(id) }} title={userInitials(users, id)}>
-                  {userInitials(users, id)}
-                </span>
-              ))}
-              {(s.assignee_groups ?? []).length > 0 && (
-                <span className="av" style={{ background: "var(--primary-weak)", color: "var(--dome)" }} title={t("ap.assignGroup")}>◇</span>
-              )}
-            </span>
-          </button>
-          <select data-testid="subtask-status" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)} style={{ width: "auto" }}>
-            {statuses.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
-          </select>
-          <button type="button" className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => remove(s.id)}><X size={16} /></button>
-        </div>
-      ))}
-      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+      <div className="sub-head">
+        <h3 className="section-title" style={{ margin: 0 }}>{t("task.subtasks")} ({subs.length})</h3>
+        {subs.length > 0 && <span className="sub-counts"><SubtaskDots counts={counts} /></span>}
+        {subs.length > 0 && <span className="sub-prog"><SubtaskBar counts={counts} /></span>}
+      </div>
+
+      <div className="st-rows">
+        {subs.map((s, i) => {
+          const avs = (s.assignees ?? []).slice(0, 3);
+          const extra = (s.assignees ?? []).length - avs.length;
+          return (
+            <div key={s.id} data-testid="subtask-row" className="st-row" role="button" tabIndex={0}
+              onClick={() => onOpen(s, i + 1)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(s, i + 1); } }}
+              title={t("subtask.editDetails")}>
+              <span className="st-prio" title={PRIORITY_META[s.priority].label}><PriorityIcon level={s.priority} /></span>
+              <span className="st-open"><span className="st-title">{s.title}</span></span>
+              <span className="st-avs">
+                {avs.map((id) => (
+                  <span key={id} className="av" style={{ background: avatarColor(id) }} title={userInitials(users, id)}>
+                    {userInitials(users, id)}
+                  </span>
+                ))}
+                {extra > 0 && <span className="more">+{extra}</span>}
+                {(s.assignee_groups ?? []).length > 0 && <span className="grp" title={t("ap.assignGroup")}>◇</span>}
+              </span>
+              <span className="st-stat">
+                <StatusPillSelect testId="subtask-status" value={s.status} statuses={statuses} onChange={(k) => setStatus(s.id, k)} />
+              </span>
+              <button type="button" className="st-del" title={t("common.delete", "Delete")}
+                onClick={(e) => { e.stopPropagation(); remove(s.id); }}><Trash2 size={15} /></button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="st-add">
         <input data-testid="subtask-add-input" placeholder={t("task.addSubtask")} value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} />

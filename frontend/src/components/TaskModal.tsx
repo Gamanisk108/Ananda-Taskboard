@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Archive, Share2, Pencil } from "lucide-react";
+import { Eye, Archive, Share2, Pencil, ArrowLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
@@ -316,6 +316,9 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   // form (one window, breadcrumb back — never a stacked modal). Capped at one level:
   // subtasks have no subtasks, so the breadcrumb is only ever two deep.
   const [openSub, setOpenSub] = useState<Subtask | null>(null);
+  // 1-based position of the open subtask among its siblings → the `#parent.index`
+  // breadcrumb id (design D12). Supplied by SubtaskEditor when a row is opened.
+  const [openSubIndex, setOpenSubIndex] = useState(0);
   // Synchronous in-flight guard: `busy` (state) updates a tick late, so 2–3 fast
   // clicks could all fire before the button re-renders disabled, creating duplicate
   // tasks (QA 2026-06-05). The ref blocks re-entry immediately.
@@ -385,8 +388,26 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   if (editing && openSub) {
+    // The breadcrumb REPLACES the modal title (design D12): ← Back · {Parent}
+    // #142 › {Sub-task} #142.index, with Share to its right (✕ is the Modal's).
+    const crumb = (
+      <>
+        <span className="sd-crumb">
+          <button type="button" className="sd-back" onClick={() => setOpenSub(null)}>
+            <ArrowLeft size={15} /> {t("subtask.backShort", "Back")}
+          </button>
+          <span className="cr">{task!.title} <span className="id-pill">#{task!.id}</span></span>
+          <span className="sep"><ChevronRight size={14} /></span>
+          <span className="cur" title={openSub.title}>{openSub.title} <span className="id-pill">#{task!.id}.{openSubIndex}</span></span>
+        </span>
+        <button type="button" className="btn-secondary head-share" style={{ flex: "none" }}
+          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}&subtask=${openSub.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
+          <Share2 size={14} /> {shareLabel || t("task.share")}
+        </button>
+      </>
+    );
     return (
-      <Modal title={`${t("task.edit")} · #${task!.id}`} onClose={onClose} wide>
+      <Modal title={crumb} onClose={onClose} wide>
         <SubtaskDetail
           subtask={openSub}
           users={users}
@@ -527,7 +548,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <LinksEditor value={links} onChange={setLinks} disabled={readOnly} />
         </div>
 
-        <div className="field">
+        <div className="field" style={{ marginBottom: 10 }}>
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input type="checkbox" style={{ width: "auto" }} checked={rec.repeats} onChange={(e) => rec.setRepeats(e.target.checked)} />
             {t("task.repeats")}
@@ -540,7 +561,9 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             <input type="checkbox" style={{ width: "auto" }} checked={monitor} onChange={(e) => setMonitor(e.target.checked)} />
             {t("task.monitor")}
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+          {/* Even 10px rhythm across the three toggles (design): Repeats→Monitor and
+              Monitor→Auto-complete are the same gap. */}
+          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10 }}>
             <input type="checkbox" style={{ width: "auto" }} checked={autoComplete} onChange={(e) => setAutoComplete(e.target.checked)} />
             {t("task.autoComplete")}
           </label>
@@ -549,7 +572,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
       </form>
-      {editing && <SubtaskEditor taskId={task!.id} onOpen={setOpenSub} onChanged={onChanged} />}
+      {editing && <SubtaskEditor taskId={task!.id} onOpen={(s, i) => { setOpenSub(s); setOpenSubIndex(i); }} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}
     </Modal>
   );
