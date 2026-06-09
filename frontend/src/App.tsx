@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
-  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, LogOut, Mail } from "lucide-react";
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, LogOut, Mail, MoreHorizontal } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -12,7 +12,7 @@ import { ResetPassword } from "./components/ResetPassword";
 import { VerifyEmail } from "./components/VerifyEmail";
 import { AcceptInvite } from "./components/AcceptInvite";
 import { PlatformStats } from "./components/PlatformStats";
-import { Spinner, ColorDot, SingleSelect } from "./components/common";
+import { Spinner, ColorDot, SingleSelect, useIsNarrow } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
 import { MonthlyView } from "./components/MonthlyView";
@@ -104,6 +104,8 @@ export default function App() {
   const [showBulk, setShowBulk] = useState(false);
   const [showPlatform, setShowPlatform] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const narrow = useIsNarrow();
   // First-login welcome shows once ever (localStorage "at-onboarded"); "Show welcome
   // again" in Help re-arms it. What's-New dot compares the latest help version against
   // the last version the user opened Help at ("at-help-seen").
@@ -313,19 +315,40 @@ export default function App() {
             </button>
           ))}
         </div>
-        <div className="right">
-          <ShareViewButton />
-          <button className="btn-secondary" onClick={() => setShowSummary(true)}><Copy /><span className="lbl">{t("view.copySummary")}</span></button>
-          <ExportDialog me={me} />
-          {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
-          <button
-            className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
-            onClick={() => { setView("list"); setShowArchived((a) => !a); }}
-            title={t("view.archiveHint")}
-          >
-            <BookOpen /><span className="lbl">{showArchived ? t("view.hideArchive") : t("view.archive")}</span>
-          </button>
-        </div>
+        {(() => {
+          const actions = (
+            <>
+              <ShareViewButton />
+              <button className="btn-secondary" onClick={() => setShowSummary(true)}><Copy /><span className="lbl">{t("view.copySummary")}</span></button>
+              <ExportDialog me={me} />
+              {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
+              <button
+                className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
+                onClick={() => { setView("list"); setShowArchived((a) => !a); }}
+                title={t("view.archiveHint")}
+              >
+                <BookOpen /><span className="lbl">{showArchived ? t("view.hideArchive") : t("view.archive")}</span>
+              </button>
+            </>
+          );
+          // On phones the action buttons overflow the one-line viewbar → collapse
+          // them into a ⋯ overflow menu (the buttons stack vertically inside).
+          return narrow ? (
+            <div className="right view-overflow">
+              <button type="button" className="btn-secondary icon-only" data-testid="view-overflow"
+                aria-label={t("common.more", "More")} aria-expanded={actionsOpen}
+                onClick={() => setActionsOpen((o) => !o)}><MoreHorizontal /></button>
+              {actionsOpen && (
+                <>
+                  <div className="vo-scrim" onClick={() => setActionsOpen(false)} />
+                  <div className="vo-pop" onClick={() => setActionsOpen(false)}>{actions}</div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="right">{actions}</div>
+          );
+        })()}
       </div>
 
       <main className="content">

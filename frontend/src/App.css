@@ -547,6 +547,14 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .btn-filters.on { border-color: var(--dome); }
 .btn-filters .fcount { font-family: var(--f-mono); font-size: 11px; background: var(--dome); color: #fff;
   border-radius: var(--r-pill); padding: 0 6px; line-height: 17px; }
+/* viewbar action overflow (⋯) on phones */
+.view-overflow { position: relative; }
+.vo-scrim { position: fixed; inset: 0; z-index: 40; }
+.vo-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; min-width: 200px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
+  box-shadow: var(--shadow-2); padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+.vo-pop button { width: 100%; justify-content: flex-start; }
+.vo-pop .lbl { display: inline; }
 
 /* Mobile task cards (.tcard) — replace the dense table on phones (design mobile List). */
 .tcards { display: flex; flex-direction: column; gap: 8px; }
@@ -695,3 +703,10 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
   padding: 6px 8px; border-radius: 8px; transition: background .12s ease, color .12s ease;
 }
 .help-contact:hover { background: var(--hover); color: var(--text); }
+
+/* Phones (≤700px, where the viewbar actions collapse to a ⋯ menu): keep the
+   view switcher + ⋯ on one row instead of the stacked column used at 700–760px. */
+@media (max-width: 700px) {
+  .viewbar { flex-direction: row; align-items: center; }
+  .viewbar > div { flex-wrap: nowrap; }
+}
