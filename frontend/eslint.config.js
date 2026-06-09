@@ -64,6 +64,16 @@ export default defineConfig([
       // 🙂 is the EmojiPicker's own default placeholder (the project picker itself).
       // Everything else (🌐 🎉 🧹 🙏 ✅ 📁 📋 …) was converted to lucide line-art.
       'local/no-emoji-icon': ['error', { allow: ['👥', '🙂'] }],
+      // Hard UI rule: no native form controls that render browser chrome. Native
+      // <select> carets sit too close to the edge (use SingleSelect / MultiSelect,
+      // design D2) and native <input type="color"> is a square swatch (use the
+      // circular ColorPicker). Self-enforces the no-native-control sweeps. The one
+      // sanctioned exception is the custom-color hatch INSIDE ColorPicker, which
+      // carries a single documented eslint-disable.
+      'no-restricted-syntax': ['error',
+        { selector: 'JSXOpeningElement[name.name="select"]', message: 'No native <select> — use SingleSelect / MultiSelect from components/common (design D2: custom popover + caret).' },
+        { selector: 'JSXAttribute[name.name="type"][value.value="color"]', message: 'No native <input type="color"> — use the circular ColorPicker from components/common (hard rule: swatch pickers are circles + a recommended palette).' },
+      ],
     },
   },
 ])

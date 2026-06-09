@@ -58,6 +58,9 @@ export function ColorPicker({ value, onChange, title }: { value: string; onChang
           </div>
           <div className="color-custom">
             <span>{t("common.custom", "Custom")}</span>
+            {/* The ONE sanctioned native color input: the custom-color hatch inside
+                the circular ColorPicker (the no-restricted-syntax ban covers the rest). */}
+            {/* eslint-disable-next-line no-restricted-syntax */}
             <input type="color" value={value} onChange={(e) => onChange(e.target.value)} aria-label={t("common.customColor", "Custom color")} />
             <span className="color-prev" style={{ background: value }} />
             <input type="text" value={value} spellCheck={false} onChange={(e) => onChange(e.target.value)}
