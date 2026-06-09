@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon } from "lucide-react";
 import { api } from "../api/client";
-import { Modal, Spinner, SingleSelect } from "./common";
+import { Modal, Spinner, SingleSelect, ColorPicker } from "./common";
 import { useConfirm } from "./confirm";
 
 interface S { daily_push_hour: number; daily_push_minute: number; timezone: string; }
@@ -106,7 +106,7 @@ function StatusManager() {
       </div>
       {list.map((s, idx) => (
         <div key={s.id} className="assignee-row" style={{ gap: 8 }}>
-          <input type="color" value={s.color || "#6b7280"} onChange={(e) => patch(s, { color: e.target.value })} style={{ width: 38, padding: 2 }} />
+          <ColorPicker value={s.color || "#6b7280"} onChange={(v) => patch(s, { color: v })} title={t("settings.statusColor", "Status color")} />
           <input defaultValue={s.label} onBlur={(e) => e.target.value !== s.label && patch(s, { label: e.target.value })} style={{ flex: 1 }} />
           <input type="number" value={s.order} onChange={(e) => patch(s, { order: Number(e.target.value) })} style={{ width: 56 }} title={t("settings.orderTitle")} />
           <label className="muted" style={{ display: "flex", gap: 4, alignItems: "center", margin: 0, whiteSpace: "nowrap" }}>
@@ -116,7 +116,7 @@ function StatusManager() {
         </div>
       ))}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 38, padding: 2 }} />
+        <ColorPicker value={color} onChange={setColor} title={t("settings.statusColor", "Status color")} />
         <input placeholder={t("settings.newStatus")} value={label} onChange={(e) => setLabel(e.target.value)} />
         <button className="btn-secondary" type="button" onClick={add}>{t("settings.addStatus")}</button>
       </div>

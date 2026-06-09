@@ -4,7 +4,7 @@ import { Check, X, LayoutGrid } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, ColorPicker } from "./common";
 import { useConfirm } from "./confirm";
 import { DeleteWithMove } from "./DeleteWithMove";
 import { EmojiPicker } from "./EmojiPicker";
@@ -147,7 +147,7 @@ function ProjectEditor({
   return (
     <div className="card" style={{ padding: 12, marginBottom: 12 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
-        <input type="color" value={p.color} onChange={(e) => setP({ ...p, color: e.target.value })} style={{ width: 44, padding: 2 }} />
+        <ColorPicker value={p.color} onChange={(v) => setP({ ...p, color: v })} title={t("mp.colorTitle", "Project color")} />
         <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title={t("mp.emojiTitle")} />
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>{t("common.save")}</button>
@@ -179,7 +179,7 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
   useEffect(() => setS(sub), [sub]);
   return (
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-      <input type="color" value={s.color} onChange={(e) => setS({ ...s, color: e.target.value })} style={{ width: 40, padding: 2 }} />
+      <ColorPicker value={s.color} onChange={(v) => setS({ ...s, color: v })} title={t("mp.subColorTitle", "Sub-project color")} />
       <input value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} disabled={s.is_default && s.name === "General"} />
       <label className="muted" style={{ display: "flex", gap: 5, alignItems: "center", whiteSpace: "nowrap", margin: 0 }}
         title={t("mp.trustedTitle")}>

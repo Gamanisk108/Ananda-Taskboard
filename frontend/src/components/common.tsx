@@ -6,6 +6,70 @@ import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
 
+/** Recommended project/sub-project palette (design openColorPicker). */
+const COLOR_PALETTE = [
+  "#c8762f", "#b4452f", "#bb3b28", "#a23e6e", "#7a5aa6", "#2c5499",
+  "#2563a8", "#2f7d74", "#3f7d54", "#4f7a3c", "#c9a24b", "#6b7280",
+];
+
+/** Circular color-swatch picker (design `openColorPicker`): a round swatch
+ *  trigger that opens a popover with a recommended palette of circular swatches
+ *  plus a custom color + hex field. Replaces native `<input type=color>` (a
+ *  square, browser-chrome swatch — against the hard UI rule that swatch pickers
+ *  are circles with a recommended palette). Popover is portaled + fixed so it
+ *  never clips inside a scrolling modal. */
+export function ColorPicker({ value, onChange, title }: { value: string; onChange: (hex: string) => void; title?: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLButtonElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<CSSProperties>({});
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const r = ref.current?.getBoundingClientRect();
+      if (r) setPos({ position: "fixed", top: r.bottom + 6, left: Math.max(8, Math.min(r.left, window.innerWidth - 244)), zIndex: 200 });
+    };
+    place();
+    const onDoc = (e: MouseEvent) => { const tg = e.target as Node; if (ref.current?.contains(tg) || popRef.current?.contains(tg)) return; setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <>
+      <button type="button" ref={ref} className="swatch-btn" style={{ background: value }}
+        title={title ?? value} aria-label={t("common.color", "Color")} onClick={() => setOpen((o) => !o)} />
+      {open && createPortal(
+        <div className="color-pop" ref={popRef} style={pos}>
+          <div className="color-grid">
+            {COLOR_PALETTE.map((c) => (
+              <button key={c} type="button" className="color-cell" style={{ background: c }} title={c}
+                aria-label={c} onClick={() => { onChange(c); setOpen(false); }} />
+            ))}
+          </div>
+          <div className="color-custom">
+            <span>{t("common.custom", "Custom")}</span>
+            <input type="color" value={value} onChange={(e) => onChange(e.target.value)} aria-label={t("common.customColor", "Custom color")} />
+            <span className="color-prev" style={{ background: value }} />
+            <input type="text" value={value} spellCheck={false} onChange={(e) => onChange(e.target.value)}
+              style={{ width: 84, fontFamily: "var(--f-mono)", textTransform: "uppercase" }} aria-label={t("common.hex", "Hex") } />
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 export function ColorDot({ color }: { color: string }) {
   return <span className="dot" style={{ background: color }} />;
 }
