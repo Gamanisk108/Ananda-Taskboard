@@ -86,7 +86,7 @@ export function Signup({ onBack }: { onBack: () => void }) {
         <Field label={t("login.email")} type="email" value={f.email} onChange={set("email")} required />
         <Field label={t("login.password")} type="password" value={f.password} onChange={set("password")} required />
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}
-        <button className="btn-primary" style={{ width: "100%" }} disabled={busy}>
+        <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("signup.creating") : t("signup.create")}
         </button>
         <div style={{ marginTop: 14, textAlign: "center" }}>

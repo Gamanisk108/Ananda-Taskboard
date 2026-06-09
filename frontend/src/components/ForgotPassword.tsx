@@ -61,7 +61,7 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
           <label>{t("login.email")}</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
         </div>
-        <button className="btn-primary" style={{ width: "100%" }} disabled={busy}>
+        <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("reset.sending") : t("reset.send")}
         </button>
         <div style={{ marginTop: 14, textAlign: "center" }}>

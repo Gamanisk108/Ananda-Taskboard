@@ -34,7 +34,7 @@ export function VerifyEmail() {
         {status === "ok" && (
           <>
             <p className="muted" style={{ marginTop: 0 }}>{t("verify.okBody")}</p>
-            <button type="button" className="btn-primary" style={{ width: "100%" }} onClick={goLogin}>
+            <button type="button" className="btn-primary btn-full" onClick={goLogin}>
               {t("login.signIn")}
             </button>
           </>

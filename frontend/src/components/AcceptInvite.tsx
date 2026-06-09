@@ -88,7 +88,7 @@ export function AcceptInvite() {
     return (
       <Card title={t("accept.joinedTitle", { org: preview.organization })}>
         <p className="muted" style={{ marginTop: 0 }}>{t("accept.joinedBody")}</p>
-        <button type="button" className="btn-primary" style={{ width: "100%" }} onClick={goLogin}>
+        <button type="button" className="btn-primary btn-full" onClick={goLogin}>
           {t("login.signIn")}
         </button>
       </Card>
@@ -113,7 +113,7 @@ export function AcceptInvite() {
         </>
       )}
       {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}
-      <button type="button" className="btn-primary" style={{ width: "100%" }} disabled={busy} onClick={accept}>
+      <button type="button" className="btn-primary btn-full" disabled={busy} onClick={accept}>
         {busy ? t("accept.joining") : t("accept.join", { org: preview.organization })}
       </button>
       <div style={{ marginTop: 14, textAlign: "center" }}>

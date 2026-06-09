@@ -74,7 +74,7 @@ export function ResetPassword() {
     return (
       <Card title={t("reset.successTitle")}>
         <p className="muted" style={{ marginTop: 0 }}>{t("reset.successBody")}</p>
-        <button type="button" className="btn-primary" style={{ width: "100%" }} onClick={goLogin}>
+        <button type="button" className="btn-primary btn-full" onClick={goLogin}>
           {t("login.signIn")}
         </button>
       </Card>
@@ -85,7 +85,7 @@ export function ResetPassword() {
     return (
       <Card title={t("reset.expiredTitle")}>
         <p className="muted" style={{ marginTop: 0 }}>{t("reset.expiredBody")}</p>
-        <button type="button" className="btn-primary" style={{ width: "100%" }} onClick={() => setRequestAgain(true)}>
+        <button type="button" className="btn-primary btn-full" onClick={() => setRequestAgain(true)}>
           {t("reset.requestNew")}
         </button>
       </Card>
@@ -105,7 +105,7 @@ export function ResetPassword() {
         </div>
         <p className="muted" style={{ fontSize: 12, marginTop: 0, marginBottom: 14 }}>{t("reset.tooShort")}</p>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}
-        <button className="btn-primary" style={{ width: "100%" }} disabled={busy}>
+        <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("reset.updating") : t("reset.update")}
         </button>
       </form>

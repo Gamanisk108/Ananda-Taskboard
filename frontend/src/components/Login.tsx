@@ -12,7 +12,9 @@ export function Login() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
-  const [signup, setSignup] = useState(false);
+  // ?signup deep link: the Spread-the-word referral lands straight on the
+  // create-account form instead of the sign-in screen.
+  const [signup, setSignup] = useState(() => new URLSearchParams(window.location.search).has("signup"));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +49,7 @@ export function Login() {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}
-        <button className="btn-primary" style={{ width: "100%" }} disabled={busy}>
+        <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("login.signingIn") : t("login.signIn")}
         </button>
         <div style={{ marginTop: 14, textAlign: "center" }}>

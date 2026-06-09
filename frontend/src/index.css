@@ -30,6 +30,9 @@
   --shadow-2:0 6px 22px rgba(30,58,110,.13);
   --shadow-pop:0 12px 34px rgba(20,30,55,.18);
   --frozen-shadow:8px 0 14px -10px rgba(30,40,60,.28);
+  --new:#6d4aff;  /* "what's-new" dot (D15/D36 — purple, never a status color) */
+  --hu:var(--dome);  /* Help Us / poll-bar accent (azure family, NOT a status color) */
+  --hu-ink:var(--primary);
   --r-card:11px; --r-ctl:8px; --r-pill:999px;
   /* Form rhythm — ONE consistent vertical step between sibling controls/rows
      everywhere (design philosophy: never stack margin + gap; one step, app-wide). */
@@ -65,6 +68,8 @@ html[data-theme="dark"] {
   --shadow-2:0 6px 22px rgba(0,0,0,.45);
   --shadow-pop:0 14px 38px rgba(0,0,0,.55);
   --frozen-shadow:10px 0 16px -10px rgba(0,0,0,.5);
+  --new:#9a82ff;
+  --hu:var(--azure); --hu-ink:var(--azure);
   color-scheme:dark;
 }
 
@@ -144,6 +149,10 @@ html.theme-switching * { transition: none !important; }
 .btn-ghost { background: transparent; color: var(--muted); }
 .btn-ghost:hover { background: var(--sunk); color: var(--text); }
 .icon-btn { padding: 6px 9px; font-size: 14px; line-height: 1; }
+/* Full-width button: the base button is inline-flex with NO justify-content, so
+   a stretched button packs its label LEFT (the off-center Sign-in bug). Any
+   button given a full width MUST use this class, never a bare width:100%. */
+.btn-full { width: 100%; justify-content: center; }
 
 /* ---- form controls (global; modals/sheets refine further in App.css) ---- */
 input, select, textarea {
