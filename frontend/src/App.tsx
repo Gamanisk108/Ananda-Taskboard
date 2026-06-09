@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
-  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, LogOut, Mail, MoreHorizontal } from "lucide-react";
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, LogOut, Mail, MoreHorizontal, Menu } from "lucide-react";
 import "./App.css";
 import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
 import { api } from "./api/client";
@@ -12,7 +12,7 @@ import { ResetPassword } from "./components/ResetPassword";
 import { VerifyEmail } from "./components/VerifyEmail";
 import { AcceptInvite } from "./components/AcceptInvite";
 import { PlatformStats } from "./components/PlatformStats";
-import { Spinner, ColorDot, SingleSelect, useIsNarrow } from "./components/common";
+import { Spinner, ColorDot, SingleSelect, Drawer, useIsNarrow } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
 import { MonthlyView } from "./components/MonthlyView";
@@ -105,6 +105,7 @@ export default function App() {
   const [showPlatform, setShowPlatform] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const narrow = useIsNarrow();
   // First-login welcome shows once ever (localStorage "at-onboarded"); "Show welcome
   // again" in Help re-arms it. What's-New dot compares the latest help version against
@@ -239,20 +240,42 @@ export default function App() {
               onChange={(v) => switchOrg(Number(v))}
               options={me.memberships.map((o) => ({ value: String(o.org_id), label: o.name }))} />
           )}
-          {me.is_superuser && (
-            <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}><Globe /><span className="lbl">{t("platform.nav")}</span></button>
-          )}
-          {me.is_admin && (
-            <button className="btn-ghost" onClick={() => setShowApprovals(true)} title={t("nav.approvals")}><CircleCheck /><span className="lbl">{t("nav.approvals")}</span></button>
-          )}
-          {me.is_admin && (
-            <button className="btn-ghost" data-testid="open-team" onClick={() => setShowTeam(true)} title={t("nav.team")}><UsersIcon /><span className="lbl">{t("nav.team")}</span></button>
-          )}
-          {/* D15: Trash + Help moved into the account menu; top bar stays lean
-              (Approvals · Team · Projects). */}
-          {me.is_admin && (
-            <button className="btn-ghost" onClick={() => setShowManage(true)} title={t("nav.projects")}><LayoutGrid /><span className="lbl">{t("nav.projects")}</span></button>
-          )}
+          {(() => {
+            // Admin/superuser nav, shared by the desktop inline buttons and the
+            // mobile nav drawer. (D15: Trash + Help live in the account menu.)
+            const navItems = [
+              me.is_superuser && { icon: <Globe />, label: t("platform.nav"), onClick: () => setShowPlatform(true), testId: undefined as string | undefined },
+              me.is_admin && { icon: <CircleCheck />, label: t("nav.approvals"), onClick: () => setShowApprovals(true), testId: undefined },
+              me.is_admin && { icon: <UsersIcon />, label: t("nav.team"), onClick: () => setShowTeam(true), testId: "open-team" },
+              me.is_admin && { icon: <LayoutGrid />, label: t("nav.projects"), onClick: () => setShowManage(true), testId: undefined },
+            ].filter(Boolean) as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string }[];
+            if (navItems.length === 0) return null;
+            // Phones: one hamburger → nav drawer; desktop: inline ghost buttons.
+            return narrow ? (
+              <>
+                <button className="btn-ghost btn-hamburger" data-testid="nav-drawer-btn" aria-label={t("nav.menu", "Menu")}
+                  aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}><Menu /></button>
+                {drawerOpen && (
+                  <Drawer onClose={() => setDrawerOpen(false)}>
+                    <div className="dhead"><img src="/logo.png" alt="" /><span className="nm">Ananda <b>Taskboard</b></span></div>
+                    <nav className="dnav">
+                      {navItems.map((it, i) => (
+                        <button key={i} data-testid={it.testId} onClick={() => { setDrawerOpen(false); it.onClick(); }}>
+                          {it.icon}<span>{it.label}</span>
+                        </button>
+                      ))}
+                    </nav>
+                  </Drawer>
+                )}
+              </>
+            ) : (
+              navItems.map((it, i) => (
+                <button key={i} className="btn-ghost" data-testid={it.testId} onClick={it.onClick} title={it.label}>
+                  {it.icon}<span className="lbl">{it.label}</span>
+                </button>
+              ))
+            );
+          })()}
           <span className="sep" />
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>

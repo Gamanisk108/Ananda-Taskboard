@@ -401,25 +401,11 @@ export function Modal({
   );
 }
 
-/** A bottom sheet (mobile design): a scrim + a panel that rises from the bottom
- *  with a grab handle, a head (title · optional Reset · ✕) and a scrollable body,
- *  plus an optional sticky footer. Closes on scrim-click / Escape. Reused for the
- *  mobile filter / picker / day-detail sheets. */
-export function BottomSheet({
-  title, onClose, children, footer, onReset, resetLabel,
-}: {
-  title: ReactNode;
-  onClose: () => void;
-  children: ReactNode;
-  footer?: ReactNode;
-  onReset?: () => void;
-  resetLabel?: string;
-}) {
-  const { t } = useTranslation();
+/** Overlay a11y, shared by BottomSheet + Drawer: lock background scroll, move
+ *  focus into the panel and trap Tab there, Escape to close, and restore focus to
+ *  the opener on unmount. Returns the ref to attach to the focusable panel. */
+function useOverlayDismiss(onClose: () => void) {
   const panelRef = useRef<HTMLDivElement>(null);
-  // Escape to close, lock background scroll, move focus into the sheet and trap it
-  // there, and restore focus to the opener on close (a11y — what a sheet lib gives
-  // you for free; done here without the dependency).
   useEffect(() => {
     const prevFocus = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
@@ -444,6 +430,25 @@ export function BottomSheet({
       prevFocus?.focus?.();
     };
   }, [onClose]);
+  return panelRef;
+}
+
+/** A bottom sheet (mobile design): a scrim + a panel that rises from the bottom
+ *  with a grab handle, a head (title · optional Reset · ✕) and a scrollable body,
+ *  plus an optional sticky footer. Closes on scrim-click / Escape. Reused for the
+ *  mobile filter / picker / day-detail sheets. */
+export function BottomSheet({
+  title, onClose, children, footer, onReset, resetLabel,
+}: {
+  title: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  onReset?: () => void;
+  resetLabel?: string;
+}) {
+  const { t } = useTranslation();
+  const panelRef = useOverlayDismiss(onClose);
   // Portal to <body> so a transformed ancestor (e.g. an entrance-animated view)
   // can't trap our position:fixed scrim/panel.
   return createPortal(
@@ -457,6 +462,21 @@ export function BottomSheet({
         </div>
         <div className="sheet-body">{children}</div>
         {footer && <div className="sheet-foot">{footer}</div>}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** A left nav drawer (mobile design): scrim + a full-height panel sliding in from
+ *  the left. Same a11y as BottomSheet. Caller supplies the panel contents
+ *  (`.dhead` / `.dnav` / `.duser`). Closes on scrim-click / Escape. */
+export function Drawer({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+  const panelRef = useOverlayDismiss(onClose);
+  return createPortal(
+    <div className="drawer-backdrop" onClick={onClose}>
+      <div className="drawer-panel" ref={panelRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        {children}
       </div>
     </div>,
     document.body,

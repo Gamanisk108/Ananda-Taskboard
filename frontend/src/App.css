@@ -554,6 +554,22 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .btn-filters.on { border-color: var(--dome); }
 .btn-filters .fcount { font-family: var(--f-mono); font-size: 11px; background: var(--dome); color: #fff;
   border-radius: var(--r-pill); padding: 0 6px; line-height: 17px; }
+/* ── Left nav drawer (mobile design) ─────────────────────────────────────── */
+.drawer-backdrop { position: fixed; inset: 0; z-index: 130; background: rgba(13, 21, 38, .45); display: flex; }
+.drawer-panel { width: 82%; max-width: 310px; height: 100%; background: var(--surface); box-shadow: var(--shadow-2);
+  display: flex; flex-direction: column; border-right: 1px solid var(--border); animation: drawer-in .2s ease-out; }
+@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .drawer-panel { animation: none; } }
+.drawer-panel .dhead { display: flex; align-items: center; gap: 11px; padding: 16px; border-bottom: 1px solid var(--border); }
+.drawer-panel .dhead img { width: 34px; height: 34px; object-fit: contain; flex: none; }
+.drawer-panel .dhead .nm { font-family: var(--f-display); font-weight: 600; font-size: 18px; letter-spacing: -.015em; color: var(--text); }
+.drawer-panel .dhead .nm b { color: var(--dome); }
+.dnav { padding: 8px; flex: 1; overflow-y: auto; }
+.dnav button { display: flex; align-items: center; gap: 13px; padding: 13px 12px; border-radius: var(--r-ctl);
+  color: var(--text); font-size: 15px; font-weight: 500; width: 100%; background: none; border: none; cursor: pointer; text-align: left; }
+.dnav button:hover { background: var(--hover); }
+.dnav button svg { width: 21px; height: 21px; color: var(--muted); flex: none; }
+.btn-hamburger { display: inline-grid; place-items: center; width: 38px; height: 38px; flex: none; }
 /* viewbar action overflow (⋯) on phones */
 .view-overflow { position: relative; }
 .vo-scrim { position: fixed; inset: 0; z-index: 40; }
