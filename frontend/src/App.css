@@ -175,14 +175,19 @@
 .modal-head .icon-btn { padding: 4px; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; flex: none; }
 .modal-head .icon-btn svg { width: 14px; height: 14px; }
 .modal-body { padding: 18px 20px 20px; overflow-y: auto; }
-.field { margin-bottom: 13px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* Form rhythm (design philosophy): one consistent --gap-form step between every
+   sibling control/row, app-wide. A two-up row owns the step itself; its fields
+   add no margin of their own, so collapsing to one column on phones never
+   doubles into margin + gap (was 13 + 12 ≈ 25px between Details and Requirements). */
+.field { margin-bottom: var(--gap-form); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-form); margin-bottom: var(--gap-form); }
+.row2 .field { margin-bottom: 0; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
 /* Sticky action bar pinned to the modal bottom (Modal `footer` prop): the body
    scrolls, this never scrolls out of view. Reusable across long modals. */
 .modal-foot-sticky { flex: none; margin-top: 0; padding: 13px 20px; border-top: 1px solid var(--border);
   background: var(--surface); border-radius: 0 0 var(--r-card) var(--r-card); }
-.rec-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 12px; margin-bottom: 13px; }
+.rec-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 12px; margin-bottom: var(--gap-form); }
 /* D4: Links as a row list (chain icon · URL · ✕) + "Add link", not a textarea. */
 .links-editor { display: flex; flex-direction: column; gap: 6px; }
 .link-row { display: flex; align-items: center; gap: 8px; }
@@ -276,7 +281,7 @@ html[data-theme="dark"] .today-tag { background: var(--azure); color: #0b1220; }
 .mcell .ev-bar { display: block; font-size: 11px; font-weight: 600; color: var(--dome); background: var(--primary-weak); border: 1px solid var(--gold); border-radius: var(--r-ctl); padding: 1px 5px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ============================================================= MONTHLY */
-.month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .dow { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: center; padding: 4px; font-weight: 700; }
 .mcell {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-ctl);
@@ -530,7 +535,7 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .sheet-foot { flex: none; display: flex; gap: 10px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border); }
 /* a labeled filter field stacked inside the sheet */
-.sheet-field { margin-bottom: 14px; }
+.sheet-field { margin-bottom: var(--gap-form); }
 .sheet-field > label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
 .sheet-field .ms { display: block; }
 .sheet-field .ms-btn { width: 100%; max-width: none; min-width: 0; }
@@ -717,4 +722,10 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
   /* Summary strip scrolls horizontally rather than overflowing/clipping. */
   .summary { overflow-x: auto; scrollbar-width: none; }
   .summary::-webkit-scrollbar { display: none; }
+  /* Monthly grid: fit all 7 day columns in the phone width (override the 680px
+     min-width that makes calendars scroll at ≤760px — monthly cells shrink fine;
+     weekly keeps its scroll since the time bars need width). */
+  .month { gap: 4px; min-width: 0; }
+  .mcell { min-height: 58px; padding: 5px 4px; gap: 3px; }
+  .mcell .day-num { font-size: 11px; }
 }

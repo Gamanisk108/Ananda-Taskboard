@@ -31,6 +31,9 @@
   --shadow-pop:0 12px 34px rgba(20,30,55,.18);
   --frozen-shadow:8px 0 14px -10px rgba(30,40,60,.28);
   --r-card:11px; --r-ctl:8px; --r-pill:999px;
+  /* Form rhythm — ONE consistent vertical step between sibling controls/rows
+     everywhere (design philosophy: never stack margin + gap; one step, app-wide). */
+  --gap-form:13px;
   --f-display:"Fraunces",Georgia,serif;
   --f-ui:"Instrument Sans",system-ui,sans-serif;
   --f-mono:"Red Hat Mono",ui-monospace,monospace;
