@@ -116,7 +116,7 @@
     "member": "Member",
     "email": "Email",
     "role": "Role",
-    "tier": "Tier",
+    "tier": "View Access",
     "role_admin": "Admin",
     "role_member": "Member"
   },
@@ -540,7 +540,7 @@
     "tierHint": "(new member inherits its access)",
     "noTierBlank": "No tier (blank slate)",
     "addMember": "Add member",
-    "shareHint": "Share the email + password with them directly. Admins ignore tiers — they see everything.",
+    "shareHint": "Share the email + password with them directly. Admins ignore View Access — they see everything.",
     "active": "Active",
     "disabled": "Disabled",
     "adminDash": "— (admin)",
