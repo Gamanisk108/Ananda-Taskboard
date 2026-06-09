@@ -102,6 +102,7 @@ export const api = {
   /** Authenticated GET returning the raw response text (e.g. a TSV export). */
   text: (p: string) => raw("GET", p).then((r) => r.text()),
   post: (p: string, b?: unknown) => raw("POST", p, b ?? {}).then(handle),
+  put: (p: string, b: unknown) => raw("PUT", p, b).then(handle),
   patch: (p: string, b: unknown) => raw("PATCH", p, b).then(handle),
   del: (p: string, b?: unknown) => raw("DELETE", p, b).then(handle),
   async login(email: string, password: string) {

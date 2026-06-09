@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
-  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Bell, Globe, LogOut, Mail, MoreHorizontal, Menu } from "lucide-react";
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Globe, LogOut, Languages, MoreHorizontal, Menu } from "lucide-react";
 import "./App.css";
-import i18n, { LANGUAGES, resolveLanguage } from "./i18n";
+import i18n, { resolveLanguage } from "./i18n";
+import { applyOverrides } from "./trOverrides";
 import { api } from "./api/client";
 import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
@@ -22,6 +23,8 @@ import { Approvals } from "./components/Approvals";
 import { ManageProjects } from "./components/ManageProjects";
 import { TeamAdmin } from "./components/TeamAdmin";
 import { Settings } from "./components/Settings";
+import { helpUsUnseen } from "./helpUsSeen";
+import { TranslationReview } from "./components/TranslationReview";
 import { Trash } from "./components/Trash";
 import { CopySummary } from "./components/CopySummary";
 import { ExportDialog } from "./components/ExportDialog";
@@ -44,6 +47,20 @@ export default function App() {
   useEffect(() => {
     i18n.changeLanguage(resolveLanguage(me?.language));
   }, [me?.language]);
+
+  // Community-translation live overrides (D38): fetched at boot + on window
+  // focus and merged over the bundled catalog — an approval goes live with no
+  // redeploy. Resolution: override → bundled → English.
+  const uiLang = resolveLanguage(me?.language);
+  const { data: liveOverrides } = useQuery({
+    queryKey: ["tr-overrides", uiLang],
+    queryFn: () => api.get(`/api/translations/overrides?locale=${uiLang}`) as Promise<Record<string, string>>,
+    enabled: !!me && uiLang !== "en",
+    staleTime: 60_000,
+  });
+  useEffect(() => {
+    if (liveOverrides) applyOverrides(uiLang, liveOverrides);
+  }, [liveOverrides, uiLang]);
 
   // Keep <html lang> in sync with the active language (a11y/spellcheck/SEO). Driven
   // by i18next's own event so it updates regardless of what triggered the switch.
@@ -103,6 +120,7 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [showPlatform, setShowPlatform] = useState(false);
+  const [showTrReview, setShowTrReview] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -245,6 +263,8 @@ export default function App() {
             // mobile nav drawer. (D15: Trash + Help live in the account menu.)
             const navItems = [
               me.is_superuser && { icon: <Globe />, label: t("platform.nav"), onClick: () => setShowPlatform(true), testId: undefined as string | undefined },
+              // D38: Translation review lives beside Platform overview (superadmin-only).
+              me.is_superuser && { icon: <Languages />, label: t("trv.nav"), onClick: () => setShowTrReview(true), testId: "open-tr-review" },
               me.is_admin && { icon: <CircleCheck />, label: t("nav.approvals"), onClick: () => setShowApprovals(true), testId: undefined },
               me.is_admin && { icon: <UsersIcon />, label: t("nav.team"), onClick: () => setShowTeam(true), testId: "open-team" },
               me.is_admin && { icon: <LayoutGrid />, label: t("nav.projects"), onClick: () => setShowManage(true), testId: undefined },
@@ -283,10 +303,6 @@ export default function App() {
           <UserMenu
             name={me.name || me.email}
             isAdmin={me.is_admin}
-            language={resolveLanguage(me.language)}
-            onLanguage={changeLanguage}
-            dailyPushEnabled={me.daily_push_enabled}
-            onToggleDailyPush={toggleDailyPush}
             onSettings={() => setShowSettings(true)}
             onRestore={() => setShowRestore(true)}
             onHistory={() => setShowHistory(true)}
@@ -425,13 +441,23 @@ export default function App() {
           onChanged={() => { refreshMe(); bump(); }}
         />
       )}
-      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <Settings
+          me={me}
+          language={resolveLanguage(me.language)}
+          onLanguage={changeLanguage}
+          dailyPushEnabled={me.daily_push_enabled}
+          onToggleDailyPush={toggleDailyPush}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
       {showTrash && <Trash onClose={() => setShowTrash(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showSummary && <CopySummary me={me} onClose={() => setShowSummary(false)} />}
       {showRestore && <RestorePoints onClose={() => setShowRestore(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showHistory && <History onClose={() => setShowHistory(false)} />}
       {showBulk && <BulkMigrate me={me} onClose={() => setShowBulk(false)} onChanged={() => { refreshMe(); bump(); }} />}
       {showPlatform && <PlatformStats onClose={() => setShowPlatform(false)} />}
+      {showTrReview && <TranslationReview onClose={() => setShowTrReview(false)} />}
       {showHelp && (
         <HelpCenter
           onClose={() => setShowHelp(false)}
@@ -447,15 +473,16 @@ export default function App() {
   );
 }
 
-function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onToggleDailyPush, onSettings, onRestore, onHistory, onBulk, onHelp, onTrash, hasNewHelp, onLogout }: {
-  name: string; isAdmin: boolean; language: string; onLanguage: (lang: string) => void;
-  dailyPushEnabled: boolean; onToggleDailyPush: (enabled: boolean) => void;
+function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onBulk, onHelp, onTrash, hasNewHelp, onLogout }: {
+  name: string; isAdmin: boolean;
   onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void;
   onHelp: () => void; onTrash: () => void; hasNewHelp?: boolean; onLogout: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [msg, setMsg] = useState("");
+  // D36: the purple dot rides the Settings row while Help Us is unseen.
+  const helpUsDot = helpUsUnseen();
+  const anyDot = hasNewHelp || helpUsDot;
 
   useEffect(() => {
     if (!open) return;
@@ -464,34 +491,29 @@ function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onTog
     return () => window.removeEventListener("click", close);
   }, [open]);
 
-  async function enableNotifications() {
-    const { enablePush } = await import("./push");
-    setMsg(await enablePush());
-    setTimeout(() => setMsg(""), 3500);
-  }
-
   return (
     <div className="usermenu" onClick={(e) => e.stopPropagation()}>
       <div className="user usermenu-btn" role="button" tabIndex={0} onClick={() => setOpen((o) => !o)} title={t("menu.account")} style={{ position: "relative" }}>
         <span className="avatar">{initials(name)}</span>
         <span className="lbl">{name}</span>
         <ChevronDown size={14} className="muted" />
-        {/* D15: purple What's-New dot rides the user pill when unseen features exist. */}
-        {hasNewHelp && <span aria-hidden style={{ position: "absolute", top: 2, left: 18, width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)", border: "1.5px solid var(--surface)" }} />}
+        {/* D15/D36: purple What's-New dot rides the user pill when unseen features exist. */}
+        {anyDot && <span aria-hidden style={{ position: "absolute", top: 2, left: 18, width: 8, height: 8, borderRadius: "50%", background: "var(--new, #6d4aff)", border: "1.5px solid var(--surface)" }} />}
       </div>
       {open && (
         <div className="usermenu-pop">
           {/* D15: Help & FAQ at the top of the account menu, available to everyone. */}
           <button className="usermenu-item" data-testid="open-help" onClick={() => { setOpen(false); onHelp(); }}>
             <CircleHelp size={15} /> {t("help.open")}
-            {hasNewHelp && <span aria-hidden style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6d4aff)" }} />}
+            {hasNewHelp && <span aria-hidden style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: "var(--new, #6d4aff)" }} />}
           </button>
           <div className="usermenu-sep" />
-          {isAdmin && (
-            <button className="usermenu-item" onClick={() => { setOpen(false); onSettings(); }}>
-              <SettingsIcon size={15} /> {t("menu.settings")}
-            </button>
-          )}
+          {/* D36: Settings is member-visible (sections are role-filtered inside).
+              Language, notifications, and the daily push now live in its panes. */}
+          <button className="usermenu-item" data-testid="open-settings" onClick={() => { setOpen(false); onSettings(); }}>
+            <SettingsIcon size={15} /> {t("menu.settings")}
+            {helpUsDot && <span aria-hidden style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: "var(--new, #6d4aff)" }} />}
+          </button>
           {isAdmin && (
             <button className="usermenu-item" onClick={() => { setOpen(false); onHistory(); }}>
               <HistoryIcon size={15} /> {t("menu.history")}
@@ -512,26 +534,6 @@ function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onTog
           <button className="usermenu-item" onClick={() => { setOpen(false); onTrash(); }}>
             <Trash2 size={15} /> {t("nav.trash")}
           </button>
-          <button className="usermenu-item" onClick={enableNotifications}>
-            <Bell size={15} /> {msg || t("menu.notificationsOn")}
-          </button>
-          <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <Mail size={15} /> {t("menu.dailyPush")}
-            <input type="checkbox" style={{ width: "auto", marginLeft: "auto" }}
-              checked={dailyPushEnabled}
-              onChange={(e) => onToggleDailyPush(e.target.checked)}
-              onClick={(e) => e.stopPropagation()} />
-          </label>
-          <div className="usermenu-sep" />
-          <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-            <Globe size={15} /> {t("menu.language")}
-            <span style={{ marginLeft: "auto" }} onClick={(e) => e.stopPropagation()}>
-              <SingleSelect testId="language-select" value={language} onChange={onLanguage}
-                options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))} />
-            </span>
-          </label>
-          {/* DN6: theme is controlled by the single toggle next to the logo only;
-              the account-menu theme dropdown is removed (no duplicate control). */}
           <div className="usermenu-sep" />
           <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
             <LogOut size={15} /> {t("menu.logout")}

@@ -31,6 +31,8 @@ reload. **Verify every deploy** by comparing the live bundle hash to the local
 one (see memory `ananda_taskboard_deploy_verify`).
 
 ## Hard rules (carried from the design handoff — non-negotiable)
+- FIRST: the universal `C:\AI\deep-dives\design-constitution.md` applies on
+  top of everything below (asset integrity, alignment, no clipping, etc.).
 - **Rule #0 Fidelity-first:** recreate existing agreed designs 100% faithfully
   (read the real source, copy it) BEFORE layering anything new. Never ship a
   simplified approximation of an existing surface.
@@ -80,11 +82,14 @@ Weekly/Monthly treatments. Also open: DN3 Holidays→Settings, DN5 Archive→
 account menu, DN4 filter scoping, DN12 assignee picker (E3), proj-pills on
 Trash/Copy rows, i18n for renamed keys. Ops: confirm Render email (password
 reset via Resend), purge test orgs (`delete_org --purge-unverified`).
-**NEW from Design 2026-06-08/09 (D35–D41, BUILD pending):** `--gap-form`
-token rollout (D35) · Settings left section-nav + "Help Us" pane (D36) ·
-Community Translations contributor flow (D37) + superadmin poll-graph
-review (D38) · connected-control alignment retro-audit (D39) · devotional
-quotes via `TRB.quote` (D40) · Report-a-problem / Suggest-a-feature /
-Spread-the-word flows (D41). Design reference:
-`translations/Ananda Taskboard - Community Translations.html`.
+**Help Us / Community Translations (D36–D43): FUNCTIONAL v1 BUILT 2026-06-09**
+(committed, not yet pushed/deployed) — backend `translations` + `feedback`
+apps, runtime override resolution, member-visible Settings section-nav,
+contributor + superadmin-poll + the three flows. Rulings + open design asks
+live in `design/Claude Design/Ananda Taskboard Help Us Handoff/
+design_handoff_community_translations/CODE-AUDIT-FEEDBACK.md` (§12). The
+VISUAL fidelity pass is DEFERRED until Claude Design's revised handoff
+(Account/Notifications panes, reframed contributor copy, referral card,
+placeholder states, heart-hands SVG). Still pending: `--gap-form` rollout
+(D35) · alignment retro-audit (D39).
 Detailed pointers: `design/.../handoff6-6-26eod_COMPLETE/audit/RESUME.md`.

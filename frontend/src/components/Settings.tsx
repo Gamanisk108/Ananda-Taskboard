@@ -1,18 +1,158 @@
-import { useEffect, useState } from "react";
+// Settings — left section-nav shell (design D36): Account · Notifications ·
+// Task statuses · Calendar & holidays · Help Us. Open to EVERY member (audit
+// ruling §2); the admin-only panes are role-filtered. The Account/Notifications
+// panes absorb the account-menu language picker + push controls. Theme stays
+// logo-side only (D25). The Help Us pane is the hub of community ask-cards;
+// its flows replace this dialog rather than stack on it.
+
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon } from "lucide-react";
+import {
+  X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon,
+  UserRound, Bell, ListChecks, Heart, Mail,
+} from "lucide-react";
 import { api } from "../api/client";
+import { LANGUAGES } from "../i18n";
 import { Modal, Spinner, SingleSelect, ColorPicker } from "./common";
 import { useConfirm } from "./confirm";
+import { HelpUsPane, ReportProblemDialog, SuggestFeatureDialog, SpreadWordDialog, type HelpUsFlow } from "./HelpUs";
+import { ImproveTranslations } from "./ImproveTranslations";
+import { helpUsUnseen, markHelpUsSeen } from "../helpUsSeen";
+import type { Me } from "../types";
 
-interface S { daily_push_hour: number; daily_push_minute: number; timezone: string; }
+type SectionKey = "account" | "notifications" | "statuses" | "calendar" | "helpus";
+
+export function Settings({ me, language, onLanguage, dailyPushEnabled, onToggleDailyPush, onClose }: {
+  me: Me;
+  language: string;
+  onLanguage: (lang: string) => void;
+  dailyPushEnabled: boolean;
+  onToggleDailyPush: (enabled: boolean) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [active, setActive] = useState<SectionKey>("account");
+  const [flow, setFlow] = useState<HelpUsFlow | null>(null);
+  const [helpDot, setHelpDot] = useState(helpUsUnseen);
+
+  function openSection(key: SectionKey) {
+    setActive(key);
+    if (key === "helpus") {
+      markHelpUsSeen();
+      setHelpDot(false);
+    }
+  }
+
+  // The Help Us flows open as their own dialog in place of Settings (the design
+  // shows them as standalone Settings-style dialogs — never stacked modals).
+  if (flow === "translate") return <ImproveTranslations me={me} onClose={() => setFlow(null)} />;
+  if (flow === "report") return <ReportProblemDialog onClose={() => setFlow(null)} />;
+  if (flow === "suggest") return <SuggestFeatureDialog onClose={() => setFlow(null)} />;
+  if (flow === "spread") return <SpreadWordDialog onClose={() => setFlow(null)} />;
+
+  const sections: { key: SectionKey; icon: ReactNode; label: string; adminOnly?: boolean; dot?: boolean }[] = [
+    { key: "account", icon: <UserRound size={16} />, label: t("settings.navAccount") },
+    { key: "notifications", icon: <Bell size={16} />, label: t("settings.navNotifications") },
+    { key: "statuses", icon: <ListChecks size={16} />, label: t("settings.navStatuses"), adminOnly: true },
+    { key: "calendar", icon: <Calendar size={16} />, label: t("settings.navCalendar"), adminOnly: true },
+    { key: "helpus", icon: <Heart size={16} />, label: t("settings.navHelpUs"), dot: helpDot },
+  ];
+  const visible = sections.filter((s) => !s.adminOnly || me.is_admin);
+
+  return (
+    <Modal icon={<SettingsIcon />} title={t("modals.settings")} onClose={onClose} wide>
+      <div className="set-shell">
+        <nav className="set-nav">
+          {visible.map((s) => (
+            <button key={s.key} type="button" className={`sn${active === s.key ? " on" : ""}`}
+              data-testid={`settings-nav-${s.key}`} onClick={() => openSection(s.key)}>
+              {s.icon}<span>{s.label}</span>
+              {s.dot && <span className="nd" aria-hidden />}
+            </button>
+          ))}
+        </nav>
+        <div className="set-pane">
+          {active === "account" && <AccountPane me={me} language={language} onLanguage={onLanguage} />}
+          {active === "notifications" && (
+            <NotificationsPane isAdmin={me.is_admin} dailyPushEnabled={dailyPushEnabled} onToggleDailyPush={onToggleDailyPush} />
+          )}
+          {active === "statuses" && me.is_admin && <StatusManager />}
+          {active === "calendar" && me.is_admin && <EventsManager />}
+          {active === "helpus" && <HelpUsPane onOpen={setFlow} />}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* =====================================================================
+   Account — identity (read-only) + UI language (absorbed from the menu)
+   ===================================================================== */
+function AccountPane({ me, language, onLanguage }: { me: Me; language: string; onLanguage: (lang: string) => void }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <h3 className="section-title" style={{ marginTop: 0 }}>{t("settings.navAccount")}</h3>
+      <div className="field">
+        <label>{t("settings.accountName")}</label>
+        <input value={me.name} readOnly disabled />
+      </div>
+      <div className="field">
+        <label>{t("settings.accountEmail")}</label>
+        <input value={me.email} readOnly disabled />
+      </div>
+      <div className="field">
+        <label>{t("menu.language")}</label>
+        <SingleSelect width="100%" testId="language-select" value={language} onChange={onLanguage}
+          options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))} />
+      </div>
+      <div className="muted" style={{ fontSize: 12 }}>{t("settings.accountHint")}</div>
+    </>
+  );
+}
+
+/* =====================================================================
+   Notifications — personal browser-push + daily-push opt-out; the app-wide
+   push TIME stays an admin control (moved here from the old top section).
+   ===================================================================== */
+interface S { daily_push_hour: number; daily_push_minute: number; timezone: string }
 
 const TZS = [
   "America/Los_Angeles", "America/Denver", "America/Chicago", "America/New_York",
   "America/Anchorage", "Pacific/Honolulu", "Europe/London", "UTC",
 ];
 
-export function Settings({ onClose }: { onClose: () => void }) {
+function NotificationsPane({ isAdmin, dailyPushEnabled, onToggleDailyPush }: {
+  isAdmin: boolean; dailyPushEnabled: boolean; onToggleDailyPush: (enabled: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const [msg, setMsg] = useState("");
+
+  async function enableNotifications() {
+    const { enablePush } = await import("../push");
+    setMsg(await enablePush());
+    setTimeout(() => setMsg(""), 3500);
+  }
+
+  return (
+    <>
+      <h3 className="section-title" style={{ marginTop: 0 }}>{t("settings.navNotifications")}</h3>
+      <div className="field">
+        <button type="button" className="btn-secondary" onClick={enableNotifications}>
+          <Bell size={15} /> {msg || t("menu.notificationsOn")}
+        </button>
+      </div>
+      <label className="field" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--text)", fontWeight: 500 }}>
+        <Mail size={15} style={{ flex: "none", color: "var(--muted)" }} /> {t("menu.dailyPush")}
+        <input type="checkbox" style={{ width: "auto", marginLeft: "auto" }}
+          checked={dailyPushEnabled} onChange={(e) => onToggleDailyPush(e.target.checked)} />
+      </label>
+      {isAdmin && <PushTimeForm />}
+    </>
+  );
+}
+
+function PushTimeForm() {
   const { t } = useTranslation();
   const [s, setS] = useState<S | null>(null);
   const [msg, setMsg] = useState("");
@@ -26,50 +166,42 @@ export function Settings({ onClose }: { onClose: () => void }) {
     catch { setMsg(t("settings.saveErr")); }
   }
 
+  if (!s) return <Spinner />;
   return (
-    <Modal icon={<SettingsIcon />} title={t("modals.settings")} onClose={onClose}>
-      {!s ? <Spinner /> : (
-        <>
-          <h3 className="section-title">{t("settings.pushTime")}</h3>
-          <div className="row2">
-            <div className="field">
-              <label>{t("settings.hour")}</label>
-              <input type="number" min={0} max={23} value={s.daily_push_hour}
-                onChange={(e) => setS({ ...s, daily_push_hour: Number(e.target.value) })} />
-            </div>
-            <div className="field">
-              <label>{t("settings.minute")}</label>
-              <input type="number" min={0} max={59} value={s.daily_push_minute}
-                onChange={(e) => setS({ ...s, daily_push_minute: Number(e.target.value) })} />
-            </div>
-          </div>
-          <div className="field">
-            <label>{t("settings.timezone")}</label>
-            <SingleSelect width="100%" value={s.timezone} onChange={(v) => setS({ ...s, timezone: v })}
-              options={TZS.map((tz) => ({ value: tz, label: tz }))} />
-          </div>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 12 }}>
-            {t("settings.pushTimeHelp")}
-          </div>
-          {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 10 }}>{msg}</div>}
-          <div className="modal-foot" style={{ marginBottom: 8 }}>
-            <button className="btn-primary" onClick={save}>{t("settings.saveTime")}</button>
-          </div>
-
-          <StatusManager />
-
-          <EventsManager />
-
-          <div className="modal-foot">
-            <button className="btn-secondary" onClick={onClose}>{t("settings.close")}</button>
-          </div>
-        </>
-      )}
-    </Modal>
+    <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
+      <h3 className="section-title">{t("settings.pushTime")}</h3>
+      <div className="row2">
+        <div className="field">
+          <label>{t("settings.hour")}</label>
+          <input type="number" min={0} max={23} value={s.daily_push_hour}
+            onChange={(e) => setS({ ...s, daily_push_hour: Number(e.target.value) })} />
+        </div>
+        <div className="field">
+          <label>{t("settings.minute")}</label>
+          <input type="number" min={0} max={59} value={s.daily_push_minute}
+            onChange={(e) => setS({ ...s, daily_push_minute: Number(e.target.value) })} />
+        </div>
+      </div>
+      <div className="field">
+        <label>{t("settings.timezone")}</label>
+        <SingleSelect width="100%" value={s.timezone} onChange={(v) => setS({ ...s, timezone: v })}
+          options={TZS.map((tz) => ({ value: tz, label: tz }))} />
+      </div>
+      <div className="muted" style={{ fontSize: 12, marginBottom: 12 }}>
+        {t("settings.pushTimeHelp")}
+      </div>
+      {msg && <div style={{ color: "var(--accent)", fontSize: 13, marginBottom: 10 }}>{msg}</div>}
+      <div className="modal-foot" style={{ marginBottom: 8 }}>
+        <button className="btn-primary" onClick={save}>{t("settings.saveTime")}</button>
+      </div>
+    </div>
   );
 }
 
-interface St { id: number; key: string; label: string; color: string; order: number; is_complete: boolean; is_initial: boolean; }
+/* =====================================================================
+   Task statuses (admin) — unchanged manager, now its own pane
+   ===================================================================== */
+interface St { id: number; key: string; label: string; color: string; order: number; is_complete: boolean; is_initial: boolean }
 
 function StatusManager() {
   const { t } = useTranslation();
@@ -99,8 +231,8 @@ function StatusManager() {
   }
 
   return (
-    <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">{t("settings.statusesTitle")}</h3>
+    <div>
+      <h3 className="section-title" style={{ marginTop: 0 }}>{t("settings.statusesTitle")}</h3>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
         {t("settings.statusesHelp")}
       </div>
@@ -124,6 +256,9 @@ function StatusManager() {
   );
 }
 
+/* =====================================================================
+   Calendar & holidays (admin) — the events manager pane
+   ===================================================================== */
 type EvKind = "single" | "yearly" | "range" | "repeating";
 interface Ev {
   id: number;
@@ -240,8 +375,8 @@ function EventsManager() {
   const ranged = d.kind === "range";
 
   return (
-    <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 14 }}>
-      <h3 className="section-title">{t("settings.eventsTitle")}</h3>
+    <div>
+      <h3 className="section-title" style={{ marginTop: 0 }}>{t("settings.eventsTitle")}</h3>
       <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
         {t("settings.eventsHelp")}
       </div>

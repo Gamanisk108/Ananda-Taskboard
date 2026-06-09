@@ -18,6 +18,13 @@ import fr from "./locales/fr.json";
 import pt from "./locales/pt.json";
 import zh from "./locales/zh.json";
 
+/** The bundled catalogs, keyed by locale. Exported so the community-translations
+ *  runtime can re-assert the pristine bundle under live overrides (an override
+ *  that gets cleared must fall back to the bundled wording, not stick). */
+export const CATALOGS: Record<string, Record<string, unknown>> = {
+  en, it, es, hi, bn, ta, te, mr, gu, de, fr, pt, zh,
+};
+
 export const LANGUAGES: { code: string; label: string }[] = [
   { code: "en", label: "English" },
   { code: "it", label: "Italiano" },

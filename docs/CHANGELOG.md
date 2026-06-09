@@ -2,6 +2,34 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [Unreleased] — "Help Us" + Community Translations (functional v1, 2026-06-09)
+Built per `design/Claude Design/Ananda Taskboard Help Us Handoff/` + the code
+audit rulings in its `CODE-AUDIT-FEEDBACK.md` (§12). Visual fidelity pass
+deferred until Claude Design's revised handoff lands.
+- **Backend:** new `translations` app (per-member suggestions, unique per
+  key+locale+user; live overrides, one per key+locale; superuser review/approve/
+  clear endpoints) + new `feedback` app (problem reports w/ compressed
+  screenshot stored in Postgres + 90-day purge on the daily job; feature
+  suggestions; owner email notify). 18 new pytest tests.
+- **Runtime i18n overrides:** string resolution is now override → bundled →
+  English; approvals go live with no redeploy (boot fetch + window-focus
+  refetch via TanStack Query).
+- **Settings rework (D36):** member-visible with role-filtered section-nav —
+  Account · Notifications · Task statuses (admin) · Calendar & holidays (admin)
+  · Help Us. Language picker, notification enable, and daily-push toggle moved
+  from the account menu into panes.
+- **Help Us hub (D36/D40/D41):** four ask-cards; Improve translations
+  (per-row save/edit loop, personal-coverage meter, search, exact-normalized
+  fuzzy-merge fan-out, {{placeholder}} chips + validation); Report a problem
+  (mono TB-ref); Suggest a feature; Spread the word (signup-link referral +
+  `?signup` deep link).
+- **Translation review (D38):** superadmin poll graph beside Platform overview —
+  variant bars, submitter expander, styled go-live confirm, clear override,
+  placeholder warnings.
+- **i18n:** 129 new keys × all 13 locales (parity verified, 684 keys each).
+- **Fix:** full-width buttons packed their label left (off-center "Sign in") —
+  new `.btn-full` utility applied to all nine auth-surface buttons.
+
 ## [1.1] — post-launch iteration (deployed to Render + Neon Postgres)
 Shipped since v1.0.0 (all live on `main`, browser-QA'd each step):
 - **Persistence:** deployed single-server to Render; data on **Neon Postgres**
