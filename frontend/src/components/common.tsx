@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { X, Link2, Plus, Check } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
@@ -397,6 +398,45 @@ export function Modal({
         {footer && <div className="modal-foot modal-foot-sticky">{footer}</div>}
       </div>
     </div>
+  );
+}
+
+/** A bottom sheet (mobile design): a scrim + a panel that rises from the bottom
+ *  with a grab handle, a head (title · optional Reset · ✕) and a scrollable body,
+ *  plus an optional sticky footer. Closes on scrim-click / Escape. Reused for the
+ *  mobile filter / picker / day-detail sheets. */
+export function BottomSheet({
+  title, onClose, children, footer, onReset, resetLabel,
+}: {
+  title: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  onReset?: () => void;
+  resetLabel?: string;
+}) {
+  const { t } = useTranslation();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  // Portal to <body> so a transformed ancestor (e.g. an entrance-animated view)
+  // can't trap our position:fixed scrim/panel.
+  return createPortal(
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="sheet-grab"><i /></div>
+        <div className="sheet-head">
+          <h2>{title}</h2>
+          {onReset && <button type="button" className="sheet-reset" onClick={onReset}>{resetLabel ?? t("common.reset", "Reset")}</button>}
+          <button type="button" className="sheet-x" onClick={onClose} aria-label={t("common.close")}><X size={16} /></button>
+        </div>
+        <div className="sheet-body">{children}</div>
+        {footer && <div className="sheet-foot">{footer}</div>}
+      </div>
+    </div>,
+    document.body,
   );
 }
 

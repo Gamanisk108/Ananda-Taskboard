@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { Search, RefreshCw, Archive } from "lucide-react";
+import { Search, RefreshCw, Archive, SlidersHorizontal } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, ProjPill, useIsNarrow, type MultiSelectOption } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, useIsNarrow, type MultiSelectOption } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -75,6 +75,7 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
 
   // filter option lists (MultiSelect uses string values)
   const narrow = useIsNarrow();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const projectOpts = me.tree.projects;
   const subSource = fProjects.length
     ? projectOpts.filter((p) => fProjects.includes(p.id)).flatMap((p) => p.subprojects)
@@ -140,38 +141,63 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
     <th className="sortable" onClick={() => clickSort(k)}>{children}{arrow(k)}</th>
   );
 
+  // The seven filter controls, shared by the desktop bar and the mobile sheet
+  // (rendered bare inline on desktop, label-stacked inside the sheet on phones).
+  const filterControls: { label: string; node: React.ReactNode }[] = [
+    { label: tr("list.colProject"), node: <MultiSelect placeholder={tr("list.allProjects")} options={projectOptions} selected={fProjects.map(String)} onChange={(v) => { setFProjects(v.map(Number)); setFSubs([]); }} /> },
+    { label: tr("list.colSubproject"), node: <MultiSelect placeholder={tr("list.allSubprojects")} options={subOptions} selected={fSubs.map(String)} onChange={(v) => setFSubs(v.map(Number))} /> },
+    { label: tr("list.colAssignees"), node: <MultiSelect testId="filter-assignee" placeholder={tr("list.anyAssignee")} options={assigneeOptions} selected={assigneeSel} onChange={setAssigneeSel} /> },
+    { label: tr("task.priority"), node: <MultiSelect testId="filter-priority" placeholder={tr("list.anyPriority")} options={priorityOptions} selected={fPriorities.map(String)} onChange={(v) => setFPriorities(v.map(Number))} /> },
+    { label: tr("task.status"), node: <MultiSelect placeholder={tr("list.anyStatus")} options={statusOptions} selected={fStatuses} onChange={setFStatuses} /> },
+    { label: tr("list.colDeadline"), node: <SingleSelect value={fDeadline} onChange={(v) => setFDeadline(v as "" | "pending" | "overdue")} options={[{ value: "", label: tr("list.deadlineAny") }, { value: "pending", label: tr("list.pendingUpcoming") }, { value: "overdue", label: tr("list.overdue") }]} /> },
+    { label: tr("list.fRecurrence", "Recurrence"), node: <SingleSelect value={fRecur} onChange={(v) => setFRecur(v as "" | "yes" | "no")} options={[{ value: "", label: tr("list.recurringAny") }, { value: "yes", label: tr("list.recurringOnly") }, { value: "no", label: tr("list.oneOffOnly") }]} /> },
+  ];
+  // On phones the search box stays inline; everything else moves into the sheet,
+  // so the trigger count excludes the search term.
+  const sheetFilterCount = activeFilters - (q ? 1 : 0);
+
   return (
     <div className="rise">
-      <div className="filters">
-        <label className={`search${q ? " has-text" : ""}`}>
-          <Search />
-          <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
-        </label>
-        <MultiSelect placeholder={tr("list.allProjects")} options={projectOptions}
-          selected={fProjects.map(String)} onChange={(v) => { setFProjects(v.map(Number)); setFSubs([]); }} />
-        <MultiSelect placeholder={tr("list.allSubprojects")} options={subOptions}
-          selected={fSubs.map(String)} onChange={(v) => setFSubs(v.map(Number))} />
-        <MultiSelect testId="filter-assignee" placeholder={tr("list.anyAssignee")} options={assigneeOptions}
-          selected={assigneeSel} onChange={setAssigneeSel} />
-        <MultiSelect testId="filter-priority" placeholder={tr("list.anyPriority")} options={priorityOptions}
-          selected={fPriorities.map(String)} onChange={(v) => setFPriorities(v.map(Number))} />
-        <MultiSelect placeholder={tr("list.anyStatus")} options={statusOptions}
-          selected={fStatuses} onChange={setFStatuses} />
-        <SingleSelect value={fDeadline} onChange={(v) => setFDeadline(v as "" | "pending" | "overdue")}
-          options={[
-            { value: "", label: tr("list.deadlineAny") },
-            { value: "pending", label: tr("list.pendingUpcoming") },
-            { value: "overdue", label: tr("list.overdue") },
-          ]} />
-        <SingleSelect value={fRecur} onChange={(v) => setFRecur(v as "" | "yes" | "no")}
-          options={[
-            { value: "", label: tr("list.recurringAny") },
-            { value: "yes", label: tr("list.recurringOnly") },
-            { value: "no", label: tr("list.oneOffOnly") },
-          ]} />
-        {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>Clear ({activeFilters})</button>}
-        {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {tr("list.showingArchive", "Showing archive")}</span>}
-      </div>
+      {narrow ? (
+        <>
+          <div className="filters-mobile">
+            <label className={`search${q ? " has-text" : ""}`}>
+              <Search />
+              <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
+            </label>
+            <button type="button" className={`btn-filters${sheetFilterCount > 0 ? " on" : ""}`} data-testid="filters-button" onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontal size={15} /> {tr("list.filters", "Filters")}
+              {sheetFilterCount > 0 && <span className="fcount">{sheetFilterCount}</span>}
+            </button>
+          </div>
+          {showArchived && <div style={{ marginBottom: 10 }}><span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {tr("list.showingArchive", "Showing archive")}</span></div>}
+          {filtersOpen && (
+            <BottomSheet title={tr("list.filters", "Filters")} onClose={() => setFiltersOpen(false)}
+              onReset={sheetFilterCount > 0 ? clearFilters : undefined}
+              footer={<>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={clearFilters}>{tr("list.clear", "Clear")}</button>
+                <button type="button" className="btn-primary" style={{ flex: 2 }} onClick={() => setFiltersOpen(false)}>{tr("list.showN", "Show {{n}} tasks", { n: filtered.length })}</button>
+              </>}>
+              {filterControls.map((c, i) => (
+                <div className="sheet-field" key={i}>
+                  <label>{c.label}</label>
+                  {c.node}
+                </div>
+              ))}
+            </BottomSheet>
+          )}
+        </>
+      ) : (
+        <div className="filters">
+          <label className={`search${q ? " has-text" : ""}`}>
+            <Search />
+            <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
+          </label>
+          {filterControls.map((c, i) => <Fragment key={i}>{c.node}</Fragment>)}
+          {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>{tr("list.clear", "Clear")} ({activeFilters})</button>}
+          {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {tr("list.showingArchive", "Showing archive")}</span>}
+        </div>
+      )}
 
       <div className="summary" style={{ margin: "0 -18px 14px" }}>
         <div className="sm-item"><span className="sm-num">{filtered.length}</span><span className="sm-lab">{tr("summary.tasks", "Tasks")}</span></div>
