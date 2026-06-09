@@ -15,7 +15,7 @@ import { defineConfig, devices } from "@playwright/test";
  *   npm run test:visual:update
  *
  * NOTE: requires `npm i -D @playwright/test && npx playwright install` once.
- * These tests are isolated from vitest (vitest only runs src/**/*.test.ts) and
+ * These tests are isolated from vitest (which only runs the src test files) and
  * from `tsc -b` (tsconfig.app includes only `src`).
  */
 const BASE_URL = process.env.PW_BASE_URL || "http://localhost:4173";

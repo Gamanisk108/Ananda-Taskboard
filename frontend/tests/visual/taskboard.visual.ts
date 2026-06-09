@@ -17,13 +17,17 @@ async function login(page: Page) {
   await page.goto("/");
   // already logged in? the board/list chrome will be present
   if (await page.locator(".usermenu-btn").count()) return;
-  await page.getByLabel(/email/i).fill(EMAIL);
-  await page.getByLabel(/password/i).fill(PASSWORD);
+  // The login labels aren't htmlFor-associated, so target the inputs directly.
+  await page.locator('input[type="email"]').fill(EMAIL);
+  await page.locator('input[type="password"]').fill(PASSWORD);
   await page.getByRole("button", { name: /sign in/i }).click();
   await page.locator(".usermenu-btn").waitFor({ timeout: 15000 });
   // dismiss first-run welcome if present
   const gotIt = page.getByRole("button", { name: /got it/i });
   if (await gotIt.count()) await gotIt.click().catch(() => {});
+  // Theme persists per-user server-side, so a prior dark test can bleed in.
+  // Normalize every test to light unless it explicitly switches to dark.
+  await setTheme(page, "light");
 }
 
 async function setTheme(page: Page, theme: "light" | "dark") {
@@ -63,18 +67,34 @@ test.describe("Views (dark)", () => {
   });
 });
 
+// Open the admin Team dialog regardless of nav layout: a top-bar button on
+// desktop, or via the hamburger nav drawer on phones (≤700px).
+async function openTeam(page: Page) {
+  const top = page.locator('.topbar-actions button[title="Team"]');
+  if (await top.count()) { await top.click(); return; }
+  await page.locator('[data-testid="nav-drawer-btn"]').click();
+  await page.locator('.dnav [data-testid="open-team"]').click();
+}
+// Settings / Help live in the account menu (D15).
+async function openAccountItem(page: Page, re: RegExp) {
+  await page.locator(".usermenu-btn").click();
+  await page.getByRole("button", { name: re }).first().click();
+}
+
 test.describe("Dialogs", () => {
-  const dialogs: Array<[string, RegExp]> = [
-    ["team", /^team$/i],
-    ["settings", /settings/i],
-    ["help", /help/i],
-  ];
-  for (const [name, re] of dialogs) {
+  test("team dialog", async ({ page }) => {
+    await login(page);
+    await gotoView(page, "list");
+    await openTeam(page);
+    await page.locator(".modal, [role='dialog']").first().waitFor({ timeout: 8000 });
+    await expect(page).toHaveScreenshot("dialog-team.png", { fullPage: true });
+  });
+  for (const [name, re] of [["settings", /settings/i], ["help", /help|faq/i]] as Array<[string, RegExp]>) {
     test(`${name} dialog`, async ({ page }) => {
       await login(page);
       await gotoView(page, "list");
-      await page.getByRole("button", { name: re }).first().click();
-      await page.locator("[class*='modal'], [role='dialog']").first().waitFor({ timeout: 8000 });
+      await openAccountItem(page, re);
+      await page.locator(".modal, [role='dialog']").first().waitFor({ timeout: 8000 });
       await expect(page).toHaveScreenshot(`dialog-${name}.png`, { fullPage: true });
     });
   }
