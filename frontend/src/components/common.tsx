@@ -113,10 +113,13 @@ export function SingleSelect({
 
   const chosen = options.find((o) => o.value === value);
   let lastSection: string | undefined;
+  // A falsy value (e.g. a filter's "Any" default) still shows its label but is
+  // not styled active — mirrors MultiSelect's unfiltered look in the filter bar.
   return (
-    <div className={`ms ss${chosen ? " on" : ""}${width === "100%" ? " ss-block" : ""}`} ref={ref} data-testid={testId}
+    <div className={`ms ss${chosen && value ? " on" : ""}${width === "100%" ? " ss-block" : ""}`} ref={ref} data-testid={testId}
       style={typeof width === "number" ? { width } : undefined}>
-      <button type="button" className="ms-btn" disabled={disabled} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={chosen?.label ?? placeholder}>
+      <button type="button" className="ms-btn" disabled={disabled} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={chosen?.label ?? placeholder}
+        style={typeof width === "number" ? { width: "100%", minWidth: 0, maxWidth: "none" } : undefined}>
         {chosen?.color && <span className="dot" style={{ background: chosen.color }} />}
         <span className="ms-label">{chosen ? chosen.label : (placeholder ?? "—")}</span>
         <span className="ms-caret" aria-hidden>▾</span>

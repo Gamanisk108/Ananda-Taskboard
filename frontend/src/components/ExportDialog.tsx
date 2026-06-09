@@ -5,7 +5,7 @@ import { api } from "../api/client";
 import { useStatuses } from "../statuses";
 import { peopleInMyScope, useUsers } from "../users";
 import { useAdminGroups } from "../groups";
-import { Modal } from "./common";
+import { Modal, SingleSelect } from "./common";
 import { PRIORITY_META, type Me } from "../types";
 
 // `key` MUST match the backend COLUMNS registry in exporting/export.py.
@@ -100,11 +100,12 @@ export function ExportDialog({ me }: { me: Me }) {
           <div className="row2">
             <div className="field">
               <label>{t("import.formatLabel")}</label>
-              <select data-testid="export-format" value={fmt} onChange={(e) => setFmt(e.target.value as Fmt)}>
-                <option value="xlsx">{t("export.fmtXlsx")}</option>
-                <option value="csv">{t("export.fmtCsv")}</option>
-                <option value="json">{t("export.fmtJson")}</option>
-              </select>
+              <SingleSelect testId="export-format" width="100%" value={fmt} onChange={(v) => setFmt(v as Fmt)}
+                options={[
+                  { value: "xlsx", label: t("export.fmtXlsx") },
+                  { value: "csv", label: t("export.fmtCsv") },
+                  { value: "json", label: t("export.fmtJson") },
+                ]} />
             </div>
             <div className="field">
               <label>{t("export.include")}</label>
@@ -161,27 +162,30 @@ export function ExportDialog({ me }: { me: Me }) {
           <div className="row2">
             <div className="field">
               <label>{t("task.status")}</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="">{t("list.anyStatus")}</option>
-                {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
+              <SingleSelect width="100%" value={status} onChange={setStatus}
+                options={[
+                  { value: "", label: t("list.anyStatus") },
+                  ...statuses.map((s) => ({ value: s.key, label: s.label, color: s.color })),
+                ]} />
             </div>
             <div className="field">
               <label>{t("task.priority")}</label>
-              <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-                <option value="">{t("list.anyPriority")}</option>
-                {[5, 4, 3, 2, 1].map((p) => <option key={p} value={p}>{PRIORITY_META[p].label}</option>)}
-              </select>
+              <SingleSelect width="100%" value={priority} onChange={setPriority}
+                options={[
+                  { value: "", label: t("list.anyPriority") },
+                  ...[5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label })),
+                ]} />
             </div>
           </div>
 
           <div className="field">
             <label>{t("subtask.assignee")}</label>
-            <select value={assignee} onChange={(e) => setAssignee(e.target.value)} style={{ maxWidth: 260 }}>
-              <option value="">{t("list.anyAssignee")}</option>
-              <option value="unassigned">{t("list.unassigned")}</option>
-              {users.map((u) => <option key={u.id} value={String(u.id)}>{u.name || u.email}</option>)}
-            </select>
+            <SingleSelect width={260} value={assignee} onChange={setAssignee}
+              options={[
+                { value: "", label: t("list.anyAssignee") },
+                { value: "unassigned", label: t("list.unassigned") },
+                ...users.map((u) => ({ value: String(u.id), label: u.name || u.email })),
+              ]} />
           </div>
 
           <div className="field">

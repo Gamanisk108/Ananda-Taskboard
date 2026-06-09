@@ -8,7 +8,7 @@ import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, ProjPill, useIsNarrow, type MultiSelectOption } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, ProjPill, useIsNarrow, type MultiSelectOption } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -157,16 +157,18 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
           selected={fPriorities.map(String)} onChange={(v) => setFPriorities(v.map(Number))} />
         <MultiSelect placeholder={tr("list.anyStatus")} options={statusOptions}
           selected={fStatuses} onChange={setFStatuses} />
-        <select value={fDeadline} onChange={(e) => setFDeadline(e.target.value as "" | "pending" | "overdue")}>
-          <option value="">{tr("list.deadlineAny")}</option>
-          <option value="pending">{tr("list.pendingUpcoming")}</option>
-          <option value="overdue">{tr("list.overdue")}</option>
-        </select>
-        <select value={fRecur} onChange={(e) => setFRecur(e.target.value as "" | "yes" | "no")}>
-          <option value="">{tr("list.recurringAny")}</option>
-          <option value="yes">{tr("list.recurringOnly")}</option>
-          <option value="no">{tr("list.oneOffOnly")}</option>
-        </select>
+        <SingleSelect value={fDeadline} onChange={(v) => setFDeadline(v as "" | "pending" | "overdue")}
+          options={[
+            { value: "", label: tr("list.deadlineAny") },
+            { value: "pending", label: tr("list.pendingUpcoming") },
+            { value: "overdue", label: tr("list.overdue") },
+          ]} />
+        <SingleSelect value={fRecur} onChange={(v) => setFRecur(v as "" | "yes" | "no")}
+          options={[
+            { value: "", label: tr("list.recurringAny") },
+            { value: "yes", label: tr("list.recurringOnly") },
+            { value: "no", label: tr("list.oneOffOnly") },
+          ]} />
         {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>Clear ({activeFilters})</button>}
         {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {tr("list.showingArchive", "Showing archive")}</span>}
       </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { avatarColor, userInitials } from "../users";
+import { SingleSelect } from "./common";
 import type { UserLite } from "../types";
 
 export interface GroupLite {
@@ -87,10 +88,9 @@ export function AssigneePicker({
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <input placeholder={t("ap.searchByName")} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
           {isAdmin && groups.length > 0 && (
-            <select value={groupFilter} onChange={(e) => setGroupFilter(Number(e.target.value))} style={{ maxWidth: 170 }}>
-              <option value={0}>{t("ap.filterGroup")}</option>
-              {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
+            <SingleSelect width={170} value={groupFilter ? String(groupFilter) : ""} placeholder={t("ap.filterGroup")}
+              onChange={(v) => setGroupFilter(Number(v) || 0)}
+              options={groups.map((g) => ({ value: String(g.id), label: g.name }))} />
           )}
         </div>
 

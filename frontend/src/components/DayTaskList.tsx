@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useStatuses } from "../statuses";
 import { useUsers, userName } from "../users";
 import { timeRange } from "../lookup";
-import { StatusPill, PriorityIcon, DueFlag } from "./common";
+import { StatusPill, PriorityIcon, DueFlag, SingleSelect } from "./common";
 import type { CalendarInstance } from "../types";
 
 type DaySort = "time" | "title" | "status";
@@ -87,11 +87,12 @@ export function DayTaskList({
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
         <label className="muted" style={{ margin: 0, fontSize: 12 }}>{t("day.sort")}</label>
-        <select value={sort} onChange={(e) => setSort(e.target.value as DaySort)} style={{ width: "auto" }}>
-          <option value="time">{t("day.sortTime")}</option>
-          <option value="title">{t("day.sortAZ")}</option>
-          <option value="status">{t("task.status")}</option>
-        </select>
+        <SingleSelect value={sort} onChange={(v) => setSort(v as DaySort)}
+          options={[
+            { value: "time", label: t("day.sortTime") },
+            { value: "title", label: t("day.sortAZ") },
+            { value: "status", label: t("task.status") },
+          ]} />
       </div>
       {items.length === 0 ? <div className="muted" style={{ fontSize: 13 }}>{t("day.noTasks")}</div> : body}
     </div>

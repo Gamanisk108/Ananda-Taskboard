@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon } from "lucide-react";
 import { api } from "../api/client";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, SingleSelect } from "./common";
 import { useConfirm } from "./confirm";
 
 interface S { daily_push_hour: number; daily_push_minute: number; timezone: string; }
@@ -45,9 +45,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
           </div>
           <div className="field">
             <label>{t("settings.timezone")}</label>
-            <select value={s.timezone} onChange={(e) => setS({ ...s, timezone: e.target.value })}>
-              {TZS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <SingleSelect width="100%" value={s.timezone} onChange={(v) => setS({ ...s, timezone: v })}
+              options={TZS.map((tz) => ({ value: tz, label: tz }))} />
           </div>
           <div className="muted" style={{ fontSize: 12, marginBottom: 12 }}>
             {t("settings.pushTimeHelp")}
@@ -261,12 +260,13 @@ function EventsManager() {
         <div className="row2">
           <div className="field" style={{ marginBottom: 0 }}>
             <label>{t("settings.evType")}</label>
-            <select value={d.kind} onChange={(e) => setD({ ...d, kind: e.target.value as EvKind })}>
-              <option value="single">{t("settings.evSingle")}</option>
-              <option value="yearly">{t("settings.evYearly")}</option>
-              <option value="range">{t("settings.evRange")}</option>
-              <option value="repeating">{t("settings.evRepeating")}</option>
-            </select>
+            <SingleSelect width="100%" value={d.kind} onChange={(v) => setD({ ...d, kind: v as EvKind })}
+              options={[
+                { value: "single", label: t("settings.evSingle") },
+                { value: "yearly", label: t("settings.evYearly") },
+                { value: "range", label: t("settings.evRange") },
+                { value: "repeating", label: t("settings.evRepeating") },
+              ]} />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
             <label>{t("settings.evTitle")}</label>
@@ -308,11 +308,12 @@ function EventsManager() {
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>{t("settings.ends")}</label>
-                <select value={d.endMode} onChange={(e) => setD({ ...d, endMode: e.target.value as EndMode })}>
-                  <option value="weeks">{t("settings.endsWeeks")}</option>
-                  <option value="until">{t("settings.endsUntil")}</option>
-                  <option value="never">{t("settings.endsNever")}</option>
-                </select>
+                <SingleSelect width="100%" value={d.endMode} onChange={(v) => setD({ ...d, endMode: v as EndMode })}
+                  options={[
+                    { value: "weeks", label: t("settings.endsWeeks") },
+                    { value: "until", label: t("settings.endsUntil") },
+                    { value: "never", label: t("settings.endsNever") },
+                  ]} />
               </div>
             </div>
             {d.endMode === "weeks" && (

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { Modal, Spinner } from "./common";
+import { Modal, Spinner, SingleSelect } from "./common";
 import type { Task } from "../types";
 
 interface ProjLite { id: number; name: string; subprojects: { id: number; name: string; is_default?: boolean }[]; }
@@ -82,10 +82,9 @@ export function DeleteWithMove({ kind, id, name, projects, onClose, onDone }: Pr
               </p>
               <div className="field">
                 <label>{t("del.moveLabel")}</label>
-                <select value={target} onChange={(e) => setTarget(Number(e.target.value))}>
-                  <option value={0}>{t("del.selectSub")}</option>
-                  {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-                </select>
+                <SingleSelect width="100%" value={target ? String(target) : ""} placeholder={t("del.selectSub")}
+                  onChange={(v) => setTarget(Number(v) || 0)}
+                  options={targets.map((tg) => ({ value: String(tg.id), label: tg.label }))} />
               </div>
               <div className="assignee-list" style={{ maxHeight: 220 }}>
                 {tasks.map((t) => (

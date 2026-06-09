@@ -5,7 +5,7 @@ import { api } from "../api/client";
 import { useUsers, userName } from "../users";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
-import { Modal, Spinner, StatusPill, PriorityIcon, ProjPill } from "./common";
+import { Modal, Spinner, StatusPill, PriorityIcon, ProjPill, SingleSelect } from "./common";
 import { useConfirm } from "./confirm";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -75,14 +75,16 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
 
       <div className="filters" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0" }}>
         <input placeholder={t("common.search")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 200 }} />
-        <select value={fProject} onChange={(e) => setFProject(Number(e.target.value))} style={{ width: "auto" }}>
-          <option value={0}>{t("list.allProjects")}</option>
-          {me.tree.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={{ width: "auto" }}>
-          <option value="">{t("list.anyStatus")}</option>
-          {statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-        </select>
+        <SingleSelect value={fProject ? String(fProject) : ""} onChange={(v) => setFProject(Number(v) || 0)}
+          options={[
+            { value: "", label: t("list.allProjects") },
+            ...me.tree.projects.map((p) => ({ value: String(p.id), label: p.name })),
+          ]} />
+        <SingleSelect value={fStatus} onChange={setFStatus}
+          options={[
+            { value: "", label: t("list.anyStatus") },
+            ...statuses.map((s) => ({ value: s.key, label: s.label, color: s.color })),
+          ]} />
         <span className="muted" style={{ alignSelf: "center", fontSize: 12 }}>{t("bulk.counts", { sel: sel.size, shown: filtered.length })}</span>
       </div>
 
@@ -91,18 +93,16 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
         {me.is_admin && (
           <div className="field" style={{ margin: 0 }}><label>{t("bulk.moveTo")}</label>
             <div style={{ display: "flex", gap: 6 }}>
-              <select value={moveTo} onChange={(e) => setMoveTo(Number(e.target.value))} style={{ width: "auto" }}>
-                <option value={0}>{t("bulk.subprojectPh")}</option>{subOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
+              <SingleSelect value={moveTo ? String(moveTo) : ""} placeholder={t("bulk.subprojectPh")} onChange={(v) => setMoveTo(Number(v) || 0)}
+                options={subOptions.map((o) => ({ value: String(o.id), label: o.label }))} />
               <button className="btn-secondary" disabled={busy || !sel.size || !moveTo} onClick={() => applyBulk("move", moveTo)}>{t("bulk.apply")}</button>
             </div>
           </div>
         )}
         <div className="field" style={{ margin: 0 }}><label>{t("bulk.setStatus")}</label>
           <div style={{ display: "flex", gap: 6 }}>
-            <select value={setTo} onChange={(e) => setSetTo(e.target.value)} style={{ width: "auto" }}>
-              <option value="">{t("bulk.statusPh")}</option>{statuses.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-            </select>
+            <SingleSelect value={setTo} placeholder={t("bulk.statusPh")} onChange={setSetTo}
+              options={statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }))} />
             <button className="btn-secondary" disabled={busy || !sel.size || !setTo} onClick={() => applyBulk("status", setTo)}>{t("bulk.apply")}</button>
           </div>
         </div>
@@ -115,10 +115,11 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
         {me.is_admin && (
           <div className="field" style={{ margin: 0 }}><label>{t("bulk.reassignTo")}</label>
             <div style={{ display: "flex", gap: 6 }}>
-              <select value={assignee} onChange={(e) => setAssignee(Number(e.target.value))} style={{ width: "auto", maxWidth: 150 }}>
-                <option value={0}>{t("bulk.personPh")}</option><option value={-1}>{t("list.unassigned")}</option>
-                {users.map((u) => <option key={u.id} value={u.id}>{u.name || u.email}</option>)}
-              </select>
+              <SingleSelect value={assignee ? String(assignee) : ""} placeholder={t("bulk.personPh")} onChange={(v) => setAssignee(Number(v) || 0)}
+                options={[
+                  { value: "-1", label: t("list.unassigned") },
+                  ...users.map((u) => ({ value: String(u.id), label: u.name || u.email })),
+                ]} />
               <button className="btn-secondary" disabled={busy || !sel.size || !assignee}
                 onClick={() => applyBulk("assign", assignee === -1 ? [] : [assignee])}>{t("bulk.apply")}</button>
             </div>

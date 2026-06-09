@@ -12,7 +12,7 @@ import { ResetPassword } from "./components/ResetPassword";
 import { VerifyEmail } from "./components/VerifyEmail";
 import { AcceptInvite } from "./components/AcceptInvite";
 import { PlatformStats } from "./components/PlatformStats";
-import { Spinner, ColorDot } from "./components/common";
+import { Spinner, ColorDot, SingleSelect } from "./components/common";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
 import { MonthlyView } from "./components/MonthlyView";
@@ -233,17 +233,9 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           {me.memberships && me.memberships.length > 1 && (
-            <select
-              className="btn-secondary"
-              value={me.active_org ?? ""}
-              onChange={(e) => switchOrg(Number(e.target.value))}
-              title={t("org.switch")}
-              style={{ width: "auto" }}
-            >
-              {me.memberships.map((o) => (
-                <option key={o.org_id} value={o.org_id}>{o.name}</option>
-              ))}
-            </select>
+            <SingleSelect value={me.active_org != null ? String(me.active_org) : ""}
+              onChange={(v) => switchOrg(Number(v))}
+              options={me.memberships.map((o) => ({ value: String(o.org_id), label: o.name }))} />
           )}
           {me.is_superuser && (
             <button className="btn-ghost" onClick={() => setShowPlatform(true)} title={t("platform.nav")}><Globe /><span className="lbl">{t("platform.nav")}</span></button>
@@ -483,12 +475,10 @@ function UserMenu({ name, isAdmin, language, onLanguage, dailyPushEnabled, onTog
           <div className="usermenu-sep" />
           <label className="usermenu-item" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
             <Globe size={15} /> {t("menu.language")}
-            <select data-testid="language-select" value={language}
-              onChange={(e) => onLanguage(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{ width: "auto", marginLeft: "auto" }}>
-              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
-            </select>
+            <span style={{ marginLeft: "auto" }} onClick={(e) => e.stopPropagation()}>
+              <SingleSelect testId="language-select" value={language} onChange={onLanguage}
+                options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))} />
+            </span>
           </label>
           {/* DN6: theme is controlled by the single toggle next to the logo only;
               the account-menu theme dropdown is removed (no duplicate control). */}

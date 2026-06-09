@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Upload, CircleCheck } from "lucide-react";
 import { api, ApiError } from "../api/client";
-import { Modal } from "./common";
+import { Modal, SingleSelect } from "./common";
 
 type Fmt = "csv" | "tsv" | "json" | "xlsx";
 type Decision = "overwrite" | "create" | "skip";
@@ -133,12 +133,13 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                     onChange={(e) => onFile(e.target.files?.[0])} />
                   {fileName && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{fileName} ({fmt})</div>}
                   <label style={{ marginTop: 10 }}>{t("import.formatLabel")}</label>
-                  <select data-testid="import-format" value={fmt} onChange={(e) => setFmt(e.target.value as Fmt)} disabled={!!fileName}>
-                    <option value="csv">{t("import.fmtCsv")}</option>
-                    <option value="tsv">{t("import.fmtTsv")}</option>
-                    <option value="json">{t("import.fmtJson")}</option>
-                    <option value="xlsx">{t("import.fmtXlsx")}</option>
-                  </select>
+                  <SingleSelect testId="import-format" width="100%" value={fmt} disabled={!!fileName} onChange={(v) => setFmt(v as Fmt)}
+                    options={[
+                      { value: "csv", label: t("import.fmtCsv") },
+                      { value: "tsv", label: t("import.fmtTsv") },
+                      { value: "json", label: t("import.fmtJson") },
+                      { value: "xlsx", label: t("import.fmtXlsx") },
+                    ]} />
                 </div>
               </div>
 

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X, Users } from "lucide-react";
 import { api } from "../api/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, Spinner, MultiSelect, type MultiSelectOption } from "./common";
+import { Modal, Spinner, MultiSelect, SingleSelect, type MultiSelectOption } from "./common";
 import { useConfirm } from "./confirm";
 import { useSubmitGuard } from "../useSubmitGuard";
 import { useAuth } from "../state/auth";
@@ -147,17 +147,18 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
       <div className="row2">
         <div className="field"><label>{tr("login.email")}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
         <div className="field"><label>{tr("ta.role")}</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
-          </select>
+          <SingleSelect width="100%" value={role} onChange={setRole}
+            options={[
+              { value: "member", label: tr("ta.roleMember") },
+              { value: "admin", label: tr("ta.roleAdmin") },
+            ]} />
         </div>
       </div>
       <div className="row2">
         <div className="field">
           <label>{tr("ta.viewAccess", "Access")}</label>
-          <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
-            {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
-          </select>
+          <SingleSelect width="100%" value={tier} disabled={role === "admin"} onChange={setTier}
+            options={tierList.map((t) => ({ value: String(t.id), label: `${t.name} — ${TIER_DESC[t.default_sees]}` }))} />
         </div>
         <div className="field">
           <label>{tr("ta.startingAccess", "Add to projects (optional)")}</label>
@@ -239,16 +240,17 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
         <div className="row2">
           <div className="field"><label>{tr("ta.startingPw")}</label><input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={tr("ta.min8")} /></div>
           <div className="field"><label>{tr("ta.role")}</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
-            </select>
+            <SingleSelect width="100%" value={role} onChange={setRole}
+              options={[
+                { value: "member", label: tr("ta.roleMember") },
+                { value: "admin", label: tr("ta.roleAdmin") },
+              ]} />
           </div>
         </div>
         <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
           <label>{tr("ta.viewAccess", "Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "how many tasks they can see")}</span></label>
-          <select value={tier} onChange={(e) => setTier(e.target.value)} disabled={role === "admin"}>
-            {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
-          </select>
+          <SingleSelect width="100%" value={tier} disabled={role === "admin"} onChange={setTier}
+            options={tierList.map((t) => ({ value: String(t.id), label: `${t.name} — ${TIER_DESC[t.default_sees]}` }))} />
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
         <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addMember")}</button>
@@ -265,17 +267,17 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
               <td>
                 {/* You can't demote your own admin account (backend blocks it) — disable
                     the select rather than let it fail-on-use (QA 2026-06-05). */}
-                <select value={u.role} onChange={(e) => setMemberRole(u, e.target.value)} style={{ width: "auto" }}
-                  disabled={u.id === me?.id} title={u.id === me?.id ? tr("ta.ownRoleLocked") : undefined}>
-                  <option value="member">{tr("ta.roleMember")}</option><option value="admin">{tr("ta.roleAdmin")}</option>
-                </select>
+                <SingleSelect value={u.role} disabled={u.id === me?.id} onChange={(v) => setMemberRole(u, v)}
+                  options={[
+                    { value: "member", label: tr("ta.roleMember") },
+                    { value: "admin", label: tr("ta.roleAdmin") },
+                  ]} />
               </td>
               <td>
                 {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
-                  <select value={u.tier ?? ""} onChange={(e) => setMemberTier(u, e.target.value)} style={{ width: "auto", maxWidth: 210 }}>
-                    {u.tier == null && <option value="">{tr("ta.pickViewAccess", "Pick…")}</option>}
-                    {tierList.map((t) => <option key={t.id} value={t.id}>{t.name} — {TIER_DESC[t.default_sees]}</option>)}
-                  </select>
+                  <SingleSelect width={210} value={u.tier != null ? String(u.tier) : ""} placeholder={tr("ta.pickViewAccess", "Pick…")}
+                    onChange={(v) => setMemberTier(u, v)}
+                    options={tierList.map((t) => ({ value: String(t.id), label: `${t.name} — ${TIER_DESC[t.default_sees]}` }))} />
                 )}
               </td>
               <td><button className="btn-ghost" onClick={() => toggleActive(u)}>{u.is_active ? tr("ta.active") : tr("ta.disabled")}</button></td>
@@ -442,13 +444,15 @@ function Access({
       <div className="field" style={{ maxWidth: 360 }}>
         <label>{tr("ta.defineAccessFor")}</label>
         <div style={{ display: "flex", gap: 6 }}>
-          <select data-testid="access-subject-type" value={subjectType} onChange={(e) => { setSubjectType(e.target.value as SubjectType); setSubjectId(0); }} style={{ width: 110 }}>
-            <option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option>
-          </select>
-          <select data-testid="access-subject-id" value={subjectId} onChange={(e) => setSubjectId(Number(e.target.value))}>
-            <option value={0}>{tr("ta.select")}</option>
-            {subjects.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-          </select>
+          <SingleSelect testId="access-subject-type" width={110} value={subjectType}
+            onChange={(v) => { setSubjectType(v as SubjectType); setSubjectId(0); }}
+            options={[
+              { value: "user", label: tr("ta.subjPerson") },
+              { value: "group", label: tr("ta.subjGroup") },
+            ]} />
+          <SingleSelect testId="access-subject-id" value={subjectId ? String(subjectId) : ""} placeholder={tr("ta.select")}
+            onChange={(v) => setSubjectId(Number(v) || 0)}
+            options={subjects.map((s) => ({ value: String(s.id), label: s.label }))} />
         </div>
       </div>
 
@@ -462,21 +466,24 @@ function Access({
             <div className="row2">
               <div className="field"><label>{tr("ta.to")}</label>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <select data-testid="grant-scope-type" value={scopeType} onChange={(e) => { setScopeType(e.target.value as "subproject" | "project"); setScopeId(0); }} style={{ width: 140 }}>
-                    <option value="subproject">{tr("task.subproject")}</option><option value="project">{tr("ta.scopeWholeProject")}</option>
-                  </select>
-                  <select data-testid="grant-scope-id" value={scopeId} onChange={(e) => setScopeId(Number(e.target.value))}>
-                    <option value={0}>{tr("ta.select")}</option>
-                    {(scopeType === "subproject" ? subOptions : projects.map((p) => ({ id: p.id, label: p.name }))).map((o) => (
-                      <option key={o.id} value={o.id}>{o.label}</option>
-                    ))}
-                  </select>
+                  <SingleSelect testId="grant-scope-type" width={140} value={scopeType}
+                    onChange={(v) => { setScopeType(v as "subproject" | "project"); setScopeId(0); }}
+                    options={[
+                      { value: "subproject", label: tr("task.subproject") },
+                      { value: "project", label: tr("ta.scopeWholeProject") },
+                    ]} />
+                  <SingleSelect testId="grant-scope-id" value={scopeId ? String(scopeId) : ""} placeholder={tr("ta.select")}
+                    onChange={(v) => setScopeId(Number(v) || 0)}
+                    options={(scopeType === "subproject" ? subOptions : projects.map((p) => ({ id: p.id, label: p.name })))
+                      .map((o) => ({ value: String(o.id), label: o.label }))} />
                 </div>
               </div>
               <div className="field"><label>{tr("ta.level")}</label>
-                <select data-testid="grant-level" value={level} onChange={(e) => setLevel(e.target.value)}>
-                  <option value="member">{tr("ta.levelMember")}</option><option value="viewer">{tr("ta.levelViewer")}</option>
-                </select>
+                <SingleSelect testId="grant-level" width="100%" value={level} onChange={setLevel}
+                  options={[
+                    { value: "member", label: tr("ta.levelMember") },
+                    { value: "viewer", label: tr("ta.levelViewer") },
+                  ]} />
               </div>
             </div>
             <div className="muted" style={{ fontSize: 12, margin: "6px 0 10px" }}>
@@ -515,17 +522,20 @@ function Access({
               {myExclusions.length === 0 && <span className="muted" style={{ fontSize: 12 }}>{tr("ta.noExclusions")}</span>}
             </div>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-              <select data-testid="exc-type" value={excType} onChange={(e) => { setExcType(e.target.value as ExcType); setExcId(""); }} style={{ width: 140 }}>
-                <option value="task">{tr("list.colTask")}</option><option value="user">{tr("ta.subjPerson")}</option><option value="group">{tr("ta.subjGroup")}</option>
-                <option value="project">{tr("task.project")}</option><option value="subproject">{tr("task.subproject")}</option>
-              </select>
+              <SingleSelect testId="exc-type" width={140} value={excType}
+                onChange={(v) => { setExcType(v as ExcType); setExcId(""); }}
+                options={[
+                  { value: "task", label: tr("list.colTask") },
+                  { value: "user", label: tr("ta.subjPerson") },
+                  { value: "group", label: tr("ta.subjGroup") },
+                  { value: "project", label: tr("task.project") },
+                  { value: "subproject", label: tr("task.subproject") },
+                ]} />
               {excType === "task" ? (
                 <input data-testid="exc-task-id" type="number" min={1} placeholder={tr("ta.taskIdPh")} value={excId} onChange={(e) => setExcId(e.target.value)} style={{ maxWidth: 200 }} />
               ) : (
-                <select data-testid="exc-target" value={excId} onChange={(e) => setExcId(e.target.value)}>
-                  <option value="">{tr("ta.selectHide")}</option>
-                  {excOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-                </select>
+                <SingleSelect testId="exc-target" value={excId} placeholder={tr("ta.selectHide")} onChange={setExcId}
+                  options={excOptions.map((o) => ({ value: String(o.id), label: o.label }))} />
               )}
               <button className="btn-secondary" data-testid="exc-add" onClick={addExclusion}>+ Add exclusion</button>
             </div>
