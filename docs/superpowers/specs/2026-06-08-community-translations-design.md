@@ -25,6 +25,8 @@ Today all 13 locale catalogs are compile-time JSON baked into the bundle
 | Who submits | **Any logged-in member**, in their currently selected language. |
 | Review | **Superadmin only**, in the **Platform** area, with a **poll bar-chart** of suggested variants per string. |
 | Override granularity | By **English source text** (not by key) — approving `"Save"→"Guardar"` fixes every place "Save" appears. |
+| List reduction | **Fuzzy-merge** near-duplicate English strings into one contributor row (a "string group"); approving translates the whole group. |
+| Completion | **Partial submission** — a member may translate one, a few, or all strings; nothing is ever required to be "finished". |
 | Out of scope | Community upvoting; public/no-login submission; per-org translations. |
 | Deferred escape hatch | Per-key (context-specific) overrides, only if a real collision appears. |
 
@@ -113,9 +115,21 @@ This makes the override **by-English-text** model concrete: one approved
   suggestion immediately; no batching in v1, to keep state simple and feedback
   instant). **Untranslated rows sort to the top** of each category. A small count
   badge per category shows how many are still untranslated.
-- Dedup note: exact-match dedup removes only ~37 of 555 (→ ~518 unique). The
-  category accordion + untranslated-first ordering is the real manageability
-  lever; dedup is a secondary tidy-up.
+- **Fuzzy-merge (string groups):** beyond exact dedup (which only trims ~37 of
+  555 → ~518), near-duplicate English strings are grouped into a single
+  contributor row. Normalize by: lowercase, trim, collapse whitespace, strip
+  trailing punctuation/ellipsis/colon, and treat interpolation placeholders
+  (`{{count}}`) as wildcards; group by identical normalized form **or** very high
+  similarity (token/Levenshtein ratio ≥ ~0.9 — conservative, so only true
+  near-twins like "Add link" / "Add a link" / "Add link…" merge, never distinct
+  meanings). Each group shows one **canonical** English (shortest/most-frequent);
+  approving a translation writes overrides for **every** `source_text` in the
+  group. The group's member strings are inspectable; a reviewer can split a group
+  if a bad merge ever appears (escape hatch).
+- **Partial submission:** a member translates as many or as few rows as they like
+  — one, a handful, or all. Per-row Save persists immediately; there is no
+  "submit all / you must finish" gate. A subtle progress hint ("X of Y in this
+  category") is informational only.
 
 ## 7. Superadmin review UI — Platform area → "Translation review"
 
@@ -141,9 +155,11 @@ All new UI chrome (Help Us intro, buttons, review labels) needs keys added to
 - **Backend (pytest):** suggestion upsert (one per user/string), superadmin-only
   gates on review/approve, override upsert/delete, the review aggregation
   (variant counts), locale validation.
-- **Frontend (vitest):** the `en.json` flatten+dedup+categorize helper (pure
-  function — inventory, ordering, untranslated detection); the override→bundle
-  merge mapping (source_text→keys). 
+- **Frontend (vitest):** the `en.json` flatten + **fuzzy-group** + categorize
+  helper (pure function — inventory, canonical pick, group membership, ordering,
+  untranslated detection — incl. cases that MUST and MUST NOT merge); the
+  override→bundle merge mapping (a group's `source_text`s → all their keys);
+  partial-submission state (saving one row never blocks others).
 - **Browser (Playwright):** submit a suggestion as a member; approve it as
   superadmin; confirm the string changes live after reload without a redeploy.
 
