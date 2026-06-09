@@ -414,8 +414,8 @@
       "fri": "Sex",
       "sat": "Sáb"
     },
-    "noDate": "Sem data",
-    "noDateTitle": "Sem data — {{count}} tarefas"
+    "noDate": "Tarefas não agendadas",
+    "noDateTitle": "Tarefas não agendadas ({{count}})"
   },
   "del": {
     "kindProject": "projeto",

@@ -414,8 +414,8 @@
       "fri": "Ven",
       "sat": "Sab"
     },
-    "noDate": "Senza data",
-    "noDateTitle": "Senza data — {{count}} attività"
+    "noDate": "Attività non pianificate",
+    "noDateTitle": "Attività non pianificate ({{count}})"
   },
   "del": {
     "kindProject": "progetto",

@@ -414,8 +414,8 @@
       "fri": "Ven",
       "sat": "Sam"
     },
-    "noDate": "Sans date",
-    "noDateTitle": "Sans date — {{count}} tâches"
+    "noDate": "Tâches non planifiées",
+    "noDateTitle": "Tâches non planifiées ({{count}})"
   },
   "del": {
     "kindProject": "projet",

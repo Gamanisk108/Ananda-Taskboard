@@ -414,8 +414,8 @@
       "fri": "শুক্র",
       "sat": "শনি"
     },
-    "noDate": "তারিখ নেই",
-    "noDateTitle": "তারিখ নেই — {{count}}টি কাজ"
+    "noDate": "অনির্ধারিত কাজ",
+    "noDateTitle": "অনির্ধারিত কাজ ({{count}})"
   },
   "del": {
     "kindProject": "প্রকল্প",

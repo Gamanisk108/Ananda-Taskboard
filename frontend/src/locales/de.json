@@ -414,8 +414,8 @@
       "fri": "Fr",
       "sat": "Sa"
     },
-    "noDate": "Ohne Datum",
-    "noDateTitle": "Ohne Datum — {{count}} Aufgaben"
+    "noDate": "Nicht geplante Aufgaben",
+    "noDateTitle": "Nicht geplante Aufgaben ({{count}})"
   },
   "del": {
     "kindProject": "Projekt",

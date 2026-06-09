@@ -414,8 +414,8 @@
       "fri": "शुक्र",
       "sat": "शनि"
     },
-    "noDate": "तारीख नाही",
-    "noDateTitle": "तारीख नाही — {{count}} कार्ये"
+    "noDate": "अनियोजित कार्ये",
+    "noDateTitle": "अनियोजित कार्ये ({{count}})"
   },
   "del": {
     "kindProject": "प्रकल्प",
