@@ -78,6 +78,10 @@ def country_pack(code):
 
 
 us_federal = country_pack("US")
+# Italian national holidays (for the Ananda Assisi community). The `holidays`
+# library supplies Capodanno, Liberazione (Apr 25), Festa della Repubblica
+# (Jun 2), Ferragosto (Aug 15), Ognissanti (Nov 1), etc.
+italy = country_pack("IT")
 
 
 # ---- Hindu / yoga festivals: curated lunisolar table -----------------------
@@ -124,13 +128,16 @@ SET_PROVIDERS = {
     "us_observances": us_observances,
     "christian": christian,
     "hindu_festivals": hindu_festivals,
+    "italy": italy,
     "ananda_lineage": ananda_lineage,
 }
 
 # Order chosen for the admin UI and as the default for orgs with none set.
+# Italian holidays sit after the Hindu/yoga festivals, before Ananda lineage
+# days (fits the Ananda Assisi community); default ON.
 DEFAULT_SETS = [
     "us_federal", "us_observances", "christian",
-    "hindu_festivals", "ananda_lineage",
+    "hindu_festivals", "italy", "ananda_lineage",
 ]
 AVAILABLE_SETS = list(SET_PROVIDERS.keys())
 

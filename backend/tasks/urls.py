@@ -3,7 +3,14 @@ from rest_framework.routers import DefaultRouter
 
 from .bulk import BulkTasksView, MarkDoneView
 from .calendar import CalendarView, UndatedTasksView
-from .events_views import CalendarEventViewSet, EventsRangeView, HolidaySettingsView, HolidaysRangeView, StatusViewSet
+from .events_views import (
+    CalendarEventViewSet,
+    EventsRangeView,
+    HolidaySettingsView,
+    HolidaysRangeView,
+    PersonalHolidayViewSet,
+    StatusViewSet,
+)
 from .history_service import HistoryDatesView, HistoryView
 from .views import ApprovalsView, CommentViewSet, SubtaskViewSet, TaskViewSet
 
@@ -12,6 +19,7 @@ router.register("tasks", TaskViewSet, basename="task")
 router.register("subtasks", SubtaskViewSet, basename="subtask")
 router.register("comments", CommentViewSet, basename="comment")
 router.register("events", CalendarEventViewSet, basename="event")
+router.register("holidays/personal", PersonalHolidayViewSet, basename="personal-holiday")
 router.register("statuses", StatusViewSet, basename="status")
 
 urlpatterns = [

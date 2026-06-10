@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
+    ChangePasswordView,
     GroupViewSet,
     InvitationAcceptView,
     InvitationPreviewView,
@@ -29,6 +30,7 @@ urlpatterns = [
     path("auth/refresh", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/password/request", PasswordResetRequestView.as_view(), name="password-reset-request"),
     path("auth/password/confirm", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
+    path("auth/password/change", ChangePasswordView.as_view(), name="password-change"),
     path("auth/signup", SignupView.as_view(), name="signup"),
     path("auth/verify", VerifyEmailView.as_view(), name="verify-email"),
     # Public, token-gated invite preview + accept (before the router's detail routes).

@@ -57,6 +57,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Personal opt-out of the daily push. The app-wide push *schedule* stays
     # admin-controlled; this only governs whether THIS user receives one.
     daily_push_enabled = models.BooleanField(default=True)
+    # Extra PWA-push notifications (free; web push, no app store). Deadline
+    # reminders (a "due tomorrow" heads-up in the digest) default ON;
+    # assignment-change pings default OFF (opt-in).
+    deadline_reminders = models.BooleanField(default=True)
+    assignment_changes = models.BooleanField(default=False)
     # Optional permission tier: a reusable template a member inherits grants +
     # default visibility from (admins ignore tiers — they see everything).
     tier = models.ForeignKey(

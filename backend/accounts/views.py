@@ -94,6 +94,12 @@ class MeView(APIView):
         the push schedule/timezone stay admin-only on AppSettingsView.)"""
         user = request.user
         updates = []
+        if "name" in request.data:
+            name = (request.data.get("name") or "").strip()
+            if not name:
+                raise ValidationError({"name": "Name can't be empty."})
+            user.name = name[:200]
+            updates.append("name")
         if "language" in request.data:
             lang = (request.data.get("language") or "").strip()
             if lang and lang not in SUPPORTED_LANGUAGES:
@@ -109,9 +115,38 @@ class MeView(APIView):
         if "daily_push_enabled" in request.data:
             user.daily_push_enabled = bool(request.data.get("daily_push_enabled"))
             updates.append("daily_push_enabled")
+        if "deadline_reminders" in request.data:
+            user.deadline_reminders = bool(request.data.get("deadline_reminders"))
+            updates.append("deadline_reminders")
+        if "assignment_changes" in request.data:
+            user.assignment_changes = bool(request.data.get("assignment_changes"))
+            updates.append("assignment_changes")
         if updates:
             user.save(update_fields=updates)
         return Response(UserSerializer(user).data)
+
+
+class ChangePasswordView(APIView):
+    """Authenticated self-service password change (distinct from the emailed
+    reset flow): verify the current password, then set a validated new one."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current = (request.data.get("current_password") or "")
+        new = (request.data.get("new_password") or "")
+        if not current or not new:
+            raise ValidationError({"detail": "Both current and new passwords are required."})
+        if not user.check_password(current):
+            raise ValidationError({"current_password": "That isn't your current password."})
+        try:
+            validate_password(new, user)
+        except DjangoValidationError as exc:
+            raise ValidationError({"new_password": list(exc.messages)})
+        user.set_password(new)
+        user.save(update_fields=["password"])
+        return Response({"detail": "Password updated."})
 
 
 class UsersView(APIView):

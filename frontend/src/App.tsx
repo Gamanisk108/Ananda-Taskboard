@@ -446,6 +446,8 @@ export default function App() {
           me={me}
           language={resolveLanguage(me.language)}
           onLanguage={changeLanguage}
+          theme={theme}
+          onTheme={changeTheme}
           dailyPushEnabled={me.daily_push_enabled}
           onToggleDailyPush={toggleDailyPush}
           onClose={() => setShowSettings(false)}

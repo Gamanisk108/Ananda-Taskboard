@@ -33,7 +33,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "role", "is_admin", "is_active", "tier", "language", "theme", "daily_push_enabled"]
+        fields = ["id", "email", "name", "role", "is_admin", "is_active", "tier", "language", "theme",
+                  "daily_push_enabled", "deadline_reminders", "assignment_changes"]
 
 
 class UserWriteSerializer(serializers.ModelSerializer):

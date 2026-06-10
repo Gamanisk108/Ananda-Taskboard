@@ -27,18 +27,16 @@ def local_today():
         return datetime.now(ZoneInfo(settings.APP_TIMEZONE)).date()
 
 
-def tasks_for_user(user, today):
-    """Return (due_today, overdue) title lists for a user's assigned, approved,
-    visible tasks. De-duplicated. Assignment counts direct assignees AND any group
-    the user belongs to. Recurring tasks contribute a 'due today' entry when an
-    occurrence lands today."""
+def _assigned_visible(user):
+    """A user's assigned, approved, visible, not-yet-complete tasks (direct +
+    via any group). Shared by the digest and the deadline-reminder heads-up."""
     from django.db.models import Q
 
     from permissions.engine import visible_tasks_q
     from tasks.models import complete_status_keys
 
     group_ids = list(user.member_groups.values_list("id", flat=True))
-    assigned = (
+    return (
         Task.objects.filter(approval_state=Task.Approval.APPROVED, archived_at__isnull=True)
         .filter(visible_tasks_q(user))  # respects own-scope + exclusions (deny > assignment)
         .exclude(status__in=complete_status_keys())  # completed tasks don't need a reminder
@@ -46,6 +44,27 @@ def tasks_for_user(user, today):
         .select_related("recurrence_rule")
         .distinct()
     )
+
+
+def tasks_due_soon(user, today):
+    """Titles of dated tasks due TOMORROW (the 'deadline reminder' heads-up).
+    Recurring tasks are excluded — their cadence is its own reminder."""
+    from datetime import timedelta
+
+    tomorrow = today + timedelta(days=1)
+    seen, out = set(), []
+    for t in _assigned_visible(user):
+        if not t.is_recurring and t.deadline == tomorrow and t.id not in seen:
+            out.append(t.title); seen.add(t.id)
+    return out
+
+
+def tasks_for_user(user, today):
+    """Return (due_today, overdue) title lists for a user's assigned, approved,
+    visible tasks. De-duplicated. Assignment counts direct assignees AND any group
+    the user belongs to. Recurring tasks contribute a 'due today' entry when an
+    occurrence lands today."""
+    assigned = _assigned_visible(user)
     due_today, overdue = [], []
     seen_due, seen_over = set(), set()
     for t in assigned:
@@ -61,19 +80,23 @@ def tasks_for_user(user, today):
     return due_today, overdue
 
 
-def build_payload(due_today, overdue):
-    if not due_today and not overdue:
+def build_payload(due_today, overdue, due_soon=None):
+    due_soon = due_soon or []
+    if not due_today and not overdue and not due_soon:
         return None  # silent — nothing to say
     lines = []
     if due_today:
         lines.append(f"{len(due_today)} due today")
     if overdue:
         lines.append(f"{len(overdue)} overdue")
+    if due_soon:
+        lines.append(f"{len(due_soon)} due tomorrow")
     return {
         "title": "Ananda Taskboard — today",
         "body": " · ".join(lines),
         "due_today": due_today,
         "overdue": overdue,
+        "due_soon": due_soon,
     }
 
 
@@ -91,7 +114,8 @@ def run_daily_push(send=True):
         if user.last_daily_push == today:
             continue  # already pushed today
         due_today, overdue = tasks_for_user(user, today)
-        payload = build_payload(due_today, overdue)
+        due_soon = tasks_due_soon(user, today) if user.deadline_reminders else []
+        payload = build_payload(due_today, overdue, due_soon)
         user.last_daily_push = today
         user.save(update_fields=["last_daily_push"])
         if payload is None:
