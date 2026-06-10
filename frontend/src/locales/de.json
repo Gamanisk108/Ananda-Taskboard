@@ -776,7 +776,8 @@
     "allSuggested": "Jeder Text hat deinen Vorschlag",
     "badgeTitle": "{{n}} Texte noch ohne deinen Vorschlag",
     "remove": "Entfernen",
-    "removeHint": "Ihren Vorschlag für diesen Text zurückziehen"
+    "removeHint": "Ihren Vorschlag für diesen Text zurückziehen",
+    "removeConfirm": "Ihren Vorschlag „{{text}}“ zurückziehen?"
   },
   "trv": {
     "nav": "Übersetzungen",

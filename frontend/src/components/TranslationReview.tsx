@@ -263,7 +263,7 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear, onDismis
                 {blankPlaceholders(v.text)} · {v.count}
                 {/* Moderation: remove a junk/abusive variant from the poll. */}
                 {!(poll.live !== null && v.text === poll.live) && (
-                  <button type="button" className="btn-ghost grp-dismiss" title={t("trv.dismiss", "Remove suggestion")}
+                  <button type="button" className="btn-ghost grp-dismiss" title={t("trv.dismiss", "Remove suggestion")} aria-label={t("trv.dismiss", "Remove suggestion")}
                     onClick={() => onDismiss(poll.key, v.text)}>
                     <X size={13} />
                   </button>

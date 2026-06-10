@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import i18n, { LANGUAGES, resolveLanguage } from "../i18n";
 import { api } from "../api/client";
+import { useConfirm } from "./confirm";
 import { applyOverrides } from "../trOverrides";
 import {
   TR_CATEGORIES, catalogEntries, categoryOf, mergeRows, blankPlaceholders,
@@ -272,6 +273,15 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
       queryClient.invalidateQueries({ queryKey: ["tr-mine", locale] });
     },
   });
+  // Destructive → styled confirm first (app-wide rule; CodeRabbit PR#8).
+  const confirmDialog = useConfirm();
+  async function confirmRemove() {
+    if (await confirmDialog({
+      body: t("trc.removeConfirm", "Withdraw your suggestion “{{text}}”?", { text: savedVisible }),
+      danger: true,
+      confirmLabel: t("trc.remove", "Remove"),
+    })) remove.mutate();
+  }
 
   const showInput = !saved || editing;
   const dirty = draft.trim().length > 0 && draft.trim() !== savedVisible;
@@ -338,7 +348,7 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
                   </button>
                   <button type="button" className="btn-ghost tr-edit" disabled={remove.isPending}
                     title={t("trc.removeHint", "Withdraw your suggestion for this phrase")}
-                    onClick={() => remove.mutate()}>
+                    onClick={confirmRemove}>
                     <X size={14} /> {t("trc.remove", "Remove")}
                   </button>
                 </span>
