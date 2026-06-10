@@ -207,7 +207,7 @@ export function ReportProblemDialog({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="field">
-        <PendingAttachments files={files} onChange={setFiles} label={`${t("attach.label")} (${t("fb.optional")})`} />
+        <PendingAttachments files={files} onChange={setFiles} label={`${t("attach.label")} ${t("fb.optional")}`} />
       </div>
       <div className="an-techbox">
         <Toggle label={t("fb.tech")} hint={t("fb.techHint")} on={tech} onChange={setTech} />
