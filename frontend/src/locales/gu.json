@@ -437,7 +437,12 @@
       "hindu_festivals": "હોળી, ગુરુ પૂર્ણિમા, દિવાળી, જન્માષ્ટમી…",
       "italy": "કેપોદાન્નો, લિબરેઝિઓને, ફેરાગોસ્તો, ઓનિસાંતી…",
       "ananda_lineage": "યોગાનંદ, લાહિરી અને શ્રીયુક્તેશ્વર દિવસો…"
-    }
+    },
+    "addHoliday": "રજા ઉમેરો",
+    "scopeTeamHoliday": "ટીમ રજા",
+    "scopePersonalHoliday": "વ્યક્તિગત રજા",
+    "teamHolidays": "ટીમ રજાઓ",
+    "noTeamHolidays": "હજી સુધી ટીમ રજાઓ નથી."
   },
   "mp": {
     "newProjectPh": "નવા પ્રોજેક્ટનું નામ…",

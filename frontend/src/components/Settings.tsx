@@ -639,21 +639,22 @@ function EventsTab({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-/* ---- Holidays tab: personal holidays + org-wide holiday sets ---- */
-interface PHoliday { id: number; name: string; month: number; day: number }
+/* ---- Holidays tab: custom personal/team holidays + org-wide holiday sets ---- */
+interface PHoliday { id: number; name: string; month: number; day: number; owner: number | null }
 interface HolidaySettings { enabled: string[]; available: string[] }
 const HOLIDAY_SET_KEYS = ["us_federal", "us_observances", "christian", "hindu_festivals", "italy", "ananda_lineage"];
 
 function HolidaysTab({ isAdmin }: { isAdmin: boolean }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [mine, setMine] = useState<PHoliday[]>([]);
+  const [list, setList] = useState<PHoliday[]>([]);
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
+  const [personal, setPersonal] = useState(!isAdmin);
   const [sets, setSets] = useState<HolidaySettings | null>(null);
 
   function load() {
-    api.get("/api/holidays/personal").then(setMine).catch(() => setMine([]));
+    api.get("/api/holidays/personal").then(setList).catch(() => setList([]));
     api.get("/api/holidays/settings").then(setSets).catch(() => setSets(null));
   }
   useEffect(load, []);
@@ -661,7 +662,7 @@ function HolidaysTab({ isAdmin }: { isAdmin: boolean }) {
   async function addHoliday() {
     if (!name.trim() || !date) return;
     const [, m, d] = date.split("-").map(Number);
-    await api.post("/api/holidays/personal", { name: name.trim(), month: m, day: d });
+    await api.post("/api/holidays/personal", { personal, name: name.trim(), month: m, day: d });
     setName(""); setDate(""); load();
   }
   async function removeHoliday(h: PHoliday) {
@@ -675,11 +676,37 @@ function HolidaysTab({ isAdmin }: { isAdmin: boolean }) {
     await api.patch("/api/holidays/settings", { enabled }).catch(() => load());
   }
 
+  const mine = list.filter((h) => h.owner !== null);
+  const team = list.filter((h) => h.owner === null);
   const enabled = new Set(sets?.enabled ?? []);
+
+  function HolRow({ h, locked }: { h: PHoliday; locked: boolean }) {
+    return (
+      <div className="listrow">
+        <span><Cake size={14} style={{ verticalAlign: "-2px", color: "var(--muted)" }} /> <strong>{h.name}</strong> · <span className="mutedtx">{monthName(h.month)} {h.day}</span></span>
+        {locked ? (
+          <span className="lr-lock" title={t("settings.adminLocked")}><Lock size={15} /></span>
+        ) : (
+          <span className="lr-acts">
+            <button type="button" className="btn-ghost icon-only lr-x" title={t("common.delete", "Delete")} onClick={() => removeHoliday(h)}><X size={16} /></button>
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="ev-card">
-        <div className="ec-t">{t("settings.addPersonalHoliday")} <span className="mutedtx">· {t("settings.onlyYourBoard")}</span></div>
+        <div className="ec-t">
+          {isAdmin ? t("settings.addHoliday") : <>{t("settings.addPersonalHoliday")} <span className="mutedtx">· {t("settings.onlyYourBoard")}</span></>}
+          {isAdmin && (
+            <div className="an-seg" style={{ maxWidth: 260, marginTop: 8 }}>
+              <button type="button" className={`an-seg-opt${!personal ? " on" : ""}`} onClick={() => setPersonal(false)}>{t("settings.scopeTeamHoliday")}</button>
+              <button type="button" className={`an-seg-opt${personal ? " on" : ""}`} onClick={() => setPersonal(true)}>{t("settings.scopePersonalHoliday")}</button>
+            </div>
+          )}
+        </div>
         <div className="hol-addrow">
           <input placeholder={t("settings.holidayNamePh")} value={name} onChange={(e) => setName(e.target.value)} />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -689,14 +716,14 @@ function HolidaysTab({ isAdmin }: { isAdmin: boolean }) {
 
       <div className="sec-label">{t("settings.yourHolidays")} <span className="own-tag">{t("settings.onlyYourBoard")}</span></div>
       {mine.length === 0 ? <div className="mutedtx" style={{ fontSize: 12.5, padding: "2px 8px" }}>{t("settings.noPersonalHolidays")}</div>
-        : mine.map((h) => (
-          <div key={h.id} className="listrow">
-            <span><Cake size={14} style={{ verticalAlign: "-2px", color: "var(--muted)" }} /> <strong>{h.name}</strong> · <span className="mutedtx">{monthName(h.month)} {h.day}</span></span>
-            <span className="lr-acts">
-              <button type="button" className="btn-ghost icon-only lr-x" title={t("common.delete", "Delete")} onClick={() => removeHoliday(h)}><X size={16} /></button>
-            </span>
-          </div>
-        ))}
+        : mine.map((h) => <HolRow key={h.id} h={h} locked={false} />)}
+
+      <div className="sec-label">
+        {t("settings.teamHolidays")}
+        {!isAdmin && <span className="lr-lock"><Lock size={13} /></span>}
+      </div>
+      {team.length === 0 ? <div className="mutedtx" style={{ fontSize: 12.5, padding: "2px 8px" }}>{t("settings.noTeamHolidays")}</div>
+        : team.map((h) => <HolRow key={h.id} h={h} locked={!isAdmin} />)}
 
       <div className="sec-label">
         {t("settings.teamHolidaySets")}

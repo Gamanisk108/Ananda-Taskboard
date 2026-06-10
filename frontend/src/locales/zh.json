@@ -437,7 +437,12 @@
       "hindu_festivals": "洒红节、上师满月节、排灯节、黑天诞辰…",
       "italy": "元旦、解放日、八月节、万圣节…",
       "ananda_lineage": "瑜伽南达、拉希里与圣尤地斯瓦尔纪念日…"
-    }
+    },
+    "addHoliday": "添加节日",
+    "scopeTeamHoliday": "团队节日",
+    "scopePersonalHoliday": "个人节日",
+    "teamHolidays": "团队节日",
+    "noTeamHolidays": "暂无团队节日。"
   },
   "mp": {
     "newProjectPh": "新项目名称…",

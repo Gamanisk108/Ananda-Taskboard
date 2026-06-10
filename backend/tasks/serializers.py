@@ -202,9 +202,12 @@ class CalendarEventSerializer(serializers.ModelSerializer):
 
 
 class PersonalHolidaySerializer(serializers.ModelSerializer):
+    # Read-only scope signal: null = org-wide (admin-set), set = personal.
+    owner = serializers.IntegerField(source="owner_id", read_only=True)
+
     class Meta:
         model = PersonalHoliday
-        fields = ["id", "name", "month", "day"]
+        fields = ["id", "name", "month", "day", "owner"]
 
     def validate(self, attrs):
         month = attrs.get("month", getattr(self.instance, "month", None))

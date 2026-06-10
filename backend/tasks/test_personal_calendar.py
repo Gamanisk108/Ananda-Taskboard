@@ -108,26 +108,66 @@ def test_member_edits_own_personal_event(member, org):
     assert r.status_code == 200 and r.json()["title"] == "Mine v2"
 
 
-# ---- personal holidays -----------------------------------------------------
+# ---- custom holidays: personal vs org-wide ---------------------------------
 
 def test_personal_holiday_crud_and_range(member, org):
     c, h = _auth(member, org)
-    r = c.post("/api/holidays/personal", {"name": "Mom's birthday", "month": 6, "day": 15},
+    r = c.post("/api/holidays/personal", {"personal": True, "name": "Mom's birthday", "month": 6, "day": 15},
                format="json", **h)
     assert r.status_code == 201, r.content
+    assert r.json()["owner"] == member.id
     rng = c.get("/api/holidays/range?from=2026-06-01&to=2026-06-30", **h).json()
     assert any(x.get("personal") and x["title"] == "Mom's birthday" for x in rng)
 
 
 def test_personal_holiday_invisible_to_others(member, other, org):
     c, h = _auth(member, org)
-    c.post("/api/holidays/personal", {"name": "Secret", "month": 6, "day": 15}, format="json", **h)
+    c.post("/api/holidays/personal", {"personal": True, "name": "Secret", "month": 6, "day": 15}, format="json", **h)
     c2, h2 = _auth(other, org)
     rng = c2.get("/api/holidays/range?from=2026-06-01&to=2026-06-30", **h2).json()
     assert not any(x["title"] == "Secret" for x in rng)
 
 
+def test_admin_creates_org_wide_holiday_visible_to_all(admin, other, org):
+    ca, ha = _auth(admin, org)
+    r = ca.post("/api/holidays/personal", {"name": "Founder's Day", "month": 7, "day": 4}, format="json", **ha)
+    assert r.status_code == 201, r.content
+    assert r.json()["owner"] is None
+    co, ho = _auth(other, org)
+    rng = co.get("/api/holidays/range?from=2026-07-01&to=2026-07-31", **ho).json()
+    match = [x for x in rng if x["title"] == "Founder's Day"]
+    assert match and match[0]["personal"] is False
+
+
+def test_member_cannot_create_org_wide_holiday(member, org):
+    c, h = _auth(member, org)
+    r = c.post("/api/holidays/personal", {"name": "Team day", "month": 7, "day": 4}, format="json", **h)
+    assert r.status_code == 403
+
+
+def test_member_cannot_edit_org_wide_holiday(admin, member, org):
+    ca, ha = _auth(admin, org)
+    hol = ca.post("/api/holidays/personal", {"name": "Founder's Day", "month": 7, "day": 4}, format="json", **ha).json()
+    cm, hm = _auth(member, org)
+    r = cm.delete(f"/api/holidays/personal/{hol['id']}", **hm)
+    assert r.status_code in (403, 404)
+
+
 def test_personal_holiday_rejects_bad_date(member, org):
     c, h = _auth(member, org)
-    r = c.post("/api/holidays/personal", {"name": "Bad", "month": 13, "day": 1}, format="json", **h)
+    r = c.post("/api/holidays/personal", {"personal": True, "name": "Bad", "month": 13, "day": 1}, format="json", **h)
     assert r.status_code == 400
+
+
+def test_global_mode_org_wide_holiday_visible(db):
+    """Legacy single-tenant mode (no org / no X-Org-Id header): a global admin's
+    team holiday must still show for everyone (mirrors the event viewset)."""
+    gadmin = User.objects.create_user(email="ga@x.com", password="pw-strong-123", role="admin", is_superuser=True)
+    gmember = User.objects.create_user(email="gm@x.com", password="pw-strong-123")
+    ca = APIClient(); ca.force_authenticate(user=gadmin)
+    r = ca.post("/api/holidays/personal", {"name": "Global Day", "month": 7, "day": 4}, format="json")
+    assert r.status_code == 201, r.content
+    assert r.json()["owner"] is None
+    cm = APIClient(); cm.force_authenticate(user=gmember)
+    rng = cm.get("/api/holidays/range?from=2026-07-01&to=2026-07-31").json()
+    assert any(x["title"] == "Global Day" for x in rng)
