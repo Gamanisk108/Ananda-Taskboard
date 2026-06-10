@@ -800,7 +800,7 @@ html[data-theme="dark"] .set-nav .sn.on { color: var(--azure); }
 .hu-head h3 .hu-heart { flex: none; display: grid; place-items: center; color: var(--hu-ink); }
 .hu-head .sub { font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 46ch; }
 .hu-stack { display: flex; flex-direction: column; gap: 11px; }
-.hu-card { display: flex; align-items: flex-start; gap: 14px; padding: 15px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--shadow-1); }
+.hu-card { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px; padding: 15px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--shadow-1); }
 .hu-card .hu-ic { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: color-mix(in srgb, var(--hu) 14%, var(--surface)); color: var(--hu-ink); border: 1px solid color-mix(in srgb, var(--hu) 26%, transparent); }
 .hu-card .hu-tx { flex: 1; min-width: 0; }
 .hu-card .hu-t { font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -1027,3 +1027,95 @@ html[data-theme="dark"] .an-tg.on { background: var(--azure); }
 .an-success .an-sx-ref { margin-top: 13px; font-size: 12px; color: var(--faint); }
 .an-success .an-sx-ref b { color: var(--text); font-family: var(--f-mono); }
 .an-success .an-quote { margin-top: 20px; text-align: left; width: 100%; max-width: 420px; }
+
+/* =====================================================================
+   Help Us v2 (D44–D48) — Settings panes, Events & Holidays, poll-graph
+   additions, contributor lock-in. Appended; cascade overrides the v1
+   deltas (hu-cta, swatch ring). Dark via html[data-theme="dark"].
+   ===================================================================== */
+/* Help Us card CTA → full-width bottom row, centered, uniform width, no chevron (D48) */
+.hu-card .hu-cta { flex: 1 0 100%; display: flex; justify-content: center; margin-top: 2px; align-self: auto; }
+.hu-card .hu-cta button { min-width: 104px; justify-content: center; }
+
+/* §2 Settings panes — read-only text (D45), dividers, change-password sub-view */
+.static-val { font-size: 13.5px; color: var(--text); padding: 2px 0 1px; line-height: 1.5; }
+.set-pane .field .hint { font-size: 11.5px; color: var(--faint); margin-top: 4px; }
+.set-pane .field.disabled { opacity: .5; pointer-events: none; }
+.set-divider { height: 1px; background: var(--border); margin: var(--gap-form) 0; }
+.set-toggles { display: flex; flex-direction: column; gap: 15px; }
+.set-back { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 10px; background: none; border: none; cursor: pointer; padding: 0; }
+.set-back:hover { color: var(--text); }
+.set-back svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.set-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; max-width: 340px; margin-top: var(--gap-form); }
+.set-pane .pane-tabs { max-width: 220px; margin-bottom: var(--gap-form); }
+
+/* Task statuses pane — canonical status-manager rows (circle swatch, drag, pill) */
+.swatch-btn { border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); }
+.st-hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; text-wrap: balance; }
+.st-hint strong { color: var(--text); }
+.set-pane .st-list { display: flex; flex-direction: column; gap: 7px; max-width: 440px; }
+.set-pane .sub-row { display: flex; align-items: center; gap: 9px; }
+.set-pane .drag-handle { cursor: grab; color: var(--faint); font-size: 14px; flex: none; user-select: none; line-height: 1; }
+.set-pane .sub-row > input[type="text"] { flex: 1; min-width: 0; }
+.set-pane .pill { font-family: var(--f-ui); font-size: 10.5px; font-weight: 700; border-radius: var(--r-pill); padding: 2px 9px; white-space: nowrap; flex: none; }
+.set-pane .pill.st-complete { background: color-mix(in srgb, var(--done) 18%, transparent); color: var(--done); }
+.set-pane .pill.adminonly { font-size: 10.5px; background: var(--primary-weak); color: var(--dome); text-transform: uppercase; letter-spacing: .06em; margin-left: 6px; }
+html[data-theme="dark"] .set-pane .pill.adminonly { color: var(--azure); }
+.set-pane .sub-add { display: flex; align-items: stretch; gap: 9px; max-width: 440px; margin-top: var(--gap-form); padding-top: var(--gap-form); border-top: 1px solid var(--border); }
+.set-pane .sub-add .swatch-btn { align-self: center; }
+.set-pane .sub-add input { flex: 1; min-width: 0; }
+.set-pane .sub-add .btn, .set-pane .sub-add button { flex: none; }
+
+/* Events & Holidays pane — listrows, locked rows, personal tags, holiday sets */
+.set-pane .mutedtx { color: var(--muted); }
+.set-pane .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.set-pane .listrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: var(--r-ctl); font-size: 13px; }
+.set-pane .listrow:hover { background: var(--sunk); }
+.set-pane .listrow .lr-acts { display: flex; gap: 4px; flex: none; }
+.set-pane .listrow .lr-x { color: var(--danger) !important; }
+.set-pane .lr-lock { flex: none; display: grid; place-items: center; color: var(--faint); padding: 0 6px; }
+.set-pane .lr-lock svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.set-pane .ev-card { padding: 12px; margin: var(--gap-form) 0; background: var(--sunk); border-radius: var(--r-card); }
+.set-pane .ev-card .field { margin-bottom: 0; max-width: none; }
+.set-pane .ec-t { font-weight: 700; font-size: 13.5px; margin-bottom: 10px; }
+.set-pane .ec-t .mutedtx { font-weight: 500; font-size: 12px; }
+.set-pane .sec-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: var(--faint); margin-top: var(--gap-form); margin-bottom: 4px; display: flex; align-items: center; }
+.set-pane .sec-label .lr-lock { display: inline-grid; vertical-align: -2px; padding: 0 0 0 6px; }
+.set-pane .own-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--hu-ink); background: color-mix(in srgb, var(--hu) 12%, var(--surface)); border-radius: var(--r-pill); padding: 1px 7px; margin-left: 6px; vertical-align: 1px; }
+.set-pane .hol-addrow { display: flex; align-items: stretch; gap: 9px; }
+.set-pane .hol-addrow input:first-child { flex: 1; min-width: 0; }
+.set-pane .hol-addrow input[type="date"] { flex: none; width: 150px; }
+.set-pane .hol-addrow .btn, .set-pane .hol-addrow button { flex: none; }
+.set-pane .holiday-set { display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--surface); margin-bottom: 8px; cursor: pointer; }
+.set-pane .holiday-set:hover { border-color: var(--border-strong); }
+.set-pane .holiday-set input { width: auto; margin-top: 2px; accent-color: var(--dome); }
+.set-pane .holiday-set > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.set-pane .holiday-set .hs-t { font-weight: 600; font-size: 13px; color: var(--text); }
+.set-pane .holiday-set .hs-d { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.set-pane .holiday-set.static { cursor: default; }
+.set-pane .holiday-set.static:hover { border-color: var(--border); }
+.set-pane .hset-on { flex: none; color: var(--done); margin-top: 2px; display: grid; place-items: center; }
+.set-pane .hset-on svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Contributor — all-done prayer-hands artwork (D43) + saved row lock-in (D48) */
+.tr-done .hh-img { display: block; width: 54px; height: auto; margin: 0 auto 14px; }
+html[data-theme="dark"] .tr-done .hh-img { filter: invert(1); }
+.tr-minewrap { display: flex; align-items: center; gap: 11px; }
+.tr-mine { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.4; text-wrap: pretty; }
+
+/* Poll graph (review) §10 — variant flags, free-text override, top-5 collapse */
+.pb-flag { font-family: var(--f-ui); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-radius: var(--r-pill); padding: 1px 7px; margin-left: 7px; white-space: nowrap; }
+.pb-flag.match { color: var(--muted); background: var(--sunk); }
+.pb-flag.bad { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, var(--surface)); display: inline-flex; align-items: center; gap: 4px; }
+.pb-flag.bad svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.poll-bar.phbad { opacity: .62; cursor: not-allowed; }
+.poll-bar.phbad .pb-fill { background: color-mix(in srgb, var(--danger) 22%, var(--surface)); }
+.poll-more { display: flex; align-items: center; gap: 7px; margin-top: 9px; font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 7px 9px; border-radius: 8px; width: 100%; background: none; border: none; cursor: pointer; }
+.poll-more:hover { background: var(--surface-2); color: var(--text); }
+.poll-more svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.poll-own-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--hu-ink); background: none; border: none; cursor: pointer; padding: 0; }
+.poll-own-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.poll-own.open { margin-top: 11px; padding: 11px 12px; border: 1px dashed color-mix(in srgb, var(--hu) 38%, var(--border)); border-radius: var(--r-ctl); background: color-mix(in srgb, var(--hu) 4%, var(--surface)); }
+.poll-own.open .tr-inputrow { display: flex; align-items: stretch; gap: 9px; margin-top: 4px; }
+.poll-own.open textarea.tr-in { flex: 1; min-width: 0; }
+.poll-foot .clear { margin-left: auto; }

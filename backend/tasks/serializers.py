@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import CalendarEvent, Comment, RecurrenceRule, Status, Subtask, Task
+from .models import CalendarEvent, Comment, PersonalHoliday, RecurrenceRule, Status, Subtask, Task
 
 
 class WeekdaysField(serializers.Field):
@@ -167,10 +167,13 @@ class StatusSerializer(serializers.ModelSerializer):
 
 class CalendarEventSerializer(serializers.ModelSerializer):
     weekdays = WeekdaysField(required=False)
+    # Read-only: tells the client whether this is a personal event (owned) or an
+    # org-wide one (owner null). Scope is set server-side from the `personal` flag.
+    owner = serializers.IntegerField(source="owner_id", read_only=True)
 
     class Meta:
         model = CalendarEvent
-        fields = ["id", "kind", "date", "end_date", "weekdays", "interval", "count", "title"]
+        fields = ["id", "kind", "date", "end_date", "weekdays", "interval", "count", "title", "owner"]
 
     def validate(self, attrs):
         # Merge against the existing instance so PATCH validates the full picture.
@@ -195,6 +198,23 @@ class CalendarEventSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Until-date must be on or after the start date.")
             if interval is not None and interval < 1:
                 raise serializers.ValidationError("Interval (every N weeks) must be >= 1.")
+        return attrs
+
+
+class PersonalHolidaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonalHoliday
+        fields = ["id", "name", "month", "day"]
+
+    def validate(self, attrs):
+        month = attrs.get("month", getattr(self.instance, "month", None))
+        day = attrs.get("day", getattr(self.instance, "day", None))
+        if month is None or not 1 <= month <= 12:
+            raise serializers.ValidationError({"month": "Month must be 1-12."})
+        # Day-of-month upper bound per month (29 for Feb so leap-day birthdays work).
+        max_day = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]
+        if day is None or not 1 <= day <= max_day:
+            raise serializers.ValidationError({"day": "Day is out of range for that month."})
         return attrs
 
 

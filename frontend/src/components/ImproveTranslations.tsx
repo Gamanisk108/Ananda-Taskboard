@@ -8,14 +8,14 @@ import { Trans, useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Languages, Info, Check, Pencil, ChevronRight, ListChecks, TriangleAlert,
-  RotateCw, Search, X, HeartHandshake,
+  RotateCw, Search, X,
 } from "lucide-react";
 import i18n, { LANGUAGES, resolveLanguage } from "../i18n";
 import { api } from "../api/client";
 import { applyOverrides } from "../trOverrides";
 import {
-  TR_CATEGORIES, catalogEntries, categoryOf, mergeRows, extractPlaceholders,
-  placeholdersIntact, type MergedRow,
+  TR_CATEGORIES, catalogEntries, categoryOf, mergeRows, stripPlaceholders,
+  reinsertPlaceholders, type MergedRow,
 } from "../trCatalog";
 import { Modal, SingleSelect } from "./common";
 import { QuoteBoxed } from "./HelpUs";
@@ -30,16 +30,10 @@ function currentWording(locale: string, key: string, overrides: Record<string, s
   return overrides[key] ?? (i18n.getResource(locale, "translation", key) as string | undefined) ?? "";
 }
 
-/** English source with {{placeholders}} highlighted as chips. */
+/** English source with {{placeholders}} stripped — members never see token
+ *  syntax (D44 §6); the build re-inserts the variable on save. */
 function SourceText({ text }: { text: string }) {
-  const parts = text.split(/(\{\{\w+\}\})/g);
-  return (
-    <>
-      {parts.map((p, i) =>
-        /^\{\{\w+\}\}$/.test(p) ? <span key={i} className="tr-ph">{p}</span> : <span key={i}>{p}</span>,
-      )}
-    </>
-  );
+  return <>{stripPlaceholders(text)}</>;
 }
 
 export function ImproveTranslations({ me, onClose }: { me: Me; onClose: () => void }) {
@@ -150,9 +144,8 @@ export function ImproveTranslations({ me, onClose }: { me: Me; onClose: () => vo
         </>
       ) : allDone ? (
         <div className="tr-done">
-          {/* D43: heart-hands line-art. Lucide HeartHandshake stands in until
-              Claude Design supplies the final house SVG — flagged in the report. */}
-          <span className="hh-ic"><HeartHandshake size={54} strokeWidth={1.4} /></span>
+          {/* D43: official prayer-hands artwork (transparent alpha; theme-inverts in dark). */}
+          <img className="hh-img" src="/assets/prayer-hands-alpha.png" alt="" />
           <h3>{t("trc.doneTitle")}</h3>
           <p>{t("trc.doneBody")}</p>
           <QuoteBoxed
@@ -246,22 +239,24 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [draft, setDraft] = useState(mineText ?? "");
+  const en = row.primary.en;
+  const key = row.primary.key;
+  // Members type/see only the brace-free text; the source token is re-inserted
+  // on save (D44 §6). So the editable draft is the STRIPPED form of their save.
+  const savedVisible = stripPlaceholders(mineText ?? "");
+  const [draft, setDraft] = useState(savedVisible);
   const [editing, setEditing] = useState(false);
   const [simOpen, setSimOpen] = useState(false);
 
-  const en = row.primary.en;
-  const key = row.primary.key;
   const current = currentWording(locale, key, overrides);
   const saved = mineText !== undefined;
-  const phOk = !draft.trim() || placeholdersIntact(en, draft);
-  const placeholders = extractPlaceholders(en);
 
   const save = useMutation({
     mutationFn: () =>
       api.put("/api/translations/mine", {
         locale,
-        entries: row.keys.map((k) => ({ key: k, text: draft.trim() })),
+        // Re-insert the English token at its source slot so interpolation works.
+        entries: row.keys.map((k) => ({ key: k, text: reinsertPlaceholders(en, draft) })),
       }),
     onSuccess: () => {
       setEditing(false);
@@ -270,7 +265,7 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
   });
 
   const showInput = !saved || editing;
-  const dirty = draft.trim().length > 0 && draft.trim() !== (mineText ?? "");
+  const dirty = draft.trim().length > 0 && draft.trim() !== savedVisible;
 
   const cls = ["tr-row", !saved ? "untranslated" : "", saved && !editing ? "saved" : "", save.isError ? "error" : "", simOpen ? "simopen" : ""]
     .filter(Boolean).join(" ");
@@ -300,7 +295,7 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
       </div>
       <div className="tr-cur">
         <div className="tr-lbl">{t("trc.current")}</div>
-        <div className={`tr-val${current ? "" : " none"}`}>{current || "—"}</div>
+        <div className={`tr-val${current ? "" : " none"}`}>{stripPlaceholders(current) || "—"}</div>
       </div>
       {save.isError ? (
         <div className="tr-err">
@@ -313,35 +308,29 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
         <div className="tr-inwrap">
           <div className="tr-field">
             <div className="tr-lbl">{t("trc.yoursIn", { lang: localeLabel })}</div>
-            <div className="tr-inputrow">
-              {showInput ? (
-                <>
-                  <textarea className="tr-in" rows={1} placeholder={t("trc.inputPh")} value={draft}
-                    onChange={(e) => setDraft(e.target.value)} />
-                  <button type="button" className="btn-primary tr-save"
-                    disabled={!dirty || !phOk || save.isPending}
-                    onClick={() => save.mutate()}>
-                    <Check size={14} /> {saved ? t("trc.update") : t("common.save")}
+            {showInput ? (
+              <div className="tr-inputrow">
+                <textarea className="tr-in" rows={1} placeholder={t("trc.inputPh")} value={draft}
+                  onChange={(e) => setDraft(e.target.value)} />
+                <button type="button" className="btn-primary tr-save"
+                  disabled={!dirty || save.isPending}
+                  onClick={() => save.mutate()}>
+                  <Check size={14} /> {saved ? t("trc.update") : t("common.save")}
+                </button>
+              </div>
+            ) : (
+              /* D48: a saved row locks in — static text + Saved ✓ + Edit. */
+              <div className="tr-minewrap">
+                <span className="tr-mine">{savedVisible}</span>
+                <span className="tr-savedwrap">
+                  <span className="tr-saved"><Check size={15} /> {t("trc.saved")}</span>
+                  <button type="button" className="btn-ghost tr-edit" onClick={() => { setDraft(savedVisible); setEditing(true); }}>
+                    <Pencil size={14} /> {t("common.edit")}
                   </button>
-                </>
-              ) : (
-                <>
-                  <textarea className="tr-in" rows={1} value={mineText} readOnly />
-                  <span className="tr-savedwrap">
-                    <span className="tr-saved"><Check size={15} /> {t("trc.saved")}</span>
-                    <button type="button" className="btn-ghost tr-edit" onClick={() => { setDraft(mineText ?? ""); setEditing(true); }}>
-                      <Pencil size={14} /> {t("common.edit")}
-                    </button>
-                  </span>
-                </>
-              )}
-            </div>
-            {editing && saved && <div className="tr-prev">{t("trc.prevSaved", { text: mineText })}</div>}
-            {!phOk && (
-              <div className="tr-pherr">
-                <TriangleAlert size={14} /> {t("trc.phError", { token: placeholders.map((p) => `{{${p}}}`).join(", ") })}
+                </span>
               </div>
             )}
+            {editing && saved && <div className="tr-prev">{t("trc.prevSaved", { text: savedVisible })}</div>}
           </div>
         </div>
       )}

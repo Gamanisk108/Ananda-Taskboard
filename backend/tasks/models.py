@@ -213,6 +213,11 @@ class CalendarEvent(models.Model):
     organization = models.ForeignKey(
         "accounts.Organization", null=True, blank=True, on_delete=models.CASCADE, related_name="events"
     )
+    # Personal scope (D47): null = org-wide (admin-set, locked for members);
+    # set = a member's personal event, visible only on that member's own board.
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name="personal_events"
+    )
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.SINGLE)
     date = models.DateField()                 # single/yearly date, range start, or series anchor
     end_date = models.DateField(null=True, blank=True)   # range end (incl) or repeat "until"
@@ -231,6 +236,25 @@ class CalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.kind} @ {self.date})"
+
+
+class PersonalHoliday(models.Model):
+    """A member's own holiday (D47): a yearly-recurring named day (month/day),
+    visible only on that member's board. Distinct from the org-wide holiday SETS."""
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="personal_holidays"
+    )
+    name = models.CharField(max_length=120)
+    month = models.PositiveSmallIntegerField()  # 1-12
+    day = models.PositiveSmallIntegerField()    # 1-31
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["month", "day"]
+
+    def __str__(self):
+        return f"{self.name} ({self.month:02d}-{self.day:02d})"
 
 
 class HistoryDay(models.Model):

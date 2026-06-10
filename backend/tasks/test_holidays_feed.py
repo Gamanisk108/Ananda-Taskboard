@@ -95,11 +95,13 @@ from tasks.holidays_feed import (
 )
 
 
-def test_default_sets_are_the_five_ananda_sets():
+def test_default_sets_are_the_ananda_sets_plus_italy():
+    # D47: Italian holidays added (Ananda Assisi), ordered before the lineage days.
     assert DEFAULT_SETS == [
         "us_federal", "us_observances", "christian",
-        "hindu_festivals", "ananda_lineage",
+        "hindu_festivals", "italy", "ananda_lineage",
     ]
+    assert "italy" in AVAILABLE_SETS
 
 
 def test_range_filters_to_window_and_tags_set():

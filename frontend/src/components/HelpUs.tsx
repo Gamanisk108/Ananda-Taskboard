@@ -6,7 +6,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Heart, Languages, TriangleAlert, Sparkles, Share2, ChevronRight, Send,
+  Heart, Languages, TriangleAlert, Sparkles, Share2, Send,
   Paperclip, X, Copy, Mail, MessageCircle, Check, Info, Link2,
 } from "lucide-react";
 import { api } from "../api/client";
@@ -57,7 +57,9 @@ export function HelpUsPane({ onOpen }: { onOpen: (flow: HelpUsFlow) => void }) {
     },
     { flow: "report", icon: <TriangleAlert size={21} />, title: t("helpus.repTitle"), blurb: t("helpus.repBlurb"), cta: t("helpus.repCta") },
     { flow: "suggest", icon: <Sparkles size={21} />, title: t("helpus.sugTitle"), blurb: t("helpus.sugBlurb"), cta: t("helpus.sugCta") },
-    { flow: "spread", icon: <Share2 size={21} />, title: t("helpus.spreadTitle"), blurb: t("helpus.spreadBlurb"), cta: t("helpus.spreadCta") },
+    // D48: "Spread the word" is deferred post-MVP — its card is hidden from the
+    // hub (the flow builder + dialog stay in code for the v2 revival). The hub
+    // ships three asks: Translate · Report · Suggest.
   ];
   return (
     <>
@@ -78,7 +80,7 @@ export function HelpUsPane({ onOpen }: { onOpen: (flow: HelpUsFlow) => void }) {
             </div>
             <div className="hu-cta">
               <button type="button" className="btn-primary" onClick={() => onOpen(c.flow)}>
-                {c.cta} <ChevronRight size={14} />
+                {c.cta}
               </button>
             </div>
           </div>

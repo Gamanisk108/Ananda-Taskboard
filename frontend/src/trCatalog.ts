@@ -104,3 +104,44 @@ export function placeholdersIntact(enText: string, suggestion: string): boolean 
   if (need.length !== have.length) return false;
   return need.every((p, i) => p === have[i]);
 }
+
+/** D44 §6 — placeholders are INVISIBLE to members. Strip every {{token}} (and
+ *  the surrounding space) so "Assigned to {{name}}" reads "Assigned to". Members
+ *  translate only the visible text; the build re-inserts the variable. */
+export function stripPlaceholders(text: string): string {
+  return text.replace(/\s*\{\{[^}]+\}\}\s*/g, " ").replace(/\s{2,}/g, " ").trim();
+}
+
+/** Re-insert the English source's {{placeholders}} into a member's brace-free
+ *  translation, at their source position. Single leading/trailing tokens are
+ *  placed exactly; a mid-string or multi-token case can't preserve order in this
+ *  v1 (flagged) — we append the tokens so interpolation never breaks. */
+export function reinsertPlaceholders(enText: string, visibleTranslation: string): string {
+  const tokens = [...enText.matchAll(/\{\{[^}]+\}\}/g)].map((m) => m[0]);
+  const v = visibleTranslation.trim();
+  if (tokens.length === 0) return v;
+  if (tokens.length === 1) {
+    const ph = tokens[0];
+    const idx = enText.indexOf(ph);
+    const before = enText.slice(0, idx).trim();
+    const after = enText.slice(idx + ph.length).trim();
+    if (!before && after) return `${ph} ${v}`.trim();          // leading token
+    if (before && !after) return `${v} ${ph}`.trim();          // trailing token
+    if (!before && !after) return ph;                          // token-only string
+    return `${v} ${ph}`.trim();                                // mid-string fallback (flagged)
+  }
+  return `${v} ${tokens.join(" ")}`.trim();                    // multi-token fallback (flagged)
+}
+
+/** Strings whose {{placeholder}} sits mid-sentence or that have 2+ tokens: their
+ *  word-order can't be expressed without showing tokens (v1 limit — see report). */
+export function placeholderPositionAmbiguous(enText: string): boolean {
+  const tokens = [...enText.matchAll(/\{\{[^}]+\}\}/g)].map((m) => m[0]);
+  if (tokens.length === 0) return false;
+  if (tokens.length > 1) return true;
+  const ph = tokens[0];
+  const idx = enText.indexOf(ph);
+  const before = enText.slice(0, idx).trim();
+  const after = enText.slice(idx + ph.length).trim();
+  return Boolean(before && after); // token in the middle
+}

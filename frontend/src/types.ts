@@ -51,6 +51,8 @@ export interface Me {
   language: string;
   theme: string;                 // personal UI theme ("" = follow app default)
   daily_push_enabled: boolean;   // personal opt-in to the daily push
+  deadline_reminders?: boolean;  // "due tomorrow" heads-up in the digest
+  assignment_changes?: boolean;  // real-time ping when newly assigned
   groups: { id: number; name: string }[];
   tree: Tree;
   memberships: OrgMembership[];

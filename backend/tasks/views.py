@@ -82,6 +82,32 @@ def _notify_mentioned(task, author, user_ids):
         pass
 
 
+def _notify_assigned(task, actor, new_user_ids):
+    """Push to users newly assigned to a task who opted into assignment-change
+    notifications (best-effort, never raises). The actor isn't pinged for their
+    own action."""
+    try:
+        from accounts.models import User
+        from notifications.models import PushSubscription
+        from notifications.push import send_web_push
+
+        targets = list(
+            User.objects.filter(id__in=new_user_ids, assignment_changes=True)
+            .exclude(id=actor.id)
+            .values_list("id", flat=True)
+        )
+        if not targets:
+            return
+        payload = {
+            "title": "New assignment",
+            "body": f"{actor.name or actor.email} assigned you “{task.title}”",
+        }
+        for sub in PushSubscription.objects.filter(user_id__in=targets):
+            send_web_push(sub, payload)
+    except Exception:
+        pass
+
+
 def _approval_for(user, subproject, org):
     """Decide a Member's task approval state. Admin or a trusted sub-project →
     live (approved); otherwise pending."""
@@ -173,6 +199,9 @@ class TaskViewSet(ModelViewSet):
             raise PermissionDenied("Viewers cannot create tasks.")
         approval = _approval_for(self.request.user, sp, org)
         task = serializer.save(created_by=self.request.user, approval_state=approval)
+        assigned_ids = set(task.assignees.values_list("id", flat=True))
+        if assigned_ids:
+            _notify_assigned(task, self.request.user, assigned_ids)
         emit.emit(emit.TASK_CREATED, {"task": task.id, "approval": approval})
 
     def perform_update(self, serializer):
@@ -183,7 +212,11 @@ class TaskViewSet(ModelViewSet):
         sp = self._require_visible_subproject(target_sp_id)
         if not can_act_as_member(user, sp.id, org):
             raise PermissionDenied("Viewers cannot edit tasks.")
+        before_assignees = set(instance.assignees.values_list("id", flat=True))
         task = serializer.save()
+        newly_assigned = set(task.assignees.values_list("id", flat=True)) - before_assignees
+        if newly_assigned:
+            _notify_assigned(task, user, newly_assigned)
         # A Member's content edit re-enters approval unless the sub-project is
         # trusted; Admin edits stay live.
         if not is_org_admin(user, org) and not sp.members_post_without_approval:
