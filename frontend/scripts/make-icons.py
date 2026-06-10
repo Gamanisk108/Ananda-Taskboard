@@ -1,4 +1,6 @@
 # Generates the PWA/app icons from the REAL brand mark (public/logo.png).
+# Future alternative: @vite-pwa/assets-generator (official; regenerates every
+# icon size from one source image on each build) - adopt if icon needs grow.
 # Asset-integrity rule: the mark is only ever DOWNSCALED (never upscaled);
 # the 512 maskable icon composes the native-size mark on a brand-navy canvas.
 # Run: backend/venv/Scripts/python.exe frontend/scripts/make-icons.py
