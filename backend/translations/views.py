@@ -9,6 +9,7 @@
 
 import re
 
+from django.db import transaction
 from rest_framework import status as http
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -69,10 +70,12 @@ class MySuggestionsView(APIView):
             if len(text) > MAX_TEXT:
                 return _bad(f"Suggestions are limited to {MAX_TEXT} characters.")
             cleaned.append((key, text.strip()))
-        for key, text in cleaned:
-            TranslationSuggestion.objects.update_or_create(
-                key=key, locale=locale, user=request.user, defaults={"text": text}
-            )
+        # One transaction: a fuzzy-merged row's fan-out saves all-or-nothing.
+        with transaction.atomic():
+            for key, text in cleaned:
+                TranslationSuggestion.objects.update_or_create(
+                    key=key, locale=locale, user=request.user, defaults={"text": text}
+                )
         return Response({"saved": len(cleaned)})
 
 

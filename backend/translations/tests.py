@@ -15,6 +15,7 @@ def api():
 
 def auth(api, user):
     res = api.post("/api/auth/login", {"email": user.email, "password": "pw-strong-123"}, format="json")
+    assert res.status_code == 200, f"Login failed: {res.status_code} {res.data}"
     api.credentials(HTTP_AUTHORIZATION=f"Bearer {res.data['access']}")
 
 

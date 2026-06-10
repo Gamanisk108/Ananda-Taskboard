@@ -31,10 +31,10 @@ with the app-wide mobile effort), upvoting, public submission, per-org translati
    flag). POST endpoints (IsAuthenticated) → mono ref `TB-NNNN`; email superusers
    (fail_silently); screenshot purge >90 days piggybacked on the existing
    `/api/jobs/daily-push` cron. pytest: create, ref format, size cap, purge.
-3. **Frontend foundation** — `translationOverrides.ts` (fetch per locale + i18next
+3. **Frontend foundation** — `trOverrides.ts` (fetch per locale + i18next
    `addResourceBundle`, TanStack Query, refetch on focus + after approve);
-   `i18nCategories.ts` (42 namespaces → 9 categories + vitest completeness test);
-   `placeholders.ts` ({{var}} extraction + validation + vitest).
+   `trCatalog.ts` (flatten catalog, 42 namespaces → 9 categories, fuzzy-merge,
+   {{var}} placeholder validation — all covered by `trCatalog.test.ts`).
 4. **Settings rework** (`Settings.tsx`) — left section-nav (desktop rail / top list on
    narrow), role-filtered: Account (name/email display + language) · Notifications
    (enable-push + daily-push toggle) · Task statuses (existing StatusManager, admin) ·

@@ -25,6 +25,7 @@ npx playwright install     # downloads the browser binaries
 ## Run
 ```bash
 # against the local Django build (serves committed dist + API on one origin)
+cd frontend && npm run build        # dist must be CURRENT — Django serves it
 cd backend && ./venv/Scripts/python.exe manage.py runserver 8000 --noreload
 PW_BASE_URL=http://localhost:8000 npm run test:visual
 
