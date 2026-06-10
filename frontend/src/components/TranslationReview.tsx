@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Languages, Check, ChevronRight, ChevronDown, Inbox, TriangleAlert, Pencil } from "lucide-react";
 import i18n, { LANGUAGES } from "../i18n";
 import { api } from "../api/client";
-import { catalogEntries, placeholdersIntact, stripPlaceholders, reinsertPlaceholders } from "../trCatalog";
+import { catalogEntries, placeholdersIntact, blankPlaceholders, restorePlaceholders } from "../trCatalog";
 import { Modal, SingleSelect, Spinner } from "./common";
 import { useConfirm } from "./confirm";
 
@@ -49,7 +49,7 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
   const approve = useMutation({
     mutationFn: (v: { key: string; text: string }) =>
       api.post("/api/translations/approve", { locale, key: v.key, text: v.text }),
-    onSuccess: (_d, v) => { setJustApproved({ key: v.key, text: stripPlaceholders(v.text) }); refresh(); },
+    onSuccess: (_d, v) => { setJustApproved({ key: v.key, text: blankPlaceholders(v.text) }); refresh(); },
   });
   const clear = useMutation({
     mutationFn: (key: string) => api.del("/api/translations/override", { locale, key }),
@@ -69,8 +69,8 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
         <>
           <p style={{ margin: 0 }}>{t("trv.confirmBody", { lang: localeLabel })}</p>
           <div className="cf-quote">
-            <span className="lang">{localeLabel} · “{stripPlaceholders(en)}”</span>
-            {stripPlaceholders(text)}
+            <span className="lang">{localeLabel} · “{blankPlaceholders(en)}”</span>
+            {blankPlaceholders(text)}
           </div>
           {phBroken && (
             <p style={{ color: "var(--danger)", fontSize: 12.5, display: "flex", alignItems: "center", gap: 6 }}>
@@ -85,7 +85,7 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
 
   async function onClear(poll: Poll) {
     const ok = await confirm({
-      body: t("trv.clearConfirm", { key: stripPlaceholders(enByKey.get(poll.key) ?? poll.key) }),
+      body: t("trv.clearConfirm", { key: blankPlaceholders(enByKey.get(poll.key) ?? poll.key) }),
       danger: true,
       confirmLabel: t("trv.clear"),
     });
@@ -154,17 +154,21 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
       <div className="poll-top">
         <div className="pt-tx">
           <div className="poll-key">key · {poll.key}</div>
-          <div className="poll-en">{stripPlaceholders(en)}</div>
-          <div className="poll-live-now">
-            {poll.live ? (
-              <>
-                <span className="chip-live"><Check size={12} /> {t("trv.live")}</span>
-                <span className="lv-txt">{stripPlaceholders(poll.live)}</span>
-              </>
-            ) : (
-              <span className="lv-none">{t("trv.noLive")}</span>
-            )}
-          </div>
+          <div className="poll-en">{blankPlaceholders(en)}</div>
+          {/* Show the live-wording line only when it ISN'T already a green bar
+              below (avoids the duplicate "LIVE Salva" + green-Salva redundancy). */}
+          {!hasLive && (
+            <div className="poll-live-now">
+              {poll.live ? (
+                <>
+                  <span className="chip-live"><Check size={12} /> {t("trv.live")}</span>
+                  <span className="lv-txt">{blankPlaceholders(poll.live)}</span>
+                </>
+              ) : (
+                <span className="lv-none">{t("trv.noLive")}</span>
+              )}
+            </div>
+          )}
         </div>
         <div className="pt-n">
           <b>{poll.total}</b>{poll.total === 1 ? t("trv.reply1") : t("trv.replyN")}
@@ -184,7 +188,8 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
               title={live ? undefined : phBroken ? t("trv.phWarn") : t("trv.makeLive")}>
               <span className="pb-txt">
                 <span className="tick"><Check size={14} /></span>
-                {stripPlaceholders(v.text)}
+                {blankPlaceholders(v.text)}
+                {live && <span className="pb-flag livechip">{t("trv.live")}</span>}
                 {matchesCurrent && <span className="pb-flag match">{t("trv.matchesCurrent")}</span>}
                 {phBroken && <span className="pb-flag bad"><TriangleAlert size={11} /> {t("trv.phBad")}</span>}
               </span>
@@ -214,7 +219,7 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
             <textarea className="tr-in" rows={1} placeholder={t("trv.ownPh")} value={own}
               onChange={(e) => setOwn(e.target.value)} />
             <button type="button" className="btn-primary" disabled={!own.trim()}
-              onClick={() => { onApprove(poll.key, reinsertPlaceholders(en, own)); setOwn(""); setOwnOpen(false); }}>
+              onClick={() => { onApprove(poll.key, restorePlaceholders(en, own)); setOwn(""); setOwnOpen(false); }}>
               <Check size={14} /> {t("trv.makeLive")}
             </button>
           </div>
@@ -238,11 +243,11 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
         <div className="poll-detail">
           {poll.variants.map((v, i) => (
             <div key={i}>
-              <div className="grp-h">{stripPlaceholders(v.text)} · {v.count}</div>
+              <div className="grp-h">{blankPlaceholders(v.text)} · {v.count}</div>
               {v.users.map((name, j) => (
                 <div key={j} className="sub-row">
                   <span className="who" title={name}>{name}</span>
-                  <span className={`said${poll.live !== null && v.text === poll.live ? " win" : ""}`}>{stripPlaceholders(v.text)}</span>
+                  <span className={`said${poll.live !== null && v.text === poll.live ? " win" : ""}`}>{blankPlaceholders(v.text)}</span>
                 </div>
               ))}
             </div>

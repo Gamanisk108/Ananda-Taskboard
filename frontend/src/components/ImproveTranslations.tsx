@@ -14,8 +14,8 @@ import i18n, { LANGUAGES, resolveLanguage } from "../i18n";
 import { api } from "../api/client";
 import { applyOverrides } from "../trOverrides";
 import {
-  TR_CATEGORIES, catalogEntries, categoryOf, mergeRows, stripPlaceholders,
-  reinsertPlaceholders, type MergedRow,
+  TR_CATEGORIES, catalogEntries, categoryOf, mergeRows, blankPlaceholders,
+  restorePlaceholders, type MergedRow,
 } from "../trCatalog";
 import { Modal, SingleSelect } from "./common";
 import { QuoteBoxed } from "./HelpUs";
@@ -30,10 +30,10 @@ function currentWording(locale: string, key: string, overrides: Record<string, s
   return overrides[key] ?? (i18n.getResource(locale, "translation", key) as string | undefined) ?? "";
 }
 
-/** English source with {{placeholders}} stripped — members never see token
- *  syntax (D44 §6); the build re-inserts the variable on save. */
+/** English source with each {{placeholder}} shown as a "___" blank — members see
+ *  where the variable goes, never the token syntax (D44 §6). */
 function SourceText({ text }: { text: string }) {
-  return <>{stripPlaceholders(text)}</>;
+  return <>{blankPlaceholders(text)}</>;
 }
 
 export function ImproveTranslations({ me, onClose }: { me: Me; onClose: () => void }) {
@@ -243,7 +243,7 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
   const key = row.primary.key;
   // Members type/see only the brace-free text; the source token is re-inserted
   // on save (D44 §6). So the editable draft is the STRIPPED form of their save.
-  const savedVisible = stripPlaceholders(mineText ?? "");
+  const savedVisible = blankPlaceholders(mineText ?? "");
   const [draft, setDraft] = useState(savedVisible);
   const [editing, setEditing] = useState(false);
   const [simOpen, setSimOpen] = useState(false);
@@ -256,7 +256,7 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
       api.put("/api/translations/mine", {
         locale,
         // Re-insert the English token at its source slot so interpolation works.
-        entries: row.keys.map((k) => ({ key: k, text: reinsertPlaceholders(en, draft) })),
+        entries: row.keys.map((k) => ({ key: k, text: restorePlaceholders(en, draft) })),
       }),
     onSuccess: () => {
       setEditing(false);
@@ -295,7 +295,7 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
       </div>
       <div className="tr-cur">
         <div className="tr-lbl">{t("trc.current")}</div>
-        <div className={`tr-val${current ? "" : " none"}`}>{stripPlaceholders(current) || "—"}</div>
+        <div className={`tr-val${current ? "" : " none"}`}>{blankPlaceholders(current) || "—"}</div>
       </div>
       {save.isError ? (
         <div className="tr-err">
