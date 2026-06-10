@@ -43,7 +43,7 @@ export function RestorePoints({ onClose, onChanged }: { onClose: () => void; onC
   }
 
   return (
-    <Modal icon={<RotateCcw />} title={t("modals.restore")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<RotateCcw />} title={t("modals.restore")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("restore.intro")}</p>
       <div className="bulkbar">
         <button className="btn-primary" onClick={save} disabled={busy}>{t("restore.saveNow")}</button>

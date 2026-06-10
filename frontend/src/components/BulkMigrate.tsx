@@ -70,7 +70,7 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
   const [assignee, setAssignee] = useState(0);
 
   return (
-    <Modal icon={<ArrowLeftRight />} title={t("bulk.title")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<ArrowLeftRight />} title={t("bulk.title")} onClose={onClose} wide>
       <div className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("bulk.intro")}</div>
 
       <div className="filters" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0" }}>

@@ -5,7 +5,7 @@ import {
   useClick, useDismiss, useRole, useInteractions, FloatingPortal,
 } from "@floating-ui/react";
 import { useTranslation } from "react-i18next";
-import { X, Link2, Plus, Check } from "lucide-react";
+import { X, Link2, Plus, Check, ChevronLeft } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
@@ -432,6 +432,7 @@ export function Modal({
   wide,
   icon,
   footer,
+  fullScreenOnNarrow,
 }: {
   title: ReactNode;
   onClose: () => void;
@@ -442,8 +443,14 @@ export function Modal({
   /** Optional action bar pinned to the modal bottom (sticky; never scrolls out).
    *  When provided, only `children` scroll. Reuse for any long modal. */
   footer?: ReactNode;
+  /** Phones: render as a full-screen route-like view (design `.fs-head`: back
+   *  chevron + title) instead of a floating card. Opt-in — small dialogs
+   *  (confirm) stay centered cards. */
+  fullScreenOnNarrow?: boolean;
 }) {
   const { t } = useTranslation();
+  const narrow = useIsNarrow();
+  const fs = !!fullScreenOnNarrow && narrow;
   // Escape closes the modal (app-wide expectation). Backdrop click closes too
   // (onClick below); the inner card stops propagation so clicks inside don't.
   useEffect(() => {
@@ -453,26 +460,66 @@ export function Modal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
+  // Full-screen views participate in history: the hardware/browser Back closes
+  // the view instead of leaving the app (native-feel expectation).
+  // StrictMode-safe: push once per open (ref guard) and DEFER the unmount
+  // history.back() so the dev double-mount can cancel it — a synchronous back()
+  // in cleanup closed the modal the instant it opened.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+  const pushedRef = useRef(false);
+  const backTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!fs) return;
+    if (backTimer.current) { clearTimeout(backTimer.current); backTimer.current = null; }
+    if (!pushedRef.current) {
+      window.history.pushState({ atFsModal: true }, "");
+      pushedRef.current = true;
+    }
+    const onPop = () => { pushedRef.current = false; onCloseRef.current(); };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // Closed via UI (not Back): consume the entry we pushed — deferred so a
+      // StrictMode remount can cancel it.
+      backTimer.current = setTimeout(() => {
+        if (pushedRef.current && window.history.state?.atFsModal) {
+          pushedRef.current = false;
+          window.history.back();
+        }
+      }, 60);
+    };
+  }, [fs]);
   // Portaled to <body> (same as BottomSheet/Drawer): position:fixed on the
   // backdrop is trapped by any transformed ancestor (e.g. a `.rise`-animated
   // container keeps an identity transform), which shrank the backdrop to the
   // ancestor's box and visually clipped the modal (the Unscheduled-tasks bug).
   return createPortal(
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop${fs ? " fs" : ""}`} onClick={onClose}>
       <div
-        className="card modal sheet rise"
-        style={{ maxWidth: wide ? 760 : 520 }}
+        className={`card modal sheet rise${fs ? " fs" : ""}`}
+        style={fs ? undefined : { maxWidth: wide ? 760 : 520 }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="modal-head">
-          <h2 style={{ fontSize: 18 }}>
-            {icon && <span className="sh-icn">{icon}</span>}
-            {title}
-          </h2>
-          <button className="btn-ghost icon-btn" onClick={onClose} aria-label={t("common.close")}><X size={14} /></button>
-        </div>
+        {fs ? (
+          <div className="fs-head">
+            <button className="ic" onClick={onClose} aria-label={t("common.back", "Back")}><ChevronLeft /></button>
+            <h2>
+              {icon && <span className="sh-icn">{icon}</span>}
+              {title}
+            </h2>
+          </div>
+        ) : (
+          <div className="modal-head">
+            <h2 style={{ fontSize: 18 }}>
+              {icon && <span className="sh-icn">{icon}</span>}
+              {title}
+            </h2>
+            <button className="btn-ghost icon-btn" onClick={onClose} aria-label={t("common.close")}><X size={14} /></button>
+          </div>
+        )}
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot modal-foot-sticky">{footer}</div>}
       </div>

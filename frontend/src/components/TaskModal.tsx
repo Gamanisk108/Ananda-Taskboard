@@ -408,7 +408,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       </>
     );
     return (
-      <Modal title={crumb} onClose={onClose} wide>
+      <Modal fullScreenOnNarrow title={crumb} onClose={onClose} wide>
         <SubtaskDetail
           subtask={openSub}
           users={users}
@@ -424,7 +424,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal onClose={onClose} wide
+    <Modal fullScreenOnNarrow onClose={onClose} wide
       title={/* DN10: the header IS the inline-editable task title + pen + #id chip. */
         <span className="task-title-head">
           {/* Only autofocus when CREATING (so a long existing title stays blurred

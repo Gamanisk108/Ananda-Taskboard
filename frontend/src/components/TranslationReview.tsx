@@ -108,7 +108,7 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal icon={<Languages />} title={t("trv.title")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<Languages />} title={t("trv.title")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("trv.sub")}</p>
       <div className="rv-bar">
         <div className="rv-lang">

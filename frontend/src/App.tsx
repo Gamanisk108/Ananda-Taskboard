@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
-  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Globe, LogOut, Languages, MoreHorizontal, Menu } from "lucide-react";
+  Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Globe, LogOut, Languages, MoreHorizontal, Menu,
+  List as ListIcon, Columns3, CalendarRange, CalendarDays } from "lucide-react";
 import "./App.css";
 import i18n, { resolveLanguage } from "./i18n";
 import { applyOverrides } from "./trOverrides";
@@ -249,8 +250,117 @@ export default function App() {
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const hasNewHelp = whatsNew(helpSeen, me.is_admin).length > 0;
 
+  // Admin/superuser nav, shared by the desktop inline buttons and the mobile
+  // nav drawer. (D15: Trash + Help live in the account menu / drawer.)
+  const navItems = [
+    me.is_superuser && { icon: <Globe />, label: t("platform.nav"), onClick: () => setShowPlatform(true), testId: undefined as string | undefined },
+    // D38: Translation review lives beside Platform overview (superadmin-only).
+    me.is_superuser && { icon: <Languages />, label: t("trv.nav"), onClick: () => setShowTrReview(true), testId: "open-tr-review" },
+    me.is_admin && { icon: <CircleCheck />, label: t("nav.approvals"), onClick: () => setShowApprovals(true), testId: undefined, badge: approvalsCount || undefined },
+    me.is_admin && { icon: <UsersIcon />, label: t("nav.team"), onClick: () => setShowTeam(true), testId: "open-team" },
+    me.is_admin && { icon: <LayoutGrid />, label: t("nav.projects"), onClick: () => setShowManage(true), testId: undefined },
+  ].filter(Boolean) as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; badge?: number }[];
+  // Account actions, shared by the desktop UserMenu and the mobile drawer.
+  const accountItems = [
+    { icon: <CircleHelp size={15} />, label: t("help.open"), onClick: () => setShowHelp(true), testId: "open-help", dot: hasNewHelp },
+    { icon: <SettingsIcon size={15} />, label: t("menu.settings"), onClick: () => setShowSettings(true), testId: "open-settings", dot: helpUsUnseen() },
+    ...(me.is_admin ? [
+      { icon: <HistoryIcon size={15} />, label: t("menu.history"), onClick: () => setShowHistory(true) },
+      { icon: <RotateCcw size={15} />, label: t("menu.restorePoints"), onClick: () => setShowRestore(true) },
+    ] : []),
+    { icon: <ArrowLeftRight size={15} />, label: t("menu.bulkMigrate"), onClick: () => setShowBulk(true) },
+    { icon: <BookOpen size={15} />, label: showArchived ? t("view.hideArchive") : t("view.archive"), onClick: () => { setView("list"); setShowArchived((a) => !a); }, testId: "toggle-archive" },
+    { icon: <Trash2 size={15} />, label: t("nav.trash"), onClick: () => setShowTrash(true) },
+  ] as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; dot?: boolean }[];
+
+  // View-scoped actions (Share/Copy/Export/Import) — inline on desktop, behind
+  // the appbar kebab on phones.
+  const viewActions = (
+    <>
+      <ShareViewButton />
+      <button className="btn-secondary" onClick={() => setShowSummary(true)}><Copy /><span className="lbl">{t("view.copySummary")}</span></button>
+      <ExportDialog me={me} />
+      {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
+    </>
+  );
+
   return (
     <div className="app">
+      {narrow ? (
+        /* Mobile shell (design .appbar): one 54px bar — hamburger · brand · + · avatar.
+           The drawer carries admin nav + account actions + the .duser footer. */
+        <header className="appbar">
+          <button className="ic" data-testid="nav-drawer-btn" aria-label={t("nav.menu", "Menu")}
+            aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}><Menu /></button>
+          <div className="title">
+            <img className="mark" src="/logo.png" alt="" />
+            <span className="brandcol">
+              <span className="nm">Ananda <b>Taskboard</b></span>
+              <span className="tagline">Love &amp; Blessings from Ananda Los Angeles</span>
+            </span>
+          </div>
+          {canCreate && (
+            <button className="ic primary" data-testid="new-task" aria-label={t("nav.newTask")}
+              onClick={() => setEditing("new")}><Plus /></button>
+          )}
+          {/* Kebab = the view actions (Share/Copy/Export/Import), design .ic.kebab. */}
+          <div className="view-overflow">
+            <button type="button" className="ic" data-testid="view-overflow"
+              aria-label={t("common.more", "More")} aria-expanded={actionsOpen}
+              onClick={() => setActionsOpen((o) => !o)}><MoreHorizontal /></button>
+            {actionsOpen && (
+              <>
+                <div className="vo-scrim" onClick={() => setActionsOpen(false)} />
+                {/* Don't unmount on item click — ExportDialog/ImportDialog hold
+                    their modal in their own state. The scrim dismisses. */}
+                <div className="vo-pop">{viewActions}</div>
+              </>
+            )}
+          </div>
+          {drawerOpen && (
+            <Drawer onClose={() => setDrawerOpen(false)}>
+              <div className="dhead"><img src="/logo.png" alt="" /><span className="nm">Ananda <b>Taskboard</b></span></div>
+              {me.memberships && me.memberships.length > 1 && (
+                <div style={{ padding: "10px 14px 2px" }}>
+                  <SingleSelect width="100%" value={me.active_org != null ? String(me.active_org) : ""}
+                    onChange={(v) => { setDrawerOpen(false); switchOrg(Number(v)); }}
+                    options={me.memberships.map((o) => ({ value: String(o.org_id), label: o.name }))} />
+                </div>
+              )}
+              <nav className="dnav">
+                {navItems.map((it, i) => (
+                  <button key={i} data-testid={it.testId} onClick={() => { setDrawerOpen(false); it.onClick(); }}>
+                    {it.icon}<span>{it.label}</span>
+                    {it.badge != null && <span className="nav-badge">{it.badge}</span>}
+                  </button>
+                ))}
+                {navItems.length > 0 && <div className="dsep" />}
+                {accountItems.map((it, i) => (
+                  <button key={`a${i}`} data-testid={it.testId} onClick={() => { setDrawerOpen(false); it.onClick(); }}>
+                    {it.icon}<span>{it.label}</span>
+                    {it.dot && <span className="dnav-dot" aria-hidden />}
+                  </button>
+                ))}
+                <div className="dsep" />
+                <button onClick={() => { setDrawerOpen(false); logout(); }}>
+                  <LogOut size={15} /><span>{t("menu.logout")}</span>
+                </button>
+              </nav>
+              {/* .duser footer (design): avatar · name/email · theme toggle */}
+              <div className="duser">
+                <span className="av">{initials(me.name || me.email)}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div className="nm">{me.name || me.email}</div>
+                  <div className="em">{me.email}</div>
+                </div>
+                <button className="theme" title={t("menu.theme")} onClick={() => changeTheme(isDark ? "light" : "dark")}>
+                  {isDark ? <Sun /> : <Moon />}
+                </button>
+              </div>
+            </Drawer>
+          )}
+        </header>
+      ) : (
       <header className="topbar">
         <div className="brand">
           <img src="/logo.png" alt="Ananda" />
@@ -269,46 +379,12 @@ export default function App() {
               onChange={(v) => switchOrg(Number(v))}
               options={me.memberships.map((o) => ({ value: String(o.org_id), label: o.name }))} />
           )}
-          {(() => {
-            // Admin/superuser nav, shared by the desktop inline buttons and the
-            // mobile nav drawer. (D15: Trash + Help live in the account menu.)
-            const navItems = [
-              me.is_superuser && { icon: <Globe />, label: t("platform.nav"), onClick: () => setShowPlatform(true), testId: undefined as string | undefined },
-              // D38: Translation review lives beside Platform overview (superadmin-only).
-              me.is_superuser && { icon: <Languages />, label: t("trv.nav"), onClick: () => setShowTrReview(true), testId: "open-tr-review" },
-              me.is_admin && { icon: <CircleCheck />, label: t("nav.approvals"), onClick: () => setShowApprovals(true), testId: undefined, badge: approvalsCount || undefined },
-              me.is_admin && { icon: <UsersIcon />, label: t("nav.team"), onClick: () => setShowTeam(true), testId: "open-team" },
-              me.is_admin && { icon: <LayoutGrid />, label: t("nav.projects"), onClick: () => setShowManage(true), testId: undefined },
-            ].filter(Boolean) as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; badge?: number }[];
-            if (navItems.length === 0) return null;
-            // Phones: one hamburger → nav drawer; desktop: inline ghost buttons.
-            return narrow ? (
-              <>
-                <button className="btn-ghost btn-hamburger" data-testid="nav-drawer-btn" aria-label={t("nav.menu", "Menu")}
-                  aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}><Menu /></button>
-                {drawerOpen && (
-                  <Drawer onClose={() => setDrawerOpen(false)}>
-                    <div className="dhead"><img src="/logo.png" alt="" /><span className="nm">Ananda <b>Taskboard</b></span></div>
-                    <nav className="dnav">
-                      {navItems.map((it, i) => (
-                        <button key={i} data-testid={it.testId} onClick={() => { setDrawerOpen(false); it.onClick(); }}>
-                          {it.icon}<span>{it.label}</span>
-                          {it.badge != null && <span className="nav-badge">{it.badge}</span>}
-                        </button>
-                      ))}
-                    </nav>
-                  </Drawer>
-                )}
-              </>
-            ) : (
-              navItems.map((it, i) => (
-                <button key={i} className="btn-ghost" data-testid={it.testId} onClick={it.onClick} title={it.label}>
-                  {it.icon}<span className="lbl">{it.label}</span>
-                  {it.badge != null && <span className="nav-badge">{it.badge}</span>}
-                </button>
-              ))
-            );
-          })()}
+          {navItems.map((it, i) => (
+            <button key={i} className="btn-ghost" data-testid={it.testId} onClick={it.onClick} title={it.label}>
+              {it.icon}<span className="lbl">{it.label}</span>
+              {it.badge != null && <span className="nav-badge">{it.badge}</span>}
+            </button>
+          ))}
           <span className="sep" />
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
@@ -329,6 +405,7 @@ export default function App() {
           />
         </div>
       </header>
+      )}
 
       <div className="tabrail">
         <nav className="tabs">
@@ -369,37 +446,9 @@ export default function App() {
             </button>
           ))}
         </div>
-        {(() => {
-          const actions = (
-            <>
-              <ShareViewButton />
-              <button className="btn-secondary" onClick={() => setShowSummary(true)}><Copy /><span className="lbl">{t("view.copySummary")}</span></button>
-              <ExportDialog me={me} />
-              {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
-            </>
-          );
-          // On phones the action buttons overflow the one-line viewbar → collapse
-          // them into a ⋯ overflow menu (the buttons stack vertically inside).
-          return narrow ? (
-            <div className="right view-overflow">
-              <button type="button" className="btn-secondary icon-only" data-testid="view-overflow"
-                aria-label={t("common.more", "More")} aria-expanded={actionsOpen}
-                onClick={() => setActionsOpen((o) => !o)}><MoreHorizontal /></button>
-              {actionsOpen && (
-                <>
-                  <div className="vo-scrim" onClick={() => setActionsOpen(false)} />
-                  {/* Don't close (unmount) the menu on an item click: ExportDialog /
-                      ImportDialog keep their modal in their OWN state, so unmounting
-                      them here would destroy the modal before it shows. The scrim
-                      dismisses the menu; their modals open over it. */}
-                  <div className="vo-pop">{actions}</div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="right">{actions}</div>
-          );
-        })()}
+        {/* Desktop: inline action buttons. On phones they live behind the
+            appbar kebab, and the whole viewbar row is hidden (CSS). */}
+        {!narrow && <div className="right">{viewActions}</div>}
       </div>
 
       <main className="content">
@@ -418,6 +467,19 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Mobile bottom tab bar (design .tabbar): the four views, line-art icons.
+          Replaces the .seg switcher on phones (hidden via CSS). */}
+      {narrow && (
+        <nav className="tabbar" aria-label={t("nav.views", "Views")}>
+          {([["list", <ListIcon key="i" />], ["board", <Columns3 key="i" />], ["weekly", <CalendarRange key="i" />], ["monthly", <CalendarDays key="i" />]] as [ViewMode, React.ReactNode][]).map(([v, icon]) => (
+            <button key={v} type="button" className={`tb${view === v ? " on" : ""}`}
+              aria-current={view === v ? "page" : undefined} onClick={() => setView(v)}>
+              {icon}<span className="lab">{t(`view.${v}`)}</span>
+            </button>
+          ))}
+        </nav>
+      )}
 
       {editing && (
         <TaskModal

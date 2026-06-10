@@ -113,7 +113,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   return (
-    <Modal icon={<LayoutGrid />} title={t("modals.projects")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<LayoutGrid />} title={t("modals.projects")} onClose={onClose} wide>
       <div className="field" style={{ display: "flex", gap: 8 }}>
         <input placeholder={t("mp.newProjectPh")} value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} />
         <button className="btn-primary" onClick={addProject} disabled={busy}>{t("mp.addProject")}</button>

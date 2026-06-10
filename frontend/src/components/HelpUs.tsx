@@ -172,14 +172,14 @@ export function ReportProblemDialog({ onClose }: { onClose: () => void }) {
 
   if (sentRef) {
     return (
-      <Modal icon={<TriangleAlert />} title={t("helpus.repTitle")} onClose={onClose}
+      <Modal fullScreenOnNarrow icon={<TriangleAlert />} title={t("helpus.repTitle")} onClose={onClose}
         footer={<button type="button" className="btn-primary" onClick={onClose}>{t("common.done", "Done")}</button>}>
         <SuccessPanel title={t("fb.repDoneTitle")} body={t("fb.repDoneBody")} refNo={sentRef} />
       </Modal>
     );
   }
   return (
-    <Modal icon={<TriangleAlert />} title={t("helpus.repTitle")} onClose={onClose}
+    <Modal fullScreenOnNarrow icon={<TriangleAlert />} title={t("helpus.repTitle")} onClose={onClose}
       footer={
         <>
           <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
@@ -255,14 +255,14 @@ export function SuggestFeatureDialog({ onClose }: { onClose: () => void }) {
 
   if (sent) {
     return (
-      <Modal icon={<Sparkles />} title={t("helpus.sugTitle")} onClose={onClose}
+      <Modal fullScreenOnNarrow icon={<Sparkles />} title={t("helpus.sugTitle")} onClose={onClose}
         footer={<button type="button" className="btn-primary" onClick={onClose}>{t("common.done", "Done")}</button>}>
         <SuccessPanel title={t("fb.sugDoneTitle")} body={t("fb.sugDoneBody")} />
       </Modal>
     );
   }
   return (
-    <Modal icon={<Sparkles />} title={t("helpus.sugTitle")} onClose={onClose}
+    <Modal fullScreenOnNarrow icon={<Sparkles />} title={t("helpus.sugTitle")} onClose={onClose}
       footer={
         <>
           <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
@@ -313,7 +313,7 @@ export function SpreadWordDialog({ onClose }: { onClose: () => void }) {
   const smsHref = `sms:?body=${encodeURIComponent(t("fb.spMailBody", { url: signupUrl }))}`;
 
   return (
-    <Modal icon={<Share2 />} title={t("helpus.spreadTitle")} onClose={onClose}
+    <Modal fullScreenOnNarrow icon={<Share2 />} title={t("helpus.spreadTitle")} onClose={onClose}
       footer={<button type="button" className="btn-secondary" onClick={onClose}>{t("common.close")}</button>}>
       <div className="flow-intro"><Share2 size={22} /><p>{t("fb.spIntro")}</p></div>
       <div className="field">

@@ -53,7 +53,7 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
   const empty = data && !data.projects.length && !data.subprojects.length && !data.tasks.length;
 
   return (
-    <Modal icon={<Trash2 />} title={t("modals.trash")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<Trash2 />} title={t("modals.trash")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("trash.intro")}</p>
       {!data ? <Spinner /> : empty ? (
         <div className="empty"><Trash2 size={16} aria-hidden style={{ verticalAlign: "-3px", marginRight: 6, opacity: 0.6 }} />{t("empty.trash")}</div>

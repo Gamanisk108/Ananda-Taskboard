@@ -55,7 +55,7 @@ export function Approvals({
   }
 
   return (
-    <Modal icon={<CircleCheck />} title={tr("modals.approvals")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<CircleCheck />} title={tr("modals.approvals")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{tr("approvals.intro")}</p>
       {!pending ? (
         <Spinner />

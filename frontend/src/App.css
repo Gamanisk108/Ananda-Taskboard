@@ -579,6 +579,78 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .btn-filters .fcount { font-family: var(--f-mono); font-size: 11px; background: var(--dome); color: #fff;
   border-radius: var(--r-pill); padding: 0 6px; line-height: 17px; }
 /* ── Left nav drawer (mobile design) ─────────────────────────────────────── */
+/* ── Full-screen modal variant on phones (design task-detail/.fs-head) ───── */
+.modal-backdrop.fs { padding: 0; align-items: stretch; }
+.modal.fs { max-width: none !important; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; }
+.fs-head { flex: none; display: flex; align-items: center; gap: 4px; height: 54px; padding: 0 10px 0 4px; border-bottom: 1px solid var(--border); }
+.fs-head .ic { width: 42px; height: 42px; border-radius: var(--r-ctl); display: grid; place-items: center; color: var(--text); background: none; border: none; cursor: pointer; flex: none; }
+.fs-head .ic:active { background: var(--sunk); }
+.fs-head .ic svg { width: 22px; height: 22px; }
+.fs-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.modal.fs .modal-foot-sticky { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+/* ── Mobile app bar (design .appbar): one 54px bar on phones ─────────────── */
+.appbar {
+  display: flex; align-items: center; gap: 6px; height: 54px; padding: 0 8px 0 4px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 60;
+}
+.appbar .ic {
+  width: 40px; height: 40px; border-radius: var(--r-ctl); display: grid; place-items: center;
+  color: var(--text); flex: none; background: none; border: none; cursor: pointer;
+}
+.appbar .ic:active { background: var(--sunk); }
+.appbar .ic svg { width: 22px; height: 22px; }
+.appbar .ic.primary { background: var(--primary); color: var(--primary-ink); }
+.appbar .mark { width: 30px; height: 30px; flex: none; object-fit: contain; }
+.appbar .title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; overflow: hidden; }
+.appbar .brandcol { display: flex; flex-direction: column; min-width: 0; justify-content: center; }
+.appbar .brandcol .nm {
+  font-family: var(--f-display); font-weight: 600; font-size: 18px; letter-spacing: -.015em;
+  color: var(--text); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.appbar .brandcol .nm b { color: var(--primary); font-weight: 600; }
+html[data-theme="dark"] .appbar .brandcol .nm b { color: var(--azure); }
+.appbar .tagline {
+  font-family: var(--f-display); font-style: italic; font-size: 9px; color: var(--gold-deep);
+  line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.appbar-av {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: var(--primary-ink);
+  display: grid; place-items: center; font-family: var(--f-mono); font-weight: 600; font-size: 11.5px;
+}
+
+/* ── Mobile bottom tab bar (design .tabbar) ──────────────────────────────── */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  display: flex; background: var(--surface); border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tabbar .tb {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0 5px; color: var(--muted); background: none; border: none; cursor: pointer;
+}
+.tabbar .tb svg { width: 23px; height: 23px; }
+.tabbar .tb .lab { font-size: 10.5px; font-weight: 600; letter-spacing: .01em; }
+.tabbar .tb.on { color: var(--primary); }
+html[data-theme="dark"] .tabbar .tb.on { color: var(--azure); }
+
+/* ── Drawer extras: separators, dots, .duser footer (design) ─────────────── */
+.dnav .dsep { height: 1px; background: var(--border); margin: 8px 10px; }
+.dnav-dot { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--new, #6d4aff); flex: none; }
+.duser { display: flex; align-items: center; gap: 11px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+.duser .av {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: var(--primary-ink);
+  display: grid; place-items: center; font-family: var(--f-mono); font-weight: 600; font-size: 13px; flex: none;
+}
+.duser .nm { font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duser .em { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duser .theme {
+  margin-left: auto; width: 38px; height: 38px; border-radius: var(--r-ctl); background: var(--sunk);
+  display: grid; place-items: center; color: var(--text); border: none; cursor: pointer; flex: none;
+}
+.duser .theme svg { width: 19px; height: 19px; }
+
 .drawer-backdrop { position: fixed; inset: 0; z-index: 130; background: rgba(13, 21, 38, .45); display: flex; }
 .drawer-panel { width: 82%; max-width: 310px; height: 100%; background: var(--surface); box-shadow: var(--shadow-2);
   display: flex; flex-direction: column; border-right: 1px solid var(--border); animation: drawer-in .2s ease-out; }
@@ -615,7 +687,7 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 
 /* Mobile task cards (.tcard) — replace the dense table on phones (design mobile List). */
 .tcards { display: flex; flex-direction: column; gap: 8px; }
-.tcard { display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left;
+.tcard { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; text-align: left;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
   padding: 12px; cursor: pointer; }
 .tcard.overdue { background: var(--overdue-bg); border-color: color-mix(in srgb, var(--danger) 30%, var(--border)); }
@@ -787,8 +859,13 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
 /* Phones (≤700px, where the viewbar actions collapse to a ⋯ menu): keep the
    view switcher + ⋯ on one row instead of the stacked column used at 700–760px. */
 @media (max-width: 700px) {
-  .viewbar { flex-direction: row; align-items: center; }
+  .viewbar { flex-direction: row; align-items: center; justify-content: flex-end; }
   .viewbar > div { flex-wrap: nowrap; }
+  /* The bottom .tabbar replaces the segmented switcher, and the view actions
+     live behind the appbar kebab — the whole viewbar row goes away on phones. */
+  .viewbar { display: none; }
+  /* Keep content clear of the fixed bottom tab bar. */
+  .content { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
   /* Project picker: a single horizontal-scroll chip rail instead of ~3 wrapped
      rows, reclaiming vertical space on phones. */
   .tabs { flex-wrap: nowrap; max-height: none; overflow-y: hidden; overflow-x: auto;
