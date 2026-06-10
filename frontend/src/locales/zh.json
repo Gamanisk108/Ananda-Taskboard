@@ -444,7 +444,12 @@
     "scopeTeamHoliday": "团队节日",
     "scopePersonalHoliday": "个人节日",
     "teamHolidays": "团队节日",
-    "noTeamHolidays": "暂无团队节日。"
+    "noTeamHolidays": "暂无团队节日。",
+    "deleteAccount": "删除账户",
+    "deleteAccountSub": "这将永久删除您的账户、登录信息和个人数据。团队仍需要的任务和评论将保留，但不再显示您的名字。此操作无法撤销。",
+    "deleteConfirmPw": "输入密码以确认",
+    "deleteAccountCta": "删除我的账户",
+    "deleteError": "无法删除账户。"
   },
   "mp": {
     "newProjectPh": "新项目名称…",
@@ -872,5 +877,9 @@
     "none": "暂无文件。",
     "drop": "将文件拖到此处，或点击浏览",
     "full": "最多 {{n}} 个文件。"
+  },
+  "legal": {
+    "privacy": "隐私政策",
+    "terms": "服务条款"
   }
 }

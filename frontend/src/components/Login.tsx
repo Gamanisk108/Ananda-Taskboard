@@ -83,6 +83,12 @@ export function Login() {
             {t("signup.cta")}
           </button>
         </div>
+        {/* Hosted legal pages (also linked from store listings). */}
+        <div className="legal-links">
+          <a href="/privacy">{t("legal.privacy", "Privacy Policy")}</a>
+          <span aria-hidden>·</span>
+          <a href="/terms">{t("legal.terms", "Terms of Service")}</a>
+        </div>
       </form>
     </div>
   );

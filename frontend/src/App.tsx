@@ -11,6 +11,7 @@ import { api } from "./api/client";
 import { useAuth } from "./state/auth";
 import { Login } from "./components/Login";
 import { ResetPassword } from "./components/ResetPassword";
+import { Privacy, Terms } from "./components/Legal";
 import { VerifyEmail } from "./components/VerifyEmail";
 import { AcceptInvite } from "./components/AcceptInvite";
 import { PlatformStats } from "./components/PlatformStats";
@@ -227,6 +228,10 @@ export default function App() {
     window.history.replaceState(null, "", `?${q.toString()}`);
   }, [effectiveTop, effectiveSub, view, me?.id]);
 
+  // Hosted legal pages (/privacy, /terms) — pre-auth; the backend SPA fallback
+  // serves index.html for any path, so these are real linkable URLs.
+  if (window.location.pathname === "/privacy") return <Privacy />;
+  if (window.location.pathname === "/terms") return <Terms />;
   // Password-reset deep-link from the email (?reset&uid=…&token=…) — shown
   // standalone, before the auth gate, since the user is logged out here.
   if (new URLSearchParams(window.location.search).has("reset")) return <ResetPassword />;

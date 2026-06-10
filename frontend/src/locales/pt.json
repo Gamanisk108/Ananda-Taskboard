@@ -444,7 +444,12 @@
     "scopeTeamHoliday": "Feriado da equipa",
     "scopePersonalHoliday": "Feriado pessoal",
     "teamHolidays": "Feriados da equipa",
-    "noTeamHolidays": "Ainda não há feriados da equipa."
+    "noTeamHolidays": "Ainda não há feriados da equipa.",
+    "deleteAccount": "Eliminar conta",
+    "deleteAccountSub": "Isto remove permanentemente a sua conta, o acesso e os dados pessoais. As tarefas e comentários de que a equipa ainda precisa permanecem, sem o seu nome. Isto não pode ser desfeito.",
+    "deleteConfirmPw": "Introduza a sua palavra-passe para confirmar",
+    "deleteAccountCta": "Eliminar a minha conta",
+    "deleteError": "Não foi possível eliminar a conta."
   },
   "mp": {
     "newProjectPh": "Nome do novo projeto…",
@@ -872,5 +877,9 @@
     "none": "Ainda não há ficheiros.",
     "drop": "Arraste ficheiros aqui ou clique para procurar",
     "full": "Até {{n}} ficheiros."
+  },
+  "legal": {
+    "privacy": "Política de privacidade",
+    "terms": "Termos de serviço"
   }
 }

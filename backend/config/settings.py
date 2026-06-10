@@ -234,3 +234,17 @@ ATTACH_MAX_PER_TARGET = int(env("ATTACH_MAX_PER_TARGET", "5"))
 ATTACH_MAX_IMAGE = int(env("ATTACH_MAX_IMAGE_BYTES", str(2 * 1024 * 1024)))   # 2 MB
 ATTACH_MAX_DOC = int(env("ATTACH_MAX_DOC_BYTES", str(5 * 1024 * 1024)))       # 5 MB
 ATTACH_MAX_VIDEO = int(env("ATTACH_MAX_VIDEO_BYTES", str(25 * 1024 * 1024)))  # 25 MB
+
+# --- Error monitoring (Sentry; dormant until SENTRY_DSN is set) --------------
+# Phase-12 observability: production failures should surface without a manual
+# log audit. Free-tier friendly: low traces sample, no PII.
+SENTRY_DSN = env("SENTRY_DSN", "")
+if SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=float(env("SENTRY_TRACES_RATE", "0.05")),
+        send_default_pii=False,
+        environment=env("SENTRY_ENV", "production"),
+    )

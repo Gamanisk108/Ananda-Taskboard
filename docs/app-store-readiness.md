@@ -13,10 +13,10 @@ but several **store-mandatory features are missing** regardless of wrapper:
 | Mandatory item | Apple | Google | Present today? |
 |---|---|---|---|
 | Native wrapper (Capacitor) | ✅ required | ✅ required | ❌ Not added |
-| Self-serve account deletion (in-app) | ✅ required | ✅ required | ❌ Missing |
+| Self-serve account deletion (in-app) | ✅ required | ✅ required | ✅ Done 2026-06-10 (Settings → Account → Delete account; POST /api/me/delete) |
 | Account-deletion **web URL** | — | ✅ required | ❌ Missing |
-| Privacy Policy (in-app + URL) | ✅ required | ✅ required | ❌ Missing |
-| Terms of Service | recommended | recommended | ❌ Missing |
+| Privacy Policy (in-app + URL) | ✅ required | ✅ required | ✅ Done 2026-06-10 (/privacy, linked from Login + Settings) |
+| Terms of Service | recommended | recommended | ✅ Done 2026-06-10 (/terms) |
 | Demo account / guest access for review | ✅ required | ⚠️ recommended | ❌ Missing |
 | Native push (APNs/FCM, not web-push) | ✅ if push | ✅ if push | ⚠️ Web-push only |
 | App Privacy / Data Safety disclosure | ✅ required | ✅ required | ❌ Not prepared |
@@ -135,7 +135,7 @@ donation path. **Blocks everything downstream — start now.**
 ### Phase 1 — Store-mandatory features _(Claude can build, no Mac needed)_
 1. Self-serve **account deletion** — backend endpoint + confirm-modal UI + Play web URL page.
 2. **Privacy Policy + Terms** — draft content + in-app screens + hosted pages.
-3. **Demo/guest mode** — seeded read-only demo account (extend `seed_demo.py`) + a "View demo"
+3. **Demo/guest mode** — ✅ backend done 2026-06-10: `manage.py create_demo_account` (idempotent, viewer-grants on every project; demo@ananda.test). Optional "View demo"
    button on the login screen.
 4. Polish offline/empty/error states.
 
