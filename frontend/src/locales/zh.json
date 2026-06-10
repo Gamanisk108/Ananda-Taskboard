@@ -776,7 +776,8 @@
     "allSuggested": "每条短语都有你的建议",
     "badgeTitle": "还有 {{n}} 条短语没有你的建议",
     "remove": "移除",
-    "removeHint": "撤回您对该短语的建议"
+    "removeHint": "撤回您对该短语的建议",
+    "removeConfirm": "撤回您的建议“{{text}}”？"
   },
   "trv": {
     "nav": "翻译",

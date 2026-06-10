@@ -776,7 +776,8 @@
     "allSuggested": "Chaque phrase a votre proposition",
     "badgeTitle": "{{n}} phrases encore sans votre proposition",
     "remove": "Retirer",
-    "removeHint": "Retirer votre suggestion pour cette phrase"
+    "removeHint": "Retirer votre suggestion pour cette phrase",
+    "removeConfirm": "Retirer votre suggestion « {{text}} » ?"
   },
   "trv": {
     "nav": "Traductions",

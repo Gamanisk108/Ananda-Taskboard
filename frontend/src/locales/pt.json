@@ -776,7 +776,8 @@
     "allSuggested": "Todas as frases têm a sua sugestão",
     "badgeTitle": "{{n}} frases ainda sem a sua sugestão",
     "remove": "Remover",
-    "removeHint": "Retirar a sua sugestão para esta frase"
+    "removeHint": "Retirar a sua sugestão para esta frase",
+    "removeConfirm": "Retirar a sua sugestão «{{text}}»?"
   },
   "trv": {
     "nav": "Traduções",
