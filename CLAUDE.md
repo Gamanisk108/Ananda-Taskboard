@@ -82,8 +82,9 @@ Weekly/Monthly treatments. Also open: DN3 Holidays→Settings, DN5 Archive→
 account menu, DN4 filter scoping, DN12 assignee picker (E3), proj-pills on
 Trash/Copy rows, i18n for renamed keys. Ops: confirm Render email (password
 reset via Resend), purge test orgs (`delete_org --purge-unverified`).
-**Help Us / Community Translations (D36–D43): FUNCTIONAL v1 BUILT 2026-06-09**
-(committed, not yet pushed/deployed) — backend `translations` + `feedback`
+**Help Us / Community Translations (D36–D43): FUNCTIONAL v1 LIVE 2026-06-09**
+(deployed to Render, smoke-tested: health/login/overrides/review/feedback
+validation all green) — backend `translations` + `feedback`
 apps, runtime override resolution, member-visible Settings section-nav,
 contributor + superadmin-poll + the three flows. Rulings + open design asks
 live in `design/Claude Design/Ananda Taskboard Help Us Handoff/
