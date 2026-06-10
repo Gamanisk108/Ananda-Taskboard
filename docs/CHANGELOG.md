@@ -2,6 +2,31 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [Shipped 2026-06-10] — Help Us v2 fidelity + Settings, Events/Holidays, media uploads
+Built from `design/Claude Design/handoff6-9-2026` (D44–D48) + Gordon's rulings;
+deployed to Render across PRs #2–#6 (each browser-QA'd light+dark, then verified live).
+- **Settings = popup modal, role-filtered panes:** Account (read-only email as text
+  D45, Light/Dark theme segmented D48, in-pane change-password sub-view + new
+  `POST /api/auth/password/change`), Notifications (daily-digest / deadline-reminder
+  / assignment-change toggles over free PWA push), Task statuses (drag-reorder,
+  circle swatch, "Task Complete" pill, 5 statuses), Events & Holidays.
+- **Events & Holidays (D47):** renamed + tabbed; per-member **personal vs org-wide**
+  scope for both events and holidays (admins add team-wide or personal, members
+  manage their own; `CalendarEvent.owner` + `PersonalHoliday` model). New
+  **Italian holidays** set (default on). Segmented controls gained an outline.
+- **Help Us hub:** 3 cards (Spread the word deferred, D48), one-word verbs,
+  full-width centered CTAs. Contributor: invisible `{{placeholders}}` shown as a
+  `___` blank (re-inserted on save), saved-row lock-in, 555 personal-coverage,
+  prayer-hands all-done (D43). Review poll: matches-current flag, free-text
+  override, top-5 collapse, softened confirm, de-duplicated live row.
+- **Media attachments (Cloudflare R2):** images/docs/short-video on tasks,
+  subtasks, and bug reports — list + drag/click upload popup; client-side image
+  compression; presigned direct-to-R2 upload; private bucket served via signed
+  links; ≤5/item; report media 90-day purge. **Dormant until R2 env+CORS set —
+  see `docs/r2-media-setup.md`.**
+- **i18n:** all new keys across 13 locales (European/zh authored; Indic
+  best-effort, flagged for native review). boto3 added.
+
 ## [Unreleased] — "Help Us" + Community Translations (functional v1, 2026-06-09)
 Built per `design/Claude Design/Ananda Taskboard Help Us Handoff/` + the code
 audit rulings in its `CODE-AUDIT-FEEDBACK.md` (§12). Visual fidelity pass
