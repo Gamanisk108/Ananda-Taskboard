@@ -102,6 +102,69 @@ test.describe("Dialogs", () => {
   }
 });
 
+// Help Us / Community Translations surfaces (D36–D43, built 2026-06-09).
+// NOTE: these baselines capture the FUNCTIONAL v1 — regenerate deliberately
+// when Claude Design's revised handoff lands and the fidelity pass is built.
+test.describe("Help Us", () => {
+  async function openHelpUs(page: Page) {
+    await login(page);
+    await gotoView(page, "list"); // settle the board behind the dialog (anti-flake)
+    await page.locator(".usermenu-btn").click();
+    await page.locator('[data-testid="open-settings"]').click();
+    await page.locator('[data-testid="settings-nav-helpus"]').click();
+    await page.locator(".hu-stack").waitFor({ timeout: 8000 });
+  }
+
+  test("settings → help us hub", async ({ page }) => {
+    await openHelpUs(page);
+    await expect(page).toHaveScreenshot("settings-helpus.png", { fullPage: true });
+  });
+
+  test("settings → help us hub (dark)", async ({ page }) => {
+    // Theme toggles by the logo, BEHIND the modal backdrop — switch first.
+    await login(page);
+    await setTheme(page, "dark");
+    await gotoView(page, "list"); // settle the board behind the dialog (anti-flake)
+    await page.locator(".usermenu-btn").click();
+    await page.locator('[data-testid="open-settings"]').click();
+    await page.locator('[data-testid="settings-nav-helpus"]').click();
+    await page.locator(".hu-stack").waitFor({ timeout: 8000 });
+    await expect(page).toHaveScreenshot("settings-helpus-dark.png", { fullPage: true });
+  });
+
+  test("improve translations dialog", async ({ page }) => {
+    await openHelpUs(page);
+    await page.getByRole("button", { name: /start translating/i }).click();
+    await page.locator(".tr-row").first().waitFor({ timeout: 10000 });
+    await page.waitForLoadState("networkidle").catch(() => {});
+    await expect(page).toHaveScreenshot("dialog-translate.png", { fullPage: true });
+  });
+
+  test("report a problem dialog", async ({ page }) => {
+    await openHelpUs(page);
+    await page.getByRole("button", { name: /^report/i }).click();
+    await page.locator(".an-seg").waitFor({ timeout: 8000 });
+    await expect(page).toHaveScreenshot("dialog-report.png", { fullPage: true });
+  });
+
+  test("spread the word dialog", async ({ page }) => {
+    await openHelpUs(page);
+    await page.getByRole("button", { name: /invite/i }).first().click();
+    await page.locator(".an-copyrow").waitFor({ timeout: 8000 });
+    await expect(page).toHaveScreenshot("dialog-spread.png", { fullPage: true });
+  });
+
+  test("translation review (superadmin)", async ({ page, viewport }) => {
+    test.skip(!viewport || viewport.width < 900, "topbar nav is desktop-scoped");
+    await login(page);
+    await gotoView(page, "list"); // settle the board behind the dialog (anti-flake)
+    await page.locator('[data-testid="open-tr-review"]').click();
+    await page.locator(".rv-bar").waitFor({ timeout: 8000 });
+    await page.waitForLoadState("networkidle").catch(() => {});
+    await expect(page).toHaveScreenshot("dialog-tr-review.png", { fullPage: true });
+  });
+});
+
 // Functional (not screenshot): the Floating-UI-positioned SingleSelect popover
 // opens, portals out of any clipping ancestor, and is shifted to stay fully in
 // the viewport. Desktop-scoped (the list filters are inline there; on phones

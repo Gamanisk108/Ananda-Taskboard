@@ -24,13 +24,19 @@ export default defineConfig({
   testDir: "./tests/visual",
   testMatch: "**/*.visual.ts",
   snapshotDir: "./tests/visual/__snapshots__",
-  fullyParallel: true,
+  // SERIAL on purpose: dark-mode tests persist theme=dark server-side on the
+  // shared test user; parallel workers then screenshot light surfaces dark.
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   expect: {
-    // small tolerance for AA/font rendering; tighten if flaky-free
-    toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: "disabled" },
+    // ABSOLUTE pixel budget, deliberately tight. The original ratio tolerance
+    // (1% = ~13k px on desktop) silently passed small-but-glaring defects - the
+    // off-center Sign-in label moved only ~2k px and counted as "no change".
+    // 250px absorbs AA/font noise; any real layout shift blows past it.
+    toHaveScreenshot: { maxDiffPixels: 250, animations: "disabled" },
   },
   use: {
     baseURL: BASE_URL,

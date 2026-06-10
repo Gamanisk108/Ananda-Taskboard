@@ -687,7 +687,9 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
   .modal-body { padding: 14px; }
   .row2 { grid-template-columns: 1fr; }
   .modal-foot { flex-wrap: wrap; }
-  .modal-foot button { flex: 1 1 auto; }
+  /* Stretched buttons must center their label (base button packs flex-start —
+     the off-center Sign-in class of bug, caught by the §2a geometry sweep). */
+  .modal-foot button { flex: 1 1 auto; justify-content: center; }
 
   /* Wide tables scroll sideways instead of squishing */
   .tbl { display: block; overflow-x: auto; white-space: nowrap; }
