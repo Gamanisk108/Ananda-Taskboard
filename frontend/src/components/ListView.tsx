@@ -76,7 +76,25 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   // filter option lists (MultiSelect uses string values)
   const narrow = useIsNarrow();
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const projectOpts = me.tree.projects;
+  // DN4: Project/Sub-project filters are scope-dependent — Global Overview gets
+  // both; a project tab gets only Sub-project (scoped to that project); a
+  // sub-project tab gets neither. The component instance persists across tab
+  // switches, so stale scope filters are cleared when the scope changes.
+  const isGlobal = !projectId && !subprojectId;
+  // Reset-on-scope-change via the React "adjust state during render" pattern
+  // (not an effect): the instance persists across tab switches, so a stale
+  // Global-Overview project filter would silently filter a project tab.
+  const scope = `${projectId ?? ""}|${subprojectId ?? ""}`;
+  const [prevScope, setPrevScope] = useState(scope);
+  if (scope !== prevScope) {
+    setPrevScope(scope);
+    setFProjects([]);
+    setFSubs([]);
+  }
+  const projectOpts = useMemo(
+    () => (projectId ? me.tree.projects.filter((p) => p.id === projectId) : me.tree.projects),
+    [me.tree.projects, projectId],
+  );
   const subSource = fProjects.length
     ? projectOpts.filter((p) => fProjects.includes(p.id)).flatMap((p) => p.subprojects)
     : projectOpts.flatMap((p) => p.subprojects);
@@ -144,8 +162,9 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   // The seven filter controls, shared by the desktop bar and the mobile sheet
   // (rendered bare inline on desktop, label-stacked inside the sheet on phones).
   const filterControls: { label: string; node: React.ReactNode }[] = [
-    { label: tr("list.colProject"), node: <MultiSelect placeholder={tr("list.allProjects")} options={projectOptions} selected={fProjects.map(String)} onChange={(v) => { setFProjects(v.map(Number)); setFSubs([]); }} /> },
-    { label: tr("list.colSubproject"), node: <MultiSelect placeholder={tr("list.allSubprojects")} options={subOptions} selected={fSubs.map(String)} onChange={(v) => setFSubs(v.map(Number))} /> },
+    // DN4: Project filter only on Global Overview; Sub-project also on project tabs.
+    ...(isGlobal ? [{ label: tr("list.colProject"), node: <MultiSelect placeholder={tr("list.allProjects")} options={projectOptions} selected={fProjects.map(String)} onChange={(v: string[]) => { setFProjects(v.map(Number)); setFSubs([]); }} /> }] : []),
+    ...(!subprojectId ? [{ label: tr("list.colSubproject"), node: <MultiSelect placeholder={tr("list.allSubprojects")} options={subOptions} selected={fSubs.map(String)} onChange={(v: string[]) => setFSubs(v.map(Number))} /> }] : []),
     { label: tr("list.colAssignees"), node: <MultiSelect testId="filter-assignee" placeholder={tr("list.anyAssignee")} options={assigneeOptions} selected={assigneeSel} onChange={setAssigneeSel} /> },
     { label: tr("task.priority"), node: <MultiSelect testId="filter-priority" placeholder={tr("list.anyPriority")} options={priorityOptions} selected={fPriorities.map(String)} onChange={(v) => setFPriorities(v.map(Number))} /> },
     { label: tr("task.status"), node: <MultiSelect placeholder={tr("list.anyStatus")} options={statusOptions} selected={fStatuses} onChange={setFStatuses} /> },

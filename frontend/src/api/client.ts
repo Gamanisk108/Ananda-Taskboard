@@ -73,6 +73,10 @@ export class ApiError extends Error {
 }
 
 async function raw(method: string, path: string, body?: unknown, retry = true): Promise<Response> {
+  // After a reload the access token (memory-only) is gone while the refresh
+  // token persists — refresh BEFORE the call instead of letting it 401 first
+  // (the 401 round-trip logged a red console error on every boot).
+  if (!accessToken && getRefresh() && retry) await refreshAccess();
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;

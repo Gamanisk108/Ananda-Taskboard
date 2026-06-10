@@ -263,6 +263,15 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
       queryClient.invalidateQueries({ queryKey: ["tr-mine", locale] });
     },
   });
+  // Retract: deletes the caller's own suggestion across the row's fan-out keys.
+  const remove = useMutation({
+    mutationFn: () => api.del("/api/translations/mine", { locale, keys: row.keys }),
+    onSuccess: () => {
+      setEditing(false);
+      setDraft("");
+      queryClient.invalidateQueries({ queryKey: ["tr-mine", locale] });
+    },
+  });
 
   const showInput = !saved || editing;
   const dirty = draft.trim().length > 0 && draft.trim() !== savedVisible;
@@ -319,13 +328,18 @@ function Row({ row, locale, localeLabel, mineText, overrides, showCat }: {
                 </button>
               </div>
             ) : (
-              /* D48: a saved row locks in — static text + Saved ✓ + Edit. */
+              /* D48: a saved row locks in — static text + Saved ✓ + Edit + Remove. */
               <div className="tr-minewrap">
                 <span className="tr-mine">{savedVisible}</span>
                 <span className="tr-savedwrap">
                   <span className="tr-saved"><Check size={15} /> {t("trc.saved")}</span>
                   <button type="button" className="btn-ghost tr-edit" onClick={() => { setDraft(savedVisible); setEditing(true); }}>
                     <Pencil size={14} /> {t("common.edit")}
+                  </button>
+                  <button type="button" className="btn-ghost tr-edit" disabled={remove.isPending}
+                    title={t("trc.removeHint", "Withdraw your suggestion for this phrase")}
+                    onClick={() => remove.mutate()}>
+                    <X size={14} /> {t("trc.remove", "Remove")}
                   </button>
                 </span>
               </div>
