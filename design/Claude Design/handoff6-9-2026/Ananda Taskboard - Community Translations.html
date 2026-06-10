@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Community Translations · Help Us · Poll review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Sans+Tamil:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Gujarati:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="ananda-translations.css?v=32" rel="stylesheet" />
+<link href="tr-feature.css?v=32" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  /* CJK + Indic fall back to Noto families so translated strings render crisply in both themes */
+  .atheme,.phone{font-family:"Instrument Sans","Noto Sans SC","Noto Sans Devanagari","Noto Sans Bengali","Noto Sans Tamil","Noto Sans Telugu","Noto Sans Gujarati",system-ui,sans-serif}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .seg{display:inline-flex;background:#efe5cc;border-radius:999px;padding:3px;gap:2px}
+  #toolbar .seg button{border:none;border-radius:999px;padding:5px 14px;background:transparent;color:#5a6172;
+    font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  #toolbar .seg button.on{background:#fffdf8;color:#23262b;box-shadow:0 1px 2px rgba(30,58,110,.12)}
+  #toolbar .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:900px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Community Translations</span></div>
+  <span class="sep"></span>
+  <div class="seg" id="themeSeg">
+    <button data-mt="light" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>Light</button>
+    <button data-mt="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark</button>
+  </div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="tr-base.js?v=27"></script>
+<script src="tr-screens.js?v=27"></script>
+<script src="tr-flows.js?v=27"></script>
+<script type="text/babel" src="design-canvas.jsx?v=27"></script>
+<script type="text/babel" src="translations-canvas.jsx?v=27"></script>
+
+<script type="text/babel">
+const A = window.TR;
+Object.assign(A, window.TRF);
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      {/* ============ HELP US LANDING ============ */}
+      <DCSection id="hu-quote" title="Quote placement — locked: epigraph under the title" subtitle="Lite treatment: Fraunces italic, no logo, no color box — sits between the title and description.">
+        {Web({ id: 'q-between', label: 'Epigraph · between title & description', html: A.webHelpUs('one', 'between'), h: 720 })}
+        {Note({ id: 'q-note', label: 'Notes', title: 'Lighter quote', sub: 'Whisper, don’t occupy', items: [
+          'No <b>color box</b>, no <b>lotus logo</b> — a small warm-gold italic line + quiet gold attribution inside the header.',
+          'Reads like a subtitle/epigraph — clear hierarchy, tiny footprint; deliberately smaller and warmer than the gray description so the two never compete.',
+          'The full <b>boxed</b> quote appears <b>only</b> on celebratory full-screen moments (thank-you / all-done), never on the working hub — per D40.',
+        ], tip: 'Locked: next-to-title and below-description options were explored and eliminated (user 06-09).' })}
+      </DCSection>
+
+      <DCSection id="hu-web" title="Settings → Help Us — web" subtitle="A new ‘Help Us’ area in Settings: a stack of ‘ask’ cards. Only ‘Improve translations’ exists now; the layout reads right with 1 card and with several.">
+        {Web({ id: 'hu-one', label: 'Today — one card', html: A.webHelpUs('one'), h: 880 })}
+        {Web({ id: 'hu-multi', label: 'All four asks (admin view)', html: A.webHelpUs('multi'), h: 880 })}
+        {Web({ id: 'hu-member', label: 'Member view — role-filtered nav', html: A.webHelpUs('multi', undefined, 'member'), h: 880 })}
+        {Note({ id: 'hu-note', label: 'Notes', title: 'Help Us hub', sub: 'Settings · a container built to grow', items: [
+          'Lives inside the real <b>Settings</b> dialog. Settings gains a left <b>section nav</b> — §2 RULED: it\u2019s <b>member-visible with role-filtered sections</b>. Members see Account · Notifications · Help Us; org admins add Task statuses · Calendar &amp; holidays (D36/D44).',
+          'Each ask is a <b>card</b>: line-art icon tile · title · one-line blurb · primary CTA. Warm, invitational — not a chore.',
+          'Only <b>Improve translations</b> is live; future asks render as muted <span class="k">Coming soon</span> cards so the stack looks intentional at 1 or 4 cards.',
+          'A purple <b>What\u2019s-new dot</b> rides the Help Us nav item (and the account-menu Help row) while there are unseen ways to help.',
+        ], tip: 'Counts (languages · phrases) use Red Hat Mono, like every number in the app.' })}
+      </DCSection>
+
+      <DCSection id="hu-panes" title="Settings — Account & Notifications panes (§2 design ask)" subtitle="The two panes the section-nav needs: they absorb the account menu's language picker, theme, and notification/daily-push controls.">
+        {Web({ id: 'pane-account', label: 'Account', html: A.webSettings('account'), h: 880 })}
+        {Web({ id: 'pane-password', label: 'Change password flow', html: A.webSettings('account', undefined, 'password'), h: 880 })}
+        {Web({ id: 'pane-notif', label: 'Notifications (digest on)', html: A.webSettings('notif'), h: 880 })}
+        {Web({ id: 'pane-notif-off', label: 'Digest off — time grayed', html: A.webSettings('notif', undefined, 'digestOff'), h: 880 })}
+        {Web({ id: 'pane-statuses', label: 'Task statuses (admin)', html: A.webSettings('statuses'), h: 880 })}
+        {Web({ id: 'pane-ev-admin', label: 'Events & Holidays · Events (admin)', html: A.webSettings('calendar'), h: 1240 })}
+        {Web({ id: 'pane-hol-admin', label: 'Holidays tab (admin)', html: A.webSettings('calendar', undefined, 'holidays'), h: 1240 })}
+        {Web({ id: 'pane-ev-member', label: 'Member view — team items locked', html: A.webSettings('calendar', 'member'), h: 1240 })}
+        {Note({ id: 'pane-note', label: 'Notes', title: 'Account & Notifications', sub: 'Absorbed from the account menu', items: [
+          '<b>Account</b>: name · email (read-only) · <b>Language</b> (house custom select — the account-menu picker moves here) · <b>Theme</b> (Light / Dark segmented — matching the app\u2019s two themes) · <b>Change password</b> opens an in-pane sub-view (← back · current / new / confirm · right-aligned Cancel + Update group per D39).',
+          '<b>Notifications</b>: <b>Daily digest</b> toggle (default ON) + digest-time select — the time stays <b>visible but grayed</b> when the toggle is off, so members sense what it does. Deadline reminders · assignment changes.',
+          'Delivery is honest about the PWA: a plain note — <i>“Notifications arrive through the web app itself — no app store needed. On a phone, add the board to your Home Screen and allow notifications when asked.”</i>',
+          '<b>Task statuses</b> (admin-only) is the <b>canonical status manager reproduced faithfully</b> (RULE #0): drag-to-reorder rows · circle swatch · editable name · <span class="k">Task Complete</span> pill on Done · add-status row — updated to the five-status rule (Review purple, 2nd-to-last).',
+          '<b>Events &amp; Holidays</b> (renamed; member-visible per D47) splits into two in-pane tabs. <b>Events</b>: the Add card on top, list below — grouped <span class="k">Your events · only on your board</span> (always editable) and <span class="k">Team events</span> (admins edit; members see a lock). <b>Holidays</b>: members add personal holidays; the admin <b>holiday sets</b> apply org-wide — members see them read-only (D45: static rows, not disabled checkboxes). Edit/✕ = the canonical listrow ghost pair.',
+          'Both reuse the flow vocabulary verbatim: <span class="k">.field</span>, custom selects, toggles, the segmented control — D35 spacing, D39 alignment.',
+        ] })}
+      </DCSection>
+
+      <DCSection id="hu-mob" title="Settings → Help Us — mobile" subtitle="Settings is a sub-route list; Help Us is its own route with full-width cards.">
+        {Mob({ id: 'hu-list', label: 'Settings list', html: A.phoneSettingsList() })}
+        {Mob({ id: 'hu-m-one', label: 'Help Us — one card', html: A.phoneHelpUs('one') })}
+        {Mob({ id: 'hu-m-multi', label: 'Help Us — several', html: A.phoneHelpUs('multi') })}
+        {Note({ id: 'hu-m-note', label: 'Notes', title: 'Help Us · mobile', sub: 'Full-screen routes', items: [
+          'Settings opens as a <b>full-screen route</b> of rows; the <b>Help Us</b> row carries the what\u2019s-new dot and a chevron into its own route.',
+          'Cards go <b>full-width</b>; the CTA sits comfortably under the thumb.',
+        ] })}
+      </DCSection>
+
+      {/* ============ IMPROVE TRANSLATIONS (CONTRIBUTOR) ============ */}
+      <DCSection id="ct-web" title="Improve translations — web" subtitle="§1 reframe: every phrase already has a translation — members suggest better wording. The meter is personal coverage ('You’ve suggested N of 555'); badges = phrases without your suggestion; rows you haven’t touched sort first.">
+        {Web({ id: 'ct-pop', label: 'Type & Save', html: A.webContribute('populated'), h: 1110 })}
+        {Web({ id: 'ct-saved', label: 'Saved ✓ — locked in (Edit reopens)', html: A.webContribute('saved'), h: 1110 })}
+        {Web({ id: 'ct-resave', label: 'Edit → Update', html: A.webContribute('resave'), h: 1110 })}
+        {Web({ id: 'ct-search', label: 'Search → grouped results', html: A.webContribute('search'), h: 1020 })}
+        {Web({ id: 'ct-sim', label: 'Fuzzy “+N similar” expanded', html: A.webContribute('similar'), h: 1110 })}
+        {Web({ id: 'ct-err', label: 'Save error · retry', html: A.webContribute('error'), h: 1110 })}
+        {Web({ id: 'ct-load', label: 'Loading', html: A.webContribute('loading'), h: 760 })}
+        {Web({ id: 'ct-done', label: 'All-done · thank-you', html: A.webContribute('done'), h: 760 })}
+        {Note({ id: 'ct-note', label: 'Notes', title: 'Contributor', sub: 'Improve translations · the workhorse', items: [
+          '§1 RULED — <b>personal coverage</b>: “You\u2019ve suggested <span class="k">12 of 555</span>”; category badges count phrases <b>without your suggestion</b> (green check at 100%); the celebration fires at personal 100%. The <b>Current wording</b> column always shows the live value — nothing is ever “untranslated”.',
+          '§6 FINAL — placeholders are <b>invisible to members</b>: display strips the variable entirely (“Assigned to {{name}}” shows as <span class="k">Assigned to</span>). Members translate only the visible text; <b>the app re-inserts the variable in its source-position slot</b>. No guard state needed — you can\u2019t break what you never see. (Code: token syntax + slot re-insertion live at the API layer; languages needing a different variable position are a known v1 limit.)',
+          '§5 — fuzzy-merge is <b>exact-after-normalization only</b> (trim · whitespace · trailing ellipsis): “Add link…” merges into “Add link” (+1 similar); “Add a link” stays its own row. One save fans out per covered key.',
+          '<b>Language picker</b> is the house custom popover (never a native select); it defaults to the member\u2019s UI language. <b>English is the source</b> column — never a target.',
+          '<b>9 category sections</b> (most-used first); each header shows a mono <b>untranslated count</b> badge — a green check when a section is fully done. Untranslated rows sort first.',
+          'Each row: <b>English source</b> (read-only) · <b>current</b> translation (or muted “— untranslated”) · an <b>input</b> with a per-row <b>Save</b> → <span class="k">Saved ✓</span>. A saved row stays <b>editable</b> (Saved ✓ + <b>Edit</b>); revising flips it to <b>Update</b> — change your mind anytime. No “submit all”.',
+          '<b>Fuzzy-merged</b> near-duplicates (“Add link” / “Add a link” / “Add link…”) collapse into one canonical row with a <b>+N similar</b> affordance. <b>Partial submission</b> is fine (a <span class="k">12 of 240</span> hint, no nag); save errors show inline with Retry.',
+        ], tip: 'All-done shows a warm lotus + thank-you — the one place we’d reach for an emoji, replaced by a line-art lotus per the no-emoji rule.' })}
+      </DCSection>
+
+      <DCSection id="ct-mob" title="Improve translations — mobile" subtitle="A full-screen route; each row stacks (English → current → input); the language picker is a bottom sheet; section headers stick.">
+        {Mob({ id: 'ct-m-pop', label: 'Populated (stacked rows)', html: A.phoneContribute('populated') })}
+        {Mob({ id: 'ct-m-lang', label: 'Language bottom sheet', html: A.phoneContribute('langopen') })}
+        {Mob({ id: 'ct-m-done', label: 'All-done', html: A.phoneContribute('done') })}
+        {Note({ id: 'ct-m-note', label: 'Notes', title: 'Contributor · mobile', sub: 'Stacks; ≥16px inputs', items: [
+          'The <b>search</b> field sits at the top of the route to jump to any phrase; each row <b>stacks</b>: English on top, current beneath it (muted, boxed), the input full-width below with its Save. Inputs hold ≥16px to avoid iOS zoom.',
+          'A saved row stays <b>editable</b> — Saved ✓ + Edit, so a member can revise and re-save after the fact.',
+          'The <b>language picker</b> opens as a <b>bottom sheet</b> with a check on the current language.',
+          'Section headers are <b>sticky</b> so you always know which category you\u2019re in while scrolling.',
+        ] })}
+      </DCSection>
+
+      {/* ============ HELP US FLOWS ============ */}
+      <DCSection id="fl-report" title="Report a problem — web & mobile" subtitle="Reached from the Help Us hub. Short, friendly form: what happened, where, how blocking, optional screenshot, and an opt-in for technical details. Saves to a confirmation with a reference number.">
+        {Web({ id: 'rp-form', label: 'Empty form', html: A.webReport('form'), h: 880 })}
+        {Web({ id: 'rp-filled', label: 'Filled in', html: A.webReport('filled'), h: 880 })}
+        {Web({ id: 'rp-sent', label: 'Report received', html: A.webReport('sent'), h: 720 })}
+        {Mob({ id: 'rp-m-form', label: 'Mobile form', html: A.phoneReport('filled') })}
+        {Mob({ id: 'rp-m-sent', label: 'Mobile · received', html: A.phoneReport('sent') })}
+        {Note({ id: 'rp-note', label: 'Notes', title: 'Report a problem', sub: 'Low-friction, no jargon', items: [
+          'Opens in the real <b>Settings dialog</b> (sticky footer per D30). Required field is just <b>What happened?</b> — everything else is optional, so reporting is quick.',
+          '<b>Where</b> is a house custom select (no native caret); <b>severity</b> is the segmented control; an optional <b>screenshot</b> attaches with a thumbnail + remove.',
+          'A calm <b>Include technical details</b> toggle (on by default) gathers browser + current page — explained plainly, “no personal data”.',
+          'Success is a clean confirmation with a <b>mono reference number</b> so a member can follow up; no quote here — kept matter-of-fact.',
+        ] })}
+      </DCSection>
+
+      <DCSection id="fl-feature" title="Suggest a feature — web & mobile" subtitle="A warm, idea-first form: a one-line idea, optional detail, which area it touches, and a notify-me toggle. Thank-you carries a Yogananda quote on service.">
+        {Web({ id: 'sf-form', label: 'Empty form', html: A.webFeature('form'), h: 760 })}
+        {Web({ id: 'sf-filled', label: 'Filled in', html: A.webFeature('filled'), h: 760 })}
+        {Web({ id: 'sf-sent', label: 'Idea received (quote)', html: A.webFeature('sent'), h: 760 })}
+        {Mob({ id: 'sf-m-form', label: 'Mobile form', html: A.phoneFeature('filled') })}
+        {Mob({ id: 'sf-m-sent', label: 'Mobile · received', html: A.phoneFeature('sent') })}
+        {Note({ id: 'sf-note', label: 'Notes', title: 'Suggest a feature', sub: 'Every idea is read', items: [
+          'Idea-first: the only required field is a <b>one-line idea</b>; “Tell us more” and area are optional so the barrier is tiny.',
+          'Sets the expectation honestly — <b>“We read every one”</b> — and a <b>Tell me when this ships</b> toggle closes the loop.',
+          'The thank-you carries a sparing <b>Paramhansa Yogananda</b> quote on the reach of selfless service — the kind of Ananda touch that fits a generous act.',
+        ] })}
+      </DCSection>
+
+      <DCSection id="fl-spread" title="Spread the word — DEFERRED post-MVP (hidden from hub)" subtitle="Parked: referral/email plumbing is beyond MVP scope (D48). Kept here for reference; the card is hidden from the live Help Us hub. Re-enable by restoring the card in huPane().">
+        {Web({ id: 'sp-form', label: 'Invite + share link', html: A.webSpread('form'), h: 860 })}
+        {Web({ id: 'sp-copied', label: 'Link copied ✓', html: A.webSpread('copied'), h: 860 })}
+        {Web({ id: 'sp-sent', label: 'Invitation sent (quote)', html: A.webSpread('sent'), h: 760 })}
+        {Mob({ id: 'sp-m-form', label: 'Mobile', html: A.phoneSpread('form') })}
+        {Mob({ id: 'sp-m-sent', label: 'Mobile · sent', html: A.phoneSpread('sent') })}
+        {Note({ id: 'sp-note', label: 'Notes', title: 'Spread the word', sub: 'Two ways to invite', items: [
+          'Mirrors the app\u2019s form vocabulary but the framing is <b>referral</b>: the link is the <b>self-serve signup URL</b> — the other center creates its <b>own separate board</b> (zero new backend).',
+          'The <b>copy-link row</b> is input + button flush on both edges (D39); <b>Copy → Copied ✓</b>. Share targets (copy / email / message) sit below.',
+          'The note says it plainly: <b>nothing here changes your team or who can join it</b> — the “join link an admin approves” concept is cut from v1 (§3).',
+          'Sent confirmation carries a <b>Swami Kriyananda</b> line about people pulling together — apt for growing the community.',
+        ] })}
+      </DCSection>
+
+      {/* ============ TRANSLATION REVIEW (POLL GRAPH) ============ */}
+      <DCSection id="rv-web" title="Translation review — web (the poll graph)" subtitle="Superadmin-only, beside Platform overview. Per string, a horizontal bar chart of the suggested variants (length = submitters); approve a winner that goes live instantly.">
+        {Web({ id: 'rv-list', label: 'Suggestions · poll graph', html: A.webReview('list'), h: 1080 })}
+        {Web({ id: 'rv-detail', label: 'Who suggested what (expanded)', html: A.webReview('detail'), h: 1180 })}
+        {Web({ id: 'rv-confirm', label: 'Go-live confirm', html: A.webReview('confirm'), h: 760 })}
+        {Web({ id: 'rv-approved', label: 'Just approved → now live', html: A.webReview('approved'), h: 980 })}
+        {Web({ id: 'rv-many', label: '100+ replies — top 5 + long tail', html: A.webReview('many'), h: 880 })}
+        {Web({ id: 'rv-own', label: '§10 Own wording (curator)', html: A.webReview('own'), h: 1120 })}
+        {Web({ id: 'rv-empty', label: 'No pending suggestions', html: A.webReview('empty'), h: 720 })}
+        {Web({ id: 'rv-load', label: 'Loading', html: A.webReview('loading'), h: 720 })}
+        {Note({ id: 'rv-note', label: 'Notes', title: 'The poll graph', sub: 'Superadmin · what does the crowd say', items: [
+          'Built on the app\u2019s <b>.segbar</b> vocabulary — no charting library. One <b>bar per distinct variant</b>, length = number of submitters, sorted most-popular first, the count in <b>Red Hat Mono</b> at the bar end.',
+          'A single calm <b>azure</b> fill (not status colors — these aren\u2019t statuses); the <b>leading</b> bar reads stronger; the <b>currently-live</b> variant gets a green check + tint and a <span class="k">Live</span> chip so consensus vs. what\u2019s-live is clear at a glance.',
+          '<b>Approve</b> by clicking a bar — a hover <span class="k">✓ Make live</span> affordance makes the target obvious. Because it goes live app-wide, a small <b>confirm</b> popup follows (the app\u2019s confirm rule).',
+          'Scale: with <b>100+ replies</b> the card shows the <b>top 5 wordings</b>; the long tail (singleton variants) collapses into <span class="k">Show all N wordings · M more replies</span>. Counts stay mono; bars stay relative to the leader.',
+          '§10 pulls: a <b>“Or enter your own wording…”</b> affordance lets the curator type a free-text override (the override model already supports any text). New variant flags: <span class="k">matches current</span> (muted) and <span class="k">placeholder broken</span> (danger — not approvable, §6). Confirm copy says “from now on” (§7 honesty).',
+          'An <b>expander</b> reveals individual submitters (name + exact text) only on demand. <b>Clear override</b> reverts to the bundled baseline (danger styling) — destructive, so it gets the same styled <b>confirm popup</b> as go-live (per the app\u2019s confirm rule).',
+          'Handles <b>1 / 2 / many</b> variants and near-ties; long CJK &amp; Indic variants wrap without breaking the bars (see parity).',
+        ] })}
+      </DCSection>
+
+      <DCSection id="rv-mob" title="Translation review — mobile" subtitle="Full-screen route; bars stack full-width; approve via tap; submitter detail in a bottom sheet.">
+        {Mob({ id: 'rv-m-pop', label: 'Poll graph (stacked bars)', html: A.phoneReview('list') })}
+        {Mob({ id: 'rv-m-detail', label: 'Submitters bottom sheet', html: A.phoneReview('detail') })}
+        {Mob({ id: 'rv-m-empty', label: 'No pending', html: A.phoneReview('empty') })}
+        {Note({ id: 'rv-m-note', label: 'Notes', title: 'Review · mobile', sub: 'Tap a bar to approve', items: [
+          'Each variant is a <b>full-width bar</b> (text above the track); the count stays in mono at the end, and the <b>Make live</b> affordance is always visible (no hover on touch).',
+          'Tapping <b>See who suggested what</b> opens a <b>bottom sheet</b> of submitters.',
+        ] })}
+      </DCSection>
+
+      {/* ============ PARITY: dark + CJK/Indic ============ */}
+      <DCSection id="parity" title="Light + dark · CJK + Indic scripts" subtitle="Every surface ships both themes from the same tokens, and renders 中文 + Devanagari/Tamil/… and long strings without clipping or bar overflow.">
+        {Web({ id: 'p-hu-d', label: 'Help Us · dark', html: A.webHelpUs('one'), theme: 'dark', h: 880 })}
+        {Web({ id: 'p-ct-cjk', label: 'Contributor · 中文 (long source)', html: A.webContribute('cjk'), theme: 'dark', h: 820 })}
+        {Web({ id: 'p-ct-indic', label: 'Contributor · हिन्दी', html: A.webContribute('indic'), h: 800 })}
+        {Web({ id: 'p-rv-cjk', label: 'Review · 中文 poll', html: A.webReview('cjk'), theme: 'dark', h: 980 })}
+        {Mob({ id: 'p-rv-d', label: 'Review · dark', html: A.phoneReview('list'), theme: 'dark' })}
+        {Note({ id: 'p-note', label: 'Notes', title: 'One token set, every script', sub: 'No forks', items: [
+          'Cards, the poll bars, custom selects and the celebratory empty all read from the same <b>Temple-of-Light</b> variables — dark is a token swap, not a separate design.',
+          'CJK + Indic fall back to the matching <b>Noto Sans</b> family; long English sources and long translations <b>wrap</b> (text-wrap: pretty) — bars grow in height, never overflow.',
+        ] })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<template id="__bundler_thumbnail" data-bg-color="#0f1b30">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0f1b30"/>
+    <g transform="translate(600 400)">
+      <rect x="-170" y="-150" width="340" height="300" rx="48" fill="#1e3a6e"/>
+      <g transform="translate(-120 -70)" stroke="#fbf6ea" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="20" y="60" width="150" height="26" rx="8" fill="#7fa8d9" stroke="none"/>
+        <rect x="20" y="100" width="110" height="26" rx="8" fill="#5a86c2" stroke="none"/>
+        <rect x="20" y="140" width="200" height="26" rx="8" fill="#9fb6d8" stroke="none"/>
+      </g>
+      <text x="0" y="120" font-family="Red Hat Mono, monospace" font-size="58" font-weight="700" fill="#fbf6ea" text-anchor="middle">あ文अ</text>
+    </g>
+  </svg>
+</template>
+</body>
+</html>
