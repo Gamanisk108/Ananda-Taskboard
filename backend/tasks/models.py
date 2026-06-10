@@ -239,11 +239,16 @@ class CalendarEvent(models.Model):
 
 
 class PersonalHoliday(models.Model):
-    """A member's own holiday (D47): a yearly-recurring named day (month/day),
-    visible only on that member's board. Distinct from the org-wide holiday SETS."""
+    """A custom yearly holiday (D47): a named day (month/day). Scope mirrors
+    CalendarEvent — owner set = personal (only that member's board); owner null
+    + organization set = org-wide (admin-set, on everyone's board). Distinct from
+    the predefined holiday SETS."""
 
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="personal_holidays"
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name="personal_holidays"
+    )
+    organization = models.ForeignKey(
+        "accounts.Organization", null=True, blank=True, on_delete=models.CASCADE, related_name="holidays"
     )
     name = models.CharField(max_length=120)
     month = models.PositiveSmallIntegerField()  # 1-12

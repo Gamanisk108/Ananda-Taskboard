@@ -437,7 +437,12 @@
       "hindu_festivals": "Holi, Guru Purnima, Diwali, Janmashtami…",
       "italy": "Capodanno, Liberazione, Ferragosto, Ognissanti…",
       "ananda_lineage": "Dias de Yogananda, Lahiri e Sri Yukteswar…"
-    }
+    },
+    "addHoliday": "Adicionar um feriado",
+    "scopeTeamHoliday": "Feriado da equipa",
+    "scopePersonalHoliday": "Feriado pessoal",
+    "teamHolidays": "Feriados da equipa",
+    "noTeamHolidays": "Ainda não há feriados da equipa."
   },
   "mp": {
     "newProjectPh": "Nome do novo projeto…",

@@ -61,17 +61,37 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
 
 class PersonalHolidayViewSet(viewsets.ModelViewSet):
-    """A member's own yearly holidays (D47) — always owner-scoped, fully editable
-    by the owner, invisible to everyone else."""
+    """Custom yearly holidays (D47), scoped like events: org-wide ones (owner
+    null) are admin-set and locked for members; a member freely manages their own
+    personal holidays (owner=self)."""
 
     serializer_class = PersonalHolidaySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return PersonalHoliday.objects.filter(owner=self.request.user)
+        org = _org(self.request)
+        user = self.request.user
+        base = PersonalHoliday.objects.filter(organization=org) if org is not None else PersonalHoliday.objects.all()
+        # Org-wide custom holidays (owner null) + this member's own.
+        return base.filter(Q(owner__isnull=True) | Q(owner=user))
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        org = _org(self.request)
+        if bool(self.request.data.get("personal")):
+            serializer.save(owner=self.request.user, organization=org)
+        else:
+            if not is_org_admin(self.request.user, org):
+                raise PermissionDenied("Only an admin can add a team-wide holiday.")
+            serializer.save(owner=None, organization=org)
+
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        if request.method in ("PUT", "PATCH", "DELETE"):
+            if obj.owner_id is None:
+                if not is_org_admin(request.user, _org(request)):
+                    raise PermissionDenied("Only an admin can change a team-wide holiday.")
+            elif obj.owner_id != request.user.id:
+                raise PermissionDenied("You can only change your own personal holidays.")
 
 
 class StatusViewSet(viewsets.ModelViewSet):
@@ -169,8 +189,12 @@ class HolidaysRangeView(APIView):
         org = _org(request)
         sets = org.enabled_holiday_sets if (org and org.enabled_holiday_sets) else DEFAULT_SETS
         out = holidays_in_range(tuple(sets), start, end)
-        # Member's own personal holidays (D47): expand each yearly across the window.
-        for ph in PersonalHoliday.objects.filter(owner=request.user):
+        # Custom holidays (D47): org-wide (owner null) for everyone + this member's
+        # own personal ones. Expand each yearly across the window.
+        user = request.user
+        base = PersonalHoliday.objects.filter(organization=org) if org is not None else PersonalHoliday.objects.all()
+        for ph in base.filter(Q(owner__isnull=True) | Q(owner=user)):
+            personal = ph.owner_id is not None
             for yr in range(start.year, end.year + 1):
                 try:
                     d = date(yr, ph.month, ph.day)
@@ -178,8 +202,8 @@ class HolidaysRangeView(APIView):
                     continue  # Feb 29 in a non-leap year
                 if start <= d <= end:
                     out.append({
-                        "title": ph.name, "set": "personal", "holiday": True,
-                        "personal": True, "start": d.isoformat(), "end": d.isoformat(),
+                        "title": ph.name, "set": "personal" if personal else "custom", "holiday": True,
+                        "personal": personal, "start": d.isoformat(), "end": d.isoformat(),
                     })
         out.sort(key=lambda h: (h["start"], h["title"]))
         return Response(out)
