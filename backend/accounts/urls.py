@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     ChangePasswordView,
+    DeleteAccountView,
     GroupViewSet,
     InvitationAcceptView,
     InvitationPreviewView,
@@ -37,6 +38,7 @@ urlpatterns = [
     path("invitations/<int:pk>/preview", InvitationPreviewView.as_view(), name="invitation-preview"),
     path("invitations/<int:pk>/accept", InvitationAcceptView.as_view(), name="invitation-accept"),
     path("me", MeView.as_view(), name="me"),
+    path("me/delete", DeleteAccountView.as_view(), name="me-delete"),
     path("platform/orgs", PlatformStatsView.as_view(), name="platform-orgs"),
     path("users", UsersView.as_view(), name="users"),
     path("users/<int:pk>", UserDetailView.as_view(), name="user-detail"),

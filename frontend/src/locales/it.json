@@ -444,7 +444,12 @@
     "scopeTeamHoliday": "Festività del team",
     "scopePersonalHoliday": "Festività personale",
     "teamHolidays": "Festività del team",
-    "noTeamHolidays": "Nessuna festività del team."
+    "noTeamHolidays": "Nessuna festività del team.",
+    "deleteAccount": "Elimina account",
+    "deleteAccountSub": "Questo rimuove definitivamente il tuo account, l'accesso e i dati personali. Le attività e i commenti che servono ancora al tuo team restano, senza il tuo nome. L'azione non può essere annullata.",
+    "deleteConfirmPw": "Inserisci la password per confermare",
+    "deleteAccountCta": "Elimina il mio account",
+    "deleteError": "Impossibile eliminare l'account."
   },
   "mp": {
     "newProjectPh": "Nome nuovo progetto…",
@@ -872,5 +877,9 @@
     "none": "Ancora nessun file.",
     "drop": "Trascina i file qui, o clicca per sfogliare",
     "full": "Fino a {{n}} file."
+  },
+  "legal": {
+    "privacy": "Informativa sulla privacy",
+    "terms": "Termini di servizio"
   }
 }

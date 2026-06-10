@@ -16,6 +16,15 @@ import { ConfirmProvider } from './components/confirm.tsx'
 // client already does its own 401→refresh, so we keep network retries low; and we
 // drive refetches explicitly via invalidateQueries (see App's bump()), so we don't
 // also refetch on window focus.
+// Error monitoring (Phase-12 observability): dormant unless VITE_SENTRY_DSN is
+// set at build time. Dynamically imported so the main bundle stays lean.
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN as string | undefined
+if (sentryDsn) {
+  import('@sentry/react').then((Sentry) => {
+    Sentry.init({ dsn: sentryDsn, sendDefaultPii: false, tracesSampleRate: 0.05 })
+  }).catch(() => { /* monitoring must never break the app */ })
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -1,5 +1,13 @@
 # Live QA findings — 2026-06-10 (full review session)
 
+> **RESOLUTION STATUS (end of session):** every 🔴 and 🟠 below is FIXED in
+> PRs #8/#9/#10 except the ❓ items (need Design/Gordon rulings). Also fixed
+> beyond this list: the Archive toggle was a silent no-op on main (viewProps
+> never passed showArchived — caught while verifying DN5). Deferred: compact
+> `.trow` Trash/Approvals rows at 390; APR-4 member pending-feedback (❓);
+> fs-task Save-in-header (❓). TRN-1's live QA suggestion ("Salvare (QA test)",
+> it) is to be dismissed with the new endpoint after deploy.
+
 Target: https://ananda-taskboard.onrender.com/ @ 99bcf7e (Help Us v2 live).
 Protocol: pixel-first sweep (playbook §2a), permutation matrix (§7), light+dark, 1440/834/390.
 Triage: 🔴 bug/broken · 🟠 visual · 🟡 polish · ❓ needs-decision.

@@ -2,6 +2,38 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [In review 2026-06-10] — Full review sweep: fixes, mobile shell, professional layer
+The 2026-06-10 full review (punch-list: `qa/qa-2026-06-10-findings.md`); PRs
+#8 (conformance) → #9 (mobile shell) → #10 (professional layer), pending merge.
+- **Fixed broken:** PWA install icons never existed (manifest pointed at absent
+  `pwa-192/512.png` — now generated from the real lotus mark + apple-touch-icon;
+  off-brand template favicon replaced); Unscheduled-tasks modal rendered an
+  empty box (`.rise` ancestor transform trapped the fixed backdrop — Modal now
+  portals to `<body>`); the Archive toggle was a silent no-op (`viewProps`
+  never passed `showArchived`).
+- **Design conformance:** DN5 Archive→account menu · DN4 filter scoping (Project
+  filter only on Global Overview; stale scope filters reset) · DN3 leftover Team
+  Holidays tab removed · proj-pills on Copy-summary + Approvals · login wordmark
+  in Fraunces + gold tagline · dark-mode Unscheduled button AA contrast · modal
+  tables scroll instead of clipping (D42) · `.tcard` left-aligned.
+- **Approvals:** reject (single + bulk) now confirms; pending-count badge on the
+  nav button.
+- **Translation moderation (new):** contributors can withdraw their own
+  suggestion; superadmin can dismiss a variant from the poll (2 new DELETE
+  endpoints, 5 pytest cases, confirm dialogs).
+- **Mobile native-feel shell:** 54px app bar (hamburger · brand · + · kebab),
+  drawer with account actions + `.duser` footer, bottom tab bar (4 views,
+  line-art), full-screen modal variant for 27 dialogs with hardware-Back
+  support. (Compact `.trow` Trash/Approvals rows deferred.)
+- **Professional layer:** hosted `/privacy` + `/terms` pages (linked from Login
+  + Settings) · in-app account deletion (`POST /api/me/delete`, password
+  re-auth, sole-admin guard, 5 pytest cases) · read-only demo account command
+  (`create_demo_account`) · env-gated Sentry on backend+frontend (dormant until
+  DSN set).
+- **Hygiene:** boot no longer fires an unauthenticated `/api/me` (red console
+  401 on every load); `platform.tier` mistranslation fixed in 12 locales;
+  20 new i18n keys ×13 locales.
+
 ## [Shipped 2026-06-10] — Help Us v2 fidelity + Settings, Events/Holidays, media uploads
 Built from `design/Claude Design/handoff6-9-2026` (D44–D48) + Gordon's rulings;
 deployed to Render across PRs #2–#6 (each browser-QA'd light+dark, then verified live).

@@ -42,7 +42,7 @@ export const TR_CATEGORIES: { key: string; namespaces: string[] }[] = [
   { key: "proj", namespaces: ["mp", "del", "trash", "restore", "history"] },
   { key: "io", namespaces: ["import", "export", "expcol", "copy"] },
   { key: "nav", namespaces: ["nav", "menu", "settings", "modals", "tabs", "empty"] },
-  { key: "account", namespaces: ["login", "reset", "signup", "verify"] },
+  { key: "account", namespaces: ["login", "reset", "signup", "verify", "legal"] },
   { key: "other", namespaces: ["platform", "help", "onboarding", "emoji", "helpus", "trc", "trv", "fb"] },
 ];
 

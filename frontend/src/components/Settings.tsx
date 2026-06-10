@@ -9,9 +9,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon,
-  UserRound, Bell, ListChecks, Heart, ArrowLeft, Lock, Check, GripVertical, Info,
+  UserRound, Bell, ListChecks, Heart, ArrowLeft, Lock, Check, GripVertical, Info, Trash2,
 } from "lucide-react";
 import { api } from "../api/client";
+import { useAuth } from "../state/auth";
 import { LANGUAGES } from "../i18n";
 import { Modal, SingleSelect, ColorPicker } from "./common";
 import { useConfirm } from "./confirm";
@@ -100,6 +101,7 @@ function AccountPane({ me, language, onLanguage, theme, onTheme }: {
 }) {
   const { t } = useTranslation();
   const [pwView, setPwView] = useState(false);
+  const [delView, setDelView] = useState(false);
   const [name, setName] = useState(me.name);
 
   function saveName() {
@@ -109,6 +111,7 @@ function AccountPane({ me, language, onLanguage, theme, onTheme }: {
   }
 
   if (pwView) return <ChangePassword onBack={() => setPwView(false)} />;
+  if (delView) return <DeleteAccount onBack={() => setDelView(false)} />;
 
   const themeActive = theme === "dark" ? "dark" : "light";
   return (
@@ -142,6 +145,62 @@ function AccountPane({ me, language, onLanguage, theme, onTheme }: {
       <button type="button" className="btn-secondary" onClick={() => setPwView(true)}>
         <Lock size={15} /> {t("settings.changePassword")}
       </button>
+      {/* Danger zone (store-readiness: in-app account deletion). Delete sits
+          LEFT-most by being the only control on its own row (D5 spirit). */}
+      <div className="set-divider" />
+      <button type="button" className="btn-danger" data-testid="open-delete-account" onClick={() => setDelView(true)}>
+        <Trash2 size={15} /> {t("settings.deleteAccount", "Delete account")}
+      </button>
+      <div className="legal-links" style={{ justifyContent: "flex-start", marginTop: 12 }}>
+        <a href="/privacy" target="_blank" rel="noreferrer">{t("legal.privacy", "Privacy Policy")}</a>
+        <span aria-hidden>·</span>
+        <a href="/terms" target="_blank" rel="noreferrer">{t("legal.terms", "Terms of Service")}</a>
+      </div>
+    </>
+  );
+}
+
+function DeleteAccount({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
+  const { logout } = useAuth();
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setErr("");
+    setBusy(true);
+    try {
+      await api.post("/api/me/delete", { password });
+      logout();
+    } catch (e) {
+      const detail = (e as { data?: { password?: string; detail?: string } })?.data;
+      setErr(detail?.password || detail?.detail || t("settings.deleteError", "Couldn't delete the account."));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <button type="button" className="set-back" onClick={onBack}>
+        <ArrowLeft size={15} /> {t("settings.navAccount")}
+      </button>
+      <div className="hu-head">
+        <h3>{t("settings.deleteAccount", "Delete account")}</h3>
+        <div className="sub">{t("settings.deleteAccountSub", "This permanently removes your account, sign-in, and personal data. Tasks and comments your team still needs stay, without your name on them. This can't be undone.")}</div>
+      </div>
+      <div className="field">
+        <label>{t("settings.deleteConfirmPw", "Enter your password to confirm")}</label>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+      </div>
+      {err && <div style={{ color: "var(--danger)", fontSize: 13 }}>{err}</div>}
+      <div className="set-actions">
+        {/* Delete on the LEFT in red (D5). */}
+        <button type="button" className="btn-danger" disabled={!password || busy} onClick={submit}>
+          <Trash2 size={14} /> {t("settings.deleteAccountCta", "Delete my account")}
+        </button>
+        <button type="button" className="btn-secondary" style={{ marginLeft: "auto" }} onClick={onBack}>{t("common.cancel")}</button>
+      </div>
     </>
   );
 }

@@ -126,6 +126,43 @@ class MeView(APIView):
         return Response(UserSerializer(user).data)
 
 
+class DeleteAccountView(APIView):
+    """Self-service account deletion (store-readiness + GDPR-style hygiene).
+    Password re-auth required. Personal data CASCADEs (push subscriptions,
+    grants, personal events/holidays, translation suggestions, memberships);
+    shared team content (tasks, comments, reports) is disassociated via
+    SET_NULL — the FK audit 2026-06-10 confirmed every User FK is one of the
+    two. Guard rails: the platform owner can't self-delete, and neither can
+    the SOLE active admin of an org that still has other active members
+    (that would orphan the org)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        password = request.data.get("password") or ""
+        if not user.check_password(password):
+            raise ValidationError({"password": "That isn't your password."})
+        if user.is_superuser:
+            raise ValidationError({"detail": "The platform owner account can't delete itself."})
+        # Sole-admin guard, per org.
+        for m in Membership.objects.filter(user=user, is_active=True, role="admin"):
+            org = m.organization
+            other_admins = Membership.objects.filter(
+                organization=org, role="admin", is_active=True
+            ).exclude(user=user).exists()
+            other_members = Membership.objects.filter(
+                organization=org, is_active=True
+            ).exclude(user=user).exists()
+            if other_members and not other_admins:
+                raise ValidationError({
+                    "detail": f"You're the only admin of “{org.name}”. "
+                              "Promote another admin (Team → Members) before deleting your account."
+                })
+        user.delete()
+        return Response({"detail": "Account deleted."})
+
+
 class ChangePasswordView(APIView):
     """Authenticated self-service password change (distinct from the emailed
     reset flow): verify the current password, then set a validated new one."""

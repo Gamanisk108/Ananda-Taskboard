@@ -60,7 +60,8 @@ one (see memory `ananda_taskboard_deploy_verify`).
   accuracy sacred — verify wording or ask.
 - Buttons: primary filled navy `#1e3a6e`; danger red `#b4452f`; **Delete on
   the LEFT in red** in dialog footers; styled confirm dialogs (no native
-  `confirm`). Modal closes on backdrop click, not Escape.
+  `confirm`). Modal closes on backdrop click AND Escape (verified in code
+  2026-06-10 — an earlier note here claiming "not Escape" was stale).
 
 ## Dev gotchas (from hard-won memories)
 - **Zombie servers:** before any QA, loop-kill ALL listeners on :8000 and
@@ -74,7 +75,20 @@ one (see memory `ananda_taskboard_deploy_verify`).
   status/priority/role/locale, light+dark, mobile widths (390/834 via
   Playwright against the LIVE build).
 
-## Current state (as of 2026-06-08; verify against git log before trusting)
+## Current state (as of 2026-06-10; verify against git log before trusting)
+**2026-06-10 full review (this supersedes most of the below):** Help Us v2
+(D44–D48) merged + live via PRs #2–#7. The review session then produced PRs
+**#8 (QA conformance: PWA icons, Unscheduled clip fix, Archive-toggle fix,
+DN3/DN4/DN5, translation moderation, a11y)**, **#9 (mobile native-feel shell:
+app bar, drawer+duser, bottom tab bar, full-screen dialogs)**, **#10
+(professional layer: /privacy + /terms, account deletion, demo account,
+env-gated Sentry)** — stacked, AWAITING GORDON'S MERGE + deploy verify.
+Punch-list + coverage: `qa/qa-2026-06-10-findings.md`. Still open after merge:
+compact `.trow` Trash/Approvals rows at 390; Save-in-header for the
+full-screen task view (❓ Design); APR-4 member pending-feedback (❓ Design);
+i18n native-speaker pass; R2 + Sentry env vars (Gordon).
+
+### Older state (2026-06-08)
 Desktop conformance ~70% (DN2 selects done; subtasks D11/D12 rebuilt; D7/D13
 unscheduled table done). **Mobile is the biggest remaining chunk** (~10%; only
 List→cards done): nav drawer, bottom sheets, full-screen task routes, Board/

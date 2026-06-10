@@ -444,7 +444,12 @@
     "scopeTeamHoliday": "Team-Feiertag",
     "scopePersonalHoliday": "Persönlicher Feiertag",
     "teamHolidays": "Team-Feiertage",
-    "noTeamHolidays": "Noch keine Team-Feiertage."
+    "noTeamHolidays": "Noch keine Team-Feiertage.",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountSub": "Dies entfernt Ihr Konto, Ihre Anmeldung und Ihre persönlichen Daten dauerhaft. Aufgaben und Kommentare, die Ihr Team noch braucht, bleiben ohne Ihren Namen erhalten. Dies kann nicht rückgängig gemacht werden.",
+    "deleteConfirmPw": "Geben Sie zur Bestätigung Ihr Passwort ein",
+    "deleteAccountCta": "Mein Konto löschen",
+    "deleteError": "Das Konto konnte nicht gelöscht werden."
   },
   "mp": {
     "newProjectPh": "Neuer Projektname…",
@@ -872,5 +877,9 @@
     "none": "Noch keine Dateien.",
     "drop": "Dateien hierher ziehen oder klicken zum Auswählen",
     "full": "Bis zu {{n}} Dateien."
+  },
+  "legal": {
+    "privacy": "Datenschutzerklärung",
+    "terms": "Nutzungsbedingungen"
   }
 }

@@ -444,7 +444,12 @@
     "scopeTeamHoliday": "Team holiday",
     "scopePersonalHoliday": "Personal holiday",
     "teamHolidays": "Team holidays",
-    "noTeamHolidays": "No team holidays yet."
+    "noTeamHolidays": "No team holidays yet.",
+    "deleteAccount": "Delete account",
+    "deleteAccountSub": "This permanently removes your account, sign-in, and personal data. Tasks and comments your team still needs stay, without your name on them. This can't be undone.",
+    "deleteConfirmPw": "Enter your password to confirm",
+    "deleteAccountCta": "Delete my account",
+    "deleteError": "Couldn't delete the account."
   },
   "mp": {
     "newProjectPh": "New project name…",
@@ -872,5 +877,9 @@
     "none": "No files yet.",
     "drop": "Drag files here, or click to browse",
     "full": "Up to {{n}} files."
+  },
+  "legal": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
   }
 }
