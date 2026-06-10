@@ -146,6 +146,15 @@ export default function App() {
   // all after any create/edit/delete/status/move/event change.
   const bump = () => queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
+  // Pending-approvals badge for the admin nav button. Keyed under the ["tasks"]
+  // prefix so bump() refreshes it after any task change (incl. approve/reject).
+  const { data: pendingApprovals = [] } = useQuery({
+    queryKey: ["tasks", "approvals-badge", me?.active_org ?? null],
+    queryFn: () => api.get("/api/approvals") as Promise<unknown[]>,
+    enabled: !!me?.is_admin,
+  });
+  const approvalsCount = pendingApprovals.length;
+
   const tree = me?.tree;
   const projects = tree?.projects ?? [];
 
@@ -234,7 +243,9 @@ export default function App() {
   const canCreate =
     me.is_admin || projects.some((p) => p.subprojects.some((s) => s.level === "member"));
 
-  const viewProps = { projectId, subprojectId, onEdit: (t: Task) => setEditing(t), me };
+  // showArchived must ride along or the Archive toggle silently no-ops (the
+  // pre-2026-06-10 viewbar button had this bug: it restyled but never filtered).
+  const viewProps = { projectId, subprojectId, onEdit: (t: Task) => setEditing(t), me, showArchived };
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const hasNewHelp = whatsNew(helpSeen, me.is_admin).length > 0;
 
@@ -265,10 +276,10 @@ export default function App() {
               me.is_superuser && { icon: <Globe />, label: t("platform.nav"), onClick: () => setShowPlatform(true), testId: undefined as string | undefined },
               // D38: Translation review lives beside Platform overview (superadmin-only).
               me.is_superuser && { icon: <Languages />, label: t("trv.nav"), onClick: () => setShowTrReview(true), testId: "open-tr-review" },
-              me.is_admin && { icon: <CircleCheck />, label: t("nav.approvals"), onClick: () => setShowApprovals(true), testId: undefined },
+              me.is_admin && { icon: <CircleCheck />, label: t("nav.approvals"), onClick: () => setShowApprovals(true), testId: undefined, badge: approvalsCount || undefined },
               me.is_admin && { icon: <UsersIcon />, label: t("nav.team"), onClick: () => setShowTeam(true), testId: "open-team" },
               me.is_admin && { icon: <LayoutGrid />, label: t("nav.projects"), onClick: () => setShowManage(true), testId: undefined },
-            ].filter(Boolean) as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string }[];
+            ].filter(Boolean) as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; badge?: number }[];
             if (navItems.length === 0) return null;
             // Phones: one hamburger → nav drawer; desktop: inline ghost buttons.
             return narrow ? (
@@ -282,6 +293,7 @@ export default function App() {
                       {navItems.map((it, i) => (
                         <button key={i} data-testid={it.testId} onClick={() => { setDrawerOpen(false); it.onClick(); }}>
                           {it.icon}<span>{it.label}</span>
+                          {it.badge != null && <span className="nav-badge">{it.badge}</span>}
                         </button>
                       ))}
                     </nav>
@@ -292,6 +304,7 @@ export default function App() {
               navItems.map((it, i) => (
                 <button key={i} className="btn-ghost" data-testid={it.testId} onClick={it.onClick} title={it.label}>
                   {it.icon}<span className="lbl">{it.label}</span>
+                  {it.badge != null && <span className="nav-badge">{it.badge}</span>}
                 </button>
               ))
             );
@@ -309,6 +322,8 @@ export default function App() {
             onBulk={() => setShowBulk(true)}
             onHelp={() => setShowHelp(true)}
             onTrash={() => setShowTrash(true)}
+            archived={showArchived}
+            onToggleArchive={() => { setView("list"); setShowArchived((a) => !a); }}
             hasNewHelp={hasNewHelp}
             onLogout={logout}
           />
@@ -361,13 +376,6 @@ export default function App() {
               <button className="btn-secondary" onClick={() => setShowSummary(true)}><Copy /><span className="lbl">{t("view.copySummary")}</span></button>
               <ExportDialog me={me} />
               {me.is_admin && <ImportDialog onImported={() => { refreshMe(); bump(); }} />}
-              <button
-                className={showArchived && view === "list" ? "btn-primary" : "btn-secondary"}
-                onClick={() => { setView("list"); setShowArchived((a) => !a); }}
-                title={t("view.archiveHint")}
-              >
-                <BookOpen /><span className="lbl">{showArchived ? t("view.hideArchive") : t("view.archive")}</span>
-              </button>
             </>
           );
           // On phones the action buttons overflow the one-line viewbar → collapse
@@ -475,10 +483,11 @@ export default function App() {
   );
 }
 
-function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onBulk, onHelp, onTrash, hasNewHelp, onLogout }: {
+function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onBulk, onHelp, onTrash, archived, onToggleArchive, hasNewHelp, onLogout }: {
   name: string; isAdmin: boolean;
   onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void;
-  onHelp: () => void; onTrash: () => void; hasNewHelp?: boolean; onLogout: () => void;
+  onHelp: () => void; onTrash: () => void; archived: boolean; onToggleArchive: () => void;
+  hasNewHelp?: boolean; onLogout: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -530,6 +539,11 @@ function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onBulk, onH
               deadline on tasks they can edit (enforced server-side). */}
           <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
             <ArrowLeftRight size={15} /> {t("menu.bulkMigrate")}
+          </button>
+          {/* DN5: Archive toggle lives here (lean top bar), next to Trash. */}
+          <button className="usermenu-item" data-testid="toggle-archive" title={t("view.archiveHint")}
+            onClick={() => { setOpen(false); onToggleArchive(); }}>
+            <BookOpen size={15} /> {archived ? t("view.hideArchive") : t("view.archive")}
           </button>
           {/* D15: Trash lives in the account menu (everyone; non-admins see only
               their own deleted items, server-enforced). */}

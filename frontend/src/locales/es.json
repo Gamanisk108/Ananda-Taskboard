@@ -116,7 +116,7 @@
     "member": "Miembro",
     "email": "Correo",
     "role": "Rol",
-    "tier": "Nivel",
+    "tier": "Acceso de visualización",
     "role_admin": "Administrador",
     "role_member": "Miembro"
   },
@@ -268,7 +268,9 @@
     "pending": "{{n}} pendientes",
     "where": "Dónde",
     "createdBy": "Creado por",
-    "open": "Abrir"
+    "open": "Abrir",
+    "confirmReject": "¿Rechazar esta tarea? La propuesta del miembro se descartará.",
+    "confirmRejectN": "¿Rechazar {{n}} tarea(s) pendiente(s)? Las propuestas se descartarán."
   },
   "trash": {
     "intro": "Los elementos eliminados se guardan 7 días y luego se eliminan automáticamente. Restaurar devuelve un elemento (y todo lo eliminado con él).",
@@ -772,7 +774,10 @@
     "doneBody": "Gracias por ayudar a que toda la comunidad lea el tablero en su idioma. Te avisaremos cuando haya frases nuevas.",
     "leaveNote": "Cada frase se guarda por sí sola; sal cuando quieras.",
     "allSuggested": "Todas las frases tienen tu sugerencia",
-    "badgeTitle": "{{n}} frases aún sin tu sugerencia"
+    "badgeTitle": "{{n}} frases aún sin tu sugerencia",
+    "remove": "Quitar",
+    "removeHint": "Retirar tu sugerencia para esta frase",
+    "removeConfirm": "¿Retirar tu sugerencia «{{text}}»?"
   },
   "trv": {
     "nav": "Traducciones",
@@ -803,7 +808,9 @@
     "showAll": "Ver las {{n}} versiones · {{m}} respuestas más",
     "ownLabel": "Tu propia versión",
     "ownPh": "Escribe la versión que debe publicarse…",
-    "ownWording": "O escribe tu propia versión…"
+    "ownWording": "O escribe tu propia versión…",
+    "dismiss": "Quitar sugerencia",
+    "dismissConfirm": "¿Quitar la sugerencia «{{text}}» de esta encuesta? Esto no se puede deshacer."
   },
   "fb": {
     "repIntro": "Cuéntanos qué salió mal y dónde; cuanto más detalle, antes podremos arreglarlo.",

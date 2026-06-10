@@ -1,10 +1,12 @@
 """Community Translations API.
 
-- /translations/mine       member: read + batch-upsert their own suggestions
+- /translations/mine       member: read + batch-upsert their own suggestions;
+                           DELETE retracts their own suggestion(s)
 - /translations/overrides  any authenticated client: the live overrides (boot fetch)
 - /translations/review     superuser: poll data (variants grouped + counted)
 - /translations/approve    superuser: set the live wording for a key+locale
 - /translations/override   superuser: DELETE clears an override (fall back to bundled)
+- /translations/suggestion superuser: DELETE dismisses a suggested variant from the poll
 """
 
 import re
@@ -77,6 +79,22 @@ class MySuggestionsView(APIView):
                     key=key, locale=locale, user=request.user, defaults={"text": text}
                 )
         return Response({"saved": len(cleaned)})
+
+    def delete(self, request):
+        """Retract the caller's own suggestion(s): {locale, keys: [...]}. A batch
+        for the same reason as PUT — a fuzzy-merged row fans out over keys."""
+        locale = _locale_or_none(request.data.get("locale", ""))
+        if not locale:
+            return _bad("Unknown or missing locale.")
+        keys = request.data.get("keys")
+        if not isinstance(keys, list) or not keys or len(keys) > MAX_BATCH:
+            return _bad(f"keys must be a non-empty list of at most {MAX_BATCH}.")
+        if not all(isinstance(k, str) and KEY_RE.match(k) for k in keys):
+            return _bad("Invalid key.")
+        deleted, _ = TranslationSuggestion.objects.filter(
+            user=request.user, locale=locale, key__in=keys
+        ).delete()
+        return Response({"deleted": deleted})
 
 
 class OverridesView(APIView):
@@ -168,3 +186,29 @@ class OverrideView(APIView):
             return _bad("locale and key are required.")
         TranslationOverride.objects.filter(locale=locale, key=key).delete()
         return Response(status=http.HTTP_204_NO_CONTENT)
+
+
+class SuggestionDismissView(APIView):
+    """Moderation: DELETE removes a suggested variant from the poll —
+    {locale, key, text} deletes every suggestion whose normalized text matches.
+    Without this, a junk/abusive suggestion would sit in the poll forever (the
+    only other 'remedy' was approving different wording)."""
+
+    permission_classes = [IsSuperUser]
+
+    def delete(self, request):
+        locale = _locale_or_none(request.data.get("locale", ""))
+        key = request.data.get("key", "")
+        text = request.data.get("text", "")
+        if not locale or not key or not KEY_RE.match(key):
+            return _bad("locale and key are required.")
+        if not isinstance(text, str) or not text.strip():
+            return _bad("text identifies the variant to dismiss.")
+        norm = normalize_text(text)
+        ids = [
+            s.id
+            for s in TranslationSuggestion.objects.filter(locale=locale, key=key)
+            if normalize_text(s.text) == norm
+        ]
+        deleted, _ = TranslationSuggestion.objects.filter(id__in=ids).delete()
+        return Response({"deleted": deleted})

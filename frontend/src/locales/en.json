@@ -268,7 +268,9 @@
     "pending": "{{n}} pending",
     "where": "Where",
     "createdBy": "Created by",
-    "open": "Open"
+    "open": "Open",
+    "confirmReject": "Reject this task? The member's submission is discarded.",
+    "confirmRejectN": "Reject {{n}} pending task(s)? The members' submissions are discarded."
   },
   "trash": {
     "intro": "Deleted items are kept for 7 days, then removed automatically. Restore brings an item (and anything deleted with it) back.",
@@ -772,7 +774,10 @@
     "doneBody": "Thank you for helping the whole community read the board in their language. We'll let you know when there are new phrases.",
     "leaveNote": "Each phrase saves on its own — leave any time.",
     "allSuggested": "Every phrase has your suggestion",
-    "badgeTitle": "{{n}} phrases without your suggestion yet"
+    "badgeTitle": "{{n}} phrases without your suggestion yet",
+    "remove": "Remove",
+    "removeHint": "Withdraw your suggestion for this phrase",
+    "removeConfirm": "Withdraw your suggestion “{{text}}”?"
   },
   "trv": {
     "nav": "Translations",
@@ -803,7 +808,9 @@
     "showAll": "Show all {{n}} wordings · {{m}} more replies",
     "ownLabel": "Your own wording",
     "ownPh": "Type the wording that should go live…",
-    "ownWording": "Or enter your own wording…"
+    "ownWording": "Or enter your own wording…",
+    "dismiss": "Remove suggestion",
+    "dismissConfirm": "Remove the suggestion “{{text}}” from this poll? This can't be undone."
   },
   "fb": {
     "repIntro": "Tell us what went wrong and where — the more detail, the faster we can fix it.",

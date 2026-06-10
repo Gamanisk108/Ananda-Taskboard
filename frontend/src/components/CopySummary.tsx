@@ -58,12 +58,14 @@ export function CopySummary({ me, onClose }: { me: Me; onClose: () => void }) {
       <div className="field">
         <label>{t("copy.filterProject")}</label>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {/* Proj-pill rule: project chips are tinted pills everywhere, incl. toggles. */}
           {projectOpts.map((p) => (
             <button key={p.id} type="button"
-              className={projects.includes(p.id) ? "btn-primary" : "btn-secondary"}
-              style={{ padding: "3px 10px", fontSize: 12 }}
+              className={`pill proj-pill proj-pill-toggle${projects.includes(p.id) ? " on" : ""}`}
+              style={{ "--pc": p.color } as React.CSSProperties}
+              aria-pressed={projects.includes(p.id)}
               onClick={() => toggle(projects, setProjects, p.id)}>
-              {p.name}
+              <span className="nm">{p.name}</span>
             </button>
           ))}
         </div>

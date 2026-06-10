@@ -8,7 +8,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Languages, Check, ChevronRight, ChevronDown, Inbox, TriangleAlert, Pencil } from "lucide-react";
+import { Languages, Check, ChevronRight, ChevronDown, Inbox, TriangleAlert, Pencil, X } from "lucide-react";
 import i18n, { LANGUAGES } from "../i18n";
 import { api } from "../api/client";
 import { catalogEntries, placeholdersIntact, blankPlaceholders, restorePlaceholders } from "../trCatalog";
@@ -55,6 +55,21 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
     mutationFn: (key: string) => api.del("/api/translations/override", { locale, key }),
     onSuccess: () => { setJustApproved(null); refresh(); },
   });
+  // Moderation: dismiss a suggested variant (removes it from the poll entirely).
+  const dismiss = useMutation({
+    mutationFn: (v: { key: string; text: string }) =>
+      api.del("/api/translations/suggestion", { locale, key: v.key, text: v.text }),
+    onSuccess: refresh,
+  });
+
+  async function onDismiss(key: string, text: string) {
+    const ok = await confirm({
+      body: t("trv.dismissConfirm", "Remove the suggestion “{{text}}” from this poll? The submitter keeps nothing — this can't be undone.", { text: blankPlaceholders(text) }),
+      danger: true,
+      confirmLabel: t("trv.dismiss", "Remove suggestion"),
+    });
+    if (ok) dismiss.mutate({ key, text });
+  }
 
   // Approve a specific wording (a bar's text, or a free-text override). `text`
   // already has placeholders re-inserted by the caller.
@@ -118,16 +133,17 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
         polls.map((poll) => (
           <PollCard key={poll.key} poll={poll} en={enByKey.get(poll.key) ?? poll.key} locale={locale}
             justApproved={justApproved?.key === poll.key ? justApproved.text : null}
-            onApprove={approveText} onClear={() => onClear(poll)} />
+            onApprove={approveText} onClear={() => onClear(poll)} onDismiss={onDismiss} />
         ))
       )}
     </Modal>
   );
 }
 
-function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
+function PollCard({ poll, en, locale, justApproved, onApprove, onClear, onDismiss }: {
   poll: Poll; en: string; locale: string; justApproved: string | null;
   onApprove: (key: string, text: string) => void; onClear: () => void;
+  onDismiss: (key: string, text: string) => void;
 }) {
   const { t } = useTranslation();
   const [detailOpen, setDetailOpen] = useState(false);
@@ -243,7 +259,16 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
         <div className="poll-detail">
           {poll.variants.map((v, i) => (
             <div key={i}>
-              <div className="grp-h">{blankPlaceholders(v.text)} · {v.count}</div>
+              <div className="grp-h">
+                {blankPlaceholders(v.text)} · {v.count}
+                {/* Moderation: remove a junk/abusive variant from the poll. */}
+                {!(poll.live !== null && v.text === poll.live) && (
+                  <button type="button" className="btn-ghost grp-dismiss" title={t("trv.dismiss", "Remove suggestion")} aria-label={t("trv.dismiss", "Remove suggestion")}
+                    onClick={() => onDismiss(poll.key, v.text)}>
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
               {v.users.map((name, j) => (
                 <div key={j} className="sub-row">
                   <span className="who" title={name}>{name}</span>

@@ -5,7 +5,8 @@ import { api } from "../api/client";
 import { useAuth } from "../state/auth";
 import { buildSubLookup } from "../lookup";
 import { useUsers, userName } from "../users";
-import { Modal, Spinner, ColorDot } from "./common";
+import { Modal, Spinner, ProjPill } from "./common";
+import { useConfirm } from "./confirm";
 import type { Task } from "../types";
 
 export function Approvals({
@@ -17,6 +18,7 @@ export function Approvals({
 }) {
   const { t: tr } = useTranslation();  // `t` is the task param in onOpen
   const { me } = useAuth();
+  const confirm = useConfirm();
   const [pending, setPending] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
   const subs = useMemo(() => (me ? buildSubLookup(me.tree) : new Map()), [me]);
@@ -37,6 +39,8 @@ export function Approvals({
   async function bulk(action: "approve" | "reject") {
     const ids = sel.size ? [...sel] : (pending ?? []).map((t) => t.id);
     if (!ids.length) return;
+    // Rejecting discards a member's submission — destructive, so it confirms.
+    if (action === "reject" && !(await confirm({ body: tr("approvals.confirmRejectN", "Reject {{n}} pending task(s)? The member's submission is discarded.", { n: ids.length }), danger: true, confirmLabel: tr("approvals.reject", "Reject") }))) return;
     await api.post("/api/approvals", { ids, action });
     setSel(new Set());
     onChanged();
@@ -44,6 +48,7 @@ export function Approvals({
   }
 
   async function act(id: number, action: "approve" | "reject") {
+    if (action === "reject" && !(await confirm({ body: tr("approvals.confirmReject", "Reject this task? The member's submission is discarded."), danger: true, confirmLabel: tr("approvals.reject", "Reject") }))) return;
     await api.post(`/api/tasks/${id}/${action}`, {});
     onChanged();
     load();
@@ -84,8 +89,10 @@ export function Approvals({
                       {t.details && <div className="muted" style={{ fontSize: 12 }}>{t.details.slice(0, 90)}</div>}
                     </td>
                     <td>
-                      {info && <span style={{ display: "inline-flex", gap: 5, alignItems: "center", fontSize: 12 }}>
-                        <ColorDot color={info.color} /> {info.projectName} / {info.name}
+                      {/* Proj-pill rule: projects/sub-projects render as pills, never dot+text. */}
+                      {info && <span style={{ display: "inline-flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+                        <ProjPill name={info.projectName} color={info.projectColor} />
+                        <ProjPill name={info.name} color={info.color} />
                       </span>}
                     </td>
                     <td className="muted" style={{ fontSize: 12 }}>{t.created_by ? userName(users, t.created_by) : "—"}</td>

@@ -116,7 +116,7 @@
     "member": "Mitglied",
     "email": "E-Mail",
     "role": "Rolle",
-    "tier": "Stufe",
+    "tier": "Ansichtsrechte",
     "role_admin": "Administrator",
     "role_member": "Mitglied"
   },
@@ -268,7 +268,9 @@
     "pending": "{{n}} ausstehend",
     "where": "Wo",
     "createdBy": "Erstellt von",
-    "open": "Öffnen"
+    "open": "Öffnen",
+    "confirmReject": "Diese Aufgabe ablehnen? Die Einreichung des Mitglieds wird verworfen.",
+    "confirmRejectN": "{{n}} ausstehende Aufgabe(n) ablehnen? Die Einreichungen werden verworfen."
   },
   "trash": {
     "intro": "Gelöschte Elemente werden 7 Tage aufbewahrt und dann automatisch entfernt. Wiederherstellen holt ein Element (und alles damit Gelöschte) zurück.",
@@ -772,7 +774,10 @@
     "doneBody": "Danke, dass du der ganzen Gemeinschaft hilfst, das Board in ihrer Sprache zu lesen. Wir melden uns, wenn es neue Texte gibt.",
     "leaveNote": "Jeder Text speichert für sich — du kannst jederzeit aufhören.",
     "allSuggested": "Jeder Text hat deinen Vorschlag",
-    "badgeTitle": "{{n}} Texte noch ohne deinen Vorschlag"
+    "badgeTitle": "{{n}} Texte noch ohne deinen Vorschlag",
+    "remove": "Entfernen",
+    "removeHint": "Ihren Vorschlag für diesen Text zurückziehen",
+    "removeConfirm": "Ihren Vorschlag „{{text}}“ zurückziehen?"
   },
   "trv": {
     "nav": "Übersetzungen",
@@ -803,7 +808,9 @@
     "showAll": "Alle {{n}} Formulierungen anzeigen · {{m}} weitere Antworten",
     "ownLabel": "Ihre eigene Formulierung",
     "ownPh": "Geben Sie die Formulierung ein, die live gehen soll…",
-    "ownWording": "Oder eigene Formulierung eingeben…"
+    "ownWording": "Oder eigene Formulierung eingeben…",
+    "dismiss": "Vorschlag entfernen",
+    "dismissConfirm": "Den Vorschlag „{{text}}“ aus dieser Umfrage entfernen? Dies kann nicht rückgängig gemacht werden."
   },
   "fb": {
     "repIntro": "Sag uns, was schiefging und wo — je mehr Details, desto schneller können wir es beheben.",

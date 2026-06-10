@@ -121,7 +121,9 @@
 }
 .ms-btn:hover { border-color: var(--border-strong); }
 .ms.on .ms-btn { border-color: var(--dome); font-weight: 600; }
-.ms-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* min-width:0 lets the flex label actually shrink → ellipsis (D42); without it
+   the button's min-content width is the full label and narrow layouts overflow. */
+.ms-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .ms-caret { flex: none; color: var(--faint); font-size: 10px; }
 .ms-pop {
   position: absolute; z-index: 50; top: calc(100% + 4px); left: 0;
@@ -189,8 +191,10 @@
    add no margin of their own, so collapsing to one column on phones never
    doubles into margin + gap (was 13 + 12 ≈ 25px between Details and Requirements). */
 .field { margin-bottom: var(--gap-form); }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-form); margin-bottom: var(--gap-form); }
-.row2 .field { margin-bottom: 0; }
+/* minmax(0,1fr) (D42): grid children must be able to shrink so long select
+   labels ellipsize instead of pushing the track past the card edge. */
+.row2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: var(--gap-form); margin-bottom: var(--gap-form); }
+.row2 .field { margin-bottom: 0; min-width: 0; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
 /* Sticky action bar pinned to the modal bottom (Modal `footer` prop): the body
    scrolls, this never scrolls out of view. Reusable across long modals. */
@@ -209,6 +213,14 @@
   background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--primary); }
 .btn-unscheduled:hover { background: color-mix(in srgb, var(--primary) 16%, var(--surface)); }
 .btn-unscheduled .us-count { font-family: var(--f-mono); font-size: 11px; background: var(--primary); color: var(--primary-ink); border-radius: var(--r-pill); padding: 1px 7px; }
+/* Dark theme keeps --primary navy, which is ~2:1 against the dark surface (AA
+   fail) — switch the accent to azure like other dark-mode actives (.tb.on). */
+html[data-theme="dark"] .btn-unscheduled {
+  border-color: var(--azure, #58a6ff); color: var(--azure, #58a6ff);
+  background: color-mix(in srgb, var(--azure, #58a6ff) 12%, var(--surface));
+}
+html[data-theme="dark"] .btn-unscheduled:hover { background: color-mix(in srgb, var(--azure, #58a6ff) 18%, var(--surface)); }
+html[data-theme="dark"] .btn-unscheduled .us-count { background: var(--azure, #58a6ff); color: #0b1220; }
 @media (max-width: 760px) { .btn-unscheduled { width: 100%; justify-content: center; margin: 6px 0 0; } }
 /* assignee avatar chips (task modal) */
 .m-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -460,6 +472,9 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 
 /* ---- List table: frozen task col, cells, pills, avatars ---- */
 .tbl { border-collapse: separate; border-spacing: 0; }
+/* Tables inside modals (Team members, Access, Approvals…) can outgrow the
+   dialog — scroll sideways instead of hard-clipping at the card edge (D42). */
+.modal-body .tbl { display: block; overflow-x: auto; }
 .tbl tbody td { height: 34px; padding: 0 12px; }
 .task-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .task-name { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -623,6 +638,27 @@ html[data-theme="dark"] .proj-pill {
   background: color-mix(in srgb, var(--pc) 24%, var(--surface));
   color: color-mix(in srgb, var(--pc) 35%, #fff);
   border-color: color-mix(in srgb, var(--pc) 42%, transparent);
+}
+/* Dismiss-variant button in the review poll's who-suggested expander. */
+.grp-dismiss { padding: 2px 4px; margin-left: 6px; color: var(--danger); vertical-align: -2px; }
+
+/* Pending-count badge on nav buttons (Approvals): navy pill, mono digits. */
+.nav-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 17px; height: 17px; padding: 0 5px; margin-left: 2px;
+  border-radius: var(--r-pill); background: var(--primary, #1e3a6e); color: #fbf6ea;
+  font-family: var(--f-mono); font-size: 10.5px; font-weight: 600; line-height: 1;
+}
+html[data-theme="dark"] .nav-badge { background: var(--azure, #58a6ff); color: #0b1220; }
+
+/* Toggleable proj-pills (Copy-summary project filter): unselected = muted pill,
+   selected = full tint + strong border. Same tinting model, button semantics. */
+button.proj-pill-toggle { cursor: pointer; font-family: inherit; }
+.proj-pill-toggle:not(.on) { opacity: .55; }
+.proj-pill-toggle.on {
+  background: color-mix(in srgb, var(--pc) 28%, var(--surface));
+  border-color: color-mix(in srgb, var(--pc) 65%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pc) 45%, transparent);
 }
 /* assignees as colored avatar stack */
 .who { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; cursor: pointer; min-height: 24px; }

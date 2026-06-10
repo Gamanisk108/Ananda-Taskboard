@@ -116,7 +116,7 @@
     "member": "Membro",
     "email": "E-mail",
     "role": "Função",
-    "tier": "Nível",
+    "tier": "Acesso de visualização",
     "role_admin": "Administrador",
     "role_member": "Membro"
   },
@@ -268,7 +268,9 @@
     "pending": "{{n}} pendentes",
     "where": "Onde",
     "createdBy": "Criado por",
-    "open": "Abrir"
+    "open": "Abrir",
+    "confirmReject": "Rejeitar esta tarefa? A proposta do membro será descartada.",
+    "confirmRejectN": "Rejeitar {{n}} tarefa(s) pendente(s)? As propostas serão descartadas."
   },
   "trash": {
     "intro": "Itens excluídos são mantidos por 7 dias e depois removidos automaticamente. Restaurar traz um item (e tudo excluído com ele) de volta.",
@@ -772,7 +774,10 @@
     "doneBody": "Obrigado por ajudar toda a comunidade a ler o quadro no próprio idioma. Avisaremos quando houver frases novas.",
     "leaveNote": "Cada frase é salva por si só — saia quando quiser.",
     "allSuggested": "Todas as frases têm a sua sugestão",
-    "badgeTitle": "{{n}} frases ainda sem a sua sugestão"
+    "badgeTitle": "{{n}} frases ainda sem a sua sugestão",
+    "remove": "Remover",
+    "removeHint": "Retirar a sua sugestão para esta frase",
+    "removeConfirm": "Retirar a sua sugestão «{{text}}»?"
   },
   "trv": {
     "nav": "Traduções",
@@ -803,7 +808,9 @@
     "showAll": "Ver as {{n}} versões · {{m}} respostas adicionais",
     "ownLabel": "A sua própria versão",
     "ownPh": "Escreva a versão que deve ficar ativa…",
-    "ownWording": "Ou escreva a sua própria versão…"
+    "ownWording": "Ou escreva a sua própria versão…",
+    "dismiss": "Remover sugestão",
+    "dismissConfirm": "Remover a sugestão «{{text}}» desta votação? Isto não pode ser desfeito."
   },
   "fb": {
     "repIntro": "Conte o que deu errado e onde — quanto mais detalhes, mais rápido conseguimos corrigir.",

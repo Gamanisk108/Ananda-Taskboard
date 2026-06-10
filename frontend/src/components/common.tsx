@@ -453,7 +453,11 @@ export function Modal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
-  return (
+  // Portaled to <body> (same as BottomSheet/Drawer): position:fixed on the
+  // backdrop is trapped by any transformed ancestor (e.g. a `.rise`-animated
+  // container keeps an identity transform), which shrank the backdrop to the
+  // ancestor's box and visually clipped the modal (the Unscheduled-tasks bug).
+  return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="card modal sheet rise"
@@ -472,7 +476,8 @@ export function Modal({
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot modal-foot-sticky">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

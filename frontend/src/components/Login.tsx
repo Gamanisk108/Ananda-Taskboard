@@ -35,9 +35,14 @@ export function Login() {
   return (
     <div className="login-wrap">
       <form className="card login-card rise" onSubmit={submit}>
-        <div className="login-brand">
-          <img src="/logo.png" alt="" style={{ width: 26, height: 26, objectFit: "contain" }} />
-          <h1 style={{ fontSize: 22 }}>Ananda Taskboard</h1>
+        {/* Brand wordmark = Fraunces + italic gold tagline (same as the app top
+            bar; Fraunces is reserved for exactly this wordmark + tagline). */}
+        <div className="login-brand brand">
+          <img src="/logo.png" alt="" style={{ width: 34, height: 34, objectFit: "contain" }} />
+          <div className="brand-txt">
+            <h1 className="name" style={{ fontSize: 22, margin: 0 }}>Ananda <b>Taskboard</b></h1>
+            <div className="tagline">Love &amp; Blessings from Ananda Los Angeles</div>
+          </div>
         </div>
         <p className="muted" style={{ marginTop: 0 }}>{t("login.subtitle")}</p>
         <div style={{ marginBottom: 12 }}>

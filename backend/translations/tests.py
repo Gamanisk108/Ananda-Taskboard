@@ -153,3 +153,64 @@ def test_approve_is_superuser_only(api, world):
                     {"locale": "es", "key": "k.a", "text": "x"}, format="json").status_code == 403
     assert api.delete("/api/translations/override",
                       {"locale": "es", "key": "k.a"}, format="json").status_code == 403
+
+
+# --- retract + dismiss (moderation; added 2026-06-10) -------------------------
+
+def test_member_can_retract_their_own_suggestion(api, world):
+    auth(api, world["m1"])
+    api.put("/api/translations/mine",
+            {"locale": "es", "entries": [{"key": "common.save", "text": "Guardar"},
+                                         {"key": "holidays.save", "text": "Guardar"}]},
+            format="json")
+    res = api.delete("/api/translations/mine",
+                     {"locale": "es", "keys": ["common.save", "holidays.save"]}, format="json")
+    assert res.status_code == 200 and res.data["deleted"] == 2
+    assert not TranslationSuggestion.objects.filter(user=world["m1"], locale="es").exists()
+
+
+def test_retract_only_touches_the_callers_rows(api, world):
+    auth(api, world["m2"])
+    api.put("/api/translations/mine",
+            {"locale": "es", "entries": [{"key": "common.save", "text": "Guardar"}]}, format="json")
+    auth(api, world["m1"])
+    api.put("/api/translations/mine",
+            {"locale": "es", "entries": [{"key": "common.save", "text": "Salvar"}]}, format="json")
+    res = api.delete("/api/translations/mine", {"locale": "es", "keys": ["common.save"]}, format="json")
+    assert res.status_code == 200 and res.data["deleted"] == 1
+    remaining = TranslationSuggestion.objects.filter(locale="es", key="common.save")
+    assert remaining.count() == 1 and remaining.first().user == world["m2"]
+
+
+def test_retract_validates_inputs(api, world):
+    auth(api, world["m1"])
+    assert api.delete("/api/translations/mine", {"locale": "xx", "keys": ["a"]}, format="json").status_code == 400
+    assert api.delete("/api/translations/mine", {"locale": "es", "keys": []}, format="json").status_code == 400
+    assert api.delete("/api/translations/mine", {"locale": "es", "keys": ["bad key!"]}, format="json").status_code == 400
+
+
+def test_superadmin_dismisses_a_variant_across_submitters(api, world):
+    # Two members suggest the same wording (one with trailing ellipsis — same
+    # normalized variant); a third wording must survive the dismiss.
+    auth(api, world["m1"])
+    api.put("/api/translations/mine",
+            {"locale": "it", "entries": [{"key": "common.save", "text": "Salvare"}]}, format="json")
+    auth(api, world["m2"])
+    api.put("/api/translations/mine",
+            {"locale": "it", "entries": [{"key": "common.save", "text": "Salvare…"}]}, format="json")
+    su = world["su"]
+    auth(api, su)
+    api.put("/api/translations/mine",
+            {"locale": "it", "entries": [{"key": "common.save", "text": "Salva"}]}, format="json")
+    res = api.delete("/api/translations/suggestion",
+                     {"locale": "it", "key": "common.save", "text": "Salvare"}, format="json")
+    assert res.status_code == 200 and res.data["deleted"] == 2
+    remaining = TranslationSuggestion.objects.filter(locale="it", key="common.save")
+    assert remaining.count() == 1 and remaining.first().text == "Salva"
+
+
+def test_dismiss_requires_superuser(api, world):
+    auth(api, world["m1"])
+    res = api.delete("/api/translations/suggestion",
+                     {"locale": "it", "key": "common.save", "text": "x"}, format="json")
+    assert res.status_code == 403

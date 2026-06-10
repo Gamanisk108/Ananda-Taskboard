@@ -116,7 +116,7 @@
     "member": "Membre",
     "email": "E-mail",
     "role": "Rôle",
-    "tier": "Niveau",
+    "tier": "Accès de consultation",
     "role_admin": "Administrateur",
     "role_member": "Membre"
   },
@@ -268,7 +268,9 @@
     "pending": "{{n}} en attente",
     "where": "Où",
     "createdBy": "Créé par",
-    "open": "Ouvrir"
+    "open": "Ouvrir",
+    "confirmReject": "Rejeter cette tâche ? La proposition du membre sera supprimée.",
+    "confirmRejectN": "Rejeter {{n}} tâche(s) en attente ? Les propositions seront supprimées."
   },
   "trash": {
     "intro": "Les éléments supprimés sont conservés 7 jours puis supprimés automatiquement. La restauration ramène un élément (et tout ce qui a été supprimé avec lui).",
@@ -772,7 +774,10 @@
     "doneBody": "Merci d'aider toute la communauté à lire le tableau dans sa langue. Nous vous préviendrons quand il y aura de nouvelles phrases.",
     "leaveNote": "Chaque phrase s'enregistre seule — partez quand vous voulez.",
     "allSuggested": "Chaque phrase a votre proposition",
-    "badgeTitle": "{{n}} phrases encore sans votre proposition"
+    "badgeTitle": "{{n}} phrases encore sans votre proposition",
+    "remove": "Retirer",
+    "removeHint": "Retirer votre suggestion pour cette phrase",
+    "removeConfirm": "Retirer votre suggestion « {{text}} » ?"
   },
   "trv": {
     "nav": "Traductions",
@@ -803,7 +808,9 @@
     "showAll": "Voir les {{n}} formulations · {{m}} réponses de plus",
     "ownLabel": "Votre propre formulation",
     "ownPh": "Saisissez la formulation à publier…",
-    "ownWording": "Ou saisissez votre propre formulation…"
+    "ownWording": "Ou saisissez votre propre formulation…",
+    "dismiss": "Supprimer la suggestion",
+    "dismissConfirm": "Supprimer la suggestion « {{text}} » de ce sondage ? Cette action est irréversible."
   },
   "fb": {
     "repIntro": "Dites-nous ce qui n'a pas marché et où — plus c'est détaillé, plus vite nous corrigerons.",

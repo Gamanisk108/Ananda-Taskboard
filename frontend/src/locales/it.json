@@ -116,7 +116,7 @@
     "member": "Membro",
     "email": "Email",
     "role": "Ruolo",
-    "tier": "Livello",
+    "tier": "Accesso di visualizzazione",
     "role_admin": "Amministratore",
     "role_member": "Membro"
   },
@@ -268,7 +268,9 @@
     "pending": "{{n}} in sospeso",
     "where": "Dove",
     "createdBy": "Creato da",
-    "open": "Apri"
+    "open": "Apri",
+    "confirmReject": "Rifiutare questa attività? La proposta del membro verrà scartata.",
+    "confirmRejectN": "Rifiutare {{n}} attività in attesa? Le proposte verranno scartate."
   },
   "trash": {
     "intro": "Gli elementi eliminati vengono conservati per 7 giorni, poi rimossi automaticamente. Il ripristino riporta un elemento (e tutto ciò che è stato eliminato con esso).",
@@ -772,7 +774,10 @@
     "doneBody": "Grazie per aiutare tutta la comunità a leggere la bacheca nella propria lingua. Ti avviseremo quando ci saranno nuove frasi.",
     "leaveNote": "Ogni frase si salva da sola: esci quando vuoi.",
     "allSuggested": "Ogni frase ha il tuo suggerimento",
-    "badgeTitle": "{{n}} frasi ancora senza il tuo suggerimento"
+    "badgeTitle": "{{n}} frasi ancora senza il tuo suggerimento",
+    "remove": "Rimuovi",
+    "removeHint": "Ritira il tuo suggerimento per questa frase",
+    "removeConfirm": "Ritirare il tuo suggerimento «{{text}}»?"
   },
   "trv": {
     "nav": "Traduzioni",
@@ -803,7 +808,9 @@
     "showAll": "Mostra tutte le {{n}} formulazioni · {{m}} altre risposte",
     "ownLabel": "La tua formulazione",
     "ownPh": "Scrivi la formulazione da pubblicare…",
-    "ownWording": "Oppure scrivi la tua formulazione…"
+    "ownWording": "Oppure scrivi la tua formulazione…",
+    "dismiss": "Rimuovi suggerimento",
+    "dismissConfirm": "Rimuovere il suggerimento «{{text}}» da questo sondaggio? L'azione non può essere annullata."
   },
   "fb": {
     "repIntro": "Dicci cosa è andato storto e dove: più dettagli ci dai, prima possiamo sistemarlo.",
