@@ -58,7 +58,8 @@ class ReportProblemView(APIView):
             f"{report.message}\n\nTech: {report.tech or '—'}\n"
             f"Screenshot attached in-app record: {'yes' if report.screenshot else 'no'}",
         )
-        return Response({"ref": report.ref}, status=http.HTTP_201_CREATED)
+        # `id` lets the client attach uploaded media to this report after creation.
+        return Response({"ref": report.ref, "id": report.id}, status=http.HTTP_201_CREATED)
 
 
 class SuggestFeatureView(APIView):

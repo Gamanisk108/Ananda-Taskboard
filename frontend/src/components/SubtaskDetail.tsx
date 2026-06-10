@@ -4,6 +4,7 @@ import { Clock } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
 import { PriorityIcon, StatusPill, SingleSelect, LinksEditor } from "./common";
+import { Attachments } from "./Attachments";
 import { useConfirm } from "./confirm";
 import type { TaskStatus } from "../statuses";
 import { PRIORITY_META, type Subtask, type UserLite } from "../types";
@@ -163,6 +164,10 @@ export function SubtaskDetail({ subtask, users, groups, statuses, subproject, is
       <div className="field">
         <label>{t("task.links")}</label>
         <LinksEditor value={links} onChange={setLinks} />
+      </div>
+
+      <div className="field">
+        <Attachments target="subtask" targetId={subtask.id} canEdit label={t("attach.label")} />
       </div>
 
       {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}

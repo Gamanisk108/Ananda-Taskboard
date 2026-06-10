@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "events",
     "translations",
     "feedback",
+    "attachments",
 ]
 
 MIDDLEWARE = [
@@ -222,3 +223,14 @@ VAPID_CLAIM_EMAIL = env("VAPID_CLAIM_EMAIL", "mailto:admin@example.com")
 
 # --- Scheduled-job auth (GitHub Actions cron → daily-push) ------------------
 DAILY_PUSH_SECRET = env("DAILY_PUSH_SECRET", "dev-daily-push-secret")
+
+# --- Media uploads (Cloudflare R2, S3-compatible) ---------------------------
+# Bucket stays private; files are served via authenticated presigned redirects.
+R2_ENDPOINT_URL = env("R2_ENDPOINT_URL", "")  # https://<account>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID = env("R2_ACCESS_KEY_ID", "")
+R2_SECRET_ACCESS_KEY = env("R2_SECRET_ACCESS_KEY", "")
+R2_BUCKET = env("R2_BUCKET", "taskboard-media")
+ATTACH_MAX_PER_TARGET = int(env("ATTACH_MAX_PER_TARGET", "5"))
+ATTACH_MAX_IMAGE = int(env("ATTACH_MAX_IMAGE_BYTES", str(2 * 1024 * 1024)))   # 2 MB
+ATTACH_MAX_DOC = int(env("ATTACH_MAX_DOC_BYTES", str(5 * 1024 * 1024)))       # 5 MB
+ATTACH_MAX_VIDEO = int(env("ATTACH_MAX_VIDEO_BYTES", str(25 * 1024 * 1024)))  # 25 MB

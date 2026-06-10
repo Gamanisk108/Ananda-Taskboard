@@ -855,5 +855,15 @@
     "spNote": "Toute personne ayant le lien peut créer sa propre équipe — son tableau reste séparé du vôtre.",
     "spMailSubject": "Venez découvrir Ananda Taskboard",
     "spMailBody": "Joy ! Nous utilisons Ananda Taskboard pour organiser notre seva — j'ai pensé que ça plairait aussi à votre équipe. Créez votre propre tableau ici : {{url}}"
+  },
+  "attach": {
+    "label": "Pièces jointes",
+    "add": "Ajouter un fichier",
+    "uploading": "Envoi…",
+    "failed": "Échec de l'envoi.",
+    "hint": "Images, documents ou vidéo courte — jusqu'à 5.",
+    "none": "Aucun fichier.",
+    "drop": "Glissez des fichiers ici, ou cliquez pour parcourir",
+    "full": "Jusqu'à {{n}} fichiers."
   }
 }

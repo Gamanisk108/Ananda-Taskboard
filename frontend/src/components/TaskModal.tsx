@@ -13,6 +13,7 @@ import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
+import { Attachments } from "./Attachments";
 import { AssigneePicker } from "./AssigneePicker";
 import { PRIORITY_META, type Me, type Recurrence, type Subtask, type Task } from "../types";
 
@@ -550,6 +551,12 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <label>{t("task.links")}</label>
           <LinksEditor value={links} onChange={setLinks} disabled={readOnly} />
         </div>
+
+        {editing && (
+          <div className="field">
+            <Attachments target="task" targetId={task!.id} canEdit={!readOnly} label={t("attach.label")} />
+          </div>
+        )}
 
         <div className="field" style={{ marginBottom: 10 }}>
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>

@@ -94,6 +94,9 @@ class DailyPushJobView(APIView):
         from feedback.models import purge_old_screenshots
 
         result["screenshots_purged"] = purge_old_screenshots()  # 90-day report-image retention
+        from attachments.purge import purge_old_report_attachments
+
+        result["report_attachments_purged"] = purge_old_report_attachments()  # 90-day R2 cleanup
         rp = daily_autosave()
         result["restore_point"] = rp.id
         return Response(result)

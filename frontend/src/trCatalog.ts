@@ -35,7 +35,7 @@ export function catalogEntries(): CatalogEntry[] {
  *  A vitest completeness test fails the build when a NEW namespace appears in
  *  en.json without a category — assign it here. */
 export const TR_CATEGORIES: { key: string; namespaces: string[] }[] = [
-  { key: "tasks", namespaces: ["common", "task", "list", "tm", "subtask", "cs", "bulk", "day"] },
+  { key: "tasks", namespaces: ["common", "task", "list", "tm", "subtask", "cs", "bulk", "day", "attach"] },
   { key: "cal", namespaces: ["cal", "holidays"] },
   { key: "status", namespaces: ["view", "kanban", "approvals", "theme"] },
   { key: "team", namespaces: ["ta", "ap", "invite", "accept", "org"] },

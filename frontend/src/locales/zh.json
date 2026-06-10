@@ -855,5 +855,15 @@
     "spNote": "任何拥有链接的人都可以创建自己的团队——他们的看板与你的完全独立。",
     "spMailSubject": "来看看 Ananda Taskboard",
     "spMailBody": "Joy！我们用 Ananda Taskboard 管理我们的 seva——想着你的团队可能也会喜欢。在这里创建你们自己的看板：{{url}}"
+  },
+  "attach": {
+    "label": "附件",
+    "add": "添加文件",
+    "uploading": "上传中…",
+    "failed": "上传失败。",
+    "hint": "图片、文档或短视频 — 最多 5 个。",
+    "none": "暂无文件。",
+    "drop": "将文件拖到此处，或点击浏览",
+    "full": "最多 {{n}} 个文件。"
   }
 }
