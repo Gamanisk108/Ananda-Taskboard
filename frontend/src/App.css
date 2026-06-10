@@ -926,9 +926,9 @@ html[data-theme="dark"] .an-quote-lite .qw { color: var(--gold); }
 .poll-top .pt-n { flex: none; text-align: right; font-size: 11px; color: var(--faint); }
 .poll-top .pt-n b { font-family: var(--f-mono); font-size: 15px; color: var(--text); display: block; line-height: 1; }
 .poll-bars { display: flex; flex-direction: column; gap: 7px; }
-.poll-bar { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; padding: 8px 9px; border-radius: 9px; border: 1px solid transparent; background: transparent; transition: background .14s, border-color .14s; }
+.poll-bar { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 9px; border-radius: 9px; border: 1px solid transparent; background: transparent; transition: background .14s, border-color .14s; }
 .poll-bar:hover { background: var(--surface-2); border-color: var(--border); }
-.poll-bar .pb-txt { flex: none; width: 188px; min-width: 188px; font-size: 13px; color: var(--text); line-height: 1.35; text-wrap: pretty; display: flex; align-items: center; gap: 7px; }
+.poll-bar .pb-txt { flex: none; width: 150px; min-width: 150px; font-size: 13px; color: var(--text); line-height: 1.35; text-wrap: pretty; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 7px; }
 .poll-bar .pb-txt .tick { flex: none; color: var(--done); display: none; }
 .poll-bar.live .pb-txt .tick { display: inline-flex; }
 .poll-bar.live .pb-txt { font-weight: 600; }
@@ -1106,6 +1106,7 @@ html[data-theme="dark"] .tr-done .hh-img { filter: invert(1); }
 /* Poll graph (review) §10 — variant flags, free-text override, top-5 collapse */
 .pb-flag { font-family: var(--f-ui); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-radius: var(--r-pill); padding: 1px 7px; margin-left: 7px; white-space: nowrap; }
 .pb-flag.match { color: var(--muted); background: var(--sunk); }
+.pb-flag.livechip { color: var(--done); background: color-mix(in srgb, var(--done) 15%, var(--surface)); }
 .pb-flag.bad { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, var(--surface)); display: inline-flex; align-items: center; gap: 4px; }
 .pb-flag.bad svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .poll-bar.phbad { opacity: .62; cursor: not-allowed; }
