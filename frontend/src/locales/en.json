@@ -855,5 +855,15 @@
     "spNote": "Anyone with the link can create their own team — their board stays separate from yours.",
     "spMailSubject": "Come see Ananda Taskboard",
     "spMailBody": "Joy! We use Ananda Taskboard to run our seva — thought your team might like it too. You can create your own board here: {{url}}"
+  },
+  "attach": {
+    "label": "Attachments",
+    "add": "Add media",
+    "uploading": "Uploading…",
+    "failed": "Upload failed.",
+    "hint": "Images, docs, or short video — up to 5.",
+    "none": "No files yet.",
+    "drop": "Drag files here, or click to browse",
+    "full": "Up to {{n}} files."
   }
 }

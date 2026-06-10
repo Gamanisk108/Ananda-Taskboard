@@ -855,5 +855,15 @@
     "spNote": "Qualquer pessoa com o link pode criar a própria equipe — o quadro dela fica separado do seu.",
     "spMailSubject": "Venha conhecer o Ananda Taskboard",
     "spMailBody": "Joy! Usamos o Ananda Taskboard para organizar nosso seva — achei que sua equipe também gostaria. Crie seu próprio quadro aqui: {{url}}"
+  },
+  "attach": {
+    "label": "Anexos",
+    "add": "Adicionar ficheiro",
+    "uploading": "A carregar…",
+    "failed": "Falha no carregamento.",
+    "hint": "Imagens, documentos ou vídeo curto — até 5.",
+    "none": "Ainda não há ficheiros.",
+    "drop": "Arraste ficheiros aqui ou clique para procurar",
+    "full": "Até {{n}} ficheiros."
   }
 }

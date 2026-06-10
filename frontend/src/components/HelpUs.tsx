@@ -3,13 +3,15 @@
 // Spread the word is the NEW-CENTER REFERRAL (audit ruling §3): it shares the
 // self-serve signup link; the join-link/approval concept is v2.
 
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Heart, Languages, TriangleAlert, Sparkles, Share2, Send,
-  Paperclip, X, Copy, Mail, MessageCircle, Check, Info, Link2,
+  Copy, Mail, MessageCircle, Check, Info, Link2,
 } from "lucide-react";
 import { api } from "../api/client";
+import { uploadAttachment } from "../attachments";
+import { PendingAttachments } from "./Attachments";
 import { Modal, SingleSelect } from "./common";
 import { useSubmitGuard } from "../useSubmitGuard";
 import { catalogEntries, mergeRows } from "../trCatalog";
@@ -119,32 +121,6 @@ function SuccessPanel({ title, body, refNo, quote }: { title: string; body: Reac
   );
 }
 
-/** Downscale + JPEG-compress an image file into a small data-URL (≤~300 KB —
- *  the backend hard-caps at 1 MB; storage is in-database, so stay tiny). */
-async function compressImage(file: File): Promise<string> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = reject;
-      el.src = url;
-    });
-    const scale = Math.min(1, 1280 / Math.max(img.width, img.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.width * scale);
-    canvas.height = Math.round(img.height * scale);
-    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-    for (const quality of [0.8, 0.6, 0.4]) {
-      const out = canvas.toDataURL("image/jpeg", quality);
-      if (out.length < 400_000) return out;
-    }
-    return canvas.toDataURL("image/jpeg", 0.3);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
 /* =====================================================================
    Report a problem (D41)
    ===================================================================== */
@@ -161,21 +137,10 @@ export function ReportProblemDialog({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState("");
   const [where, setWhere] = useState("whThis");
   const [severity, setSeverity] = useState("minor");
-  const [shot, setShot] = useState<{ name: string; data: string } | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [tech, setTech] = useState(true);
   const [sentRef, setSentRef] = useState<string | null>(null);
   const [err, setErr] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  async function pickFile(file: File | undefined) {
-    if (!file) return;
-    setErr("");
-    try {
-      setShot({ name: file.name, data: await compressImage(file) });
-    } catch {
-      setErr(t("fb.shotErr"));
-    }
-  }
 
   const send = () => run(async () => {
     setErr("");
@@ -184,7 +149,6 @@ export function ReportProblemDialog({ onClose }: { onClose: () => void }) {
         message: message.trim(),
         where,
         severity,
-        screenshot: shot?.data ?? "",
         tech: tech
           ? {
               ua: navigator.userAgent,
@@ -194,7 +158,12 @@ export function ReportProblemDialog({ onClose }: { onClose: () => void }) {
               lang: document.documentElement.lang,
             }
           : {},
-      })) as { ref: string };
+      })) as { ref: string; id: number };
+      // Attach any uploaded media to the freshly-created report (best-effort —
+      // the report itself is already saved).
+      for (const f of files) {
+        try { await uploadAttachment("report", res.id, f); } catch { /* keep going */ }
+      }
       setSentRef(res.ref);
     } catch {
       setErr(t("fb.errSend"));
@@ -238,26 +207,7 @@ export function ReportProblemDialog({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="field">
-        <label>{t("fb.shot")}</label>
-        {shot ? (
-          <div className="an-attach has">
-            <span className="an-att-thumb"><img src={shot.data} alt="" /></span>
-            <span className="an-att-meta">
-              <span className="an-att-nm" title={shot.name}>{shot.name}</span>
-              <span className="an-att-sz mono">{Math.round(shot.data.length * 0.75 / 1024)} KB</span>
-            </span>
-            <button type="button" className="an-att-x" title={t("common.remove", "Remove")} onClick={() => setShot(null)}>
-              <X size={15} />
-            </button>
-          </div>
-        ) : (
-          <button type="button" className="an-attach" onClick={() => fileRef.current?.click()}>
-            <Paperclip size={18} />
-            <span className="an-att-tx">{t("fb.attach")} <span className="opt">{t("fb.optional")}</span></span>
-          </button>
-        )}
-        <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }}
-          onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = ""; }} />
+        <PendingAttachments files={files} onChange={setFiles} label={`${t("attach.label")} (${t("fb.optional")})`} />
       </div>
       <div className="an-techbox">
         <Toggle label={t("fb.tech")} hint={t("fb.techHint")} on={tech} onChange={setTech} />

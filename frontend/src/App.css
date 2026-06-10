@@ -1120,3 +1120,28 @@ html[data-theme="dark"] .tr-done .hh-img { filter: invert(1); }
 .poll-own.open .tr-inputrow { display: flex; align-items: stretch; gap: 9px; margin-top: 4px; }
 .poll-own.open textarea.tr-in { flex: 1; min-width: 0; }
 .poll-foot .clear { margin-left: auto; }
+
+/* ---- Media attachments — file list + drag/click upload popup ---- */
+.att-wrap { margin-top: 4px; }
+.att-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.att-list { display: flex; flex-direction: column; gap: 6px; }
+.att-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--surface); }
+.att-row .att-ic { flex: none; display: grid; place-items: center; color: var(--hu-ink); }
+.att-row .att-name { flex: 1; min-width: 0; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.att-row a.att-name:hover { text-decoration: underline; }
+.att-row .att-size { flex: none; font-size: 11.5px; color: var(--faint); }
+.att-row .att-del { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; color: var(--muted); cursor: pointer; }
+.att-row .att-del:hover { background: var(--sunk); color: var(--danger); }
+.att-empty { font-size: 12.5px; color: var(--faint); padding: 2px 2px 4px; }
+.att-addbtn { margin-top: 9px; }
+/* dropzone in the popup */
+.att-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 34px 20px; border: 2px dashed var(--border-strong); border-radius: var(--r-card); background: var(--surface-2); color: var(--muted); text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+.att-drop:hover, .att-drop.drag { border-color: var(--dome); background: color-mix(in srgb, var(--hu) 6%, var(--surface)); color: var(--text); }
+.att-drop.busy { cursor: default; }
+.att-drop svg { color: var(--hu-ink); }
+.att-drop-t { font-size: 14px; font-weight: 600; color: var(--text); }
+.att-drop-h { font-size: 12px; color: var(--faint); text-wrap: balance; }
+.att-spin { animation: att-spin .9s linear infinite; }
+@keyframes att-spin { to { transform: rotate(360deg); } }
+.att-err { color: var(--danger); font-size: 12.5px; margin-top: 8px; text-wrap: pretty; }
+@media (prefers-reduced-motion: reduce) { .att-spin { animation: none; } }
