@@ -39,3 +39,5 @@ vapid_*.json
 .claude/
 .playwright-mcp/
 /qa-*.png
+# Sentry DSN is a publishable client key - this one .env file IS committed
+!frontend/.env.production
