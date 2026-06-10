@@ -124,7 +124,7 @@ export function ImproveTranslations({ me, onClose }: { me: Me; onClose: () => vo
   );
 
   return (
-    <Modal icon={<Languages />} title={t("trc.title")} onClose={onClose} wide
+    <Modal fullScreenOnNarrow icon={<Languages />} title={t("trc.title")} onClose={onClose} wide
       footer={
         <>
           <span style={{ fontSize: 12.5, color: "var(--muted)", display: "flex", alignItems: "center", gap: 7 }}>

@@ -111,7 +111,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
     <>
       <button className="btn-secondary" data-testid="import-button" onClick={() => setOpen(true)}>{t("import.button")}</button>
       {open && (
-        <Modal icon={<Upload />} title={t("modals.importTasks")} onClose={close} wide>
+        <Modal fullScreenOnNarrow icon={<Upload />} title={t("modals.importTasks")} onClose={close} wide>
           {!result && (
             <>
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>

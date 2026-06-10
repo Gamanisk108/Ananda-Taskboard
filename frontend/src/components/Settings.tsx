@@ -64,7 +64,7 @@ export function Settings({ me, language, onLanguage, theme, onTheme, dailyPushEn
   const visible = sections.filter((s) => !s.adminOnly || me.is_admin);
 
   return (
-    <Modal icon={<SettingsIcon />} title={t("modals.settings")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<SettingsIcon />} title={t("modals.settings")} onClose={onClose} wide>
       <div className="set-shell">
         <nav className="set-nav">
           {visible.map((s) => (

@@ -70,7 +70,7 @@ export function DeleteWithMove({ kind, id, name, projects, onClose, onDone }: Pr
   const moveCount = keep.size;
 
   return (
-    <Modal title={t("del.title", { kind: kindWord, name })} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow title={t("del.title", { kind: kindWord, name })} onClose={onClose} wide>
       {!tasks ? <Spinner /> : (
         <>
           {tasks.length === 0 ? (

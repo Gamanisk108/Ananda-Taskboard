@@ -50,7 +50,7 @@ export function History({ onClose }: { onClose: () => void }) {
   }, [rows]);
 
   return (
-    <Modal icon={<Clock />} title={t("modals.history")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<Clock />} title={t("modals.history")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("history.intro")}</p>
       <div className="bulkbar">
         <button className="btn-secondary" onClick={() => setDay((d) => shiftDay(d, -1))}>{t("history.prevDay")}</button>

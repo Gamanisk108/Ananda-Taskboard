@@ -96,7 +96,7 @@ export function ExportDialog({ me }: { me: Me }) {
     <>
       <button className="btn-secondary" data-testid="export-button" onClick={() => setOpen(true)}>{t("export.button")}</button>
       {open && (
-        <Modal icon={<Download />} title={t("modals.exportTasks")} onClose={() => setOpen(false)} wide>
+        <Modal fullScreenOnNarrow icon={<Download />} title={t("modals.exportTasks")} onClose={() => setOpen(false)} wide>
           <div className="row2">
             <div className="field">
               <label>{t("import.formatLabel")}</label>

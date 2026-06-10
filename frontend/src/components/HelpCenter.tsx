@@ -127,7 +127,7 @@ export function HelpCenter({
   }
 
   return (
-    <Modal icon={<CircleHelp />} title={t("help.title", "Help & FAQ")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<CircleHelp />} title={t("help.title", "Help & FAQ")} onClose={onClose} wide>
       <input
         type="search"
         data-testid="help-search"

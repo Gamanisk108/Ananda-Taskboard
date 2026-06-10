@@ -72,7 +72,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
   };
 
   return (
-    <Modal icon={<Users />} title={tr("modals.team")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow icon={<Users />} title={tr("modals.team")} onClose={onClose} wide>
       <div className="seg" style={{ marginBottom: 14 }}>
         {(["members", "groups", "access", "activity"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "seg-on" : "seg-off"} onClick={() => setTab(t)}>{labels[t]}</button>

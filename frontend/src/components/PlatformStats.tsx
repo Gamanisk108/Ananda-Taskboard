@@ -15,7 +15,7 @@ export function PlatformStats({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <Modal title={t("platform.title")} onClose={onClose} wide>
+    <Modal fullScreenOnNarrow title={t("platform.title")} onClose={onClose} wide>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("platform.subtitle")}</p>
       {orgs === null ? (
         <Spinner />

@@ -146,7 +146,7 @@ export function UndatedTasks({
         <span className="us-count">{undated.length}</span>
       </button>
       {open && (
-        <Modal wide icon={<CalendarOff />} title={t("cal.noDateTitle", "Unscheduled tasks ({{count}})", { count: undated.length })} onClose={() => setOpen(false)}>
+        <Modal fullScreenOnNarrow wide icon={<CalendarOff />} title={t("cal.noDateTitle", "Unscheduled tasks ({{count}})", { count: undated.length })} onClose={() => setOpen(false)}>
           <UnscheduledTable items={undated} onOpen={(id) => { setOpen(false); onOpen(id); }} />
         </Modal>
       )}
