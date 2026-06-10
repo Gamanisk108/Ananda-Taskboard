@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Languages, Check, ChevronRight, ChevronDown, Inbox, TriangleAlert, Pencil } from "lucide-react";
-import { LANGUAGES } from "../i18n";
+import i18n, { LANGUAGES } from "../i18n";
 import { api } from "../api/client";
 import { catalogEntries, placeholdersIntact, stripPlaceholders, reinsertPlaceholders } from "../trCatalog";
 import { Modal, SingleSelect, Spinner } from "./common";
@@ -116,7 +116,7 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
         </div>
       ) : (
         polls.map((poll) => (
-          <PollCard key={poll.key} poll={poll} en={enByKey.get(poll.key) ?? poll.key}
+          <PollCard key={poll.key} poll={poll} en={enByKey.get(poll.key) ?? poll.key} locale={locale}
             justApproved={justApproved?.key === poll.key ? justApproved.text : null}
             onApprove={approveText} onClear={() => onClear(poll)} />
         ))
@@ -125,8 +125,8 @@ export function TranslationReview({ onClose }: { onClose: () => void }) {
   );
 }
 
-function PollCard({ poll, en, justApproved, onApprove, onClear }: {
-  poll: Poll; en: string; justApproved: string | null;
+function PollCard({ poll, en, locale, justApproved, onApprove, onClear }: {
+  poll: Poll; en: string; locale: string; justApproved: string | null;
   onApprove: (key: string, text: string) => void; onClear: () => void;
 }) {
   const { t } = useTranslation();
@@ -135,6 +135,8 @@ function PollCard({ poll, en, justApproved, onApprove, onClear }: {
   const [ownOpen, setOwnOpen] = useState(false);
   const [own, setOwn] = useState("");
 
+  // What everyone using this locale sees right now: override → bundled.
+  const currentLive = poll.live ?? (i18n.getResource(locale, "translation", poll.key) as string | undefined) ?? "";
   const maxN = Math.max(...poll.variants.map((v) => v.count));
   const hasLive = poll.variants.some((v) => poll.live !== null && v.text === poll.live);
   const collapsed = poll.variants.length > TOP + 1 && !showAll;
@@ -171,6 +173,7 @@ function PollCard({ poll, en, justApproved, onApprove, onClear }: {
       <div className="poll-bars">
         {shown.map((v, i) => {
           const live = poll.live !== null && v.text === poll.live;
+          const matchesCurrent = !live && currentLive !== "" && v.text === currentLive;
           const lead = v.count === maxN && !hasLive;
           const phBroken = !placeholdersIntact(en, v.text);
           return (
@@ -182,7 +185,7 @@ function PollCard({ poll, en, justApproved, onApprove, onClear }: {
               <span className="pb-txt">
                 <span className="tick"><Check size={14} /></span>
                 {stripPlaceholders(v.text)}
-                {live && <span className="pb-flag match">{t("trv.matchesCurrent")}</span>}
+                {matchesCurrent && <span className="pb-flag match">{t("trv.matchesCurrent")}</span>}
                 {phBroken && <span className="pb-flag bad"><TriangleAlert size={11} /> {t("trv.phBad")}</span>}
               </span>
               <span className="pb-track">
