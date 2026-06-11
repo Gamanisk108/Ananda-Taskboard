@@ -425,6 +425,8 @@ export function AvatarStack({ ids, users, max = 3 }: { ids: number[]; users: Use
   );
 }
 
+let fsModalSeq = 0; // unique per-mount ids for full-screen history entries
+
 export function Modal({
   title,
   onClose,
@@ -468,12 +470,18 @@ export function Modal({
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
   const pushedRef = useRef(false);
+  const fsIdRef = useRef(0);
   const backTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!fs) return;
     if (backTimer.current) { clearTimeout(backTimer.current); backTimer.current = null; }
     if (!pushedRef.current) {
-      window.history.pushState({ atFsModal: true }, "");
+      // Each instance tags ITS OWN entry: when one full-screen view replaces
+      // another (Settings -> Improve translations), the outgoing modal must
+      // not consume the incoming one's entry — that closed the new dialog
+      // ~60ms after it opened (found by the 390px visual suite).
+      if (!fsIdRef.current) fsIdRef.current = ++fsModalSeq;
+      window.history.pushState({ atFsModal: fsIdRef.current }, "");
       pushedRef.current = true;
     }
     const onPop = () => { pushedRef.current = false; onCloseRef.current(); };
@@ -481,9 +489,9 @@ export function Modal({
     return () => {
       window.removeEventListener("popstate", onPop);
       // Closed via UI (not Back): consume the entry we pushed — deferred so a
-      // StrictMode remount can cancel it.
+      // StrictMode remount can cancel it, and only if the top entry is OURS.
       backTimer.current = setTimeout(() => {
-        if (pushedRef.current && window.history.state?.atFsModal) {
+        if (pushedRef.current && window.history.state?.atFsModal === fsIdRef.current) {
           pushedRef.current = false;
           window.history.back();
         }

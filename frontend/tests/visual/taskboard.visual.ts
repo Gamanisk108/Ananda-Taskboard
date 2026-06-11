@@ -16,12 +16,13 @@ const PASSWORD = process.env.PW_PASSWORD || "taskboard123";
 async function login(page: Page) {
   await page.goto("/");
   // already logged in? the board/list chrome will be present
-  if (await page.locator(".usermenu-btn").count()) return;
+  // Chrome marker: the user pill on desktop, the appbar hamburger on phones.
+  if (await page.locator('.usermenu-btn, [data-testid="nav-drawer-btn"]').count()) return;
   // The login labels aren't htmlFor-associated, so target the inputs directly.
   await page.locator('input[type="email"]').fill(EMAIL);
   await page.locator('input[type="password"]').fill(PASSWORD);
   await page.getByRole("button", { name: /sign in/i }).click();
-  await page.locator(".usermenu-btn").waitFor({ timeout: 15000 });
+  await page.locator('.usermenu-btn, [data-testid="nav-drawer-btn"]').first().waitFor({ timeout: 15000 });
   // dismiss first-run welcome if present
   const gotIt = page.getByRole("button", { name: /got it/i });
   if (await gotIt.count()) await gotIt.click().catch(() => {});
@@ -32,14 +33,20 @@ async function login(page: Page) {
 
 async function setTheme(page: Page, theme: "light" | "dark") {
   const cur = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-  if (cur !== theme) await page.locator('button[title="Theme"]').first().click().catch(() => {});
+  if (cur === theme) return;
+  const headerBtn = page.locator('button[title="Theme"]').first();
+  if (await headerBtn.isVisible().catch(() => false)) { await headerBtn.click().catch(() => {}); return; }
+  // Phones: the toggle lives in the drawer's .duser footer.
+  await page.locator('[data-testid="nav-drawer-btn"]').click();
+  await page.locator(".duser .theme").click();
+  await page.keyboard.press("Escape");
 }
 
 async function gotoView(page: Page, view: "list" | "board" | "weekly" | "monthly") {
   await page.goto(`/?project=global&view=${view}`);
   await page.locator("thead, .kanban, .wk, .month, [class*='board'], .kan-card").first().waitFor({ timeout: 10000 }).catch(() => {});
   // Let async task data settle so screenshots aren't flaky on render timing.
-  await page.waitForLoadState("networkidle").catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
 }
 
 test.describe("Auth", () => {
@@ -79,8 +86,15 @@ async function openTeam(page: Page) {
 }
 // Settings / Help live in the account menu (D15).
 async function openAccountItem(page: Page, re: RegExp) {
-  await page.locator(".usermenu-btn").click();
-  await page.getByRole("button", { name: re }).first().click();
+  const pill = page.locator(".usermenu-btn");
+  if (await pill.isVisible().catch(() => false)) {
+    await pill.click();
+    await page.getByRole("button", { name: re }).first().click();
+  } else {
+    // Phones: account actions live in the nav drawer.
+    await page.locator('[data-testid="nav-drawer-btn"]').click();
+    await page.locator(".dnav").getByRole("button", { name: re }).first().click();
+  }
 }
 
 test.describe("Dialogs", () => {
@@ -109,8 +123,7 @@ test.describe("Help Us", () => {
   async function openHelpUs(page: Page) {
     await login(page);
     await gotoView(page, "list"); // settle the board behind the dialog (anti-flake)
-    await page.locator(".usermenu-btn").click();
-    await page.locator('[data-testid="open-settings"]').click();
+    await openAccountItem(page, /settings/i);
     await page.locator('[data-testid="settings-nav-helpus"]').click();
     await page.locator(".hu-stack").waitFor({ timeout: 8000 });
   }
@@ -125,8 +138,7 @@ test.describe("Help Us", () => {
     await login(page);
     await setTheme(page, "dark");
     await gotoView(page, "list"); // settle the board behind the dialog (anti-flake)
-    await page.locator(".usermenu-btn").click();
-    await page.locator('[data-testid="open-settings"]').click();
+    await openAccountItem(page, /settings/i);
     await page.locator('[data-testid="settings-nav-helpus"]').click();
     await page.locator(".hu-stack").waitFor({ timeout: 8000 });
     await expect(page).toHaveScreenshot("settings-helpus-dark.png", { fullPage: true });
@@ -134,9 +146,9 @@ test.describe("Help Us", () => {
 
   test("improve translations dialog", async ({ page }) => {
     await openHelpUs(page);
-    await page.getByRole("button", { name: /start translating/i }).click();
+    await page.locator(".hu-stack").getByRole("button", { name: /^translate$/i }).click();
     await page.locator(".tr-row").first().waitFor({ timeout: 10000 });
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
     await expect(page).toHaveScreenshot("dialog-translate.png", { fullPage: true });
   });
 
@@ -147,12 +159,7 @@ test.describe("Help Us", () => {
     await expect(page).toHaveScreenshot("dialog-report.png", { fullPage: true });
   });
 
-  test("spread the word dialog", async ({ page }) => {
-    await openHelpUs(page);
-    await page.getByRole("button", { name: /invite/i }).first().click();
-    await page.locator(".an-copyrow").waitFor({ timeout: 8000 });
-    await expect(page).toHaveScreenshot("dialog-spread.png", { fullPage: true });
-  });
+  // "Spread the word" is hidden for MVP (D48) — test removed with the card.
 
   test("translation review (superadmin)", async ({ page, viewport }) => {
     test.skip(!viewport || viewport.width < 900, "topbar nav is desktop-scoped");
@@ -160,7 +167,7 @@ test.describe("Help Us", () => {
     await gotoView(page, "list"); // settle the board behind the dialog (anti-flake)
     await page.locator('[data-testid="open-tr-review"]').click();
     await page.locator(".rv-bar").waitFor({ timeout: 8000 });
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
     await expect(page).toHaveScreenshot("dialog-tr-review.png", { fullPage: true });
   });
 });

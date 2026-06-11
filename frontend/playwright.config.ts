@@ -21,6 +21,9 @@ import { defineConfig, devices } from "@playwright/test";
 const BASE_URL = process.env.PW_BASE_URL || "http://localhost:4173";
 
 export default defineConfig({
+  // Live-deploy runs (Render cold starts + full-page captures) need more than
+  // the 30s default; interaction hangs still surface via the 5s bounded waits.
+  timeout: 60_000,
   testDir: "./tests/visual",
   testMatch: "**/*.visual.ts",
   snapshotDir: "./tests/visual/__snapshots__",
