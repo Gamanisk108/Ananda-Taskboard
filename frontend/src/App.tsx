@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
   Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Globe, LogOut, Languages, MoreHorizontal, Menu,
-  List as ListIcon, Columns3, CalendarRange, CalendarDays } from "lucide-react";
+  List as ListIcon, Columns3, CalendarRange, CalendarDays, Hourglass } from "lucide-react";
 import "./App.css";
 import i18n, { resolveLanguage } from "./i18n";
 import { applyOverrides } from "./trOverrides";
@@ -36,6 +36,7 @@ import { History } from "./components/History";
 import { BulkMigrate } from "./components/BulkMigrate";
 import { HelpCenter } from "./components/HelpCenter";
 import { WelcomeCard } from "./components/WelcomeCard";
+import { WaitingForApproval } from "./components/WaitingForApproval";
 import { whatsNew, latestVersion } from "./help/registry";
 import type { ProjectNode, Task } from "./types";
 
@@ -124,6 +125,7 @@ export default function App() {
   const [showPlatform, setShowPlatform] = useState(false);
   const [showTrReview, setShowTrReview] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showMyPending, setShowMyPending] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const narrow = useIsNarrow();
@@ -156,6 +158,15 @@ export default function App() {
     enabled: !!me?.is_admin,
   });
   const approvalsCount = pendingApprovals.length;
+
+  // D50: the member's own pending submissions — badge on the account menu /
+  // drawer entry (hidden at 0), opens the "Waiting for approval" list.
+  const { data: myPending = [] } = useQuery({
+    queryKey: ["tasks", "approvals-mine", me?.active_org ?? null],
+    queryFn: () => api.get("/api/approvals/mine") as Promise<unknown[]>,
+    enabled: !!me,
+  });
+  const myPendingCount = myPending.length;
 
   const tree = me?.tree;
   const projects = tree?.projects ?? [];
@@ -267,6 +278,8 @@ export default function App() {
   ].filter(Boolean) as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; badge?: number }[];
   // Account actions, shared by the desktop UserMenu and the mobile drawer.
   const accountItems = [
+    // D50: "Pending approval" + count — first item, hidden at 0 (D6 rule).
+    ...(myPendingCount > 0 ? [{ icon: <Hourglass size={15} />, label: t("menu.pendingApproval", "Pending approval"), onClick: () => setShowMyPending(true), testId: "open-my-pending", badge: myPendingCount }] : []),
     { icon: <CircleHelp size={15} />, label: t("help.open"), onClick: () => setShowHelp(true), testId: "open-help", dot: hasNewHelp },
     { icon: <SettingsIcon size={15} />, label: t("menu.settings"), onClick: () => setShowSettings(true), testId: "open-settings", dot: helpUsUnseen() },
     ...(me.is_admin ? [
@@ -276,7 +289,7 @@ export default function App() {
     { icon: <ArrowLeftRight size={15} />, label: t("menu.bulkMigrate"), onClick: () => setShowBulk(true) },
     { icon: <BookOpen size={15} />, label: showArchived ? t("view.hideArchive") : t("view.archive"), onClick: () => { setView("list"); setShowArchived((a) => !a); }, testId: "toggle-archive" },
     { icon: <Trash2 size={15} />, label: t("nav.trash"), onClick: () => setShowTrash(true) },
-  ] as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; dot?: boolean }[];
+  ] as { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; dot?: boolean; badge?: number }[];
 
   // View-scoped actions (Share/Copy/Export/Import) — inline on desktop, behind
   // the appbar kebab on phones.
@@ -344,6 +357,7 @@ export default function App() {
                   <button key={`a${i}`} data-testid={it.testId} onClick={() => { setDrawerOpen(false); it.onClick(); }}>
                     {it.icon}<span>{it.label}</span>
                     {it.dot && <span className="dnav-dot" aria-hidden />}
+                    {it.badge != null && <span className="nav-badge">{it.badge}</span>}
                   </button>
                 ))}
                 <div className="dsep" />
@@ -533,6 +547,10 @@ export default function App() {
           onReplayWelcome={replayWelcome}
         />
       )}
+      {showMyPending && (
+        <WaitingForApproval onClose={() => setShowMyPending(false)}
+          onOpen={(t) => { setShowMyPending(false); setEditing(t); }} />
+      )}
       {showWelcome && <WelcomeCard onClose={dismissWelcome} />}
     </div>
   );
@@ -543,7 +561,7 @@ export default function App() {
  *  D15 separator after Help and the Logout row. */
 function UserMenu({ name, items, anyDot, onLogout }: {
   name: string;
-  items: { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; dot?: boolean }[];
+  items: { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; dot?: boolean; badge?: number }[];
   anyDot: boolean;
   onLogout: () => void;
 }) {
@@ -573,6 +591,7 @@ function UserMenu({ name, items, anyDot, onLogout }: {
               <button className="usermenu-item" data-testid={it.testId} onClick={() => { setOpen(false); it.onClick(); }}>
                 {it.icon} {it.label}
                 {it.dot && <span className="dnav-dot" aria-hidden />}
+                {it.badge != null && <span className="nav-badge">{it.badge}</span>}
               </button>
               {/* D15: Help (always first) sits above a separator. */}
               {i === 0 && <div className="usermenu-sep" />}

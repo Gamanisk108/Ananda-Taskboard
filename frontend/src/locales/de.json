@@ -44,7 +44,8 @@
     "logout": "Abmelden",
     "language": "Sprache",
     "theme": "Design",
-    "bulkMigrate": "Massenmigration"
+    "bulkMigrate": "Massenmigration",
+    "pendingApproval": "Wartet auf Freigabe"
   },
   "login": {
     "subtitle": "Melden Sie sich bei Ihrem Team-Board an.",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "Datenschutzerklärung",
     "terms": "Nutzungsbedingungen"
+  },
+  "summary": {
+    "pending": "Wartet auf Freigabe"
+  },
+  "wfa": {
+    "title": "Wartet auf Freigabe",
+    "sub": "Ihre Einreichungen, die noch kein Admin geprüft hat. Sie bleiben mit einer goldenen Markierung auf Ihrem Board.",
+    "sortNew": "Neueste zuerst",
+    "sortOld": "Älteste zuerst",
+    "empty": "Nichts offen — alles Eingereichte wurde geprüft.",
+    "newChip": "NEUE Aufgabe",
+    "requested": "Angefragt",
+    "submitted": "Eingereicht",
+    "sent": "gesendet {{date}}"
   }
 }

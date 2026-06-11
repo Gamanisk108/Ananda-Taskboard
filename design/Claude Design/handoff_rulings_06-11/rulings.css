@@ -1,0 +1,45 @@
+/* =============================================================
+   Rulings 2026-06-11 — style ADDITIONS only.
+   Everything else is inherited verbatim from ananda-mobile.css;
+   never restyle an existing class here (RULE #0).
+   ============================================================= */
+
+/* D20 — radius tokens are 11/8 app-wide; the copied mobile css still
+   carries the stale 13/10, so the artboards pin the canonical values. */
+.phone{--r-card:11px;--r-ctl:8px}
+
+/* ---------- Q1 (D49) · Share = ghost icon in the fs-head ---------- */
+.fs-head .rul-share{width:42px;height:42px;border-radius:var(--r-ctl);display:grid;place-items:center;color:var(--muted);flex:none}
+.fs-head .rul-share svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- Q1 (D49) · the blessed sticky footer ----------
+   Canonical dialog footer per D5: Delete LEFT in red · Cancel · Save
+   (filled primary). Share lives in the fs-head, not here. Pinned under
+   the scroll body. */
+.rul-foot{flex:none;display:flex;align-items:center;gap:9px;padding:11px 14px 24px;background:var(--surface);border-top:1px solid var(--border)}
+.rul-foot .sp{flex:1}
+.rul-foot button{border-radius:var(--r-ctl);padding:10px 14px;font-weight:600;font-size:14px;border:1px solid transparent}
+.rul-foot .rf-del{background:var(--surface);border-color:color-mix(in srgb,var(--danger) 40%,transparent);color:var(--danger)}
+.rul-foot .rf-sec{background:var(--surface);border-color:var(--border);color:var(--text)}
+.rul-foot .rf-pri{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);box-shadow:var(--shadow-1)}
+
+/* ---------- Q2 · pending-approval treatment, phone list ---------- */
+/* warm-gold row tint — same vocabulary as the overdue(red)/due-soon(amber)
+   tints; the status rail flips to gold via --sc (set inline by the builder) */
+.trow.pending{background:color-mix(in srgb,var(--gold) 9%,transparent)}
+.pend-pill{display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;border-radius:var(--r-pill);padding:1px 8px;white-space:nowrap;
+  color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 30%,transparent)}
+.daydiv.pend-div{color:var(--gold-deep)}
+
+/* ---------- D51 · statuses restored to the responsive List ----------
+   Right-aligned column: status pill (or the pending pill) on top, avatars
+   beneath; the chevron is dropped to pay for the width. */
+.trow .rcol{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:5px;flex:none;margin-left:2px}
+.trow .rcol .status-pill{font-size:10.5px;padding:1px 8px;gap:5px;white-space:nowrap}
+.trow .rcol .status-pill .dot{width:6px;height:6px}
+.trow .rcol .avstack{display:inline-flex}
+
+/* ---------- Q2-C · "Waiting for approval" route — List rows verbatim ---------- */
+.trow .rq-diff,.crow .rq-diff{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:3px}
+.trow .rq-diff .arr,.crow .rq-diff .arr{color:var(--gold-deep)}
+.trow .rcol .appr-kind{margin:0}

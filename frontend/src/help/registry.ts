@@ -60,6 +60,12 @@ export const ARTICLES: HelpArticle[] = [
   { id: "new-task", category: "tasks", surface: "nav.newTask" },
   { id: "share-view", category: "tasks", surface: "view.shareView" },
   { id: "copy-summary", category: "tasks", surface: "view.copySummary" },
+  {
+    id: "pending-approval",
+    category: "tasks",
+    surface: "menu.pendingApproval",
+    addedISO: "2026-06-11",
+  },
   { id: "archive", category: "tasks", surface: "view.archive" },
 
   // ---- Your account --------------------------------------------------------

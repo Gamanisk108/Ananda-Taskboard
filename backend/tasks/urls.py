@@ -12,7 +12,7 @@ from .events_views import (
     StatusViewSet,
 )
 from .history_service import HistoryDatesView, HistoryView
-from .views import ApprovalsView, CommentViewSet, SubtaskViewSet, TaskViewSet
+from .views import ApprovalsView, CommentViewSet, MyPendingApprovalsView, SubtaskViewSet, TaskViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register("tasks", TaskViewSet, basename="task")
@@ -24,6 +24,7 @@ router.register("statuses", StatusViewSet, basename="status")
 
 urlpatterns = [
     path("approvals", ApprovalsView.as_view(), name="approvals"),
+    path("approvals/mine", MyPendingApprovalsView.as_view(), name="approvals-mine"),
     path("calendar", CalendarView.as_view(), name="calendar"),
     path("calendar/undated", UndatedTasksView.as_view(), name="calendar-undated"),
     path("events/range", EventsRangeView.as_view(), name="events-range"),  # before router

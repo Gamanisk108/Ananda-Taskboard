@@ -44,7 +44,8 @@
     "logout": "Log out",
     "language": "Language",
     "theme": "Theme",
-    "bulkMigrate": "Bulk migrate"
+    "bulkMigrate": "Bulk migrate",
+    "pendingApproval": "Pending approval"
   },
   "login": {
     "subtitle": "Sign in to your team board.",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
+  },
+  "summary": {
+    "pending": "Pending approval"
+  },
+  "wfa": {
+    "title": "Waiting for approval",
+    "sub": "Your submissions an admin hasn't reviewed yet. They stay on your board with a gold “Pending approval” pill until then.",
+    "sortNew": "Newest first",
+    "sortOld": "Oldest first",
+    "empty": "Nothing waiting — everything you've sent has been reviewed.",
+    "newChip": "NEW task",
+    "requested": "Requested",
+    "submitted": "Submitted",
+    "sent": "sent {{date}}"
   }
 }

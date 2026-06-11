@@ -44,7 +44,8 @@
     "logout": "退出登录",
     "language": "语言",
     "theme": "主题",
-    "bulkMigrate": "批量迁移"
+    "bulkMigrate": "批量迁移",
+    "pendingApproval": "待审批"
   },
   "login": {
     "subtitle": "登录到你的团队看板。",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "隐私政策",
     "terms": "服务条款"
+  },
+  "summary": {
+    "pending": "待审批"
+  },
+  "wfa": {
+    "title": "等待审批",
+    "sub": "管理员尚未审核的提交。在此之前它们会带着金色“待审批”标签留在您的看板上。",
+    "sortNew": "最新优先",
+    "sortOld": "最早优先",
+    "empty": "没有待审批的内容——您提交的都已审核。",
+    "newChip": "新任务",
+    "requested": "请求",
+    "submitted": "提交时间",
+    "sent": "提交于 {{date}}"
   }
 }

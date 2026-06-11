@@ -137,13 +137,19 @@ class TaskViewSet(ModelViewSet):
         # Always go through the engine — it scopes admins to their org and members
         # to their grants. (Skipping it for admins leaked every org's tasks.)
         qs = qs.filter(visible_tasks_q(user, org))
-        # The live board shows only approved tasks; pending/rejected live in the
-        # approvals inbox. Admins/creators can opt in via ?approval=.
+        # The live board shows approved tasks PLUS the requester's own pending
+        # submissions (D50/APR-4: a member's task never silently vanishes while
+        # it awaits approval — the UI renders it read-only with a pending pill).
+        # Rejected tasks and other people's pending stay in the approvals inbox.
+        # Admins/creators can still opt in via ?approval=.
         approval = self.request.query_params.get("approval")
         if approval in dict(Task.Approval.choices):
             qs = qs.filter(approval_state=approval)
         elif self.action == "list":
-            qs = qs.filter(approval_state=Task.Approval.APPROVED)
+            qs = qs.filter(
+                Q(approval_state=Task.Approval.APPROVED)
+                | Q(approval_state=Task.Approval.PENDING, created_by=user)
+            )
         params = self.request.query_params
         # Archive: list hides archived by default; ?archived=1 shows only archived.
         if self.action == "list":
@@ -383,6 +389,26 @@ class SubtaskViewSet(ModelViewSet):
     def perform_destroy(self, instance):
         self._check(instance.task)
         instance.delete()
+
+
+class MyPendingApprovalsView(APIView):
+    """D50/APR-4: the signed-in member's OWN tasks awaiting admin approval —
+    powers the 'Pending approval' menu badge and the 'Waiting for approval'
+    list. Any authenticated user; scoped to their submissions in the org."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        org = _org(request)
+        mine = (
+            Task.objects.filter(approval_state=Task.Approval.PENDING, created_by=request.user)
+            .filter(visible_tasks_q(request.user, org))
+            .select_related("subproject", "created_by")
+            .prefetch_related("assignees", "subtasks")
+            .order_by("-created_at")
+            .distinct()
+        )
+        return Response(TaskSerializer(mine, many=True).data)
 
 
 class ApprovalsView(APIView):

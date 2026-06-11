@@ -44,7 +44,8 @@
     "logout": "Esci",
     "language": "Lingua",
     "theme": "Tema",
-    "bulkMigrate": "Migrazione di massa"
+    "bulkMigrate": "Migrazione di massa",
+    "pendingApproval": "In attesa di approvazione"
   },
   "login": {
     "subtitle": "Accedi alla bacheca del tuo team.",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "Informativa sulla privacy",
     "terms": "Termini di servizio"
+  },
+  "summary": {
+    "pending": "In attesa di approvazione"
+  },
+  "wfa": {
+    "title": "In attesa di approvazione",
+    "sub": "I tuoi invii che un amministratore non ha ancora esaminato. Restano sulla tua bacheca con un'etichetta dorata.",
+    "sortNew": "Più recenti prima",
+    "sortOld": "Più vecchi prima",
+    "empty": "Niente in attesa — tutto ciò che hai inviato è stato esaminato.",
+    "newChip": "NUOVA attività",
+    "requested": "Richiesto",
+    "submitted": "Inviato",
+    "sent": "inviato {{date}}"
   }
 }

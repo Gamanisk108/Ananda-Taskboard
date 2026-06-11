@@ -37,7 +37,7 @@ export function catalogEntries(): CatalogEntry[] {
 export const TR_CATEGORIES: { key: string; namespaces: string[] }[] = [
   { key: "tasks", namespaces: ["common", "task", "list", "tm", "subtask", "cs", "bulk", "day", "attach"] },
   { key: "cal", namespaces: ["cal", "holidays"] },
-  { key: "status", namespaces: ["view", "kanban", "approvals", "theme"] },
+  { key: "status", namespaces: ["view", "kanban", "approvals", "theme", "wfa", "summary"] },
   { key: "team", namespaces: ["ta", "ap", "invite", "accept", "org"] },
   { key: "proj", namespaces: ["mp", "del", "trash", "restore", "history"] },
   { key: "io", namespaces: ["import", "export", "expcol", "copy"] },
