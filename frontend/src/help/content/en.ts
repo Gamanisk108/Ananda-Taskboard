@@ -41,6 +41,10 @@ export const EN: Record<string, HelpContent> = {
     title: "Copy a daily summary",
     body: "Copy summary makes a tidy text summary of the current tasks that you can paste into a chat or email.\n\nHandy for a quick end-of-day update without typing it out yourself.",
   },
+  "pending-approval": {
+    title: "When a task waits for approval",
+    body: "On some sub-projects, tasks you create are checked by an admin before they go live for the whole team.\n\nWhile a task waits, it stays on your board with a gold “Pending approval” pill — it is read-only until an admin approves it.\n\nThe “Pending approval” entry in your account menu lists everything you have waiting, with a number badge. It only appears when something is pending.",
+  },
   archive: {
     title: "Finding finished tasks",
     body: "Completed tasks tuck themselves away after 7 days so your list stays clean.\n\nTap the Archive button to see them again. Tap Hide archive to put them back away.",

@@ -1289,3 +1289,36 @@ html[data-theme="dark"] .tr-done .hh-img { filter: invert(1); }
 @keyframes att-spin { to { transform: rotate(360deg); } }
 .att-err { color: var(--danger); font-size: 12.5px; margin-top: 8px; text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) { .att-spin { animation: none; } }
+
+/* == D50 - pending-approval treatment (gold family) ======================== */
+/* Row tint: same vocabulary as overdue(red)/due-soon(amber). */
+.tbl tr.pending, .tcard.pending, .crow.pending-row {
+  background: color-mix(in srgb, var(--gold, #c9a24b) 9%, transparent);
+}
+.crow.pending-row { border-left: 5px solid var(--gold, #c9a24b); padding-left: 9px; cursor: pointer; }
+/* The pill in the Status slot - warn-gold, NOT a status, no caret. */
+.pill-pending {
+  color: var(--warn, #b7791f);
+  background: color-mix(in srgb, var(--warn, #b7791f) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--warn, #b7791f) 30%, transparent);
+  border-radius: var(--r-pill); font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+/* Summary chip (gold) - hidden at 0 in JSX. */
+.sm-item.pending .sm-num { color: var(--gold-deep, #8a6a1f); }
+.sm-item.pending .sm-lab { color: var(--gold-deep, #8a6a1f); }
+/* Requested chip: NEW task (azure/dome family), uppercase per spec. */
+.chip-request {
+  border-radius: var(--r-pill); padding: 2px 9px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+}
+.chip-request.new {
+  color: var(--dome);
+  background: color-mix(in srgb, var(--dome) 13%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--dome) 26%, transparent);
+}
+/* Right column on compact rows (D51 vocabulary): chip/pill on top, avatars under. */
+.rcol { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; flex: none; }
+
+/* == D49 - Share icon in the full-screen task head ========================= */
+.fs-head .ic.fs-share { color: var(--muted); }
+.fs-head .ic.fs-share svg { width: 20px; height: 20px; stroke-width: 1.9; }

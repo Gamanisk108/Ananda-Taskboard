@@ -44,7 +44,8 @@
     "logout": "Sair",
     "language": "Idioma",
     "theme": "Tema",
-    "bulkMigrate": "Migração em massa"
+    "bulkMigrate": "Migração em massa",
+    "pendingApproval": "A aguardar aprovação"
   },
   "login": {
     "subtitle": "Entre no quadro da sua equipe.",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "Política de privacidade",
     "terms": "Termos de serviço"
+  },
+  "summary": {
+    "pending": "A aguardar aprovação"
+  },
+  "wfa": {
+    "title": "A aguardar aprovação",
+    "sub": "Os seus envios que um administrador ainda não reviu. Permanecem no seu quadro com uma etiqueta dourada.",
+    "sortNew": "Mais recentes primeiro",
+    "sortOld": "Mais antigos primeiro",
+    "empty": "Nada em espera — tudo o que enviou foi revisto.",
+    "newChip": "NOVA tarefa",
+    "requested": "Pedido",
+    "submitted": "Enviado",
+    "sent": "enviado {{date}}"
   }
 }

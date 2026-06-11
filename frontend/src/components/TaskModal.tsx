@@ -8,7 +8,7 @@ import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
-import { Modal, StatusPill, PriorityIcon, LinksEditor, SingleSelect } from "./common";
+import { Modal, StatusPill, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
 import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
@@ -166,7 +166,7 @@ function RecurrenceFields(p: RecurrenceFieldsProps) {
 
 // Cancel / Delete / Save row, plus the share-link button when editing. For a
 // read-only (view-only) task it collapses to a single Close button — no Save/Delete.
-function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel, onClose, del }: {
+function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel, onClose, del, hideShare }: {
   editing: boolean;
   task: Task | null;
   busy: boolean;
@@ -175,6 +175,8 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
   setShareLabel: Dispatch<SetStateAction<string>>;
   onClose: () => void;
   del: () => void;
+  /** D49 (phones): Share lives in the fs-head icon — keep it out of the footer. */
+  hideShare?: boolean;
 }) {
   const { t } = useTranslation();
   if (readOnly) {
@@ -185,7 +187,7 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
       {/* D5: destructive Delete sits far-LEFT in red; Share beside it; Cancel/Save right. */}
       <div style={{ display: "flex", gap: 8, marginRight: "auto" }}>
         {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
-        {editing && (
+        {editing && !hideShare && (
           <button type="button" className="btn-secondary"
             onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -330,7 +332,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   // member-level holders edit normally. Drives the read-only form + real-scope display.
   const subLookup = useMemo(() => buildSubLookup(me.tree), [me]);
   const taskSub = task ? subLookup.get(task.subproject) : undefined;
-  const readOnly = !!task && !me.is_admin && taskSub?.level !== "member";
+  // D50: a pending submission is read-only for its member until approved
+  // (admins edit via the approvals flow as before).
+  const narrow = useIsNarrow();
+  const pendingLock = !!task && task.approval_state === "pending" && !me.is_admin;
+  const readOnly = pendingLock || (!!task && !me.is_admin && taskSub?.level !== "member");
 
   const fields = useTaskFields(task, me, projects, defaultProject, defaultSubproject);
   const rec = useRecurrenceState(task);
@@ -425,6 +431,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
   return (
     <Modal fullScreenOnNarrow onClose={onClose} wide
+      /* D49: on phones Share is a ghost icon at the right end of the fs-head
+         (echoes D12's subtask-breadcrumb Share); the footer drops it. */
+      headerAction={editing && !readOnly ? (
+        <button type="button" className="ic fs-share" aria-label={shareLabel || t("task.share")}
+          title={shareLabel || t("task.share")}
+          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
+          <Share2 />
+        </button>
+      ) : undefined}
       title={/* DN10: the header IS the inline-editable task title + pen + #id chip. */
         <span className="task-title-head">
           {/* Only autofocus when CREATING (so a long existing title stays blurred
@@ -436,7 +451,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
           {editing && <span className="task-id-chip">#{task!.id}</span>}
         </span>}
-      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} />}>
+      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} hideShare={narrow} />}>
       <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
           <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>

@@ -144,10 +144,15 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
       return 0;
     });
 
+  // D50: the member's own pending submissions render in place (gold, read-only)
+  // but are NOT counted into the regular totals — they get their own gold chip.
+  const pendingCount = filtered.filter((t) => t.approval_state === "pending").length;
+  const live = filtered.filter((t) => t.approval_state !== "pending");
+
   // Summary-strip tallies, computed off the filtered set (matches the design).
   let overdueCount = 0, soonCount = 0;
   const byStatus: Record<string, number> = {};
-  for (const t of filtered) {
+  for (const t of live) {
     const ds = deadlineState(t.deadline, isComplete(t.status));
     if (ds === "overdue") overdueCount++;
     else if (ds === "soon") soonCount++;
@@ -219,9 +224,13 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
       )}
 
       <div className="summary" style={{ margin: "0 -18px 14px" }}>
-        <div className="sm-item"><span className="sm-num">{filtered.length}</span><span className="sm-lab">{tr("summary.tasks", "Tasks")}</span></div>
+        <div className="sm-item"><span className="sm-num">{live.length}</span><span className="sm-lab">{tr("summary.tasks", "Tasks")}</span></div>
         <div className="sm-item alert"><span className="sm-num">{overdueCount}</span><span className="sm-lab">{tr("summary.overdue", "Overdue")}</span></div>
         <div className="sm-item soon"><span className="sm-num">{soonCount}</span><span className="sm-lab">{tr("summary.dueSoon", "Due soon")}</span></div>
+        {/* D50: gold pending chip — hidden at 0; pending is NOT in the totals. */}
+        {pendingCount > 0 && (
+          <div className="sm-item pending"><span className="sm-num">{pendingCount}</span><span className="sm-lab">{tr("summary.pending", "Pending approval")}</span></div>
+        )}
         <div className="sm-item" style={{ gap: 14 }}>
           {statuses.map((s) => (
             <span key={s.key} className="sm-stat" title={s.label}>
@@ -242,7 +251,8 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
             const info = subs.get(t.subproject);
             const ds = deadlineState(t.deadline, isComplete(t.status));
             const dcls = ds === "overdue" ? "od" : ds === "soon" ? "soon" : "";
-            const cardCls = [ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : "", isComplete(t.status) ? "done" : ""].filter(Boolean).join(" ");
+            const pending = t.approval_state === "pending";
+            const cardCls = [pending ? "pending" : ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : "", isComplete(t.status) ? "done" : ""].filter(Boolean).join(" ");
             return (
               <button key={t.id} data-testid="task-row" className={`tcard ${cardCls}`} onClick={() => onEdit(t)}>
                 <div className="tcard-top">
@@ -255,7 +265,8 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
                 <div className="tcard-meta">
                   {info && <ProjPill name={info.projectName} color={info.projectColor} />}
                   {info && <ProjPill name={info.name} color={info.color} />}
-                  <StatusPill status={t.status} editable />
+                  {/* D50: a pending submission shows the gold pill in the status slot — not a status, not interactive. */}
+                  {pending ? <span className="pill pill-pending">{tr("task.pendingApproval")}</span> : <StatusPill status={t.status} editable />}
                   {t.deadline && <span className={`cell-date ${dcls}`}>{fmtDeadline(t.deadline)}</span>}
                   {t.assignees.length > 0 && <AvatarStack ids={t.assignees} users={users} />}
                 </div>
@@ -282,7 +293,8 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
               const ds = deadlineState(t.deadline, isComplete(t.status));
               const dcls = ds === "overdue" ? "od" : ds === "soon" ? "soon" : t.deadline ? "" : "none";
               const tm = timeRange(t.start_time, t.end_time);
-              const rowCls = [ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : "", isComplete(t.status) ? "done" : ""].filter(Boolean).join(" ");
+              const pending = t.approval_state === "pending";
+              const rowCls = [pending ? "pending" : ds === "overdue" ? "overdue" : ds === "soon" ? "due-soon" : "", isComplete(t.status) ? "done" : ""].filter(Boolean).join(" ");
               return (
                 <tr key={t.id} data-testid="task-row" className={rowCls} onClick={() => onEdit(t)}>
                   <td className="c-task">
@@ -299,7 +311,7 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
                   <td>{info && <ProjPill name={info.projectName} color={info.projectColor} />}</td>
                   <td>{info && <ProjPill name={info.name} color={info.color} />}</td>
                   <td><div className="who"><AvatarStack ids={t.assignees} users={users} /></div></td>
-                  <td><StatusPill status={t.status} editable /></td>
+                  <td>{pending ? <span className="pill pill-pending">{tr("task.pendingApproval")}</span> : <StatusPill status={t.status} editable />}</td>
                   <td>
                     {t.deadline ? (
                       <span className={`cell-date ${dcls}`}>{fmtDeadline(t.deadline)}{tm && <span className="tm">{tm}</span>}</span>

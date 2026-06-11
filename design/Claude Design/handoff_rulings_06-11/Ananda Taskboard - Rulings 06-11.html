@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ananda Taskboard — Rulings 2026-06-11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Red+Hat+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="ananda-mobile.css" rel="stylesheet" />
+<link href="rulings.css" rel="stylesheet" />
+<style>
+  html,body{margin:0;height:100%;background:#f0eee9}
+  #toolbar{position:fixed;top:14px;left:14px;z-index:200;display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border:1px solid #e4d8bb;border-radius:14px;
+    padding:9px 12px;box-shadow:0 6px 22px rgba(30,58,110,.13);font-family:"Instrument Sans",system-ui,sans-serif}
+  #toolbar .tt{display:flex;align-items:center;gap:9px}
+  #toolbar img{width:24px;height:24px;object-fit:contain}
+  #toolbar .nm{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:15px;color:#23262b;letter-spacing:-.01em;white-space:nowrap}
+  #toolbar .nm b{color:#1e3a6e}
+  #toolbar .sep{width:1px;height:22px;background:#e4d8bb}
+  #toolbar .hint{font-size:11.5px;color:#8a8270;white-space:nowrap}
+  @media (max-width:680px){#toolbar .hint,#toolbar .nm{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <div class="tt"><img src="assets/ananda-mark.png" alt="" /><span class="nm">Ananda <b>Taskboard</b> · Rulings 06-11</span></div>
+  <span class="sep"></span>
+  <span class="hint">drag to pan · scroll to zoom · click ⤢ to focus a screen</span>
+</div>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="screens-views.js"></script>
+<script src="screens-flows.js"></script>
+<script src="rulings-screens.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const SCREEN = 844, W = 390;
+const R = window.R;
+const k = '<span class="k">';
+
+function Phone({ html, theme }) {
+  return <div className="phone" {...(theme ? { 'data-theme': theme } : {})}
+    dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function Notes({ title, sub, items, tip }) {
+  return (
+    <div className="specs"
+      dangerouslySetInnerHTML={{ __html:
+        `<h3>${title}</h3><div class="sub">${sub}</div><ol>${items.map(i => `<li>${i}</li>`).join('')}</ol>`
+        + (tip ? `<div class="tip">${tip}</div>` : '') }} />
+  );
+}
+
+// NB / WB / NoteB are FUNCTIONS we CALL — they return real <DCArtboard>
+// elements so DCSection's type-based walk finds them.
+const NB = ({ id, label, w = W, h = SCREEN, theme, build }) =>
+  <DCArtboard key={id} id={id} label={label} width={w} height={h}>
+    <Phone html={build()} theme={theme} />
+  </DCArtboard>;
+
+const WB = ({ id, label, v, w = 1360, h = 780 }) =>
+  <DCArtboard key={id} id={id} label={label} width={w} height={h}>
+    <iframe src={`web-board.html?v=${v}`} title={label}
+      style={{ width: '100%', height: '100%', border: 0, display: 'block', background: '#fbf6ea' }} />
+  </DCArtboard>;
+
+const NoteB = ({ id, label, ...p }) =>
+  <DCArtboard key={id} id={id} label={label} width={400} height={760} style={{ height: 'auto' }}>
+    <Notes {...p} />
+  </DCArtboard>;
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      <DCSection id="q1" title="Q1 — RULED (D49) · sticky footer + Share icon in the header" subtitle="Footer = Delete (left, red) · Cancel · Save — Share is a ghost icon in the fs-head where Save was · viewport-true on top, full page below">
+        {NB({ id:"q1-final-vp", label:"FINAL · edit view (viewport)", build:R.q1Final })}
+        {NB({ id:"q1-new-vp", label:"FINAL · new task (viewport)", build:R.q1FinalNew })}
+        {NB({ id:"q1-final-full", label:"FINAL · edit view — full page", h:1700, build:R.q1Final })}
+        {NoteB({ id:"q1-notes", label:"Notes", title:"Q1 · RULED — D49", sub:"Sticky footer blessed; Share promoted to a header icon", items:[
+          '<b>Footer</b> = the canonical dialog footer (D5): <b>Delete</b> left in red · spacer · <b>Cancel</b> · <b>Save</b> (filled). Share leaves the footer.',
+          '<b>Share = a ghost share icon in the ' + k + '.fs-head</span></b>, at the right end where the mock’s Save sat — echoes D12’s header Share on the subtask breadcrumb.',
+          'The <b>back chevron stays pure navigation</b>; Cancel lives in the footer. Both ask the unsaved-changes confirm when dirty.',
+          '<b>Create shares the footer</b> (the one-footer premise of the ruling): <b>Cancel · “Create task”</b> (D27) — no Delete, no Share. The mock’s body-end Create button is retired.',
+          'The body-bottom <b>Delete is retired</b> too — Delete lives only in the footer, left, red.',
+          '<b>Stale after this ruling:</b> the mobile mock (' + k + 'mobile/screens-flows.js taskDetail()/newTask()</span>) — updated here; the BUILD only moves Share up + drops it from the footer.',
+        ], tip:'Logged as D49. Build action: footer order Delete · Cancel · Save; Share becomes the fs-head icon.' })}
+      </DCSection>
+
+      <DCSection id="q2-web" title="Q2 — RULED (D50) · A + C combo (web)" subtitle="APR-4 · signed in as Mara (member) — a pending NEW task (“Print A2 banner”) and a pending EDIT (“Design spring flyer”)">
+        {WB({ id:"q2-web-a", label:"FINAL · board — in place, pills + summary chip", v:"a" })}
+        {WB({ id:"q2-web-c", label:"FINAL · account menu — “Pending approval · 2”", v:"c" })}
+        {WB({ id:"q2-web-d", label:"FINAL · its destination — “Waiting for approval” dialog", v:"d" })}
+        {NoteB({ id:"q2-web-notes", label:"Notes", title:"Q2 · RULED — D50 (A + C)", sub:"The task never vanishes + a durable menu entry with a real destination", items:[
+          '<b>A · board:</b> a pending <b>NEW</b> task sits where it will live (Task ▲), warm-<b>gold tint</b>, read-only, <b>“Pending approval” pill</b> in the Status column — no caret, it is <i>not</i> a status. A pending <b>EDIT</b> keeps its last <i>approved</i> values + a small <b>“Edit pending”</b> pill after the name. Summary strip gains the gold <b>“2 Pending approval”</b> chip (hidden at 0; not counted into totals).',
+          '<b>C · account menu:</b> “Pending approval” + mono count badge, first item under the header; hidden at 0 (same rule as Unscheduled, D6).',
+          '<b>Your question — yes, it opens a real list:</b> the <b>“Waiting for approval” dialog</b> reuses the Approvals methodology — <b>sort</b> (Newest first) + <b>kind</b> (All kinds / New tasks / Edits) selects; a full filter bar is overkill at personal volume. Columns: Task · Project · Sub-project · <b>Requested</b> · Submitted.',
+          '<b>“The approval they are requesting”:</b> the Requested column answers it — <b>NEW task</b> (the whole task is the request; opening it shows everything) vs <b>EDIT · n changes</b>, which expands the <b>old → new diff per field</b> right in the list. Clicking any row opens the read-only task popup carrying the same pill.',
+          'The transient submit <b>toast stays</b> (“Sent for approval — an admin will review”); the pill + menu entry are the durable signals.',
+          '<b>Pill copy:</b> kept sentence-case <b>“Pending approval”</b> to match the already-agreed detail pill and app copy style — you wrote “Pending Approval”; flag if you want Title Case.',
+          '<b>Chrome assumptions to confirm:</b> member topbar drops <b>Approvals</b> (admin-only), keeps Team + Projects; member menu strips History / Archive / Restore points / Trash / Preview-as-Viewer.',
+        ], tip:'Logged as D50; flagged to Code against APR-4. The dialog design is new — confirm and it ships as-is.' })}
+      </DCSection>
+
+      <DCSection id="d51" title="D51 — statuses restored to the responsive List" subtitle="The canonical responsive card (.tcard) always carried the status pill — the selected compact row had only the colored rail. Fixed: status pill, right-aligned, on every row.">
+        {NB({ id:"d51-list", label:"FINAL · compact List — statuses visible", h:940, build:R.listStatuses })}
+        {NoteB({ id:"d51-notes", label:"Notes", title:"D51 · Statuses in the List", sub:"You were right — it was a regression, now fixed", items:[
+          '<b>What happened:</b> the app’s responsive card (' + k + '.tcard</span>, faithful everywhere) always showed the <b>status pill</b>; the “Compact rows” direction you selected for the phone List conveyed status only through the <b>colored left rail</b> — too subtle on its own.',
+          '<b>The fix:</b> every row gets a <b>right-aligned column</b> — the status pill on top, the assignee avatars beneath it. The rail stays (it’s the at-a-glance color cue; the pill is the name).',
+          '<b>Width:</b> per your call, the rows now use the full width — the <b>chevron is dropped</b> (rows are tappable end-to-end). Flag if you want it back.',
+          'Day-divider groups, tints, badges, priority chevrons — all unchanged.',
+        ], tip:'Logged as D51 — retro-applies to MOB listCompact/compactRow + BUILD wherever compact rows render.' })}
+      </DCSection>
+
+      <DCSection id="q2-phone" title="Q2 — the same ruling on the phone" subtitle="In-place pills on the compact List · “Pending approval · 2” in the ⋯ overflow · its full-screen destination — all with D51 statuses">
+        {NB({ id:"q2-ph-a", label:"FINAL · board — in place (Later group)", h:980, build:R.q2PhoneInPlace })}
+        {NB({ id:"q2-ph-menu", label:"FINAL · ⋯ overflow — “Pending approval · 2”", build:R.q2PhoneMenu })}
+        {NB({ id:"q2-ph-queue", label:"FINAL · “Waiting for approval” route", build:R.q2PhoneQueue })}
+        {NoteB({ id:"q2-ph-notes", label:"Notes", title:"Q2 · on the phone", sub:"Pending pill takes the status slot, right side", items:[
+          'Per your call, the <b>“Pending approval” pill sits on the RIGHT</b> — it takes the status pill’s slot in the new right column (a pending NEW task has no live status yet), so the <b>date returns to line 2</b>. Gold rail + warm tint unchanged.',
+          'The pending <b>EDIT</b> row keeps its live status pill on the right with the small <b>“Edit pending”</b> pill stacked beneath it — line 2 stays one line at 390px.',
+          'In the <b>“Waiting for approval” route</b> the rows are now the <b>List compact row, verbatim</b> (your call): full width, <b>gold band left</b>, project + <b>sub-project pills</b>, “sent Jun 10” in the date slot, and the right column = <b>NEW/EDIT chip with the assignee(s) beneath</b>. Edits keep the full-width old → new diff line.',
+          'The <b>⋯ overflow</b> gains “Pending approval · 2” exactly where <b>Approvals</b> sits for admins (members never see Approvals/Trash; account = Mara).',
+          'Tapping any pending row opens the <b>read-only detail</b> with the agreed pill.',
+        ] })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -44,7 +44,8 @@
     "logout": "Cerrar sesión",
     "language": "Idioma",
     "theme": "Tema",
-    "bulkMigrate": "Migración masiva"
+    "bulkMigrate": "Migración masiva",
+    "pendingApproval": "Pendiente de aprobación"
   },
   "login": {
     "subtitle": "Inicia sesión en el tablero de tu equipo.",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "Política de privacidad",
     "terms": "Términos del servicio"
+  },
+  "summary": {
+    "pending": "Pendiente de aprobación"
+  },
+  "wfa": {
+    "title": "En espera de aprobación",
+    "sub": "Tus envíos que un administrador aún no ha revisado. Permanecen en tu tablero con una etiqueta dorada.",
+    "sortNew": "Más recientes primero",
+    "sortOld": "Más antiguos primero",
+    "empty": "Nada en espera — todo lo enviado ya fue revisado.",
+    "newChip": "Tarea NUEVA",
+    "requested": "Solicitado",
+    "submitted": "Enviado",
+    "sent": "enviado {{date}}"
   }
 }

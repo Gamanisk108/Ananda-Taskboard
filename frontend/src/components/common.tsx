@@ -435,6 +435,7 @@ export function Modal({
   icon,
   footer,
   fullScreenOnNarrow,
+  headerAction,
 }: {
   title: ReactNode;
   onClose: () => void;
@@ -449,6 +450,9 @@ export function Modal({
    *  chevron + title) instead of a floating card. Opt-in — small dialogs
    *  (confirm) stay centered cards. */
   fullScreenOnNarrow?: boolean;
+  /** Optional control at the right end of the full-screen header (D49: the
+   *  Share icon in the task view's fs-head). Ignored in card mode. */
+  headerAction?: ReactNode;
 }) {
   const { t } = useTranslation();
   const narrow = useIsNarrow();
@@ -518,6 +522,7 @@ export function Modal({
               {icon && <span className="sh-icn">{icon}</span>}
               {title}
             </h2>
+            {headerAction}
           </div>
         ) : (
           <div className="modal-head">

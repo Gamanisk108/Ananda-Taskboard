@@ -44,7 +44,8 @@
     "logout": "Se déconnecter",
     "language": "Langue",
     "theme": "Thème",
-    "bulkMigrate": "Migration groupée"
+    "bulkMigrate": "Migration groupée",
+    "pendingApproval": "En attente d'approbation"
   },
   "login": {
     "subtitle": "Connectez-vous au tableau de votre équipe.",
@@ -881,5 +882,19 @@
   "legal": {
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation"
+  },
+  "summary": {
+    "pending": "En attente d'approbation"
+  },
+  "wfa": {
+    "title": "En attente d'approbation",
+    "sub": "Vos envois qu'un administrateur n'a pas encore examinés. Ils restent sur votre tableau avec une pastille dorée.",
+    "sortNew": "Plus récents d'abord",
+    "sortOld": "Plus anciens d'abord",
+    "empty": "Rien en attente — tout ce que vous avez envoyé a été examiné.",
+    "newChip": "NOUVELLE tâche",
+    "requested": "Demandé",
+    "submitted": "Envoyé",
+    "sent": "envoyé {{date}}"
   }
 }
