@@ -5,7 +5,7 @@ import { api } from "../api/client";
 import { useAuth } from "../state/auth";
 import { buildSubLookup } from "../lookup";
 import { useUsers, userName } from "../users";
-import { Modal, Spinner, ProjPill } from "./common";
+import { Modal, Spinner, ProjPill, useIsNarrow } from "./common";
 import { useConfirm } from "./confirm";
 import type { Task } from "../types";
 
@@ -19,6 +19,7 @@ export function Approvals({
   const { t: tr } = useTranslation();  // `t` is the task param in onOpen
   const { me } = useAuth();
   const confirm = useConfirm();
+  const narrow = useIsNarrow();
   const [pending, setPending] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
   const subs = useMemo(() => (me ? buildSubLookup(me.tree) : new Map()), [me]);
@@ -72,6 +73,33 @@ export function Approvals({
             </button>
             <span className="muted">{tr("approvals.pending", { n: pending.length })}</span>
           </div>
+          {narrow ? (
+            /* Phones: compact two-line rows (design .trow) instead of the table. */
+            <div>
+              {pending.map((t) => {
+                const info = subs.get(t.subproject);
+                return (
+                  <div key={t.id} className="crow">
+                    <input type="checkbox" style={{ width: "auto", flex: "none" }} checked={sel.has(t.id)} onChange={() => toggle(t.id)} />
+                    <div className="crow-mid" onClick={() => onOpen(t)} role="button" tabIndex={0}>
+                      <span className="crow-nm">{t.title}</span>
+                      <span className="crow-sub">
+                        {info && <>
+                          <ProjPill name={info.projectName} color={info.projectColor} />
+                          <ProjPill name={info.name} color={info.color} />
+                        </>}
+                        <span className="muted" style={{ fontSize: 12 }}>{t.created_by ? userName(users, t.created_by) : "—"}{t.deadline ? ` · ${t.deadline}` : ""}</span>
+                      </span>
+                    </div>
+                    <span className="crow-acts">
+                      <button className="btn-ghost icon-only" style={{ color: "var(--success)" }} title={tr("approvals.approve", "Approve")} aria-label={tr("approvals.approve", "Approve")} onClick={() => act(t.id, "approve")}><Check size={18} /></button>
+                      <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={tr("approvals.reject", "Reject")} aria-label={tr("approvals.reject", "Reject")} onClick={() => act(t.id, "reject")}><X size={18} /></button>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
           <table className="tbl">
             <thead>
               <tr><th></th><th>{tr("list.colTask")}</th><th>{tr("approvals.where")}</th><th>{tr("approvals.createdBy")}</th><th>{tr("list.colDeadline")}</th><th></th></tr>
@@ -107,6 +135,7 @@ export function Approvals({
               })}
             </tbody>
           </table>
+          )}
         </>
       )}
     </Modal>

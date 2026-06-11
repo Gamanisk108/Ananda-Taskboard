@@ -148,8 +148,6 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear, onDismis
   const { t } = useTranslation();
   const [detailOpen, setDetailOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [ownOpen, setOwnOpen] = useState(false);
-  const [own, setOwn] = useState("");
 
   // What everyone using this locale sees right now: override → bundled.
   const currentLive = poll.live ?? (i18n.getResource(locale, "translation", poll.key) as string | undefined) ?? "";
@@ -191,35 +189,10 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear, onDismis
         </div>
       </div>
       <div className="poll-bars">
-        {shown.map((v, i) => {
-          const live = poll.live !== null && v.text === poll.live;
-          const matchesCurrent = !live && currentLive !== "" && v.text === currentLive;
-          const lead = v.count === maxN && !hasLive;
-          const phBroken = !placeholdersIntact(en, v.text);
-          return (
-            <button key={i} type="button"
-              className={`poll-bar${live ? " live" : ""}${lead && !live ? " lead" : ""}${phBroken ? " phbad" : ""}`}
-              onClick={() => !live && !phBroken && onApprove(poll.key, v.text)}
-              disabled={phBroken}
-              title={live ? undefined : phBroken ? t("trv.phWarn") : t("trv.makeLive")}>
-              <span className="pb-txt">
-                <span className="tick"><Check size={14} /></span>
-                {blankPlaceholders(v.text)}
-                {live && <span className="pb-flag livechip">{t("trv.live")}</span>}
-                {matchesCurrent && <span className="pb-flag match">{t("trv.matchesCurrent")}</span>}
-                {phBroken && <span className="pb-flag bad"><TriangleAlert size={11} /> {t("trv.phBad")}</span>}
-              </span>
-              <span className="pb-track">
-                <span className="pb-fill" style={{ width: `${Math.max(8, Math.round((v.count / maxN) * 100))}%` }} />
-              </span>
-              {!live && !phBroken && <span className="pb-approve"><Check size={14} /> {t("trv.makeLive")}</span>}
-              <span className="pb-n">
-                {v.count}
-                <span className="ppl">{v.count === 1 ? t("trv.person1") : t("trv.personN")}</span>
-              </span>
-            </button>
-          );
-        })}
+        {shown.map((v, i) => (
+          <PollBar key={i} v={v} poll={poll} en={en} maxN={maxN} hasLive={hasLive}
+            currentLive={currentLive} onApprove={onApprove} />
+        ))}
       </div>
       {collapsed && (
         <button type="button" className="poll-more" onClick={() => setShowAll(true)}>
@@ -227,24 +200,7 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear, onDismis
         </button>
       )}
 
-      {/* §10: superadmin free-text override — type a wording not among the variants */}
-      {ownOpen ? (
-        <div className="poll-own open">
-          <div className="tr-lbl">{t("trv.ownLabel")}</div>
-          <div className="tr-inputrow">
-            <textarea className="tr-in" rows={1} placeholder={t("trv.ownPh")} value={own}
-              onChange={(e) => setOwn(e.target.value)} />
-            <button type="button" className="btn-primary" disabled={!own.trim()}
-              onClick={() => { onApprove(poll.key, restorePlaceholders(en, own)); setOwn(""); setOwnOpen(false); }}>
-              <Check size={14} /> {t("trv.makeLive")}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button type="button" className="poll-own-btn" onClick={() => setOwnOpen(true)}>
-          <Pencil size={14} /> {t("trv.ownWording")}
-        </button>
-      )}
+      <OwnWordingEditor en={en} onApprove={(text) => onApprove(poll.key, text)} />
 
       <div className="poll-foot">
         <button type="button" className="poll-exp" onClick={() => setDetailOpen((o) => !o)} aria-expanded={detailOpen}>
@@ -255,30 +211,99 @@ function PollCard({ poll, en, locale, justApproved, onApprove, onClear, onDismis
           <button type="button" className="btn-danger clear" onClick={onClear}>{t("trv.clear")}</button>
         )}
       </div>
-      {detailOpen && (
-        <div className="poll-detail">
-          {poll.variants.map((v, i) => (
-            <div key={i}>
-              <div className="grp-h">
-                {blankPlaceholders(v.text)} · {v.count}
-                {/* Moderation: remove a junk/abusive variant from the poll. */}
-                {!(poll.live !== null && v.text === poll.live) && (
-                  <button type="button" className="btn-ghost grp-dismiss" title={t("trv.dismiss", "Remove suggestion")} aria-label={t("trv.dismiss", "Remove suggestion")}
-                    onClick={() => onDismiss(poll.key, v.text)}>
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-              {v.users.map((name, j) => (
-                <div key={j} className="sub-row">
-                  <span className="who" title={name}>{name}</span>
-                  <span className={`said${poll.live !== null && v.text === poll.live ? " win" : ""}`}>{blankPlaceholders(v.text)}</span>
-                </div>
-              ))}
+      {detailOpen && <PollDetail poll={poll} onDismiss={onDismiss} />}
+    </div>
+  );
+}
+
+/** One suggested-variant bar: proportional fill + live/lead/broken flags;
+ *  clicking approves (unless it's already live or its placeholders are broken). */
+function PollBar({ v, poll, en, maxN, hasLive, currentLive, onApprove }: {
+  v: Variant; poll: Poll; en: string; maxN: number; hasLive: boolean; currentLive: string;
+  onApprove: (key: string, text: string) => void;
+}) {
+  const { t } = useTranslation();
+  const live = poll.live !== null && v.text === poll.live;
+  const matchesCurrent = !live && currentLive !== "" && v.text === currentLive;
+  const lead = v.count === maxN && !hasLive;
+  const phBroken = !placeholdersIntact(en, v.text);
+  return (
+    <button type="button"
+      className={`poll-bar${live ? " live" : ""}${lead && !live ? " lead" : ""}${phBroken ? " phbad" : ""}`}
+      onClick={() => !live && !phBroken && onApprove(poll.key, v.text)}
+      disabled={phBroken}
+      title={live ? undefined : phBroken ? t("trv.phWarn") : t("trv.makeLive")}>
+      <span className="pb-txt">
+        <span className="tick"><Check size={14} /></span>
+        {blankPlaceholders(v.text)}
+        {live && <span className="pb-flag livechip">{t("trv.live")}</span>}
+        {matchesCurrent && <span className="pb-flag match">{t("trv.matchesCurrent")}</span>}
+        {phBroken && <span className="pb-flag bad"><TriangleAlert size={11} /> {t("trv.phBad")}</span>}
+      </span>
+      <span className="pb-track">
+        <span className="pb-fill" style={{ width: `${Math.max(8, Math.round((v.count / maxN) * 100))}%` }} />
+      </span>
+      {!live && !phBroken && <span className="pb-approve"><Check size={14} /> {t("trv.makeLive")}</span>}
+      <span className="pb-n">
+        {v.count}
+        <span className="ppl">{v.count === 1 ? t("trv.person1") : t("trv.personN")}</span>
+      </span>
+    </button>
+  );
+}
+
+/** §10: superadmin free-text override — type a wording not among the variants. */
+function OwnWordingEditor({ en, onApprove }: { en: string; onApprove: (text: string) => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [own, setOwn] = useState("");
+  if (!open) {
+    return (
+      <button type="button" className="poll-own-btn" onClick={() => setOpen(true)}>
+        <Pencil size={14} /> {t("trv.ownWording")}
+      </button>
+    );
+  }
+  return (
+    <div className="poll-own open">
+      <div className="tr-lbl">{t("trv.ownLabel")}</div>
+      <div className="tr-inputrow">
+        <textarea className="tr-in" rows={1} placeholder={t("trv.ownPh")} value={own}
+          onChange={(e) => setOwn(e.target.value)} />
+        <button type="button" className="btn-primary" disabled={!own.trim()}
+          onClick={() => { onApprove(restorePlaceholders(en, own)); setOwn(""); setOpen(false); }}>
+          <Check size={14} /> {t("trv.makeLive")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Who-suggested-what expander, with the per-variant moderation dismiss. */
+function PollDetail({ poll, onDismiss }: { poll: Poll; onDismiss: (key: string, text: string) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="poll-detail">
+      {poll.variants.map((v, i) => (
+        <div key={i}>
+          <div className="grp-h">
+            {blankPlaceholders(v.text)} · {v.count}
+            {/* Moderation: remove a junk/abusive variant from the poll. */}
+            {!(poll.live !== null && v.text === poll.live) && (
+              <button type="button" className="btn-ghost grp-dismiss" title={t("trv.dismiss", "Remove suggestion")} aria-label={t("trv.dismiss", "Remove suggestion")}
+                onClick={() => onDismiss(poll.key, v.text)}>
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          {v.users.map((name, j) => (
+            <div key={j} className="sub-row">
+              <span className="who" title={name}>{name}</span>
+              <span className={`said${poll.live !== null && v.text === poll.live ? " win" : ""}`}>{blankPlaceholders(v.text)}</span>
             </div>
           ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }

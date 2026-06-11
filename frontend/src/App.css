@@ -721,6 +721,27 @@ html[data-theme="dark"] .proj-pill {
   color: color-mix(in srgb, var(--pc) 35%, #fff);
   border-color: color-mix(in srgb, var(--pc) 42%, transparent);
 }
+/* ── Compact rows (.crow) — Trash + Approvals (design .trow) ─────────────────
+   Desktop: single line (name · pills · meta · actions). Phones: the mid stacks
+   into two lines (name over pills+meta), actions stay right. */
+.crow { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.crow:last-child { border-bottom: none; }
+.crow-mid { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.crow-nm { font-weight: 600; font-size: 13.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crow-sub { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.crow-acts { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+@media (max-width: 700px) {
+  .crow { padding: 11px 2px; }
+  .crow-mid { display: block; }
+  .crow-nm { display: block; font-size: 14.5px; }
+  .crow-sub { margin-top: 4px; }
+  .crow-acts .btn-secondary, .crow-acts .btn-ghost { padding: 6px 10px; font-size: 12.5px; }
+}
+
+/* What's-New dot riding the user pill (absolute, bordered to read on any bg). */
+.usermenu-pill-dot { position: absolute; top: 2px; left: 18px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--new, #6d4aff); border: 1.5px solid var(--surface); }
+
 /* Dismiss-variant button in the review poll's who-suggested expander. */
 .grp-dismiss { padding: 2px 4px; margin-left: 6px; color: var(--danger); vertical-align: -2px; }
 
