@@ -88,7 +88,16 @@ Gates on every PR: tsc clean · eslint at the 27-error baseline · vitest
 - Approvals badge polls with the standard cache (refreshes on task changes +
   ~30s stale time) — real-time push later if wanted.
 
-## 🟡 GORDON — your moves (in order)
+## ✅ CLOSED OUT (same day, post-merge)
+All PRs merged + deployed + live-verified. Sentry LIVE both ends (test events
+accepted). R2 attachments LIVE — one shared API key (from ananda-connect) +
+per-app buckets (taskboard-media), CORS set, e2e upload/serve/delete verified.
+Demo account live (Gordon ran the shell command). Stale branches archive-tagged
++ deleted. Store-readiness pytest + playbook §2b protocols added.
+Still open: /simplify the two CRAP hotspots · visual suite vs deployed ·
+.trow compact rows · 2 Design rulings (fs-Save placement, APR-4).
+
+## 🟡 GORDON — original checklist (all now ✅ or N/A)
 1. 🟡 **Merge the PRs in order: #8 → #9 → #10** (each is green; #9/#10
    retarget automatically as the previous one merges). Merging #10 deploys
    everything to Render (~3–5 min). The session's auto-merge attempt was
