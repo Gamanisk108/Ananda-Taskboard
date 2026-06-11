@@ -43,7 +43,7 @@ export const EN: Record<string, HelpContent> = {
   },
   "pending-approval": {
     title: "When a task waits for approval",
-    body: "On some sub-projects, tasks you create are checked by an admin before they go live for the whole team.\n\nWhile a task waits, it stays on your board with a gold Pending approval pill - it is read-only until an admin approves it.\n\nThe Pending approval entry in your account menu lists everything you have waiting, with a count. It only appears when something is pending.",
+    body: "On some sub-projects, tasks you create are checked by an admin before they go live for the whole team.\n\nWhile a task waits, it stays on your board with a gold “Pending approval” pill — it is read-only until an admin approves it.\n\nThe “Pending approval” entry in your account menu lists everything you have waiting, with a number badge. It only appears when something is pending.",
   },
   archive: {
     title: "Finding finished tasks",
