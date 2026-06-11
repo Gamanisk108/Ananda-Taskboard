@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
@@ -394,20 +394,8 @@ export default function App() {
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
           )}
-          <UserMenu
-            name={me.name || me.email}
-            isAdmin={me.is_admin}
-            onSettings={() => setShowSettings(true)}
-            onRestore={() => setShowRestore(true)}
-            onHistory={() => setShowHistory(true)}
-            onBulk={() => setShowBulk(true)}
-            onHelp={() => setShowHelp(true)}
-            onTrash={() => setShowTrash(true)}
-            archived={showArchived}
-            onToggleArchive={() => { setView("list"); setShowArchived((a) => !a); }}
-            hasNewHelp={hasNewHelp}
-            onLogout={logout}
-          />
+          <UserMenu name={me.name || me.email} items={accountItems}
+            anyDot={accountItems.some((it) => it.dot)} onLogout={logout} />
         </div>
       </header>
       )}
@@ -550,17 +538,17 @@ export default function App() {
   );
 }
 
-function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onBulk, onHelp, onTrash, archived, onToggleArchive, hasNewHelp, onLogout }: {
-  name: string; isAdmin: boolean;
-  onSettings: () => void; onRestore: () => void; onHistory: () => void; onBulk: () => void;
-  onHelp: () => void; onTrash: () => void; archived: boolean; onToggleArchive: () => void;
-  hasNewHelp?: boolean; onLogout: () => void;
+/** Desktop account menu. Renders the SAME `accountItems` list the mobile
+ *  drawer uses (one source of truth — the lists drifted before), plus the
+ *  D15 separator after Help and the Logout row. */
+function UserMenu({ name, items, anyDot, onLogout }: {
+  name: string;
+  items: { icon: React.ReactNode; label: string; onClick: () => void; testId?: string; dot?: boolean }[];
+  anyDot: boolean;
+  onLogout: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  // D36: the purple dot rides the Settings row while Help Us is unseen.
-  const helpUsDot = helpUsUnseen();
-  const anyDot = hasNewHelp || helpUsDot;
 
   useEffect(() => {
     if (!open) return;
@@ -576,47 +564,20 @@ function UserMenu({ name, isAdmin, onSettings, onRestore, onHistory, onBulk, onH
         <span className="lbl">{name}</span>
         <ChevronDown size={14} className="muted" />
         {/* D15/D36: purple What's-New dot rides the user pill when unseen features exist. */}
-        {anyDot && <span aria-hidden style={{ position: "absolute", top: 2, left: 18, width: 8, height: 8, borderRadius: "50%", background: "var(--new, #6d4aff)", border: "1.5px solid var(--surface)" }} />}
+        {anyDot && <span className="usermenu-pill-dot" aria-hidden />}
       </div>
       {open && (
         <div className="usermenu-pop">
-          {/* D15: Help & FAQ at the top of the account menu, available to everyone. */}
-          <button className="usermenu-item" data-testid="open-help" onClick={() => { setOpen(false); onHelp(); }}>
-            <CircleHelp size={15} /> {t("help.open")}
-            {hasNewHelp && <span aria-hidden style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: "var(--new, #6d4aff)" }} />}
-          </button>
-          <div className="usermenu-sep" />
-          {/* D36: Settings is member-visible (sections are role-filtered inside).
-              Language, notifications, and the daily push now live in its panes. */}
-          <button className="usermenu-item" data-testid="open-settings" onClick={() => { setOpen(false); onSettings(); }}>
-            <SettingsIcon size={15} /> {t("menu.settings")}
-            {helpUsDot && <span aria-hidden style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: "var(--new, #6d4aff)" }} />}
-          </button>
-          {isAdmin && (
-            <button className="usermenu-item" onClick={() => { setOpen(false); onHistory(); }}>
-              <HistoryIcon size={15} /> {t("menu.history")}
-            </button>
-          )}
-          {isAdmin && (
-            <button className="usermenu-item" onClick={() => { setOpen(false); onRestore(); }}>
-              <RotateCcw size={15} /> {t("menu.restorePoints")}
-            </button>
-          )}
-          {/* Bulk actions are open to everyone; members are limited to status/
-              deadline on tasks they can edit (enforced server-side). */}
-          <button className="usermenu-item" onClick={() => { setOpen(false); onBulk(); }}>
-            <ArrowLeftRight size={15} /> {t("menu.bulkMigrate")}
-          </button>
-          {/* DN5: Archive toggle lives here (lean top bar), next to Trash. */}
-          <button className="usermenu-item" data-testid="toggle-archive" title={t("view.archiveHint")}
-            onClick={() => { setOpen(false); onToggleArchive(); }}>
-            <BookOpen size={15} /> {archived ? t("view.hideArchive") : t("view.archive")}
-          </button>
-          {/* D15: Trash lives in the account menu (everyone; non-admins see only
-              their own deleted items, server-enforced). */}
-          <button className="usermenu-item" onClick={() => { setOpen(false); onTrash(); }}>
-            <Trash2 size={15} /> {t("nav.trash")}
-          </button>
+          {items.map((it, i) => (
+            <Fragment key={i}>
+              <button className="usermenu-item" data-testid={it.testId} onClick={() => { setOpen(false); it.onClick(); }}>
+                {it.icon} {it.label}
+                {it.dot && <span className="dnav-dot" aria-hidden />}
+              </button>
+              {/* D15: Help (always first) sits above a separator. */}
+              {i === 0 && <div className="usermenu-sep" />}
+            </Fragment>
+          ))}
           <div className="usermenu-sep" />
           <button className="usermenu-item" onClick={() => { setOpen(false); onLogout(); }}>
             <LogOut size={15} /> {t("menu.logout")}

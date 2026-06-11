@@ -33,14 +33,17 @@ export function Trash({ onClose, onChanged }: { onClose: () => void; onChanged: 
       <div style={{ marginBottom: 14 }}>
         <h3 className="section-title">{title}</h3>
         {rows.map((r) => (
-          <div key={`${type}-${r.id}`} className="assignee-row" style={{ justifyContent: "space-between", gap: 8 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0, flexWrap: "wrap" }}>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
-              {r.project && <ProjPill name={r.project.name} color={r.project.color} />}
-              {r.subproject && <ProjPill name={r.subproject.name} color={r.subproject.color} />}
-              <span className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>· {t("trash.daysLeft", { n: r.days_left })}</span>
-            </span>
-            <span style={{ display: "flex", gap: 6, flex: "none" }}>
+          /* .crow: inline on desktop, two-line compact row on phones (design .trow). */
+          <div key={`${type}-${r.id}`} className="crow">
+            <div className="crow-mid">
+              <span className="crow-nm">{r.label}</span>
+              <span className="crow-sub">
+                {r.project && <ProjPill name={r.project.name} color={r.project.color} />}
+                {r.subproject && <ProjPill name={r.subproject.name} color={r.subproject.color} />}
+                <span className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{t("trash.daysLeft", { n: r.days_left })}</span>
+              </span>
+            </div>
+            <span className="crow-acts">
               <button type="button" className="btn-secondary" onClick={() => restore(type, r.id)}>{t("trash.restore")}</button>
               <button type="button" className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => purge(type, r.id)}>{t("trash.deleteForever")}</button>
             </span>
