@@ -665,3 +665,10 @@
 - **Output convention, every session:** ① artifacts in one self-contained handoff folder
   `handoff<M-D-YY>` · ② decisions appended to this log · ③ a "what changed + which surfaces are
   now stale" note for Code's fidelity audit.
+
+---
+## BUILD STATUS (Code, 2026-06-11)
+- **D49 BUILT + deployed** (PR #12): Share icon in .fs-head, footer Delete/Cancel/Save; create = Cancel/'Create task'. Web unchanged.
+- **D50 BUILT + deployed** (PR #12), per Gordon's in-session answers: sentence-case 'Pending approval'; member menus KEEP Trash/Archive (reduced-access parity stays - the mock's assumption was stale); member topbar already hid Approvals. NOT BUILT: 'EDIT pending' chips + old->new diffs - the backend has no edit-approval concept (member edits on member-level sub-projects apply directly); needs a product decision before a future ruling.
+- **D51 RESOLVED without code:** Gordon kept the .tcard phone List ('we were just missing elements from the Approval Pending Popup due to lack of pixel real estate') - cards already carry the status pill. The .rcol right-column vocabulary ships on the pending rows (Waiting-for-approval list).
+

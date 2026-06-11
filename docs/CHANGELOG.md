@@ -2,6 +2,24 @@
 
 All notable changes to Ananda Taskboard. Newest first.
 
+## [Shipped 2026-06-11] - Design rulings D49 + D50 (APR-4 fixed)
+PR #12, from design/Claude Design/handoff_rulings_06-11. Gordon's calls:
+phone List keeps cards - sentence-case pill - members keep Trash/Archive.
+- **D49 (phones):** Share = ghost icon in the full-screen task header; sticky
+  footer = Delete-left / Cancel / Save (create: Cancel / Create task).
+- **D50 (APR-4):** a member's pending task stays on their board - gold tint +
+  'Pending approval' pill (status slot, no caret), excluded from totals with
+  its own gold summary chip; read-only until approved; account-menu/drawer
+  entry with count badge (hidden at 0) opens the new 'Waiting for approval'
+  list (web table / phone compact rows, NEW chip + avatars right column).
+  Backend: own-pending included in the task list + GET /api/approvals/mine
+  (6 pytest cases). Help article + What's-New bump; 11 i18n keys x13.
+- **D51:** already satisfied by the card status pills (kept per Gordon);
+  .rcol right-column vocabulary ships on pending rows.
+- N/A flagged for design: 'EDIT pending' chips/diffs (no edit-approval
+  concept in the backend yet).
+
+
 ## [In review 2026-06-10] — Full review sweep: fixes, mobile shell, professional layer
 The 2026-06-10 full review (punch-list: `qa/qa-2026-06-10-findings.md`); PRs
 #8 (conformance) → #9 (mobile shell) → #10 (professional layer), pending merge.
