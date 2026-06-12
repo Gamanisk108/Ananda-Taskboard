@@ -473,7 +473,8 @@
     "moveErr": "You can only move tasks assigned to you (or be an admin)."
   },
   "emoji": {
-    "pick": "Pick an emoji"
+    "pick": "Pick an emoji",
+    "none": "No emoji"
   },
   "day": {
     "sort": "Sort",

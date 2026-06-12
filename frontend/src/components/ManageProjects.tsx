@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, X, LayoutGrid } from "lucide-react";
 import { format } from "date-fns";
@@ -60,10 +60,16 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
     }
   }
 
+  // Autosave: PATCH then refresh the board, but do NOT reload the modal list —
+  // reloading resets the editors' local state mid-edit. On failure, reload to
+  // revert the optimistic change to server truth (no silent divergence).
   async function saveProject(p: Proj) {
-    await api.patch(`/api/projects/${p.id}`, { name: p.name, color: p.color, emoji: p.emoji });
-    load();
-    onChanged();
+    try {
+      await api.patch(`/api/projects/${p.id}`, { name: p.name, color: p.color, emoji: p.emoji });
+      onChanged();
+    } catch {
+      load();
+    }
   }
 
   async function addSub(projectId: number, name: string) {
@@ -74,11 +80,14 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
   }
 
   async function saveSub(s: Sub) {
-    await api.patch(`/api/subprojects/${s.id}`, {
-      name: s.name, color: s.color, members_post_without_approval: s.members_post_without_approval,
-    });
-    load();
-    onChanged();
+    try {
+      await api.patch(`/api/subprojects/${s.id}`, {
+        name: s.name, color: s.color, members_post_without_approval: s.members_post_without_approval,
+      });
+      onChanged();
+    } catch {
+      load();
+    }
   }
 
   function deleteProject(p: Proj) {
@@ -142,7 +151,19 @@ function ProjectEditor({
   const { t } = useTranslation();
   const [p, setP] = useState(project);
   const [newSub, setNewSub] = useState("");
-  useEffect(() => setP(project), [project]);
+  const saved = useRef(project);
+  useEffect(() => { setP(project); saved.current = project; }, [project]);
+
+  // Debounced autosave: persist 500ms after the last edit to name/color/emoji
+  // (no Save button — picking a color/emoji or editing the name just sticks).
+  // Empty names are never autosaved (would blank a project).
+  useEffect(() => {
+    const cur = saved.current;
+    if (p.name === cur.name && p.color === cur.color && p.emoji === cur.emoji) return;
+    if (!p.name.trim()) return;
+    const id = setTimeout(() => { saved.current = p; onSaveProject(p); }, 500);
+    return () => clearTimeout(id);
+  }, [p, onSaveProject]);
 
   return (
     <div className="card" style={{ padding: 12, marginBottom: 12 }}>
@@ -150,7 +171,6 @@ function ProjectEditor({
         <ColorPicker value={p.color} onChange={(v) => setP({ ...p, color: v })} title={t("mp.colorTitle", "Project color")} />
         <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title={t("mp.emojiTitle")} />
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
-        <button className="btn-secondary" onClick={() => onSaveProject(p)}>{t("common.save")}</button>
         <button className="btn-ghost" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
         <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
         {fmtCreated(project.created_at) && (
@@ -176,7 +196,19 @@ function ProjectEditor({
 function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s: Sub) => void; onDelete: (s: Sub) => void; onMarkDone: (kind: "project" | "subproject", id: number, name: string) => void }) {
   const { t } = useTranslation();
   const [s, setS] = useState(sub);
-  useEffect(() => setS(sub), [sub]);
+  const saved = useRef(sub);
+  useEffect(() => { setS(sub); saved.current = sub; }, [sub]);
+
+  // Debounced autosave (no Save button) — name/color/trusted-toggle persist
+  // 500ms after the last edit. Empty names are never autosaved.
+  useEffect(() => {
+    const cur = saved.current;
+    if (s.name === cur.name && s.color === cur.color && s.members_post_without_approval === cur.members_post_without_approval) return;
+    if (!s.name.trim()) return;
+    const id = setTimeout(() => { saved.current = s; onSave(s); }, 500);
+    return () => clearTimeout(id);
+  }, [s, onSave]);
+
   return (
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
       <ColorPicker value={s.color} onChange={(v) => setS({ ...s, color: v })} title={t("mp.subColorTitle", "Sub-project color")} />
@@ -187,7 +219,6 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
           onChange={(e) => setS({ ...s, members_post_without_approval: e.target.checked })} />
         {t("mp.trusted")}
       </label>
-      <button className="btn-ghost" onClick={() => onSave(s)}>{t("common.save")}</button>
       <button className="btn-ghost icon-only" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}><Check size={16} /></button>
       {!s.is_default && <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>}
       {fmtCreated(sub.created_at) && (

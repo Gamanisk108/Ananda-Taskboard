@@ -45,7 +45,12 @@ export function EmojiPicker({ value, onPick, title }: { value: string; onPick: (
       {open && Picker && (
         <FloatingPortal>
           {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter, not a React .current ref */}
-          <div ref={refs.setFloating} {...getFloatingProps()} style={{ ...floatingStyles, zIndex: 200 }}>
+          <div ref={refs.setFloating} {...getFloatingProps()} className="emoji-pop" style={{ ...floatingStyles, zIndex: 200 }}>
+            {value && (
+              <button type="button" className="emoji-clear" onClick={() => { onPick(""); setOpen(false); }}>
+                {t("emoji.none", "No emoji")}
+              </button>
+            )}
             <Picker
               data={mod!.data}
               theme={dark ? "dark" : "light"}

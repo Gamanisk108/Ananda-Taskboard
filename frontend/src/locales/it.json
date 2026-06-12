@@ -473,7 +473,8 @@
     "moveErr": "Puoi spostare solo le attività assegnate a te (o essere un amministratore)."
   },
   "emoji": {
-    "pick": "Scegli un emoji"
+    "pick": "Scegli un emoji",
+    "none": "Nessuna emoji"
   },
   "day": {
     "sort": "Ordina",

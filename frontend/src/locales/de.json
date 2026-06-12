@@ -473,7 +473,8 @@
     "moveErr": "Du kannst nur dir zugewiesene Aufgaben verschieben (oder Administrator sein)."
   },
   "emoji": {
-    "pick": "Emoji auswählen"
+    "pick": "Emoji auswählen",
+    "none": "Kein Emoji"
   },
   "day": {
     "sort": "Sortieren",

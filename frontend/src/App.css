@@ -714,6 +714,14 @@ html[data-theme="dark"] .tabbar .tb.on { color: var(--azure); }
 .color-custom { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 9px; }
 .color-custom input[type="color"] { width: 30px; height: 28px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background-color: var(--surface); cursor: pointer; flex: none; }
 .color-prev { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); flex: none; }
+/* Emoji popover: the "No emoji" clear bar sits above the emoji-mart picker. */
+.emoji-pop { display: flex; flex-direction: column; gap: 6px; }
+.emoji-clear {
+  align-self: stretch; padding: 6px 10px; font-size: 12.5px; font-weight: 500;
+  color: var(--muted); background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--r-ctl); cursor: pointer;
+}
+.emoji-clear:hover { color: var(--text); background: var(--surface-2); }
 /* viewbar action overflow (⋯) on phones */
 .view-overflow { position: relative; }
 .vo-scrim { position: fixed; inset: 0; z-index: 40; }

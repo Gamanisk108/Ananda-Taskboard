@@ -473,7 +473,8 @@
     "moveErr": "Vous ne pouvez déplacer que les tâches qui vous sont assignées (ou être administrateur)."
   },
   "emoji": {
-    "pick": "Choisir un emoji"
+    "pick": "Choisir un emoji",
+    "none": "Aucun emoji"
   },
   "day": {
     "sort": "Trier",
