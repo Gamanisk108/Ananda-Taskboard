@@ -73,6 +73,18 @@ def test_verify_activates_account_and_org_then_login_works(api):
     assert login.status_code == 200 and "access" in login.data
 
 
+def test_login_email_is_case_insensitive(api, db):
+    """Emails are stored lowercased, so a capitalized login entry (e.g. mobile
+    autocapitalize) must still authenticate rather than look like a wrong password."""
+    User.objects.create_user(email="lead@portland.org", name="X", password="strong-pw-12345")
+    login = api.post(
+        "/api/auth/login",
+        {"email": "Lead@Portland.ORG", "password": "strong-pw-12345"},
+        format="json",
+    )
+    assert login.status_code == 200 and "access" in login.data
+
+
 def test_duplicate_email_rejected(api, db):
     User.objects.create_user(email="lead@portland.org", name="X", password="strong-pw-12345")
     res = api.post("/api/auth/signup", SIGNUP, format="json")

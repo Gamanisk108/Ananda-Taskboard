@@ -38,9 +38,17 @@ from .tokens import email_verification_token
 
 
 class EmailTokenObtainSerializer(TokenObtainPairSerializer):
-    """SimpleJWT keyed on the User model's USERNAME_FIELD (email)."""
+    """SimpleJWT keyed on the User model's USERNAME_FIELD (email). Emails are
+    stored lowercased (UserManager + signup), so normalize the login email too —
+    otherwise a capitalized entry (mobile keyboards autocapitalize the first
+    letter) fails to match the stored address and looks like a wrong password."""
 
     username_field = "email"
+
+    def validate(self, attrs):
+        if attrs.get(self.username_field):
+            attrs[self.username_field] = attrs[self.username_field].strip().lower()
+        return super().validate(attrs)
 
 
 class LoginView(TokenObtainPairView):

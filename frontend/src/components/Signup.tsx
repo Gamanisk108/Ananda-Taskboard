@@ -86,7 +86,8 @@ export function Signup({ onBack }: { onBack: () => void }) {
         </div>
         <Field label={t("signup.country")} value={f.country} onChange={set("country")} />
         <Field label={t("signup.name")} value={f.name} onChange={set("name")} required />
-        <Field label={t("login.email")} type="email" value={f.email} onChange={set("email")} required />
+        <Field label={t("login.email")} type="email" value={f.email} onChange={set("email")} required
+               autoCapitalize="none" autoCorrect="off" spellCheck={false} />
         <div style={{ marginBottom: 12 }}>
           <label>{t("login.password")}</label>
           <PasswordInput value={f.password} onChange={set("password")} required />

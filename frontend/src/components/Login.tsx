@@ -48,7 +48,8 @@ export function Login() {
         <p className="muted" style={{ marginTop: 0 }}>{t("login.subtitle")}</p>
         <div style={{ marginBottom: 12 }}>
           <label>{t("login.email")}</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus
+                 autoCapitalize="none" autoCorrect="off" spellCheck={false} />
         </div>
         <div style={{ marginBottom: 16 }}>
           <label>{t("login.password")}</label>
