@@ -148,7 +148,9 @@
   border: 1px solid var(--border); border-radius: var(--r-ctl); cursor: pointer;
 }
 .ms-btn:hover { border-color: var(--border-strong); }
-.ms.on .ms-btn { border-color: var(--dome); font-weight: 600; }
+/* Selected dropdowns stay on-brand tan (not blue --dome); the 600 weight is the
+   "has a value" emphasis. Keeps every control's border in the tan family. */
+.ms.on .ms-btn { border-color: var(--border-strong); font-weight: 600; }
 /* min-width:0 lets the flex label actually shrink → ellipsis (D42); without it
    the button's min-content width is the full label and narrow layouts overflow. */
 .ms-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }

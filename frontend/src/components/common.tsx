@@ -155,7 +155,7 @@ export function MultiSelect({
   );
 }
 
-export interface SingleSelectOption { value: string; label: string; color?: string; section?: string }
+export interface SingleSelectOption { value: string; label: string; color?: string; section?: string; icon?: ReactNode }
 
 /** Custom single-select dropdown: a bordered trigger + popover with a check on
  *  the selected option (design D2 — no native <select>). Mirrors MultiSelect's
@@ -204,6 +204,7 @@ export function SingleSelect({
       <button type="button" ref={refs.setReference} {...getReferenceProps()} className="ms-btn" disabled={disabled}
         aria-expanded={open} title={chosen?.label ?? placeholder}
         style={typeof width === "number" ? { width: "100%", minWidth: 0, maxWidth: "none" } : undefined}>
+        {chosen?.icon}
         {chosen?.color && <span className="dot" style={{ background: chosen.color }} />}
         <span className="ms-label">{chosen ? chosen.label : (placeholder ?? "—")}</span>
         <span className="ms-caret" aria-hidden>▾</span>
@@ -222,6 +223,7 @@ export function SingleSelect({
                   {header && <div className="ms-section">{header}</div>}
                   <button type="button" className="ms-opt ss-opt" role="option" aria-selected={o.value === value}
                     onClick={() => { onChange(o.value); setOpen(false); }}>
+                    {o.icon}
                     {o.color && <span className="dot" style={{ background: o.color }} />}
                     <span className="ms-opt-label">{o.label}</span>
                     {o.value === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}

@@ -8,7 +8,7 @@ import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
-import { Modal, StatusPill, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
+import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
 import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
@@ -71,24 +71,19 @@ function StatusField({ canChangeStatus, editing, curStatus, statuses, changeStat
   setStatus: (s: string) => void;
 }) {
   const { t } = useTranslation();
+  // The status pill IS the dropdown (no separate pill + select). Read-only pill
+  // only when editing an existing task without permission to change it.
+  const opts = statuses.map((s) => ({ key: s.key, label: s.label, color: s.color }));
   return (
     <div className="field">
       <label>{canChangeStatus ? t("task.statusApplied") : t("task.status")}</label>
       {canChangeStatus ? (
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <StatusPill status={curStatus} />
-          <SingleSelect value="" placeholder={t("task.changeTo")} onChange={(v) => v && changeStatus(v)}
-            options={statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }))} />
-        </div>
+        <StatusPillSelect value={curStatus} statuses={opts} onChange={changeStatus} />
       ) : editing ? (
         <StatusPill status={curStatus} />
       ) : (
-        // DN9: new task gets a Status selector (defaults to To Do) instead of a hint.
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <StatusPill status={curStatus} />
-          <SingleSelect value={curStatus} onChange={setStatus}
-            options={statuses.map((s) => ({ value: s.key, label: s.label, color: s.color }))} />
-        </div>
+        // DN9: new task gets a status picker (defaults to To Do) instead of a hint.
+        <StatusPillSelect value={curStatus} statuses={opts} onChange={setStatus} />
       )}
     </div>
   );
@@ -504,11 +499,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} setStatus={setCurStatus} />
           <div className="field">
             <label>{t("task.priority")}</label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <PriorityIcon level={priority} size={16} />
-              <SingleSelect testId="task-priority-select" width="100%" value={String(priority)} onChange={(v) => setPriority(Number(v))}
-                options={[5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label }))} />
-            </div>
+            <SingleSelect testId="task-priority-select" width="100%" value={String(priority)} onChange={(v) => setPriority(Number(v))}
+              options={[5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label, icon: <PriorityIcon level={p} size={16} /> }))} />
           </div>
         </div>
 
