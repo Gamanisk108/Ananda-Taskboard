@@ -499,7 +499,9 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <StatusField canChangeStatus={canChangeStatus} editing={editing} curStatus={curStatus} statuses={statuses} changeStatus={changeStatus} setStatus={setCurStatus} />
           <div className="field">
             <label>{t("task.priority")}</label>
-            <SingleSelect testId="task-priority-select" width="100%" value={String(priority)} onChange={(v) => setPriority(Number(v))}
+            {/* Auto-width (not 100%): the trigger hugs the label + icon (Gordon)
+                instead of stretching across the half-row column. */}
+            <SingleSelect testId="task-priority-select" value={String(priority)} onChange={(v) => setPriority(Number(v))}
               options={[5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label, icon: <PriorityIcon level={p} size={16} /> }))} />
           </div>
         </div>
