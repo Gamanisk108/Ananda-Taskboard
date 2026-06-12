@@ -98,7 +98,7 @@ export function AcceptInvite() {
   return (
     <Card title={t("accept.title", { org: preview.organization })}>
       <p className="muted" style={{ marginTop: 0 }}>
-        {t("accept.subtitle", { email: preview.email, role: t(`platform.role_${preview.role}`) })}
+        {t("accept.subtitle", { org: preview.organization, email: preview.email, role: t(`platform.role_${preview.role}`) })}
       </p>
       {!preview.account_exists && (
         <>

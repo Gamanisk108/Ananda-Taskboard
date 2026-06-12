@@ -4,9 +4,9 @@ export type Approval = "pending" | "approved" | "rejected";
 /** A member's "Access" — how many tasks they can SEE. */
 export type Sees = "own" | "subproject" | "project" | "org";
 export const SEES_LABEL: Record<Sees, string> = {
-  own: "Tasks Only",
-  subproject: "Sub-Project Only",
-  project: "Full Project",
+  own: "Assigned Tasks",
+  subproject: "Sub-Project",
+  project: "Project",
   org: "Organization",
 };
 /** Dropdown / ranking order: narrowest → widest. */

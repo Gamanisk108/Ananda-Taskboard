@@ -7,7 +7,7 @@ import { Modal, Spinner, MultiSelect, SingleSelect, type MultiSelectOption } fro
 import { useConfirm } from "./confirm";
 import { useSubmitGuard } from "../useSubmitGuard";
 import { useAuth } from "../state/auth";
-import { SEES_ORDER, type Sees } from "../types";
+import { SEES_ORDER, SEES_LABEL, type Sees } from "../types";
 
 // DN3: Holidays moved to Settings → Events & Holidays (no Team tab).
 type Tab = "members" | "groups" | "access" | "activity";
@@ -25,14 +25,7 @@ interface Exclusion {
 }
 interface AuditRow { id: number; actor: string; action: string; summary: string; created_at: string; }
 
-const TIER_DESC: Record<Sees, string> = {
-  own: "View assigned tasks only",
-  subproject: "View all tasks in their sub-projects",
-  project: "View all tasks in their projects",
-  org: "View all tasks across the organization",
-};
-
-// Access dropdown order: narrowest → widest (Tasks Only … Organization).
+// Access dropdown order: narrowest → widest (Assigned Tasks … Organization).
 function byViewAccess(a: TierRow, b: TierRow) { return SEES_ORDER[a.default_sees] - SEES_ORDER[b.default_sees]; }
 function sortedTiers(tiers: TierRow[]) { return [...tiers].sort(byViewAccess); }
 
@@ -158,7 +151,7 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
         <div className="field">
           <label>{tr("ta.viewAccess", "Access")}</label>
           <SingleSelect width="100%" value={tier} disabled={role === "admin"} onChange={setTier}
-            options={tierList.map((t) => ({ value: String(t.id), label: `${t.name} — ${TIER_DESC[t.default_sees]}` }))} />
+            options={tierList.map((t) => ({ value: String(t.id), label: SEES_LABEL[t.default_sees] }))} />
         </div>
         <div className="field">
           <label>{tr("ta.startingAccess", "Add to projects (optional)")}</label>
@@ -248,9 +241,9 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
           </div>
         </div>
         <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-          <label>{tr("ta.viewAccess", "Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "how many tasks they can see")}</span></label>
+          <label>{tr("ta.viewAccess", "Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "(what can they see?)")}</span></label>
           <SingleSelect width="100%" value={tier} disabled={role === "admin"} onChange={setTier}
-            options={tierList.map((t) => ({ value: String(t.id), label: `${t.name} — ${TIER_DESC[t.default_sees]}` }))} />
+            options={tierList.map((t) => ({ value: String(t.id), label: SEES_LABEL[t.default_sees] }))} />
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
         <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addMember")}</button>
@@ -277,7 +270,7 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
                 {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
                   <SingleSelect width={210} value={u.tier != null ? String(u.tier) : ""} placeholder={tr("ta.pickViewAccess", "Pick…")}
                     onChange={(v) => setMemberTier(u, v)}
-                    options={tierList.map((t) => ({ value: String(t.id), label: `${t.name} — ${TIER_DESC[t.default_sees]}` }))} />
+                    options={tierList.map((t) => ({ value: String(t.id), label: SEES_LABEL[t.default_sees] }))} />
                 )}
               </td>
               <td><button className="btn-ghost" onClick={() => toggleActive(u)}>{u.is_active ? tr("ta.active") : tr("ta.disabled")}</button></td>
