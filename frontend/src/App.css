@@ -724,6 +724,19 @@ html[data-theme="dark"] .tabbar .tb.on { color: var(--azure); }
   border-radius: var(--r-ctl); cursor: pointer;
 }
 .emoji-clear:hover { color: var(--text); background: var(--surface-2); }
+/* Manage Projects: one grid per card so the project row, its sub-project rows,
+   and the new-sub row all share columns — emoji · color swatch · name field ·
+   Done-all · Delete · Trusted · Date — each in a perfect column. Rows are
+   display:contents wrappers so their cells become items of this grid. */
+.mp-rows {
+  display: grid;
+  grid-template-columns: 26px 24px minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  gap: 9px 10px;
+}
+.mp-rowwrap { display: contents; }
+.mp-doneall { white-space: nowrap; }
+.mp-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
 /* viewbar action overflow (⋯) on phones */
 .view-overflow { position: relative; }
 .vo-scrim { position: fixed; inset: 0; z-index: 40; }

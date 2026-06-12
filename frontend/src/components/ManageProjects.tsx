@@ -165,28 +165,35 @@ function ProjectEditor({
     return () => clearTimeout(id);
   }, [p, onSaveProject]);
 
+  // One grid per card so every row's columns line up (emoji · color · name ·
+  // Done-all · delete · trusted · date). Rows are display:contents wrappers, so
+  // their cells become items of the shared grid → perfect column alignment.
   return (
-    <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
-        <ColorPicker value={p.color} onChange={(v) => setP({ ...p, color: v })} title={t("mp.colorTitle", "Project color")} />
-        <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title={t("mp.emojiTitle")} />
-        <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
-        <button className="btn-ghost" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
-        <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
-        {fmtCreated(project.created_at) && (
-          <span className="muted" style={{ marginLeft: "auto", fontSize: 12, whiteSpace: "nowrap" }}>
-            {t("mp.created", "Created {{date}}", { date: fmtCreated(project.created_at) })}
-          </span>
-        )}
-      </div>
+    <div className="card mp-card" style={{ padding: 12, marginBottom: 12 }}>
+      <div className="mp-rows">
+        {/* Project row (emoji then color — swapped per Gordon; no trusted cell) */}
+        <div className="mp-rowwrap">
+          <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title={t("mp.emojiTitle")} />
+          <ColorPicker value={p.color} onChange={(v) => setP({ ...p, color: v })} title={t("mp.colorTitle", "Project color")} />
+          <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
+          <button className="btn-ghost mp-doneall" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
+          <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
+          <span aria-hidden />{/* trusted column: projects have none */}
+          <span className="mp-date">{fmtCreated(project.created_at) ? t("mp.created", "Created {{date}}", { date: fmtCreated(project.created_at) }) : ""}</span>
+        </div>
 
-      <div style={{ paddingLeft: 8 }}>
         {p.subprojects.map((s) => (
           <SubEditor key={s.id} sub={s} onSave={onSaveSub} onDelete={onDeleteSub} onMarkDone={onMarkDone} />
         ))}
-        <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+
+        {/* New sub-project row: blank emoji + color, input aligned under the
+            names, add button after it. */}
+        <div className="mp-rowwrap">
+          <span aria-hidden />
+          <span aria-hidden />
           <input placeholder={t("mp.newSubPh")} value={newSub} onChange={(e) => setNewSub(e.target.value)} />
-          <button className="btn-ghost" onClick={() => { onAddSub(p.id, newSub); setNewSub(""); }}>{t("mp.addSub")}</button>
+          <button className="btn-ghost mp-addsub" style={{ gridColumn: "4 / -1", justifySelf: "start" }}
+            onClick={() => { onAddSub(p.id, newSub); setNewSub(""); }}>{t("mp.addSub")}</button>
         </div>
       </div>
     </div>
@@ -209,23 +216,25 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
     return () => clearTimeout(id);
   }, [s, onSave]);
 
+  // display:contents — cells join the parent .mp-rows grid. Column order matches
+  // the project row: (blank emoji) · color · name · Done · Delete · Trusted · Date.
+  // Default "General" has a blank Delete cell (can't be deleted).
   return (
-    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+    <div className="mp-rowwrap">
+      <span aria-hidden />{/* emoji column: sub-projects have none */}
       <ColorPicker value={s.color} onChange={(v) => setS({ ...s, color: v })} title={t("mp.subColorTitle", "Sub-project color")} />
       <input value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} disabled={s.is_default && s.name === "General"} />
-      <label className="muted" style={{ display: "flex", gap: 5, alignItems: "center", whiteSpace: "nowrap", margin: 0 }}
+      <button className="btn-ghost icon-only mp-doneall" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}><Check size={16} /></button>
+      {!s.is_default
+        ? <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>
+        : <span aria-hidden />}
+      <label className="muted mp-trusted" style={{ display: "flex", gap: 5, alignItems: "center", whiteSpace: "nowrap", margin: 0 }}
         title={t("mp.trustedTitle")}>
         <input type="checkbox" style={{ width: "auto" }} checked={s.members_post_without_approval}
           onChange={(e) => setS({ ...s, members_post_without_approval: e.target.checked })} />
         {t("mp.trusted")}
       </label>
-      <button className="btn-ghost icon-only" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}><Check size={16} /></button>
-      {!s.is_default && <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>}
-      {fmtCreated(sub.created_at) && (
-        <span className="muted" style={{ marginLeft: "auto", fontSize: 11, whiteSpace: "nowrap" }}>
-          {t("mp.created", "Created {{date}}", { date: fmtCreated(sub.created_at) })}
-        </span>
-      )}
+      <span className="mp-date">{fmtCreated(sub.created_at) ? t("mp.created", "Created {{date}}", { date: fmtCreated(sub.created_at) }) : ""}</span>
     </div>
   );
 }
