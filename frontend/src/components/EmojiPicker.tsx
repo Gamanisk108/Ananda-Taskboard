@@ -34,8 +34,8 @@ export function EmojiPicker({ value, onPick, title }: { value: string; onPick: (
 
   return (
     <div ref={wrapRef} style={{ position: "relative", display: "inline-block" }}>
-      <button type="button" className="btn-secondary" onClick={toggle} title={title ?? t("emoji.pick")}
-        aria-label={title ?? t("emoji.pick")} style={{ width: 52, fontSize: 18, lineHeight: 1, padding: "4px 0", textAlign: "center" }}>
+      <button type="button" className="emoji-trigger" onClick={toggle} title={title ?? t("emoji.pick")}
+        aria-label={title ?? t("emoji.pick")}>
         {value || "🙂"}
       </button>
       {open && Picker && (

@@ -94,6 +94,18 @@
 .inline-back { display: inline-flex; align-items: center; gap: 6px; }
 .inline-back svg { flex: none; }
 
+/* emoji picker trigger: the glyph hangs on its own (no boxed button) with only a
+   hover/focus affordance — centered, never a big rectangle. */
+.emoji-trigger {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex: none; padding: 0;
+  font-size: 20px; line-height: 1;
+  background: none; border: 1px solid transparent; border-radius: var(--r-ctl);
+  cursor: pointer; transition: background .12s, border-color .12s;
+}
+.emoji-trigger:hover { background: var(--surface-2); border-color: var(--border); }
+.emoji-trigger:focus-visible { outline: 2px solid var(--dome); outline-offset: 1px; }
+
 /* ============================================================= TABLE (List) */
 .tbl {
   width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px;

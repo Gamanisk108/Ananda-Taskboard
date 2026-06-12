@@ -152,7 +152,7 @@ function ProjectEditor({
         <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
         <button className="btn-secondary" onClick={() => onSaveProject(p)}>{t("common.save")}</button>
         <button className="btn-ghost" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
-        <button className="btn-danger" onClick={() => onDeleteProject(project)}>{t("common.delete")}</button>
+        <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
         {fmtCreated(project.created_at) && (
           <span className="muted" style={{ marginLeft: "auto", fontSize: 12, whiteSpace: "nowrap" }}>
             {t("mp.created", "Created {{date}}", { date: fmtCreated(project.created_at) })}
