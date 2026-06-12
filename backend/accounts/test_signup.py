@@ -33,6 +33,7 @@ SIGNUP = {
     "email": "lead@portland.org",
     "password": "strong-pw-12345",
     "city": "Portland",
+    "state": "Oregon",
     "country": "USA",
 }
 
@@ -44,6 +45,7 @@ def test_signup_creates_inactive_account_org_and_admin_membership(api):
     assert user.is_active is False
     org = Organization.objects.get(name="Ananda Portland")
     assert org.is_active is False and org.city == "Portland" and org.country == "USA"
+    assert org.state == "Oregon"
     assert org.created_by_id == user.id
     m = Membership.objects.get(user=user, organization=org)
     assert m.role == Membership.Role.ADMIN and m.is_active is True

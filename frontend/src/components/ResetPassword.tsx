@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { ForgotPassword } from "./ForgotPassword";
+import { PasswordInput } from "./PasswordInput";
 
 /** A centered card matching the login aesthetic, used for every reset state. */
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
@@ -97,11 +98,11 @@ export function ResetPassword() {
       <form onSubmit={submit}>
         <div style={{ marginBottom: 12 }}>
           <label>{t("reset.newPassword")}</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoFocus />
+          <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} required autoFocus />
         </div>
         <div style={{ marginBottom: 8 }}>
           <label>{t("reset.confirmPassword")}</label>
-          <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+          <PasswordInput value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </div>
         <p className="muted" style={{ fontSize: 12, marginTop: 0, marginBottom: 14 }}>{t("reset.tooShort")}</p>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}

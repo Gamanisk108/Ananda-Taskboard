@@ -68,6 +68,18 @@ export function ColorDot({ color }: { color: string }) {
   return <span className="dot" style={{ background: color }} />;
 }
 
+/** "← label" rendered as a line-art arrow + text, flex-centered so the arrow
+ *  never drifts off the text baseline (the old inline "← " glyph did). Used by
+ *  the auth screens' "Back to sign in" actions. */
+export function BackLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-back">
+      <ChevronLeft size={15} aria-hidden />
+      {children}
+    </span>
+  );
+}
+
 export interface MultiSelectOption {
   value: string;        // stable key (e.g. a stringified id or status key)
   label: string;

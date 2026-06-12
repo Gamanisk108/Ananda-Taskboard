@@ -97,6 +97,7 @@ class Organization(models.Model):
 
     name = models.CharField(max_length=200)
     city = models.CharField(max_length=120, blank=True)
+    state = models.CharField(max_length=120, blank=True)  # state / province / region
     country = models.CharField(max_length=120, blank=True)
     created_by = models.ForeignKey(
         "User", null=True, blank=True, on_delete=models.SET_NULL, related_name="orgs_created"

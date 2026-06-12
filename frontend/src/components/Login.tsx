@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../state/auth";
 import { ForgotPassword } from "./ForgotPassword";
 import { Signup } from "./Signup";
+import { PasswordInput } from "./PasswordInput";
 
 export function Login() {
   const { t } = useTranslation();
@@ -51,7 +52,7 @@ export function Login() {
         </div>
         <div style={{ marginBottom: 16 }}>
           <label>{t("login.password")}</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}
         <button className="btn-primary btn-full" disabled={busy}>

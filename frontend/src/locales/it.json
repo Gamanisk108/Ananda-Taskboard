@@ -55,14 +55,16 @@
     "signingIn": "Accesso in corso…",
     "error": "Email o password non corretti.",
     "forgot": "Password dimenticata?",
-    "forgotHelp": "Contatta l'amministratore del tuo team per reimpostarla."
+    "forgotHelp": "Contatta l'amministratore del tuo team per reimpostarla.",
+    "showPassword": "Mostra password",
+    "hidePassword": "Nascondi password"
   },
   "reset": {
     "requestTitle": "Reimposta la password",
     "requestSubtitle": "Inserisci l'email del tuo account e ti invieremo un link per impostare una nuova password.",
     "send": "Invia il link",
     "sending": "Invio…",
-    "backToSignIn": "← Torna all'accesso",
+    "backToSignIn": "Torna all'accesso",
     "sentTitle": "Controlla la tua email",
     "sentBody": "Se esiste un account per {{email}}, abbiamo inviato un link per reimpostare la password. Scade tra 1 ora.",
     "newTitle": "Scegli una nuova password",
@@ -91,7 +93,8 @@
     "checkTitle": "Controlla la tua email",
     "checkBody": "Abbiamo inviato un link di verifica a {{email}}. Cliccalo per attivare il tuo account e il team.",
     "prompt": "Nuovo su Ananda Taskboard?",
-    "cta": "Crea un account"
+    "cta": "Crea un account",
+    "state": "Stato / Provincia"
   },
   "verify": {
     "working": "Verifica in corso…",

@@ -55,14 +55,16 @@
     "signingIn": "Entrando…",
     "error": "E-mail ou senha incorretos.",
     "forgot": "Esqueceu a senha?",
-    "forgotHelp": "Entre em contato com o administrador da sua equipe para redefini-la."
+    "forgotHelp": "Entre em contato com o administrador da sua equipe para redefini-la.",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha"
   },
   "reset": {
     "requestTitle": "Redefinir sua senha",
     "requestSubtitle": "Digite o e-mail da sua conta e enviaremos um link para criar uma nova senha.",
     "send": "Enviar link",
     "sending": "Enviando…",
-    "backToSignIn": "← Voltar para entrar",
+    "backToSignIn": "Voltar para entrar",
     "sentTitle": "Verifique seu e-mail",
     "sentBody": "Se existir uma conta para {{email}}, enviamos um link para redefinir sua senha. Ele expira em 1 hora.",
     "newTitle": "Escolha uma nova senha",
@@ -91,7 +93,8 @@
     "checkTitle": "Verifique seu e-mail",
     "checkBody": "Enviamos um link de verificação para {{email}}. Clique nele para ativar sua conta e equipe.",
     "prompt": "Novo no Ananda Taskboard?",
-    "cta": "Criar uma conta"
+    "cta": "Criar uma conta",
+    "state": "Estado / Província"
   },
   "verify": {
     "working": "Verificando…",

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
+import { PasswordInput } from "./PasswordInput";
+import { BackLabel } from "./common";
 
 const linkBtn: React.CSSProperties = {
   background: "none", border: "none", padding: 0,
@@ -29,7 +31,7 @@ function firstFieldError(e: unknown, fallback: string): string {
  *  until the emailed verification link is clicked. */
 export function Signup({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation();
-  const [f, setF] = useState({ organization: "", name: "", email: "", password: "", city: "", country: "" });
+  const [f, setF] = useState({ organization: "", name: "", email: "", password: "", city: "", state: "", country: "" });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
@@ -61,8 +63,8 @@ export function Signup({ onBack }: { onBack: () => void }) {
             <h1 style={{ fontSize: 22 }}>{t("signup.checkTitle")}</h1>
           </div>
           <p className="muted" style={{ marginTop: 0 }}>{t("signup.checkBody", { email: f.email })}</p>
-          <button type="button" className="btn-secondary" style={{ width: "100%" }} onClick={onBack}>
-            {t("reset.backToSignIn")}
+          <button type="button" className="btn-secondary btn-full" onClick={onBack}>
+            <BackLabel>{t("reset.backToSignIn")}</BackLabel>
           </button>
         </div>
       </div>
@@ -80,17 +82,21 @@ export function Signup({ onBack }: { onBack: () => void }) {
         <Field label={t("signup.organization")} value={f.organization} onChange={set("organization")} autoFocus required />
         <div style={{ display: "flex", gap: 8 }}>
           <Field label={t("signup.city")} value={f.city} onChange={set("city")} />
-          <Field label={t("signup.country")} value={f.country} onChange={set("country")} />
+          <Field label={t("signup.state")} value={f.state} onChange={set("state")} />
         </div>
+        <Field label={t("signup.country")} value={f.country} onChange={set("country")} />
         <Field label={t("signup.name")} value={f.name} onChange={set("name")} required />
         <Field label={t("login.email")} type="email" value={f.email} onChange={set("email")} required />
-        <Field label={t("login.password")} type="password" value={f.password} onChange={set("password")} required />
+        <div style={{ marginBottom: 12 }}>
+          <label>{t("login.password")}</label>
+          <PasswordInput value={f.password} onChange={set("password")} required />
+        </div>
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{err}</div>}
         <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("signup.creating") : t("signup.create")}
         </button>
         <div style={{ marginTop: 14, textAlign: "center" }}>
-          <button type="button" onClick={onBack} style={linkBtn}>{t("reset.backToSignIn")}</button>
+          <button type="button" onClick={onBack} style={linkBtn}><BackLabel>{t("reset.backToSignIn")}</BackLabel></button>
         </div>
       </form>
     </div>

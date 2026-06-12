@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
+import { BackLabel } from "./common";
 
 const linkBtn: React.CSSProperties = {
   background: "none",
@@ -41,8 +42,8 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
           </div>
           <p className="muted" style={{ marginTop: 0 }}>{t("reset.sentBody", { email })}</p>
           <p className="muted" style={{ fontSize: 13 }}>{t("login.forgotHelp")}</p>
-          <button type="button" className="btn-secondary" style={{ width: "100%" }} onClick={onBack}>
-            {t("reset.backToSignIn")}
+          <button type="button" className="btn-secondary btn-full" onClick={onBack}>
+            <BackLabel>{t("reset.backToSignIn")}</BackLabel>
           </button>
         </div>
       </div>
@@ -66,7 +67,7 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
         </button>
         <div style={{ marginTop: 14, textAlign: "center" }}>
           <button type="button" onClick={onBack} style={linkBtn}>
-            {t("reset.backToSignIn")}
+            <BackLabel>{t("reset.backToSignIn")}</BackLabel>
           </button>
         </div>
       </form>

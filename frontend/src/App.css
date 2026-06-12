@@ -78,6 +78,22 @@
 .login-card { padding: 32px; width: 100%; max-width: 380px; }
 .login-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
 
+/* password field with show/hide eye toggle (PasswordInput) */
+.pw-field { position: relative; }
+.pw-field input { padding-right: 40px; }
+.pw-toggle {
+  position: absolute; top: 0; right: 0; height: 100%; width: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0; margin: 0; cursor: pointer;
+  color: var(--muted); border-radius: 0 var(--r-ctl) var(--r-ctl) 0;
+}
+.pw-toggle:hover { color: var(--text); }
+.pw-toggle:focus-visible { outline: 2px solid var(--dome); outline-offset: -2px; color: var(--text); }
+
+/* back-link: line-art arrow vertically centered with its label (no glyph drift) */
+.inline-back { display: inline-flex; align-items: center; gap: 6px; }
+.inline-back svg { flex: none; }
+
 /* ============================================================= TABLE (List) */
 .tbl {
   width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px;

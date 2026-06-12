@@ -55,14 +55,16 @@
     "signingIn": "正在登录…",
     "error": "邮箱或密码错误。",
     "forgot": "忘记密码？",
-    "forgotHelp": "请联系你的团队管理员重置密码。"
+    "forgotHelp": "请联系你的团队管理员重置密码。",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码"
   },
   "reset": {
     "requestTitle": "重置密码",
     "requestSubtitle": "输入你的账户邮箱，我们将向你发送设置新密码的链接。",
     "send": "发送重置链接",
     "sending": "发送中…",
-    "backToSignIn": "← 返回登录",
+    "backToSignIn": "返回登录",
     "sentTitle": "请查收邮件",
     "sentBody": "如果 {{email}} 存在账户，我们已发送重置密码的链接。该链接将在 1 小时后失效。",
     "newTitle": "设置新密码",
@@ -91,7 +93,8 @@
     "checkTitle": "请查收邮件",
     "checkBody": "我们已向 {{email}} 发送验证链接。点击它即可激活你的账户和团队。",
     "prompt": "第一次使用 Ananda Taskboard？",
-    "cta": "创建账户"
+    "cta": "创建账户",
+    "state": "州/省"
   },
   "verify": {
     "working": "正在验证…",

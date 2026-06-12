@@ -126,7 +126,7 @@ export const api = {
   },
   /** Self-serve signup: creates an account + a new org (inactive until verified). */
   async signup(payload: {
-    organization: string; name: string; email: string; password: string; city: string; country: string;
+    organization: string; name: string; email: string; password: string; city: string; state: string; country: string;
   }) {
     const res = await fetch("/api/auth/signup", {
       method: "POST",

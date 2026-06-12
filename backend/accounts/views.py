@@ -83,7 +83,8 @@ class MeView(APIView):
         rows = Membership.objects.filter(user=user, is_active=True).select_related("organization")
         return [
             {"org_id": m.organization_id, "name": m.organization.name,
-             "city": m.organization.city, "country": m.organization.country,
+             "city": m.organization.city, "state": m.organization.state,
+             "country": m.organization.country,
              "role": m.role, "tier": m.tier_id}
             for m in rows
         ]
@@ -409,7 +410,7 @@ def _send_verification_email(user):
 
 
 class SignupView(APIView):
-    """POST {organization, name, email, password, city, country}: create an
+    """POST {organization, name, email, password, city, state, country}: create an
     inactive User + inactive Organization + an admin Membership, then email a
     verification link. 201 regardless of delivery."""
 
@@ -426,8 +427,8 @@ class SignupView(APIView):
             email=d["email"], name=d["name"], password=d["password"], is_active=False
         )
         org = Organization.objects.create(
-            name=d["organization"], city=d.get("city", ""), country=d.get("country", ""),
-            created_by=user, is_active=False,
+            name=d["organization"], city=d.get("city", ""), state=d.get("state", ""),
+            country=d.get("country", ""), created_by=user, is_active=False,
         )
         ensure_default_tiers(org)
         Membership.objects.create(
@@ -474,6 +475,7 @@ class PlatformStatsView(APIView):
                 "id": org.id,
                 "name": org.name,
                 "city": org.city,
+                "state": org.state,
                 "country": org.country,
                 "is_active": org.is_active,
                 "created_at": org.created_at.isoformat(),

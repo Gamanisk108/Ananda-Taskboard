@@ -55,14 +55,16 @@
     "signingIn": "Connexion…",
     "error": "E-mail ou mot de passe incorrect.",
     "forgot": "Mot de passe oublié ?",
-    "forgotHelp": "Contactez l'administrateur de votre équipe pour le réinitialiser."
+    "forgotHelp": "Contactez l'administrateur de votre équipe pour le réinitialiser.",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe"
   },
   "reset": {
     "requestTitle": "Réinitialiser votre mot de passe",
     "requestSubtitle": "Saisissez l'e-mail de votre compte et nous vous enverrons un lien pour définir un nouveau mot de passe.",
     "send": "Envoyer le lien",
     "sending": "Envoi…",
-    "backToSignIn": "← Retour à la connexion",
+    "backToSignIn": "Retour à la connexion",
     "sentTitle": "Vérifiez votre e-mail",
     "sentBody": "Si un compte existe pour {{email}}, nous avons envoyé un lien pour réinitialiser votre mot de passe. Il expire dans 1 heure.",
     "newTitle": "Choisissez un nouveau mot de passe",
@@ -91,7 +93,8 @@
     "checkTitle": "Vérifiez votre e-mail",
     "checkBody": "Nous avons envoyé un lien de vérification à {{email}}. Cliquez dessus pour activer votre compte et votre équipe.",
     "prompt": "Nouveau sur Ananda Taskboard ?",
-    "cta": "Créer un compte"
+    "cta": "Créer un compte",
+    "state": "État / Province"
   },
   "verify": {
     "working": "Vérification…",

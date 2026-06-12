@@ -55,14 +55,16 @@
     "signingIn": "Signing in…",
     "error": "Incorrect email or password.",
     "forgot": "Forgot password?",
-    "forgotHelp": "Contact your team admin to reset your password."
+    "forgotHelp": "Contact your team admin to reset your password.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "reset": {
     "requestTitle": "Reset your password",
     "requestSubtitle": "Enter your account email and we'll send you a link to set a new password.",
     "send": "Send reset link",
     "sending": "Sending…",
-    "backToSignIn": "← Back to sign in",
+    "backToSignIn": "Back to sign in",
     "sentTitle": "Check your email",
     "sentBody": "If an account exists for {{email}}, we've sent a link to reset your password. It expires in 1 hour.",
     "newTitle": "Choose a new password",
@@ -91,7 +93,8 @@
     "checkTitle": "Check your email",
     "checkBody": "We've sent a verification link to {{email}}. Click it to activate your account and team.",
     "prompt": "New to Ananda Taskboard?",
-    "cta": "Create an account"
+    "cta": "Create an account",
+    "state": "State / Province"
   },
   "verify": {
     "working": "Verifying…",
