@@ -481,13 +481,25 @@ export function Modal({
   useEffect(() => () => cleanupRef.current?.(), []);   // drop any active drag on unmount
   function startDrag(e: React.PointerEvent) {
     if (fs || e.button !== 0) return;                  // left-button only; no drag on mobile full-screen
-    if ((e.target as HTMLElement).closest("button,input,select,textarea,a,label")) return;
-    e.preventDefault();                                // stop text-selection hijacking the drag
+    // Only real clickable controls are exempt — NOT inputs. The title-input header
+    // (TaskModal) is still draggable: a plain click edits the title, a press-drag
+    // moves the modal (a movement threshold distinguishes them). So every popup
+    // drags from its header, even one whose header IS an input.
+    if ((e.target as HTMLElement).closest("button,a,select,[role=combobox]")) return;
     const startX = e.clientX, startY = e.clientY;
-    const base = pos ?? { x: 0, y: 0 };                // latest committed offset (handler re-created each render)
-    // Listen on DOCUMENT (not the element / not pointer-capture): moves are then
-    // delivered no matter what the cursor is over, even if capture is lost.
-    const move = (ev: PointerEvent) => setPos({ x: base.x + ev.clientX - startX, y: base.y + ev.clientY - startY });
+    const base = pos ?? { x: 0, y: 0 };
+    let dragging = false;
+    const THRESHOLD = 4;                               // px before a click becomes a drag
+    // Listen on DOCUMENT so moves arrive no matter what's under the cursor.
+    const move = (ev: PointerEvent) => {
+      if (!dragging) {
+        if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) < THRESHOLD) return;
+        dragging = true;
+        window.getSelection?.()?.removeAllRanges?.();  // entering drag → drop any text selection
+      }
+      ev.preventDefault();
+      setPos({ x: base.x + ev.clientX - startX, y: base.y + ev.clientY - startY });
+    };
     const up = () => {
       document.removeEventListener("pointermove", move);
       document.removeEventListener("pointerup", up);

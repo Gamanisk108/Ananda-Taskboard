@@ -196,6 +196,9 @@
    hijack so the pointer-drag stays smooth. */
 .modal:not(.fs) .modal-head { cursor: move; touch-action: none; user-select: none; }
 .modal:not(.fs) .modal-head h2 { cursor: move; }
+/* The title-input header (TaskModal) stays text-editable: text cursor + selectable
+   (a plain click edits; a press-drag still moves the modal via the threshold). */
+.modal:not(.fs) .modal-head input { cursor: text; user-select: text; }
 
 /* "or" divider above the Google button */
 .or-divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
