@@ -683,7 +683,14 @@
     "noExclusions": "কোনো বর্জন নেই।",
     "taskIdPh": "টাস্ক ID (যেমন ৩১৮)",
     "selectHide": "কী লুকাতে হবে নির্বাচন করুন…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "মালিক",
+    "remove": "সরান",
+    "removeFailed": "সেই সদস্যকে সরানো যায়নি।",
+    "makeOwner": "মালিক করুন",
+    "transferFailed": "মালিকানা হস্তান্তর করা যায়নি।",
+    "confirmRemove": "{{name}}-কে এই দল থেকে সরাবেন? তিনি অবিলম্বে অ্যাক্সেস হারাবেন। তাঁর অ্যাকাউন্ট ও অন্য যেসব দলে তিনি আছেন তা অক্ষত থাকবে।",
+    "confirmTransfer": "{{name}}-কে মালিক করবেন? আপনি অ্যাডমিনে নেমে যাবেন এবং মালিকের সুবিধা হারাবেন। কেবল মালিকই মালিকানা হস্তান্তর করতে পারেন।"
   },
   "cs": {
     "confirmDelete": "এই মন্তব্যটি মুছবেন?",

@@ -683,7 +683,14 @@
     "noExclusions": "无排除项。",
     "taskIdPh": "任务 ID（例如 318）",
     "selectHide": "选择要隐藏的内容…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "所有者",
+    "remove": "移除",
+    "removeFailed": "无法移除该成员。",
+    "makeOwner": "设为所有者",
+    "transferFailed": "无法转移所有权。",
+    "confirmRemove": "将 {{name}} 从此团队移除？对方将立即失去访问权限。其账户及所属的其他团队不受影响。",
+    "confirmTransfer": "将 {{name}} 设为所有者？您将降为管理员并失去所有者权限。只有所有者才能转移所有权。"
   },
   "cs": {
     "confirmDelete": "删除此评论？",

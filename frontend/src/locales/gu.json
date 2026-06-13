@@ -683,7 +683,14 @@
     "noExclusions": "કોઈ બાકાત નથી.",
     "taskIdPh": "ટાસ્ક ID (દા.ત. 318)",
     "selectHide": "શું છુપાવવું તે પસંદ કરો…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "માલિક",
+    "remove": "દૂર કરો",
+    "removeFailed": "તે સભ્યને દૂર કરી શકાયા નથી.",
+    "makeOwner": "માલિક બનાવો",
+    "transferFailed": "માલિકી તબદીલ કરી શકાઈ નથી.",
+    "confirmRemove": "{{name}} ને આ ટીમમાંથી દૂર કરવા છે? તેઓ તરત જ ઍક્સેસ ગુમાવશે. તેમનું ખાતું અને તેઓ જે અન્ય ટીમોમાં છે તે અકબંધ રહેશે.",
+    "confirmTransfer": "{{name}} ને માલિક બનાવવા છે? તમે ઍડમિન બની જશો અને માલિકના વિશેષાધિકાર ગુમાવશો. ફક્ત માલિક જ માલિકી તબદીલ કરી શકે છે."
   },
   "cs": {
     "confirmDelete": "આ ટિપ્પણી કાઢવી?",

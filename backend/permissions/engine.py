@@ -59,8 +59,21 @@ def is_org_admin(user, org=None):
     if org is None:
         return getattr(user, "is_admin", False)
     from accounts.models import Membership
+    # Owner has full admin authority (plus removal protections enforced elsewhere).
     return Membership.objects.filter(
-        user=user, organization=org, role=Membership.Role.ADMIN, is_active=True
+        user=user, organization=org,
+        role__in=[Membership.Role.ADMIN, Membership.Role.OWNER], is_active=True,
+    ).exists()
+
+
+def is_org_owner(user, org):
+    """True iff this user is the active OWNER of the org (the single top authority).
+    Owner-only powers: transfer ownership; immunity from demote/deactivate/remove."""
+    if not (user and getattr(user, "is_authenticated", False)) or org is None:
+        return False
+    from accounts.models import Membership
+    return Membership.objects.filter(
+        user=user, organization=org, role=Membership.Role.OWNER, is_active=True
     ).exists()
 
 

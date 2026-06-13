@@ -683,7 +683,14 @@
     "noExclusions": "Keine Ausschlüsse.",
     "taskIdPh": "Aufgaben-ID (z. B. 318)",
     "selectHide": "Wähle, was ausgeblendet werden soll…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "Eigentümer",
+    "remove": "Entfernen",
+    "removeFailed": "Dieses Mitglied konnte nicht entfernt werden.",
+    "makeOwner": "Zum Eigentümer machen",
+    "transferFailed": "Eigentümerschaft konnte nicht übertragen werden.",
+    "confirmRemove": "{{name}} aus diesem Team entfernen? Der Zugriff geht sofort verloren. Das Konto und andere Teams der Person bleiben unberührt.",
+    "confirmTransfer": "{{name}} zum Eigentümer machen? Sie werden zum Admin herabgestuft und verlieren die Eigentümerrechte. Nur ein Eigentümer kann die Eigentümerschaft übertragen."
   },
   "cs": {
     "confirmDelete": "Diesen Kommentar löschen?",

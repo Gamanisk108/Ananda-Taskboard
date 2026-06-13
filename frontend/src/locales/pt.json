@@ -683,7 +683,14 @@
     "noExclusions": "Sem exclusões.",
     "taskIdPh": "ID da tarefa (ex.: 318)",
     "selectHide": "Selecione o que ocultar…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "Proprietário",
+    "remove": "Remover",
+    "removeFailed": "Não foi possível remover esse membro.",
+    "makeOwner": "Tornar proprietário",
+    "transferFailed": "Não foi possível transferir a propriedade.",
+    "confirmRemove": "Remover {{name}} desta equipe? A pessoa perde o acesso imediatamente. A conta dela e as outras equipes a que pertence permanecem intactas.",
+    "confirmTransfer": "Tornar {{name}} o proprietário? Você passará a administrador e perderá os privilégios de proprietário. Apenas um proprietário pode transferir a propriedade."
   },
   "cs": {
     "confirmDelete": "Excluir este comentário?",

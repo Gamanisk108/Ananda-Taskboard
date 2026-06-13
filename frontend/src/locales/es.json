@@ -683,7 +683,14 @@
     "noExclusions": "Sin exclusiones.",
     "taskIdPh": "ID de tarea (p. ej., 318)",
     "selectHide": "Selecciona qué ocultar…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "Propietario",
+    "remove": "Quitar",
+    "removeFailed": "No se pudo quitar a ese miembro.",
+    "makeOwner": "Hacer propietario",
+    "transferFailed": "No se pudo transferir la propiedad.",
+    "confirmRemove": "¿Quitar a {{name}} de este equipo? Perderá el acceso de inmediato. Su cuenta y los demás equipos a los que pertenece no se verán afectados.",
+    "confirmTransfer": "¿Hacer propietario a {{name}}? Pasarás a ser administrador y perderás los privilegios de propietario. Solo un propietario puede transferir la propiedad."
   },
   "cs": {
     "confirmDelete": "¿Eliminar este comentario?",

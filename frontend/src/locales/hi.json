@@ -683,7 +683,14 @@
     "noExclusions": "कोई बहिष्करण नहीं।",
     "taskIdPh": "कार्य ID (जैसे 318)",
     "selectHide": "छिपाने के लिए चुनें…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "स्वामी",
+    "remove": "हटाएँ",
+    "removeFailed": "उस सदस्य को हटाया नहीं जा सका।",
+    "makeOwner": "स्वामी बनाएँ",
+    "transferFailed": "स्वामित्व स्थानांतरित नहीं किया जा सका।",
+    "confirmRemove": "{{name}} को इस टीम से हटाएँ? उनकी पहुँच तुरंत समाप्त हो जाएगी। उनका खाता और वे अन्य टीमें जिनमें वे हैं, अप्रभावित रहेंगी।",
+    "confirmTransfer": "{{name}} को स्वामी बनाएँ? आप व्यवस्थापक बन जाएँगे और स्वामी के अधिकार खो देंगे। केवल स्वामी ही स्वामित्व स्थानांतरित कर सकता है।"
   },
   "cs": {
     "confirmDelete": "इस टिप्पणी को हटाएँ?",

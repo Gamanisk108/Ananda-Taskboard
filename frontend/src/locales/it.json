@@ -683,7 +683,14 @@
     "noExclusions": "Nessuna esclusione.",
     "taskIdPh": "ID attività (es. 318)",
     "selectHide": "Seleziona cosa nascondere…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "Proprietario",
+    "remove": "Rimuovi",
+    "removeFailed": "Impossibile rimuovere quel membro.",
+    "makeOwner": "Rendi proprietario",
+    "transferFailed": "Impossibile trasferire la proprietà.",
+    "confirmRemove": "Rimuovere {{name}} da questo team? Perderà l'accesso immediatamente. Il suo account e gli altri team a cui appartiene restano intatti.",
+    "confirmTransfer": "Rendere {{name}} il proprietario? Passerai a amministratore e perderai i privilegi di proprietario. Solo un proprietario può trasferire la proprietà."
   },
   "cs": {
     "confirmDelete": "Eliminare questo commento?",

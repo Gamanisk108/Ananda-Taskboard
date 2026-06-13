@@ -12,7 +12,7 @@ import { SEES_ORDER, SEES_LABEL, type Sees } from "../types";
 // DN3: Holidays moved to Settings → Events & Holidays (no Team tab).
 type Tab = "members" | "groups" | "access" | "activity";
 
-interface UserRow { id: number; name: string; email: string; role: string; is_active: boolean; is_admin: boolean; tier: number | null; }
+interface UserRow { id: number; name: string; email: string; role: string; is_active: boolean; is_admin: boolean; is_owner: boolean; tier: number | null; }
 interface GroupRow { id: number; name: string; member_ids: number[]; }
 interface TierRow { id: number; name: string; default_sees: Sees; member_count: number; }
 interface Sub { id: number; name: string; }
@@ -189,30 +189,16 @@ function InvitesSection({ tiers, projects }: { tiers: TierRow[]; projects: Proj[
 function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: TierRow[]; projects: Proj[]; reload: () => void }) {
   const { t: tr } = useTranslation();
   const { me } = useAuth();
-  const [name, setName] = useState(""); const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); const [role, setRole] = useState("member");
-  const [tier, setTier] = useState<string>("");
-  const [err, setErr] = useState("");
+  const confirm = useConfirm();
   const tierList = useMemo(() => sortedTiers(tiers), [tiers]);
-  // No blank option — default new members to "Sub-Project Only".
-  useEffect(() => { if (!tier) { const d = defaultMemberTier(tiers); if (d) setTier(String(d.id)); } }, [tiers]);
-  const [busy, guard] = useSubmitGuard();
   // optimistic local copy so role/tier/active changes show instantly (the full
   // reload runs in the background and re-syncs via the effect below).
   const [rows, setRows] = useState(users);
   useEffect(() => setRows(users), [users]);
   const patch = (id: number, p: Partial<UserRow>) => setRows((rs) => rs.map((u) => (u.id === id ? { ...u, ...p } : u)));
+  // Owner-only powers (transfer ownership) hinge on whether I am this org's owner.
+  const iAmOwner = rows.find((u) => u.id === me?.id)?.is_owner ?? false;
 
-  function add() {
-    return guard(async () => {
-      setErr("");
-      try {
-        await api.post("/api/users", { name, email, password, role, tier: role === "admin" || !tier ? null : Number(tier) });
-        setName(""); setEmail(""); setPassword(""); setRole("member"); setTier("");
-        reload();
-      } catch { setErr(tr("ta.errAddMember")); }
-    });
-  }
   async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r, is_admin: r === "admin" }); try { await api.patch(`/api/users/${u.id}`, { role: r }); } catch { patch(u.id, { role: u.role }); } }
   async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); } catch { patch(u.id, { tier: u.tier }); } }
   async function toggleActive(u: UserRow) { const next = !u.is_active; patch(u.id, { is_active: next }); try { await api.patch(`/api/users/${u.id}`, { is_active: next }); } catch { patch(u.id, { is_active: u.is_active }); } }
@@ -220,35 +206,20 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
     const pw = prompt(tr("ta.promptNewPw", { name: u.name || u.email }));
     if (pw) { await api.patch(`/api/users/${u.id}`, { password: pw }); alert(tr("ta.pwUpdated")); }
   }
+  async function removeMember(u: UserRow) {
+    if (!(await confirm({ body: tr("ta.confirmRemove", { name: u.name || u.email }), danger: true, confirmLabel: tr("ta.remove", "Remove") }))) return;
+    try { await api.del(`/api/users/${u.id}`); reload(); }
+    catch { alert(tr("ta.removeFailed", "Couldn't remove that member.")); }
+  }
+  async function makeOwner(u: UserRow) {
+    if (!(await confirm({ body: tr("ta.confirmTransfer", { name: u.name || u.email }), danger: true, confirmLabel: tr("ta.makeOwner", "Make owner") }))) return;
+    try { await api.post(`/api/users/${u.id}/transfer-ownership`, {}); reload(); }
+    catch { alert(tr("ta.transferFailed", "Couldn't transfer ownership.")); }
+  }
 
   return (
     <>
       <InvitesSection tiers={tiers} projects={projects} />
-      <div className="card" style={{ padding: 12, marginBottom: 14, background: "var(--surface-sunk)" }}>
-        <h3 className="section-title">{tr("ta.addMemberTitle")}</h3>
-        <div className="row2">
-          <div className="field"><label>{tr("ta.name")}</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="field"><label>{tr("login.email")}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-        </div>
-        <div className="row2">
-          <div className="field"><label>{tr("ta.startingPw")}</label><input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={tr("ta.min8")} /></div>
-          <div className="field"><label>{tr("ta.role")}</label>
-            <SingleSelect width="100%" value={role} onChange={setRole}
-              options={[
-                { value: "member", label: tr("ta.roleMember") },
-                { value: "admin", label: tr("ta.roleAdmin") },
-              ]} />
-          </div>
-        </div>
-        <div className="field" style={{ maxWidth: "calc(50% - 6px)" }}>
-          <label>{tr("ta.viewAccess", "Access")} <span className="muted" style={{ fontWeight: 400 }}>{tr("ta.viewAccessHint", "(what can they see?)")}</span></label>
-          <SingleSelect width="100%" value={tier} disabled={role === "admin"} onChange={setTier}
-            options={tierList.map((t) => ({ value: String(t.id), label: SEES_LABEL[t.default_sees] }))} />
-        </div>
-        {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{err}</div>}
-        <button className="btn-primary" onClick={add} disabled={busy}>{tr("ta.addMember")}</button>
-        <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{tr("ta.shareHint")}</div>
-      </div>
 
       <table className="tbl">
         <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "Access")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
@@ -258,13 +229,17 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
               <td>{u.name || "—"}</td>
               <td className="muted">{u.email}</td>
               <td>
-                {/* You can't demote your own admin account (backend blocks it) — disable
-                    the select rather than let it fail-on-use (QA 2026-06-05). */}
-                <SingleSelect value={u.role} disabled={u.id === me?.id} onChange={(v) => setMemberRole(u, v)}
-                  options={[
-                    { value: "member", label: tr("ta.roleMember") },
-                    { value: "admin", label: tr("ta.roleAdmin") },
-                  ]} />
+                {/* The owner role is fixed here — it only moves via "Make owner"
+                    (transfer). You also can't demote your own admin account. */}
+                {u.is_owner ? (
+                  <span className="pill" style={{ background: "var(--surface-sunk)", fontWeight: 600 }}>{tr("ta.roleOwner", "Owner")}</span>
+                ) : (
+                  <SingleSelect value={u.role} disabled={u.id === me?.id} onChange={(v) => setMemberRole(u, v)}
+                    options={[
+                      { value: "member", label: tr("ta.roleMember") },
+                      { value: "admin", label: tr("ta.roleAdmin") },
+                    ]} />
+                )}
               </td>
               <td>
                 {u.is_admin ? <span className="muted" style={{ fontSize: 12 }}>{tr("ta.adminDash")}</span> : (
@@ -273,8 +248,20 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
                     options={tierList.map((t) => ({ value: String(t.id), label: SEES_LABEL[t.default_sees] }))} />
                 )}
               </td>
-              <td><button className="btn-ghost" onClick={() => toggleActive(u)}>{u.is_active ? tr("ta.active") : tr("ta.disabled")}</button></td>
-              <td><button className="btn-ghost" onClick={() => resetPw(u)}>{tr("ta.resetPw")}</button></td>
+              <td><button className="btn-ghost" disabled={u.is_owner} onClick={() => toggleActive(u)}>{u.is_active ? tr("ta.active") : tr("ta.disabled")}</button></td>
+              <td>
+                <div style={{ display: "flex", gap: 4, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                  {/* Owner row: no destructive/reset actions (the owner manages their
+                      own account in Settings). Make-owner is owner-only, on others. */}
+                  {!u.is_owner && <button className="btn-ghost" onClick={() => resetPw(u)}>{tr("ta.resetPw")}</button>}
+                  {iAmOwner && !u.is_owner && u.is_active && (
+                    <button className="btn-ghost" onClick={() => makeOwner(u)}>{tr("ta.makeOwner", "Make owner")}</button>
+                  )}
+                  {!u.is_owner && u.id !== me?.id && (
+                    <button className="btn-ghost" style={{ color: "var(--danger)" }} onClick={() => removeMember(u)}>{tr("ta.remove", "Remove")}</button>
+                  )}
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>

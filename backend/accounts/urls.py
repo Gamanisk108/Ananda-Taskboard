@@ -16,6 +16,7 @@ from .views import (
     PlatformStatsView,
     SignupView,
     TierViewSet,
+    TransferOwnershipView,
     UserDetailView,
     UsersView,
     VerifyEmailView,
@@ -42,4 +43,5 @@ urlpatterns = [
     path("platform/orgs", PlatformStatsView.as_view(), name="platform-orgs"),
     path("users", UsersView.as_view(), name="users"),
     path("users/<int:pk>", UserDetailView.as_view(), name="user-detail"),
+    path("users/<int:pk>/transfer-ownership", TransferOwnershipView.as_view(), name="user-transfer-ownership"),
 ] + router.urls

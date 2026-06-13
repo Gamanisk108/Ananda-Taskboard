@@ -118,10 +118,16 @@ class Organization(models.Model):
 
 class Membership(models.Model):
     """A user's standing within ONE organization — the unit of per-org permission:
-    role (admin|member) plus an optional tier. A user may hold many memberships,
-    one per org they belong to."""
+    role (owner|admin|member) plus an optional tier. A user may hold many
+    memberships, one per org they belong to.
+
+    OWNER is the single top authority per org (seeded as the org's creator):
+    an admin in every respect, but additionally cannot be demoted, deactivated,
+    or removed by anyone else — only the owner can hand ownership to another
+    member (which demotes the old owner to admin). Exactly one per org."""
 
     class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
         ADMIN = "admin", "Admin"
         MEMBER = "member", "Member"
 
@@ -143,8 +149,13 @@ class Membership(models.Model):
         ]
 
     @property
+    def is_owner(self):
+        return self.role == self.Role.OWNER
+
+    @property
     def is_admin(self):
-        return self.role == self.Role.ADMIN
+        """Owner is an admin in every respect, plus protections."""
+        return self.role in (self.Role.ADMIN, self.Role.OWNER)
 
     def __str__(self):
         return f"{self.user} @ {self.organization} [{self.role}]"

@@ -683,7 +683,14 @@
     "exclusionsHelp": "A deny always wins, even over a task the member is assigned to (deny > assignment > allow). Use sparingly.",
     "noExclusions": "No exclusions.",
     "taskIdPh": "Task ID (e.g. 318)",
-    "selectHide": "Select what to hide…"
+    "selectHide": "Select what to hide…",
+    "roleOwner": "Owner",
+    "remove": "Remove",
+    "removeFailed": "Couldn't remove that member.",
+    "makeOwner": "Make owner",
+    "transferFailed": "Couldn't transfer ownership.",
+    "confirmRemove": "Remove {{name}} from this team? They lose access immediately. Their account and any other teams they belong to stay intact.",
+    "confirmTransfer": "Make {{name}} the owner? You'll step down to admin and lose owner privileges. Only an owner can transfer ownership."
   },
   "cs": {
     "confirmDelete": "Delete this comment?",

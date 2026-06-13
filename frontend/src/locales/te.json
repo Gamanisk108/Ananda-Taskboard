@@ -683,7 +683,14 @@
     "noExclusions": "మినహాయింపులు లేవు.",
     "taskIdPh": "టాస్క్ ID (ఉదా. 318)",
     "selectHide": "ఏమి దాచాలో ఎంచుకోండి…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "యజమాని",
+    "remove": "తొలగించు",
+    "removeFailed": "ఆ సభ్యుడిని తొలగించడం సాధ్యపడలేదు.",
+    "makeOwner": "యజమానిగా చేయి",
+    "transferFailed": "యాజమాన్యాన్ని బదిలీ చేయడం సాధ్యపడలేదు.",
+    "confirmRemove": "{{name}}ను ఈ బృందం నుండి తొలగించాలా? వారు వెంటనే యాక్సెస్ కోల్పోతారు. వారి ఖాతా, వారు ఉన్న ఇతర బృందాలు చెక్కుచెదరవు.",
+    "confirmTransfer": "{{name}}ను యజమానిగా చేయాలా? మీరు అడ్మిన్‌గా దిగజారి యజమాని హక్కులను కోల్పోతారు. యజమాని మాత్రమే యాజమాన్యాన్ని బదిలీ చేయగలరు."
   },
   "cs": {
     "confirmDelete": "ఈ వ్యాఖ్యను తొలగించాలా?",

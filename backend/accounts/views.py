@@ -59,12 +59,14 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from permissions.engine import is_org_admin
+        from permissions.engine import is_org_admin, is_org_owner
 
         org = getattr(request, "org", None)
         data = UserSerializer(request.user).data
         # Admin status is per active org (a signup admin is role=member globally).
         data["is_admin"] = is_org_admin(request.user, org)
+        # Owner = the single top authority of the active org (org creator by default).
+        data["is_owner"] = is_org_owner(request.user, org)
         # Platform owner: gates the metadata-only stats view (NOT org data access).
         data["is_superuser"] = request.user.is_superuser
         data["memberships"] = self._memberships(request.user)
@@ -154,11 +156,27 @@ class DeleteAccountView(APIView):
             raise ValidationError({"password": "That isn't your password."})
         if user.is_superuser:
             raise ValidationError({"detail": "The platform owner account can't delete itself."})
-        # Sole-admin guard, per org.
+        # Owner succession: if the leaving user owns an org that still has other
+        # active members, hand ownership to a successor (longest-tenured active
+        # admin, else longest-tenured active member) so the team is never left
+        # ownerless. (To choose who, the owner can transfer ownership first.)
+        for m in Membership.objects.filter(user=user, is_active=True, role="owner"):
+            org = m.organization
+            successor = (
+                Membership.objects.filter(organization=org, is_active=True)
+                .exclude(user=user)
+                .order_by("role", "created_at")  # 'admin' < 'member' lexically → admins first, then oldest
+                .first()
+            )
+            if successor:
+                successor.role = "owner"
+                successor.save(update_fields=["role"])
+        # Sole-admin guard, per org (an owner counts as an admin, so a promoted
+        # successor above already satisfies this).
         for m in Membership.objects.filter(user=user, is_active=True, role="admin"):
             org = m.organization
             other_admins = Membership.objects.filter(
-                organization=org, role="admin", is_active=True
+                organization=org, role__in=["admin", "owner"], is_active=True
             ).exclude(user=user).exists()
             other_members = Membership.objects.filter(
                 organization=org, is_active=True
@@ -217,7 +235,8 @@ class UsersView(APIView):
             m = members.get(u.id)
             role = m.role if m else u.role
             out.append({
-                "id": u.id, "name": u.name, "email": u.email, "is_admin": role == "admin",
+                "id": u.id, "name": u.name, "email": u.email,
+                "is_admin": role in ("admin", "owner"), "is_owner": role == "owner",
                 "role": role, "is_active": u.is_active, "tier": (m.tier_id if m else u.tier_id),
                 "subproject_ids": visible_subproject_ids(u, org),
             })
@@ -238,7 +257,8 @@ class UsersView(APIView):
 
 
 class UserDetailView(APIView):
-    """Admin edit a member: name, role, active, or reset password."""
+    """Admin edit a member: name, role, active, or reset password. DELETE removes
+    the user from the active org (their Membership) — not their whole account."""
 
     permission_classes = [IsAdmin]
 
@@ -246,6 +266,15 @@ class UserDetailView(APIView):
         user = User.objects.filter(pk=pk).first()
         if not user:
             return Response(status=404)
+        org = getattr(request, "org", None)
+        target_m = Membership.objects.filter(user=user, organization=org).first() if org is not None else None
+        # The owner is protected: nobody but the owner themselves may change the
+        # owner's role/active/password. (Ownership only moves via transfer.)
+        if target_m and target_m.role == Membership.Role.OWNER and user.id != request.user.id:
+            raise PermissionDenied("The owner can't be changed by others. Ask them to transfer ownership first.")
+        # Role can never be set to OWNER here — that path is the transfer endpoint only.
+        if request.data.get("role") == Membership.Role.OWNER:
+            raise PermissionDenied("Use Transfer ownership to make someone the owner.")
         # Guard against an admin locking themselves out.
         if user.id == request.user.id:
             if request.data.get("role") == User.Role.MEMBER or request.data.get("is_active") is False:
@@ -275,6 +304,81 @@ class UserDetailView(APIView):
         if "is_active" in request.data:
             audit(request.user, "user.active", f"{'Enabled' if user.is_active else 'Disabled'} {who}")
         return Response(UserSerializer(user).data)
+
+    def delete(self, request, pk):
+        """Remove a user from the ACTIVE org: delete their Membership (+ this org's
+        group memberships and org-scoped access grants). Their account and any
+        memberships in other orgs are untouched. Guards: can't remove yourself
+        (use account deletion), and the owner can't be removed at all."""
+        org = getattr(request, "org", None)
+        if org is None:
+            raise ValidationError({"detail": "No active organization."})
+        user = User.objects.filter(pk=pk).first()
+        if not user:
+            return Response(status=404)
+        if user.id == request.user.id:
+            raise PermissionDenied("You can't remove yourself — use Settings → Delete account to leave.")
+        m = Membership.objects.filter(user=user, organization=org).first()
+        if not m:
+            return Response(status=404)
+        if m.role == Membership.Role.OWNER:
+            raise PermissionDenied("The owner can't be removed. Transfer ownership first.")
+
+        who = user.name or user.email
+        from django.db.models import Q
+
+        from permissions.models import AccessGrant, audit
+        from projects.models import Project, SubProject
+        sub_ids = list(SubProject.objects.filter(project__organization=org).values_list("id", flat=True))
+        proj_ids = list(Project.objects.filter(organization=org).values_list("id", flat=True))
+        # Drop org-scoped grants so a future re-invite starts clean (exclusions only
+        # restrict access, never widen it, so leaving them is safe).
+        AccessGrant.objects.filter(user=user).filter(
+            Q(subproject_id__in=sub_ids) | Q(project_id__in=proj_ids)
+        ).delete()
+        for g in Group.objects.filter(organization=org, members=user):
+            g.members.remove(user)
+        m.delete()
+        audit(request.user, "user.remove", f"Removed {who} from the team")
+        return Response(status=204)
+
+
+class TransferOwnershipView(APIView):
+    """Owner-only: hand the single Owner role to another active member of the org.
+    The current owner is atomically demoted to admin in the same transaction."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from django.db import transaction
+
+        from permissions.engine import is_org_owner
+        from permissions.models import audit
+
+        org = getattr(request, "org", None)
+        if org is None:
+            raise ValidationError({"detail": "No active organization."})
+        if not is_org_owner(request.user, org):
+            raise PermissionDenied("Only the current owner can transfer ownership.")
+        target = User.objects.filter(pk=pk).first()
+        if not target:
+            return Response(status=404)
+        if target.id == request.user.id:
+            raise ValidationError({"detail": "You're already the owner."})
+        new = Membership.objects.filter(user=target, organization=org, is_active=True).first()
+        if not new:
+            raise ValidationError({"detail": "That person isn't an active member of this team."})
+        cur = Membership.objects.filter(user=request.user, organization=org, role=Membership.Role.OWNER).first()
+        with transaction.atomic():
+            if cur:
+                cur.role = Membership.Role.ADMIN
+                cur.save(update_fields=["role"])
+            new.role = Membership.Role.OWNER
+            new.is_active = True
+            new.save(update_fields=["role", "is_active"])
+        who = target.name or target.email
+        audit(request.user, "user.ownership", f"Transferred ownership to {who}")
+        return Response({"detail": f"{who} is now the owner."})
 
 
 class GroupViewSet(viewsets.ModelViewSet):

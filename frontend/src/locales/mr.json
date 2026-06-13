@@ -683,7 +683,14 @@
     "noExclusions": "वगळणी नाही.",
     "taskIdPh": "कार्य ID (उदा. 318)",
     "selectHide": "काय लपवायचे ते निवडा…",
-    "ownRoleLocked": "You can't change your own admin role."
+    "ownRoleLocked": "You can't change your own admin role.",
+    "roleOwner": "मालक",
+    "remove": "काढा",
+    "removeFailed": "तो सदस्य काढता आला नाही.",
+    "makeOwner": "मालक करा",
+    "transferFailed": "मालकी हस्तांतरित करता आली नाही.",
+    "confirmRemove": "{{name}} ला या संघातून काढायचे? त्यांचा प्रवेश लगेच संपेल. त्यांचे खाते आणि ते सहभागी असलेले इतर संघ अबाधित राहतील.",
+    "confirmTransfer": "{{name}} ला मालक करायचे? तुम्ही प्रशासक व्हाल आणि मालकाचे अधिकार गमवाल. फक्त मालकच मालकी हस्तांतरित करू शकतो."
   },
   "cs": {
     "confirmDelete": "ही टिप्पणी हटवायची?",
