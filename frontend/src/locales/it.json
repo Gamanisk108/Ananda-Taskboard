@@ -467,7 +467,8 @@
     "trustedTitle": "I membri possono pubblicare attività qui senza approvazione admin",
     "markDoneConfirm": "Segnare TUTTE le attività in \"{{name}}\" come Fatte e archiviarle? Non è annullabile automaticamente.",
     "cantDeleteDefault": "Il sottoprogetto predefinito 'General' non può essere eliminato.",
-    "markDoneResult": "{{count}} attività contrassegnate come Completate e archiviate."
+    "markDoneResult": "{{count}} attività contrassegnate come Completate e archiviate.",
+    "saveFailed": "Impossibile salvare la modifica: ripristino dell'ultima versione salvata."
   },
   "kanban": {
     "moveErr": "Puoi spostare solo le attività assegnate a te (o essere un amministratore)."

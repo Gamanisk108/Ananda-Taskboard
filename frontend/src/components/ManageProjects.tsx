@@ -68,6 +68,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
       await api.patch(`/api/projects/${p.id}`, { name: p.name, color: p.color, emoji: p.emoji });
       onChanged();
     } catch {
+      alert(t("mp.saveFailed", "Couldn't save your change — reverting to the last saved version."));
       load();
     }
   }
@@ -86,6 +87,7 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
       });
       onChanged();
     } catch {
+      alert(t("mp.saveFailed", "Couldn't save your change — reverting to the last saved version."));
       load();
     }
   }
@@ -154,6 +156,14 @@ function ProjectEditor({
   const saved = useRef(project);
   useEffect(() => { setP(project); saved.current = project; }, [project]);
 
+  // Hold the latest onSaveProject in a ref so the autosave effect below does NOT
+  // list it as a dep. The parent recreates this callback every render; if it were
+  // a dep, an unrelated parent re-render during the 500ms window would clear the
+  // pending timer and the edit would never persist. (Assign in an effect, not in
+  // render, per react-hooks/refs.)
+  const onSaveProjectRef = useRef(onSaveProject);
+  useEffect(() => { onSaveProjectRef.current = onSaveProject; }, [onSaveProject]);
+
   // Debounced autosave: persist 500ms after the last edit to name/color/emoji
   // (no Save button — picking a color/emoji or editing the name just sticks).
   // Empty names are never autosaved (would blank a project).
@@ -161,9 +171,9 @@ function ProjectEditor({
     const cur = saved.current;
     if (p.name === cur.name && p.color === cur.color && p.emoji === cur.emoji) return;
     if (!p.name.trim()) return;
-    const id = setTimeout(() => { saved.current = p; onSaveProject(p); }, 500);
+    const id = setTimeout(() => { saved.current = p; onSaveProjectRef.current(p); }, 500);
     return () => clearTimeout(id);
-  }, [p, onSaveProject]);
+  }, [p]);
 
   // One grid per card so every row's columns line up (emoji · color · name ·
   // Done-all · delete · trusted · date). Rows are display:contents wrappers, so
@@ -206,15 +216,22 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
   const saved = useRef(sub);
   useEffect(() => { setS(sub); saved.current = sub; }, [sub]);
 
+  // Latest-ref for onSave — see the matching note in ProjectEditor: keeps the
+  // unstable parent callback out of the autosave effect's deps so a parent
+  // re-render can't clear the pending debounce timer. (Assign in an effect, not
+  // in render, per react-hooks/refs.)
+  const onSaveRef = useRef(onSave);
+  useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
+
   // Debounced autosave (no Save button) — name/color/trusted-toggle persist
   // 500ms after the last edit. Empty names are never autosaved.
   useEffect(() => {
     const cur = saved.current;
     if (s.name === cur.name && s.color === cur.color && s.members_post_without_approval === cur.members_post_without_approval) return;
     if (!s.name.trim()) return;
-    const id = setTimeout(() => { saved.current = s; onSave(s); }, 500);
+    const id = setTimeout(() => { saved.current = s; onSaveRef.current(s); }, 500);
     return () => clearTimeout(id);
-  }, [s, onSave]);
+  }, [s]);
 
   // display:contents — cells join the parent .mp-rows grid. Column order matches
   // the project row: (blank emoji) · color · name · Done · Delete · Trusted · Date.

@@ -467,7 +467,8 @@
     "trustedTitle": "Mitglieder können hier ohne Admin-Freigabe Aufgaben erstellen",
     "markDoneConfirm": "ALLE Aufgaben in \"{{name}}\" als Erledigt markieren und archivieren? Nicht automatisch rückgängig zu machen.",
     "cantDeleteDefault": "Das Standard-Unterprojekt 'General' kann nicht gelöscht werden.",
-    "markDoneResult": "{{count}} Aufgabe(n) als Erledigt markiert und archiviert."
+    "markDoneResult": "{{count}} Aufgabe(n) als Erledigt markiert und archiviert.",
+    "saveFailed": "Änderung konnte nicht gespeichert werden – letzte gespeicherte Version wird wiederhergestellt."
   },
   "kanban": {
     "moveErr": "Du kannst nur dir zugewiesene Aufgaben verschieben (oder Administrator sein)."

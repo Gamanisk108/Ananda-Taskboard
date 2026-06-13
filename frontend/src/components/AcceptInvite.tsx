@@ -18,6 +18,24 @@ function firstError(e: unknown, fallback: string): string {
   return fallback;
 }
 
+/** Brand card shell. MUST stay at module scope, not nested inside AcceptInvite:
+ *  a component defined in the render body is a new function identity every render,
+ *  so React remounts the whole subtree on each keystroke and the inputs lose focus
+ *  (the "type one letter, click back in" bug). */
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="login-wrap">
+      <div className="card login-card rise">
+        <div className="login-brand">
+          <span className="dot" style={{ background: "var(--primary)", width: 12, height: 12 }} />
+          <h1 style={{ fontSize: 22 }}>{title}</h1>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /** Invitation accept screen (?invite=<id>&token=…). For an existing account it
  *  joins the org then sends them to sign in; for a new email it collects a name +
  *  password, creates the account, and logs straight into the joined org. */
@@ -57,20 +75,6 @@ export function AcceptInvite() {
     } finally {
       setBusy(false);
     }
-  }
-
-  function Card({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-      <div className="login-wrap">
-        <div className="card login-card rise">
-          <div className="login-brand">
-            <span className="dot" style={{ background: "var(--primary)", width: 12, height: 12 }} />
-            <h1 style={{ fontSize: 22 }}>{title}</h1>
-          </div>
-          {children}
-        </div>
-      </div>
-    );
   }
 
   if (invalid) {
