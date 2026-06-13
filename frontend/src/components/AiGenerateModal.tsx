@@ -4,11 +4,11 @@
 // real tasks via the normal /api/tasks path and attaches the AI-suggested source
 // file to each. Post-save the created tasks stay listed, each opening TaskModal.
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Upload, X, Trash2, FileText } from "lucide-react";
 import { api, ApiError } from "../api/client";
-import { uploadAttachment } from "../attachments";
+import { uploadAttachment, fmtSize } from "../attachments";
 import { writableProjects } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
@@ -17,6 +17,7 @@ import { generateTasks, type ProposedTask } from "../ai";
 import { PRIORITY_META, type Me, type Task } from "../types";
 import { Modal, SingleSelect, StatusPillSelect, PriorityIcon, Spinner } from "./common";
 import { AssigneePicker } from "./AssigneePicker";
+import { useConfirm } from "./confirm";
 
 type Step = "input" | "review" | "saving" | "done";
 
@@ -58,7 +59,25 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   const [created, setCreated] = useState<Task[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const submitting = useRef(false);
+  const confirm = useConfirm();
+
+  // Drag-anywhere file intake + thumbnails for visual confirmation.
+  const isImg = (f: File) => /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif)$/i.test(f.name);
+  const addFiles = (list: FileList | File[] | null) => { if (list) setFiles((f) => [...f, ...Array.from(list)]); };
+  const thumbs = useMemo(() => files.map((f) => (isImg(f) ? URL.createObjectURL(f) : null)), [files]);
+  useEffect(() => () => thumbs.forEach((u) => u && URL.revokeObjectURL(u)), [thumbs]);
+
+  // Guard against losing typed/uploaded work to a stray backdrop-click or Escape.
+  const dirty = step !== "done" && (!!prompt.trim() || files.length > 0 || rows.length > 0);
+  async function guardedClose() {
+    if (dirty && !(await confirm({
+      body: t("ai.confirmDiscard", "Discard this AI draft? Your prompt, files, and any unsaved tasks here will be lost."),
+      danger: true, confirmLabel: t("ai.discard", "Discard"),
+    }))) return;
+    onClose();
+  }
 
   const subsFor = (pid: number) => projects.find((p) => p.id === pid)?.subprojects ?? [];
 
@@ -148,13 +167,13 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
         <button type="button" className="btn-primary" disabled={busy} onClick={runGenerate}>
           <Sparkles size={15} /> {busy ? t("ai.generating", "Generating…") : t("ai.generate", "Generate tasks")}
         </button>
-        <button type="button" className="btn-secondary" style={{ marginLeft: "auto" }} onClick={onClose}>{t("common.cancel")}</button>
+        <button type="button" className="btn-secondary" style={{ marginLeft: "auto" }} onClick={guardedClose}>{t("common.cancel")}</button>
       </div>
     ) : step === "review" ? (
       <div className="set-actions">
         <button type="button" className="btn-primary" disabled={!canSave} onClick={save}>{t("ai.save", "Save tasks")}</button>
         <button type="button" className="btn-ghost" onClick={() => setStep("input")}>{t("ai.back", "Back")}</button>
-        <button type="button" className="btn-secondary" style={{ marginLeft: "auto" }} onClick={onClose}>{t("common.cancel")}</button>
+        <button type="button" className="btn-secondary" style={{ marginLeft: "auto" }} onClick={guardedClose}>{t("common.cancel")}</button>
       </div>
     ) : step === "done" ? (
       <div className="set-actions">
@@ -164,36 +183,53 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
     ) : undefined;
 
   return (
-    <Modal fullScreenOnNarrow wide icon={<Sparkles />} title={t("ai.title", "Generate tasks with AI")} onClose={onClose} footer={footer}>
+    <Modal fullScreenOnNarrow wide icon={<Sparkles />} title={t("ai.title", "Generate tasks with AI")} onClose={guardedClose} footer={footer}>
       {step === "input" && (
-        <>
+        // Drop anywhere in the body: the whole input step is the drop target.
+        <div
+          className={`ai-input${dragOver ? " dragover" : ""}`}
+          onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(false); }}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
+        >
           <div className="field">
             <label>{t("ai.promptLabel", "What needs doing?")}</label>
-            <textarea rows={4} value={prompt} onChange={(e) => setPrompt(e.target.value)}
+            <textarea rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)}
               placeholder={t("ai.promptPh", "Describe the work, or upload notes/documents to turn into tasks…")} />
           </div>
-          <div className="field">
-            <label>{t("ai.filesLabel", "Documents & images (optional)")}</label>
-            <label className="btn-secondary" style={{ display: "inline-flex", cursor: "pointer", width: "fit-content" }}>
-              <Upload size={15} /> {t("ai.addFiles", "Add files")}
-              <input type="file" multiple accept={ACCEPT} style={{ display: "none" }}
-                onChange={(e) => { setFiles((f) => [...f, ...Array.from(e.target.files ?? [])]); e.currentTarget.value = ""; }} />
-            </label>
-            {files.length > 0 && (
-              <ul className="ai-filelist" style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "flex", flexDirection: "column", gap: 4 }}>
-                {files.map((f, i) => (
-                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
-                    <FileText size={14} /> <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
-                    <button type="button" className="btn-ghost icon-only" aria-label={t("common.remove", "Remove")}
-                      onClick={() => setFiles((fs) => fs.filter((_, j) => j !== i))}><X size={14} /></button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="hint" style={{ fontSize: 12 }}>{t("ai.privacyNotice", "Your text and files are sent to our AI provider to generate tasks. Don't upload anything you wouldn't want processed externally.")}</div>
+
+          <label className="ai-dropzone">
+            <Upload size={20} />
+            <span className="ai-dz-text">
+              {t("ai.dropPrompt", "Drag files anywhere here, or ")}<span className="ai-dz-browse">{t("ai.browse", "browse")}</span>
+            </span>
+            <span className="ai-dz-hint">{t("ai.dzHint", "PDF, Word, text, or images")}</span>
+            <input type="file" multiple accept={ACCEPT} style={{ display: "none" }}
+              onChange={(e) => { addFiles(e.target.files); e.currentTarget.value = ""; }} />
+          </label>
+
+          {files.length > 0 && (
+            <div className="ai-thumbs">
+              {files.map((f, i) => (
+                <div key={i} className="ai-thumb" title={f.name}>
+                  {thumbs[i]
+                    ? <img src={thumbs[i] as string} alt={f.name} />
+                    : <span className="ai-thumb-icon"><FileText size={22} /></span>}
+                  <div className="ai-thumb-meta">
+                    <span className="ai-thumb-name">{f.name}</span>
+                    <span className="ai-thumb-size">{fmtSize(f.size)}</span>
+                  </div>
+                  <button type="button" className="ai-thumb-x" aria-label={t("common.remove", "Remove")}
+                    onClick={() => setFiles((fs) => fs.filter((_, j) => j !== i))}><X size={13} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {dragOver && <div className="ai-drop-overlay">{t("ai.dropNow", "Drop to add")}</div>}
+          <div className="hint" style={{ fontSize: 12.5, marginTop: 12 }}>{t("ai.privacyNotice", "Your text and files are sent to our AI provider to generate tasks. Don't upload anything you wouldn't want processed externally.")}</div>
           {err && <div style={{ color: "var(--danger)", fontSize: 13, marginTop: 8 }}>{err}</div>}
-        </>
+        </div>
       )}
 
       {step === "saving" && <div style={{ padding: 24, textAlign: "center" }}><Spinner /><div className="muted" style={{ marginTop: 8 }}>{t("ai.saving", "Saving tasks…")}</div></div>}

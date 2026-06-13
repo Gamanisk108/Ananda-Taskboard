@@ -196,6 +196,30 @@
    hijack so the pointer-drag stays smooth. */
 .modal:not(.fs) .modal-head { cursor: move; touch-action: none; user-select: none; }
 .modal:not(.fs) .modal-head h2 { cursor: move; }
+
+/* AI generator — upload dropzone + file thumbnails */
+.ai-input { position: relative; }
+.ai-dropzone { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 16px; margin-top: 6px;
+  border: 1.5px dashed var(--border-strong); border-radius: var(--r-ctl, 10px); cursor: pointer; text-align: center;
+  transition: border-color .15s, background .15s; }
+.ai-dropzone:hover { border-color: var(--primary); background: var(--surface-sunk); }
+.ai-dropzone svg { color: var(--muted); }
+.ai-dz-text { font-size: 14px; color: var(--text); }
+.ai-dz-browse { color: var(--primary); text-decoration: underline; }
+.ai-dz-hint { font-size: 12px; color: var(--muted); }
+.ai-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ai-thumb { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 6px; border: 1px solid var(--border);
+  border-radius: var(--r-ctl, 10px); background: var(--surface-sunk); max-width: 240px; }
+.ai-thumb img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex: none; }
+.ai-thumb-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--muted); flex: none; }
+.ai-thumb-meta { display: flex; flex-direction: column; min-width: 0; }
+.ai-thumb-name { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.ai-thumb-size { font-size: 11px; color: var(--muted); }
+.ai-thumb-x { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 3px; border-radius: 50%; display: flex; flex: none; }
+.ai-thumb-x:hover { color: var(--danger); background: var(--sunk); }
+.ai-drop-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(46,100,168,.10); border: 2px dashed var(--primary); border-radius: var(--r-ctl, 10px);
+  font-weight: 600; color: var(--primary); pointer-events: none; z-index: 2; }
 .modal { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--shadow-pop);
   display: flex; flex-direction: column; max-height: calc(100dvh - 64px); }
 .modal.wide { max-width: 760px; }

@@ -939,6 +939,12 @@
     "generateMore": "Generate more",
     "subtasks": "Subtasks",
     "addSubtask": "Add subtask",
-    "subtaskN": "Subtask {{n}}"
+    "subtaskN": "Subtask {{n}}",
+    "dropPrompt": "Drag files anywhere here, or ",
+    "browse": "browse",
+    "dzHint": "PDF, Word, text, or images",
+    "dropNow": "Drop to add",
+    "confirmDiscard": "Discard this AI draft? Your prompt, files, and any unsaved tasks here will be lost.",
+    "discard": "Discard"
   }
 }

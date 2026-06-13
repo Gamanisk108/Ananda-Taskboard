@@ -939,6 +939,12 @@
     "generateMore": "Mehr erstellen",
     "subtasks": "Teilaufgaben",
     "addSubtask": "Teilaufgabe hinzufügen",
-    "subtaskN": "Teilaufgabe {{n}}"
+    "subtaskN": "Teilaufgabe {{n}}",
+    "dropPrompt": "Dateien hierher ziehen, oder ",
+    "browse": "durchsuchen",
+    "dzHint": "PDF, Word, Text oder Bilder",
+    "dropNow": "Zum Hinzufügen ablegen",
+    "confirmDiscard": "Diesen KI-Entwurf verwerfen? Text, Dateien und nicht gespeicherte Aufgaben gehen verloren.",
+    "discard": "Verwerfen"
   }
 }

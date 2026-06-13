@@ -483,22 +483,20 @@ export function Modal({
     if (fs || e.button !== 0) return;                  // left-button only; no drag on mobile full-screen
     if ((e.target as HTMLElement).closest("button,input,select,textarea,a,label")) return;
     e.preventDefault();                                // stop text-selection hijacking the drag
-    const head = e.currentTarget as HTMLElement;
     const startX = e.clientX, startY = e.clientY;
     const base = pos ?? { x: 0, y: 0 };                // latest committed offset (handler re-created each render)
-    const pid = e.pointerId;
-    try { head.setPointerCapture(pid); } catch { /* capture optional */ }
+    // Listen on DOCUMENT (not the element / not pointer-capture): moves are then
+    // delivered no matter what the cursor is over, even if capture is lost.
     const move = (ev: PointerEvent) => setPos({ x: base.x + ev.clientX - startX, y: base.y + ev.clientY - startY });
     const up = () => {
-      head.removeEventListener("pointermove", move);
-      head.removeEventListener("pointerup", up);
-      head.removeEventListener("pointercancel", up);
-      try { head.releasePointerCapture(pid); } catch { /* already released */ }
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
       cleanupRef.current = null;
     };
-    head.addEventListener("pointermove", move);
-    head.addEventListener("pointerup", up);
-    head.addEventListener("pointercancel", up);
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
     cleanupRef.current = up;
   }
   // Escape closes the modal (app-wide expectation). Backdrop click closes too

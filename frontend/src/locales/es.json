@@ -939,6 +939,12 @@
     "generateMore": "Generar más",
     "subtasks": "Subtareas",
     "addSubtask": "Añadir subtarea",
-    "subtaskN": "Subtarea {{n}}"
+    "subtaskN": "Subtarea {{n}}",
+    "dropPrompt": "Arrastra archivos aquí, o ",
+    "browse": "buscar",
+    "dzHint": "PDF, Word, texto o imágenes",
+    "dropNow": "Suelta para añadir",
+    "confirmDiscard": "¿Descartar este borrador de IA? Se perderán tu texto, archivos y las tareas no guardadas.",
+    "discard": "Descartar"
   }
 }

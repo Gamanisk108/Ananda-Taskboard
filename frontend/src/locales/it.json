@@ -939,6 +939,12 @@
     "generateMore": "Genera altre",
     "subtasks": "Sottoattività",
     "addSubtask": "Aggiungi sottoattività",
-    "subtaskN": "Sottoattività {{n}}"
+    "subtaskN": "Sottoattività {{n}}",
+    "dropPrompt": "Trascina i file qui, oppure ",
+    "browse": "sfoglia",
+    "dzHint": "PDF, Word, testo o immagini",
+    "dropNow": "Rilascia per aggiungere",
+    "confirmDiscard": "Scartare questa bozza IA? Testo, file e attività non salvate andranno persi.",
+    "discard": "Scarta"
   }
 }

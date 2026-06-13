@@ -939,6 +939,12 @@
     "generateMore": "Générer plus",
     "subtasks": "Sous-tâches",
     "addSubtask": "Ajouter une sous-tâche",
-    "subtaskN": "Sous-tâche {{n}}"
+    "subtaskN": "Sous-tâche {{n}}",
+    "dropPrompt": "Glissez des fichiers ici, ou ",
+    "browse": "parcourir",
+    "dzHint": "PDF, Word, texte ou images",
+    "dropNow": "Déposez pour ajouter",
+    "confirmDiscard": "Abandonner ce brouillon IA ? Votre texte, vos fichiers et les tâches non enregistrées seront perdus.",
+    "discard": "Abandonner"
   }
 }
