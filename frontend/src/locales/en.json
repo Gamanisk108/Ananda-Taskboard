@@ -630,7 +630,6 @@
     "role": "Role",
     "roleMember": "Member",
     "roleAdmin": "Admin",
-    "ownRoleLocked": "You can't change your own admin role.",
     "tier": "Tier",
     "tierHint": "(new member inherits its access)",
     "noTierBlank": "No tier (blank slate)",

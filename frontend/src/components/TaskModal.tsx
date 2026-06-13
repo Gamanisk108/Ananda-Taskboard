@@ -345,18 +345,24 @@ function InlineCreate({ kind, projectId, onCreated, onCancel }: {
   const [emoji, setEmoji] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // Synchronous in-flight guard: `busy` updates a tick late, so fast double-clicks
+  // could POST twice and create duplicate projects. The ref blocks re-entry now.
+  const submitting = useRef(false);
 
   async function create() {
     const nm = name.trim();
     if (!nm) { setErr(t("tm.nameRequired", "Name is required")); return; }
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true); setErr("");
     try {
       const entity = kind === "project"
         ? await api.post("/api/projects", { name: nm, color, emoji })
         : await api.post("/api/subprojects", { project: projectId, name: nm, color });
-      onCreated(entity);
+      onCreated(entity);  // unmounts this panel on success
     } catch {
       setErr(t("tm.createFailed", "Couldn't create that — the name may already be taken."));
+      submitting.current = false;
       setBusy(false);
     }
   }

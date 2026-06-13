@@ -687,7 +687,6 @@
     "noExclusions": "无排除项。",
     "taskIdPh": "任务 ID（例如 318）",
     "selectHide": "选择要隐藏的内容…",
-    "ownRoleLocked": "You can't change your own admin role.",
     "roleOwner": "所有者",
     "remove": "移除",
     "removeFailed": "无法移除该成员。",

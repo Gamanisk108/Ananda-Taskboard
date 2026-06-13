@@ -13,19 +13,22 @@ def set_owners(apps, schema_editor):
             continue  # already has an owner
         chosen = None
         if org.created_by_id:
+            # Only an ACTIVE creator membership — never resurrect a deactivated one.
             chosen = Membership.objects.filter(
-                organization=org, user_id=org.created_by_id
+                organization=org, user_id=org.created_by_id, is_active=True
             ).first()
         if chosen is None:
+            # Earliest active admin, else earliest active member ('admin' < 'member'
+            # lexically → admins first). An org with zero active members is left
+            # owner-less by design — there is no one to own it.
             chosen = (
-                Membership.objects.filter(organization=org, role="admin", is_active=True)
-                .order_by("created_at")
+                Membership.objects.filter(organization=org, is_active=True)
+                .order_by("role", "created_at")
                 .first()
             )
         if chosen is not None:
             chosen.role = "owner"
-            chosen.is_active = True
-            chosen.save(update_fields=["role", "is_active"])
+            chosen.save(update_fields=["role"])
 
 
 def unset_owners(apps, schema_editor):
