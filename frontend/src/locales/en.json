@@ -938,6 +938,7 @@
     "createdTitle": "Created {{n}} task(s). Click any to keep editing.",
     "generateMore": "Generate more",
     "subtasks": "Subtasks",
-    "addSubtask": "Add subtask"
+    "addSubtask": "Add subtask",
+    "subtaskN": "Subtask {{n}}"
   }
 }

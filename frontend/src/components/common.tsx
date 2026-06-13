@@ -472,25 +472,34 @@ export function Modal({
   const narrow = useIsNarrow();
   const fs = !!fullScreenOnNarrow && narrow;
   // Draggable by its header (desktop only). Offset from the centered resting
-  // position; null until first drag so the entrance animation isn't overridden.
+  // position; null until first drag so nothing overrides the resting layout.
+  // Uses pointer capture on the header so moves are delivered reliably even when
+  // the cursor leaves the element or the browser would otherwise start a text
+  // selection (the reason a plain window-listener version felt dead).
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => cleanupRef.current?.(), []);   // drop any active drag on unmount
   function startDrag(e: React.PointerEvent) {
-    if (fs) return;                                   // mobile full-screen: no drag
+    if (fs || e.button !== 0) return;                  // left-button only; no drag on mobile full-screen
     if ((e.target as HTMLElement).closest("button,input,select,textarea,a,label")) return;
-    const cur = pos ?? { x: 0, y: 0 };
-    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: cur.x, oy: cur.y };
-    const move = (ev: PointerEvent) => {
-      const d = dragRef.current;
-      if (d) setPos({ x: d.ox + ev.clientX - d.sx, y: d.oy + ev.clientY - d.sy });
-    };
+    e.preventDefault();                                // stop text-selection hijacking the drag
+    const head = e.currentTarget as HTMLElement;
+    const startX = e.clientX, startY = e.clientY;
+    const base = pos ?? { x: 0, y: 0 };                // latest committed offset (handler re-created each render)
+    const pid = e.pointerId;
+    try { head.setPointerCapture(pid); } catch { /* capture optional */ }
+    const move = (ev: PointerEvent) => setPos({ x: base.x + ev.clientX - startX, y: base.y + ev.clientY - startY });
     const up = () => {
-      dragRef.current = null;
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
+      head.removeEventListener("pointermove", move);
+      head.removeEventListener("pointerup", up);
+      head.removeEventListener("pointercancel", up);
+      try { head.releasePointerCapture(pid); } catch { /* already released */ }
+      cleanupRef.current = null;
     };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+    head.addEventListener("pointermove", move);
+    head.addEventListener("pointerup", up);
+    head.addEventListener("pointercancel", up);
+    cleanupRef.current = up;
   }
   // Escape closes the modal (app-wide expectation). Backdrop click closes too
   // (onClick below); the inner card stops propagation so clicks inside don't.

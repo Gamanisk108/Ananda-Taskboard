@@ -938,6 +938,7 @@
     "createdTitle": "Create {{n}} attività. Clicca su una per continuare a modificarla.",
     "generateMore": "Genera altre",
     "subtasks": "Sottoattività",
-    "addSubtask": "Aggiungi sottoattività"
+    "addSubtask": "Aggiungi sottoattività",
+    "subtaskN": "Sottoattività {{n}}"
   }
 }

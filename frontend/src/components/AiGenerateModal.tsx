@@ -252,7 +252,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                 {r.subtasks.map((st, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span aria-hidden style={{ color: "var(--muted)" }}>↳</span>
-                    <input value={st} onChange={(e) => setSub(r.key, i, e.target.value)} style={{ flex: 1, minWidth: 0 }} />
+                    <input value={st} onChange={(e) => setSub(r.key, i, e.target.value)} aria-label={t("ai.subtaskN", "Subtask {{n}}", { n: i + 1 })} style={{ flex: 1, minWidth: 0 }} />
                     <button type="button" className="btn-ghost icon-only" aria-label={t("common.remove", "Remove")} onClick={() => removeSub(r.key, i)}><X size={14} /></button>
                   </div>
                 ))}
