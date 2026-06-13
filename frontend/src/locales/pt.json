@@ -945,6 +945,8 @@
     "dzHint": "PDF, Word, texto ou imagens",
     "dropNow": "Solte para adicionar",
     "confirmDiscard": "Descartar este rascunho de IA? Seu texto, arquivos e tarefas não salvas serão perdidos.",
-    "discard": "Descartar"
+    "discard": "Descartar",
+    "repeats": "Repete",
+    "clearRecur": "Tornar única"
   }
 }

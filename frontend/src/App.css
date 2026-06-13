@@ -218,8 +218,8 @@
 .ai-thumb-x { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 3px; border-radius: 50%; display: flex; flex: none; }
 .ai-thumb-x:hover { color: var(--danger); background: var(--sunk); }
 .ai-drop-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(46,100,168,.10); border: 2px dashed var(--primary); border-radius: var(--r-ctl, 10px);
-  font-weight: 600; color: var(--primary); pointer-events: none; z-index: 2; }
+  background: var(--surface); border: 2px dashed var(--primary); border-radius: var(--r-ctl, 10px);
+  font-weight: 600; font-size: 16px; color: var(--primary); pointer-events: none; z-index: 2; }
 .modal { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--shadow-pop);
   display: flex; flex-direction: column; max-height: calc(100dvh - 64px); }
 .modal.wide { max-width: 760px; }

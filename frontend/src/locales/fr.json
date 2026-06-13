@@ -945,6 +945,8 @@
     "dzHint": "PDF, Word, texte ou images",
     "dropNow": "Déposez pour ajouter",
     "confirmDiscard": "Abandonner ce brouillon IA ? Votre texte, vos fichiers et les tâches non enregistrées seront perdus.",
-    "discard": "Abandonner"
+    "discard": "Abandonner",
+    "repeats": "Se répète",
+    "clearRecur": "Rendre unique"
   }
 }

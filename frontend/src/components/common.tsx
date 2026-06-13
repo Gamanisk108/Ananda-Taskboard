@@ -554,7 +554,10 @@ export function Modal({
         className={`card modal sheet rise${fs ? " fs" : ""}`}
         style={fs ? undefined : {
           maxWidth: wide ? 760 : 520,
-          ...(pos ? { transform: `translate(${pos.x}px, ${pos.y}px)` } : {}),
+          // `.rise` animates transform with fill-mode `both`, so its final
+          // `transform: none` keyframe permanently overrides an inline transform.
+          // While dragging, disable the animation so the drag offset actually applies.
+          ...(pos ? { transform: `translate(${pos.x}px, ${pos.y}px)`, animation: "none" } : {}),
         }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"

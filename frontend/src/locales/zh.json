@@ -945,6 +945,8 @@
     "dzHint": "PDF、Word、文本或图片",
     "dropNow": "放下以添加",
     "confirmDiscard": "放弃此 AI 草稿？你的文字、文件和未保存的任务将会丢失。",
-    "discard": "放弃"
+    "discard": "放弃",
+    "repeats": "重复",
+    "clearRecur": "设为一次性"
   }
 }

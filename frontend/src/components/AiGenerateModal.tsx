@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Upload, X, Trash2, FileText } from "lucide-react";
+import { Sparkles, Upload, X, Trash2, FileText, Repeat } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { uploadAttachment, fmtSize } from "../attachments";
 import { writableProjects } from "../lookup";
@@ -14,7 +14,7 @@ import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses } from "../statuses";
 import { generateTasks, type ProposedTask } from "../ai";
-import { PRIORITY_META, type Me, type Task } from "../types";
+import { PRIORITY_META, type Me, type Task, type Recurrence } from "../types";
 import { Modal, SingleSelect, StatusPillSelect, PriorityIcon, Spinner } from "./common";
 import { AssigneePicker } from "./AssigneePicker";
 import { useConfirm } from "./confirm";
@@ -34,6 +34,16 @@ interface Row {
   attach: boolean;
   newProject: string | null;
   subtasks: string[];
+  recurrence: Recurrence | null;
+}
+
+const WD_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function recurLabel(r: Recurrence): string {
+  const parts: string[] = [r.freq];
+  if (r.freq === "weekly" && r.weekdays?.length) parts.push(r.weekdays.map((d) => WD_SHORT[d] ?? d).join(", "));
+  if (r.count) parts.push(`×${r.count}`);
+  else if (r.end_date) parts.push(`until ${r.end_date}`);
+  return parts.join(" · ");
 }
 
 const ACCEPT = ".pdf,.txt,.md,.docx,image/png,image/jpeg,image/webp,image/gif";
@@ -91,7 +101,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
       assignees: tk.assignee_ids ?? [], assigneeGroups: [],
       status: "todo", sourceFileIndex: tk.source_file_index,
       attach: tk.source_file_index != null, newProject: tk.new_project,
-      subtasks: tk.subtasks ?? [],
+      subtasks: tk.subtasks ?? [], recurrence: tk.recurrence ?? null,
     };
   }
 
@@ -134,6 +144,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
         const task = await api.post("/api/tasks", {
           subproject: r.subprojectId, title: r.title.trim(), priority: r.priority,
           assignees: r.assignees, assignee_groups: r.assigneeGroups, status: r.status,
+          recurrence: r.recurrence,
         }) as Task;
         for (const st of r.subtasks) {
           const title = st.trim();
@@ -282,6 +293,14 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                   <StatusPillSelect value={r.status} statuses={statuses} onChange={(s) => update(r.key, { status: s })} />
                 </div>
               </div>
+              {r.recurrence && (
+                <div className="ai-recur" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--muted)" }}>
+                  <Repeat size={14} />
+                  <span>{t("ai.repeats", "Repeats")} {recurLabel(r.recurrence)}</span>
+                  <button type="button" className="btn-ghost icon-only" aria-label={t("ai.clearRecur", "Make one-time")}
+                    onClick={() => update(r.key, { recurrence: null })}><X size={13} /></button>
+                </div>
+              )}
               {/* Subtasks — small editable title list (one level, matches the app). */}
               <div className="ai-subtasks" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <label className="muted" style={{ fontSize: 12 }}>{t("ai.subtasks", "Subtasks")}</label>

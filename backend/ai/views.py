@@ -60,10 +60,12 @@ class GenerateTasksView(APIView):
                 else:
                     raise ValidationError({"detail": f"“{f.name}” is an unsupported file type."})
 
+            from django.utils import timezone
+            today = timezone.now().strftime("%Y-%m-%d (%A)")
             projects = self._projects_for(user, org)
             members = self._members_for(org)
             result = generator.propose_tasks(
-                prompt, documents, projects, members, images=images, n_files=len(files)
+                prompt, documents, projects, members, images=images, n_files=len(files), today=today
             )
         except Exception:
             gen.delete()   # refund the reserved slot

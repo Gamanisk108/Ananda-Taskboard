@@ -945,6 +945,8 @@
     "dzHint": "PDF, Word, text, or images",
     "dropNow": "Drop to add",
     "confirmDiscard": "Discard this AI draft? Your prompt, files, and any unsaved tasks here will be lost.",
-    "discard": "Discard"
+    "discard": "Discard",
+    "repeats": "Repeats",
+    "clearRecur": "Make one-time"
   }
 }

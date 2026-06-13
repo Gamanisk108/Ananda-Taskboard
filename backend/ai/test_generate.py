@@ -86,6 +86,25 @@ def test_validate_subtasks(project):
 def test_validate_subtasks_default_empty(project):
     out = _validate({"tasks": [{"title": "Plain"}]}, _proj_fixture(project), [], n_files=0)["tasks"][0]
     assert out["subtasks"] == []
+    assert out["recurrence"] is None
+
+
+def test_validate_recurrence(project):
+    raw = {"tasks": [{"title": "Raja", "recurrence": {
+        "freq": "weekly", "interval": 1, "weekdays": [5, 9], "count": 8, "anchor": "2026-07-11"}}]}
+    r = _validate(raw, _proj_fixture(project), [], n_files=0, today="2026-06-13")["tasks"][0]["recurrence"]
+    assert r["freq"] == "weekly" and r["weekdays"] == [5] and r["count"] == 8 and r["anchor"] == "2026-07-11"
+
+
+def test_validate_recurrence_bad_is_none(project):
+    r = _validate({"tasks": [{"title": "x", "recurrence": {"freq": "nope"}}]}, _proj_fixture(project), [], n_files=0)["tasks"][0]["recurrence"]
+    assert r is None
+
+
+def test_validate_recurrence_anchor_defaults_today(project):
+    r = _validate({"tasks": [{"title": "x", "recurrence": {"freq": "weekly"}}]},
+                  _proj_fixture(project), [], n_files=0, today="2026-06-13")["tasks"][0]["recurrence"]
+    assert r["anchor"] == "2026-06-13"
 
 
 def test_validate_sub_implies_project(project):

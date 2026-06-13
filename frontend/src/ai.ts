@@ -4,6 +4,7 @@
 
 import { api } from "./api/client";
 import { compressImageToBlob } from "./attachments";
+import type { Recurrence } from "./types";
 
 export interface ProposedTask {
   title: string;
@@ -14,6 +15,7 @@ export interface ProposedTask {
   new_project: string | null;
   source_file_index: number | null;
   subtasks: string[];
+  recurrence: Recurrence | null;
 }
 
 export interface GenerateResult {

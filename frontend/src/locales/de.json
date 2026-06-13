@@ -945,6 +945,8 @@
     "dzHint": "PDF, Word, Text oder Bilder",
     "dropNow": "Zum Hinzufügen ablegen",
     "confirmDiscard": "Diesen KI-Entwurf verwerfen? Text, Dateien und nicht gespeicherte Aufgaben gehen verloren.",
-    "discard": "Verwerfen"
+    "discard": "Verwerfen",
+    "repeats": "Wiederholt sich",
+    "clearRecur": "Einmalig machen"
   }
 }
