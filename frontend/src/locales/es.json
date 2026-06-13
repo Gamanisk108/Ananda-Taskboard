@@ -911,5 +911,31 @@
     "requested": "Solicitado",
     "submitted": "Enviado",
     "sent": "enviado {{date}}"
+  },
+  "ai": {
+    "button": "IA",
+    "title": "Generar tareas con IA",
+    "promptLabel": "¿Qué hay que hacer?",
+    "promptPh": "Describe el trabajo o sube notas/documentos para convertirlos en tareas…",
+    "filesLabel": "Documentos e imágenes (opcional)",
+    "addFiles": "Añadir archivos",
+    "privacyNotice": "Tu texto y archivos se envían a nuestro proveedor de IA para generar tareas. No subas nada que no quieras procesar externamente.",
+    "needInput": "Añade una indicación o un archivo.",
+    "genError": "No se pudieron generar tareas. Inténtalo de nuevo.",
+    "noTasks": "No se obtuvieron tareas — prueba una indicación más clara.",
+    "generate": "Generar tareas",
+    "generating": "Generando…",
+    "save": "Guardar tareas",
+    "back": "Atrás",
+    "saving": "Guardando tareas…",
+    "saveError": "Algunas tareas no se pudieron guardar — revisa las que siguen en la lista.",
+    "reviewHint": "Revisa y ajusta, luego guarda. Cada una se convierte en una tarea real.",
+    "remaining": "Te quedan {{n}} generaciones de IA hoy",
+    "truncated": "Solo se muestra el primer lote.",
+    "newProjectHint": "La IA sugirió un nuevo proyecto «{{name}}» — elige un proyecto/subproyecto existente para archivarla.",
+    "attachFile": "Adjuntar {{name}}",
+    "dropTask": "Quitar",
+    "createdTitle": "Se crearon {{n}} tarea(s). Haz clic en cualquiera para seguir editando.",
+    "generateMore": "Generar más"
   }
 }

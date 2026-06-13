@@ -911,5 +911,31 @@
     "requested": "Richiesto",
     "submitted": "Inviato",
     "sent": "inviato {{date}}"
+  },
+  "ai": {
+    "button": "IA",
+    "title": "Genera attività con l'IA",
+    "promptLabel": "Cosa c'è da fare?",
+    "promptPh": "Descrivi il lavoro o carica note/documenti da trasformare in attività…",
+    "filesLabel": "Documenti e immagini (facoltativo)",
+    "addFiles": "Aggiungi file",
+    "privacyNotice": "Il tuo testo e i file vengono inviati al nostro fornitore di IA per generare attività. Non caricare nulla che non vorresti elaborato esternamente.",
+    "needInput": "Aggiungi un'istruzione o un file.",
+    "genError": "Impossibile generare attività. Riprova.",
+    "noTasks": "Nessuna attività restituita — prova un'istruzione più chiara.",
+    "generate": "Genera attività",
+    "generating": "Generazione…",
+    "save": "Salva attività",
+    "back": "Indietro",
+    "saving": "Salvataggio attività…",
+    "saveError": "Alcune attività non sono state salvate — controlla quelle ancora elencate.",
+    "reviewHint": "Rivedi e modifica, poi salva. Ognuna diventa un'attività reale.",
+    "remaining": "Ti restano {{n}} generazioni IA oggi",
+    "truncated": "Viene mostrato solo il primo gruppo.",
+    "newProjectHint": "L'IA ha suggerito un nuovo progetto «{{name}}» — scegli un progetto/sottoprogetto esistente dove archiviarla.",
+    "attachFile": "Allega {{name}}",
+    "dropTask": "Rimuovi",
+    "createdTitle": "Create {{n}} attività. Clicca su una per continuare a modificarla.",
+    "generateMore": "Genera altre"
   }
 }

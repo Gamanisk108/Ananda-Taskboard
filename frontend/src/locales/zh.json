@@ -911,5 +911,31 @@
     "requested": "请求",
     "submitted": "提交时间",
     "sent": "提交于 {{date}}"
+  },
+  "ai": {
+    "button": "AI",
+    "title": "用 AI 生成任务",
+    "promptLabel": "需要做什么？",
+    "promptPh": "描述工作内容，或上传笔记/文档以转化为任务……",
+    "filesLabel": "文档和图片（可选）",
+    "addFiles": "添加文件",
+    "privacyNotice": "你的文字和文件会发送给我们的 AI 提供方以生成任务。请勿上传不希望被外部处理的内容。",
+    "needInput": "请添加提示或文件。",
+    "genError": "无法生成任务，请重试。",
+    "noTasks": "没有返回任务——请尝试更清晰的提示。",
+    "generate": "生成任务",
+    "generating": "生成中……",
+    "save": "保存任务",
+    "back": "返回",
+    "saving": "正在保存任务……",
+    "saveError": "部分任务未能保存——请检查仍列出的项。",
+    "reviewHint": "检查并调整后保存。每一项都会成为真实任务。",
+    "remaining": "今天还剩 {{n}} 次 AI 生成",
+    "truncated": "仅显示第一批。",
+    "newProjectHint": "AI 建议新建项目“{{name}}”——请选择一个现有项目/子项目来归档。",
+    "attachFile": "附加 {{name}}",
+    "dropTask": "移除",
+    "createdTitle": "已创建 {{n}} 个任务。点击任意一个继续编辑。",
+    "generateMore": "生成更多"
   }
 }

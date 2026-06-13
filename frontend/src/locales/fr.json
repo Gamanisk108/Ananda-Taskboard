@@ -911,5 +911,31 @@
     "requested": "Demandé",
     "submitted": "Envoyé",
     "sent": "envoyé {{date}}"
+  },
+  "ai": {
+    "button": "IA",
+    "title": "Générer des tâches avec l'IA",
+    "promptLabel": "Qu'y a-t-il à faire ?",
+    "promptPh": "Décrivez le travail, ou téléversez des notes/documents à transformer en tâches…",
+    "filesLabel": "Documents et images (facultatif)",
+    "addFiles": "Ajouter des fichiers",
+    "privacyNotice": "Votre texte et vos fichiers sont envoyés à notre fournisseur d'IA pour générer des tâches. Ne téléversez rien que vous ne voudriez pas traiter en externe.",
+    "needInput": "Ajoutez une consigne ou un fichier.",
+    "genError": "Impossible de générer des tâches. Réessayez.",
+    "noTasks": "Aucune tâche obtenue — essayez une consigne plus claire.",
+    "generate": "Générer les tâches",
+    "generating": "Génération…",
+    "save": "Enregistrer les tâches",
+    "back": "Retour",
+    "saving": "Enregistrement…",
+    "saveError": "Certaines tâches n'ont pas pu être enregistrées — vérifiez celles encore listées.",
+    "reviewHint": "Vérifiez et ajustez, puis enregistrez. Chacune devient une vraie tâche.",
+    "remaining": "Il vous reste {{n}} générations IA aujourd'hui",
+    "truncated": "Seul le premier lot est affiché.",
+    "newProjectHint": "L'IA a suggéré un nouveau projet « {{name}} » — choisissez un projet/sous-projet existant pour le classer.",
+    "attachFile": "Joindre {{name}}",
+    "dropTask": "Retirer",
+    "createdTitle": "{{n}} tâche(s) créée(s). Cliquez sur l'une pour continuer à modifier.",
+    "generateMore": "Générer plus"
   }
 }

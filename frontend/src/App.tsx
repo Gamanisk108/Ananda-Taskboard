@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Users as UsersIcon, Trash2, LayoutGrid, Plus, Sun, Moon, Share2, Copy, BookOpen, ChevronDown, CircleHelp,
   Settings as SettingsIcon, History as HistoryIcon, RotateCcw, ArrowLeftRight, Globe, LogOut, Languages, MoreHorizontal, Menu,
-  List as ListIcon, Columns3, CalendarRange, CalendarDays, Hourglass } from "lucide-react";
+  List as ListIcon, Columns3, CalendarRange, CalendarDays, Hourglass, Sparkles } from "lucide-react";
 import "./App.css";
 import i18n, { resolveLanguage } from "./i18n";
 import { applyOverrides } from "./trOverrides";
@@ -14,6 +14,7 @@ import { ResetPassword } from "./components/ResetPassword";
 import { Privacy, Terms } from "./components/Legal";
 import { VerifyEmail } from "./components/VerifyEmail";
 import { AcceptInvite } from "./components/AcceptInvite";
+import { AiGenerateModal } from "./components/AiGenerateModal";
 import { PlatformStats } from "./components/PlatformStats";
 import { Spinner, ColorDot, SingleSelect, Drawer, useIsNarrow } from "./components/common";
 import { ListView } from "./components/ListView";
@@ -112,6 +113,7 @@ export default function App() {
   const [subTab, setSubTab] = useState<"overview" | number | null>(null);
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Task | "new" | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
   const [showApprovals, setShowApprovals] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
@@ -408,6 +410,9 @@ export default function App() {
           {canCreate && (
             <button className="btn-primary" data-testid="new-task" onClick={() => setEditing("new")} title={t("nav.newTask")}><Plus /><span className="lbl">{t("nav.newTask")}</span></button>
           )}
+          {canCreate && (
+            <button className="btn-secondary" data-testid="ai-generate" onClick={() => setAiOpen(true)} title={t("ai.title", "Generate tasks with AI")}><Sparkles /><span className="lbl">{t("ai.button", "AI")}</span></button>
+          )}
           <UserMenu name={me.name || me.email} items={accountItems}
             anyDot={accountItems.some((it) => it.dot)} onLogout={logout} />
         </div>
@@ -497,6 +502,14 @@ export default function App() {
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); bump(); }}
           onChanged={bump}
+        />
+      )}
+      {aiOpen && (
+        <AiGenerateModal
+          me={me}
+          onClose={() => setAiOpen(false)}
+          onChanged={bump}
+          onOpenTask={(task) => { setAiOpen(false); setEditing(task); }}
         />
       )}
       {showApprovals && (

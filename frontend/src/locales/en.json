@@ -911,5 +911,31 @@
     "requested": "Requested",
     "submitted": "Submitted",
     "sent": "sent {{date}}"
+  },
+  "ai": {
+    "button": "AI",
+    "title": "Generate tasks with AI",
+    "promptLabel": "What needs doing?",
+    "promptPh": "Describe the work, or upload notes/documents to turn into tasks…",
+    "filesLabel": "Documents & images (optional)",
+    "addFiles": "Add files",
+    "privacyNotice": "Your text and files are sent to our AI provider to generate tasks. Don't upload anything you wouldn't want processed externally.",
+    "needInput": "Add a prompt or a file.",
+    "genError": "Couldn't generate tasks. Try again.",
+    "noTasks": "No tasks came back — try a clearer prompt.",
+    "generate": "Generate tasks",
+    "generating": "Generating…",
+    "save": "Save tasks",
+    "back": "Back",
+    "saving": "Saving tasks…",
+    "saveError": "Some tasks couldn't be saved — check the ones still listed.",
+    "reviewHint": "Review and adjust, then save. Each becomes a real task.",
+    "remaining": "{{n}} AI generations left today",
+    "truncated": "Only the first batch is shown.",
+    "newProjectHint": "AI suggested a new project “{{name}}” — pick an existing project/sub-project to file this under.",
+    "attachFile": "Attach {{name}}",
+    "dropTask": "Remove",
+    "createdTitle": "Created {{n}} task(s). Click any to keep editing.",
+    "generateMore": "Generate more"
   }
 }

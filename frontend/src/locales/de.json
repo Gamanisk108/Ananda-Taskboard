@@ -911,5 +911,31 @@
     "requested": "Angefragt",
     "submitted": "Eingereicht",
     "sent": "gesendet {{date}}"
+  },
+  "ai": {
+    "button": "KI",
+    "title": "Aufgaben mit KI erstellen",
+    "promptLabel": "Was ist zu tun?",
+    "promptPh": "Beschreibe die Arbeit oder lade Notizen/Dokumente hoch, um sie in Aufgaben umzuwandeln…",
+    "filesLabel": "Dokumente & Bilder (optional)",
+    "addFiles": "Dateien hinzufügen",
+    "privacyNotice": "Dein Text und deine Dateien werden zur Aufgabenerstellung an unseren KI-Anbieter gesendet. Lade nichts hoch, das nicht extern verarbeitet werden soll.",
+    "needInput": "Gib eine Eingabe oder eine Datei an.",
+    "genError": "Aufgaben konnten nicht erstellt werden. Versuche es erneut.",
+    "noTasks": "Keine Aufgaben erhalten — versuche eine klarere Eingabe.",
+    "generate": "Aufgaben erstellen",
+    "generating": "Wird erstellt…",
+    "save": "Aufgaben speichern",
+    "back": "Zurück",
+    "saving": "Aufgaben werden gespeichert…",
+    "saveError": "Einige Aufgaben konnten nicht gespeichert werden — prüfe die noch gelisteten.",
+    "reviewHint": "Prüfen und anpassen, dann speichern. Jede wird zu einer echten Aufgabe.",
+    "remaining": "Heute noch {{n}} KI-Generierungen übrig",
+    "truncated": "Nur die erste Charge wird angezeigt.",
+    "newProjectHint": "Die KI hat ein neues Projekt „{{name}}“ vorgeschlagen — wähle ein vorhandenes Projekt/Teilprojekt zum Ablegen.",
+    "attachFile": "{{name}} anhängen",
+    "dropTask": "Entfernen",
+    "createdTitle": "{{n}} Aufgabe(n) erstellt. Klicke eine an, um weiter zu bearbeiten.",
+    "generateMore": "Mehr erstellen"
   }
 }
