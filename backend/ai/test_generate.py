@@ -124,3 +124,23 @@ def test_daily_cap_blocks(admin, org, monkeypatch):
     AiGeneration.objects.bulk_create([AiGeneration(user=admin, organization=org) for _ in range(DAILY_LIMIT)])
     r = client(admin).post("/api/ai/generate", {"prompt": "x"}, format="multipart", **h(org))
     assert r.status_code == 429 and r.data["remaining"] == 0
+
+
+@override_settings(ANTHROPIC_API_KEY="test-key")
+def test_reserved_slot_refunded_on_bad_input(admin, org):
+    """A request that reserves a slot but then fails validation must not burn the cap."""
+    r = client(admin).post("/api/ai/generate", {}, format="multipart", **h(org))
+    assert r.status_code == 400
+    assert AiGeneration.objects.filter(user=admin, organization=org).count() == 0
+
+
+@override_settings(ANTHROPIC_API_KEY="test-key")
+def test_slot_refunded_on_model_error(admin, org, monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("provider down")
+    monkeypatch.setattr(generator, "_call_model", boom)
+    api = client(admin)
+    api.raise_request_exception = False   # capture the 500 response instead of re-raising
+    r = api.post("/api/ai/generate", {"prompt": "x"}, format="multipart", **h(org))
+    assert r.status_code >= 500
+    assert AiGeneration.objects.filter(user=admin, organization=org).count() == 0

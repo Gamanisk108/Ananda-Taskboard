@@ -103,8 +103,11 @@ def _validate(raw: dict, projects, members, n_files: int) -> dict:
             sub = None
         if proj is None and sub is not None:           # sub implies its project
             proj = sub_to_proj.get(sub)
-        assignees = [a for a in (t.get("assignee_ids") or []) if a in valid_members]
-        new_project = (t.get("new_project") or "").strip() or None
+        raw_assignees = t.get("assignee_ids")
+        if not isinstance(raw_assignees, (list, tuple)):
+            raw_assignees = []
+        assignees = [a for a in raw_assignees if isinstance(a, int) and a in valid_members]
+        new_project = ((t.get("new_project") or "").strip()[:100]) or None
         if proj is not None:
             new_project = None                          # existing project wins
         sfi = t.get("source_file_index")

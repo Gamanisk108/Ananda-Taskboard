@@ -102,8 +102,11 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
     if (submitting.current || !canSave) return;
     submitting.current = true; setStep("saving"); setErr("");
     const out: Task[] = [];
-    try {
-      for (const r of rows) {
+    const failed = new Set<number>();
+    // Per-row: a failure must NOT abort the rest, and successfully-created rows are
+    // dropped so a retry can't duplicate them (only failed rows remain in review).
+    for (const r of rows) {
+      try {
         const task = await api.post("/api/tasks", {
           subproject: r.subprojectId, title: r.title.trim(), priority: r.priority,
           assignees: r.assignees, assignee_groups: r.assigneeGroups, status: r.status,
@@ -112,11 +115,19 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
           try { await uploadAttachment("task", task.id, files[r.sourceFileIndex]); } catch { /* keep the task even if its attachment fails */ }
         }
         out.push(task);
+      } catch {
+        failed.add(r.key);
       }
-      setCreated(out); onChanged?.(); setStep("done");
-    } catch {
-      setErr(t("ai.saveError", "Some tasks couldn't be saved — check the ones still listed.")); setStep("review");
-    } finally { submitting.current = false; }
+    }
+    submitting.current = false;
+    if (out.length) { setCreated((c) => [...c, ...out]); onChanged?.(); }
+    if (failed.size) {
+      setRows((rs) => rs.filter((r) => failed.has(r.key)));   // keep only the failures
+      setErr(t("ai.saveError", "Some tasks couldn't be saved — retry the ones still listed."));
+      setStep("review");
+    } else {
+      setStep("done");
+    }
   }
 
   const PRIO_OPTS = [5, 4, 3, 2, 1].map((p) => ({ value: String(p), label: PRIORITY_META[p].label, icon: <PriorityIcon level={p} size={16} /> }));

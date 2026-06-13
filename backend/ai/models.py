@@ -41,3 +41,21 @@ def remaining_today(user, org):
 
 def can_generate(user, org):
     return generations_today(user, org) < DAILY_LIMIT
+
+
+def reserve_generation(user, org):
+    """Atomically claim a daily slot: lock this user's row, re-check the count, and
+    insert the AiGeneration in one transaction so two concurrent requests can't both
+    slip past the cap (TOCTOU). Returns the row, or None if the cap is reached.
+    Caller fills num_tasks/num_files after the (slow, unlocked) model call — and
+    should delete the row to refund the slot if generation fails."""
+    from django.db import transaction
+
+    User = user.__class__
+    with transaction.atomic():
+        # Serialize all of THIS user's generation attempts (no-op lock on SQLite,
+        # real row lock on Postgres/Neon in prod).
+        User.objects.select_for_update().filter(pk=user.pk).first()
+        if generations_today(user, org) >= DAILY_LIMIT:
+            return None
+        return AiGeneration.objects.create(user=user, organization=org)

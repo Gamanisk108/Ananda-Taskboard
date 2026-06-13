@@ -932,7 +932,7 @@
     "reviewHint": "Revisa y ajusta, luego guarda. Cada una se convierte en una tarea real.",
     "remaining": "Te quedan {{n}} generaciones de IA hoy",
     "truncated": "Solo se muestra el primer lote.",
-    "newProjectHint": "La IA sugirió un nuevo proyecto «{{name}}» — elige un proyecto/subproyecto existente para archivarla.",
+    "newProjectHint": "La IA sugirió un nuevo proyecto «{{name}}» — elige un proyecto/subproyecto existente para ubicarla.",
     "attachFile": "Adjuntar {{name}}",
     "dropTask": "Quitar",
     "createdTitle": "Se crearon {{n}} tarea(s). Haz clic en cualquiera para seguir editando.",
