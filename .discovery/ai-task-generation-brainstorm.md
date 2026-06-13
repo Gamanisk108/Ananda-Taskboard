@@ -1,7 +1,7 @@
 ---
 feature: ai-task-generation
 project: ananda-taskboard
-status: round-1-complete
+status: complete
 current-round: 2
 total-rounds: 2
 last-updated: 2026-06-12
@@ -104,6 +104,22 @@ in the global /goal workflow → brainstorm first.
    when they hit the 20/day cap.
 8. **States:** empty (no input), loading, partial error (one task fails), provider
    error/timeout, oversized/unsupported file.
+
+## ROUND 2 — ANSWERS (Gordon, 2026-06-12)
+1. **Entry point:** "✨ Generate with AI" button next to the board's add-task control.
+2. **Review popup layout:** REUSE the app's EXISTING task layout EXACTLY — same
+   components, field order **Priority · Task Name · Project · Sub-Project · Assignee ·
+   Status**. NO new card/table format. (See memory feedback-reuse-existing-ui-patterns.)
+3. **File→task mapping:** AI suggests which uploaded file backs which task (model maps
+   task→source file/page); files attach via existing Attachments/R2; images compressed.
+4. **Generation UX:** single spinner → full proposed-task list (no streaming).
+5. *(default)* Image compression: client downscale ~1600px max, JPEG ~0.8, before upload.
+6. *(default)* Audit: log AI task creations to the Activity tab.
+7. *(default)* Rate-limit UX: show "X/20 today"; block with a clear message at the cap.
+8. Design all states: empty / loading / provider-error / partial-failure / oversized file.
+
+**Brainstorm COMPLETE → next is the build PLAN (Phase 2), then Gordon approval
+(Phase 4) before any code.**
 
 ## Notes
 - Reuses the just-shipped **inline create Project/Sub-project** flow for the
