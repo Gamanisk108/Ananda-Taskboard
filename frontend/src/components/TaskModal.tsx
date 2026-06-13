@@ -11,6 +11,7 @@ import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, ColorPicker, useIsNarrow } from "./common";
 import { EmojiPicker } from "./EmojiPicker";
 import { useConfirm } from "./confirm";
+import { useAuth } from "../state/auth";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
@@ -385,6 +386,7 @@ function InlineCreate({ kind, projectId, onCreated, onCancel }: {
 
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const { t } = useTranslation();
+  const { refreshMe } = useAuth();
   const confirm = useConfirm();
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
@@ -599,6 +601,10 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
                 else addCreatedSub(projectId, entity as { id: number; name: string });
                 setCreating(null);
                 onChanged?.();
+                // Refresh me.tree so the new project/sub is known app-wide — else the
+                // saved task renders blank in the board and is missing from pickers
+                // until the next full reload (Gordon 2026-06-13).
+                refreshMe();
               }}
             />
           )}

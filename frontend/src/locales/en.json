@@ -194,7 +194,7 @@
     "deadlineAny": "Deadline: any",
     "pendingUpcoming": "Pending (upcoming)",
     "overdue": "Overdue",
-    "recurringAny": "Recurring? any",
+    "recurringAny": "Recurring: any",
     "recurringOnly": "Recurring only",
     "oneOffOnly": "One-off only",
     "colPriority": "Priority",

@@ -47,7 +47,7 @@ def test_new_google_user_created_and_needs_org(db, monkeypatch):
 def test_existing_account_logs_in(db, monkeypatch):
     u = User.objects.create_user(email="ada@x.com", name="Ada", password=PW)
     org = Organization.objects.create(name="Ada Org", is_active=True)
-    Membership.objects.create(user=u, organization=org, role="owner")
+    Membership.objects.create(user=u, organization=org, role=Membership.Role.OWNER)
     _token(monkeypatch, email="ada@x.com")
     r = APIClient().post("/api/auth/google", {"credential": "tok"}, format="json")
     assert r.status_code == 200
@@ -79,7 +79,7 @@ def test_create_org_after_social_signup(db, monkeypatch):
     assert cr.status_code == 201
     user = User.objects.get(email="founder@x.com")
     m = Membership.objects.get(user=user)
-    assert m.role == "owner" and m.is_active and m.organization.is_active   # creator owns it
+    assert m.role == Membership.Role.OWNER and m.is_active and m.organization.is_active   # creator owns it
     # default tiers seeded
     assert m.organization.tiers.count() >= 4
 
@@ -90,4 +90,4 @@ def test_signup_creator_is_owner(db):
     }, format="json")
     assert r.status_code == 201
     m = Membership.objects.get(user__email="olive@x.com")
-    assert m.role == "owner"     # was admin before the owner-role fix
+    assert m.role == Membership.Role.OWNER     # was admin before the owner-role fix

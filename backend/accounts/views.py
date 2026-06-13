@@ -648,6 +648,9 @@ class GoogleAuthView(APIView):
         elif not user.is_active:
             user.is_active = True
             user.save(update_fields=["is_active"])
+        # Google verified the email → activate any org this user created but left
+        # pending (mirrors email verification) so a returning signup isn't stranded.
+        Organization.objects.filter(created_by=user, is_active=False).update(is_active=True)
 
         from rest_framework_simplejwt.tokens import RefreshToken
         refresh = RefreshToken.for_user(user)

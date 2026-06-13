@@ -84,6 +84,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   // Guard against losing typed/uploaded work to a stray backdrop-click or Escape.
   const dirty = step !== "done" && (!!prompt.trim() || files.length > 0 || rows.length > 0);
   async function guardedClose() {
+    if (submitting.current) return;   // never close mid-save
     if (dirty && !(await confirm({
       body: t("ai.confirmDiscard", "Discard this AI draft? Your prompt, files, and any unsaved tasks here will be lost."),
       danger: true, confirmLabel: t("ai.discard", "Discard"),

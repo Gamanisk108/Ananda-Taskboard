@@ -194,7 +194,7 @@
     "deadlineAny": "截止日期：任意",
     "pendingUpcoming": "待处理（即将到来）",
     "overdue": "已逾期",
-    "recurringAny": "重复？任意",
+    "recurringAny": "重复：任意",
     "recurringOnly": "仅重复",
     "oneOffOnly": "仅一次性",
     "colPriority": "优先级",
