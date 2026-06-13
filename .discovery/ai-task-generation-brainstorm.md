@@ -1,8 +1,8 @@
 ---
 feature: ai-task-generation
 project: ananda-taskboard
-status: in-progress
-current-round: 1
+status: round-1-complete
+current-round: 2
 total-rounds: 2
 last-updated: 2026-06-12
 ---
@@ -66,10 +66,44 @@ in the global /goal workflow → brainstorm first.
 7. **Scope of a generation.** Cap on tasks per run (to avoid a 200-task dump)?
    (Default: max 25 proposed tasks per generation, with a note if truncated.)
 
-## ROUND 2 (after Round 1) — UX + technical specifics
-Entry placement (FAB? a button on the board? in the "+ Task" menu?), review-popup
-layout (table vs cards), partial-failure handling, undo, audit logging of AI
-creations, rate-limit UX, streaming vs wait, empty/error/loading states.
+## ROUND 1 — ANSWERS (Gordon, 2026-06-12)
+1. **Access:** ALL members (AI tasks follow existing approval rules).
+2. **Model / cap:** Claude **Haiku**, **20 generations/user/day**.
+3. **Doc privacy:** Allowed for all, with an in-UI notice; raw file not stored
+   beyond what's attached (see #4).
+4. **Formats:** PDF + text + Word + **images**. **NEW REQUIREMENT:** the uploaded
+   source files attach to the relevant generated task(s) — **images compressed**
+   before storage — via Taskboard's existing Attachments + R2 pipeline.
+5. *(default)* Assignment: LLM picks from the existing project/sub-project list.
+6. *(default)* New projects: only proposed in the review popup; never auto-created.
+7. *(default)* Cap: 25 proposed tasks per generation.
+
+### Implications of the file-attachment requirement
+- Reuse the existing `Attachments` component + R2 storage (already live).
+- **Mapping:** which uploaded file attaches to which generated task? The LLM maps
+  document→tasks; default = attach each source file to every task it produced, and
+  let the user re-assign/remove attachments in the review popup (Round 2 Q).
+- **Image compression:** client-side downscale/compress before upload (e.g. canvas
+  to ~1600px / JPEG ~0.8) to bound R2 size + cost. Confirm target in Round 2.
+- Multimodal: images go to Haiku's vision input for task extraction AND are stored
+  as attachments — two uses of the same upload.
+
+## ROUND 2 — UX + technical specifics (pending)
+1. **Entry point:** a floating "✨ Generate with AI" button on the board? an item in
+   the "+ New task" menu? both? (Lean: a button near the board's add-task control.)
+2. **Review popup layout:** table (dense, many tasks) vs cards (roomier, per-task
+   attachments + project picker). Lean: cards — they fit the attachment + reassign
+   controls better.
+3. **File→task attachment mapping:** attach every source file to every generated
+   task by default, user prunes? Or AI suggests which file backs which task?
+4. **Image compression target** (max dimension / quality) + max upload size + count.
+5. **Generation UX:** stream tasks in as they're parsed, or one spinner→full list?
+6. **Partial save / edit-after-save:** confirmed flow — save creates real tasks, popup
+   stays open listing them with inline edit + a link to each; reuses TaskModal?
+7. **Audit + rate-limit UX:** log AI creations to the Activity tab; what the user sees
+   when they hit the 20/day cap.
+8. **States:** empty (no input), loading, partial error (one task fails), provider
+   error/timeout, oversized/unsupported file.
 
 ## Notes
 - Reuses the just-shipped **inline create Project/Sub-project** flow for the
