@@ -1,0 +1,19 @@
+# graphify corpus curation — keep the graph about architecture, not noise.
+node_modules/
+dist/
+build/
+.vite/
+.next/
+out/
+coverage/
+*.min.js
+*.min.css
+*.map
+**/locales/
+**/i18n/
+**/migrations/
+graphify-out/
+.git/
+.discovery/
+**/Claude Design/
+**/design/**/handoff*/
