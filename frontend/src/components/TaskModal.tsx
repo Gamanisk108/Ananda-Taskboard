@@ -434,6 +434,9 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     onClose();
     try {
       await api.del(`/api/tasks/${id}`);
+    } catch {
+      // The finally-invalidate refetches and the task reappears; tell the user why.
+      alert(t("tm.errDelete", "Couldn't delete that task — it's been restored."));
     } finally {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }

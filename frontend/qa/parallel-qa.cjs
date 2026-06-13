@@ -38,7 +38,9 @@ async function login(page, { email = "admin@ananda.test", password = "taskboard1
   await page.click(".login-card button.btn-primary");
   await page.waitForSelector("[data-testid=ai-generate], [data-testid=new-task]", { timeout: 25000 });
   for (let i = 0; i < 3; i++) {
-    if (await page.$(".modal-backdrop")) { await page.keyboard.press("Escape"); await page.waitForTimeout(300); }
+    if (!(await page.$(".modal-backdrop"))) break;
+    await page.keyboard.press("Escape");
+    await page.waitForSelector(".modal-backdrop", { state: "detached", timeout: 2000 }).catch(() => {});
   }
 }
 
