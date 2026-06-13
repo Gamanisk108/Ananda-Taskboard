@@ -20,7 +20,8 @@ export function CreateOrganization() {
     try {
       await api.createOrg({ organization: name.trim() });
       await refreshMe();   // now has a membership → App renders the board
-    } catch {
+    } catch (e) {
+      console.error("createOrg failed:", e);
       setErr(t("org.createError", "Couldn't create your organization. Please try again."));
       setBusy(false);
     }

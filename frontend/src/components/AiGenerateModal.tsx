@@ -330,7 +330,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                     }
                     // Background-refresh me.tree so the board knows the new entity too
                     // (no await → the picker switches instantly; board catches up).
-                    refreshMe();
+                    refreshMe().catch(() => {});
                   }}
                 />
               )}

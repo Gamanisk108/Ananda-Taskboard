@@ -557,7 +557,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
                 // Refresh me.tree so the new project/sub is known app-wide — else the
                 // saved task renders blank in the board and is missing from pickers
                 // until the next full reload (Gordon 2026-06-13).
-                refreshMe();
+                refreshMe().catch(() => {});
               }}
             />
           )}
