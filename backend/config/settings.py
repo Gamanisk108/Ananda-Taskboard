@@ -249,3 +249,11 @@ if SENTRY_DSN:
         send_default_pii=False,
         environment=env("SENTRY_ENV", "production"),
     )
+
+# AI task generation (Claude). Key is server-only — never sent to the client.
+# Feature is inert (endpoint returns 503) unless ANTHROPIC_API_KEY is set.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", "")
+AI_MODEL = env("AI_MODEL", "claude-haiku-4-5-20251001")
+AI_MAX_TASKS = int(env("AI_MAX_TASKS", "25"))            # cap per generation
+AI_MAX_FILE_MB = int(env("AI_MAX_FILE_MB", "10"))        # per-file upload guard
+AI_MAX_FILES = int(env("AI_MAX_FILES", "8"))             # files per generation

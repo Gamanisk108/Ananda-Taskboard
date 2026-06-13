@@ -57,6 +57,7 @@ urlpatterns = [
     path("api/", include("translations.urls")),
     path("api/", include("feedback.urls")),
     path("api/", include("attachments.urls")),
+    path("api/", include("ai.urls")),
     path("api/trash", TrashView.as_view(), name="trash"),
     path("api/trash/action", TrashActionView.as_view(), name="trash-action"),
     path("api/", include(_restore_router.urls)),  # restore points (admin)
