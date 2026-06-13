@@ -10,7 +10,8 @@
     "add": "ઉમેરો",
     "loading": "લોડ થઈ રહ્યું છે…",
     "subtasksByStatus": "સ્થિતિ પ્રમાણે પેટા-કાર્યો",
-    "done": "થઈ ગયું"
+    "done": "થઈ ગયું",
+    "create": "બનાવો"
   },
   "nav": {
     "approvals": "મંજૂરીઓ",
@@ -616,7 +617,13 @@
     "startsAnchor": "શરૂ (એન્કર)",
     "endOnDate": "તારીખે",
     "endAfterN": "N વખત પછી",
-    "occurrences": "ઘટનાઓ"
+    "occurrences": "ઘટનાઓ",
+    "newProject": "+ નવો પ્રોજેક્ટ…",
+    "newSubproject": "+ નવો સબ-પ્રોજેક્ટ…",
+    "newProjectPh": "નવા પ્રોજેક્ટનું નામ",
+    "newSubPh": "નવા સબ-પ્રોજેક્ટનું નામ",
+    "nameRequired": "નામ જરૂરી છે",
+    "createFailed": "બનાવી શકાયું નથી — નામ પહેલેથી લેવાયેલું હોઈ શકે."
   },
   "ta": {
     "addMemberTitle": "ટીમ સભ્ય ઉમેરો",

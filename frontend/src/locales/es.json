@@ -10,7 +10,8 @@
     "add": "Agregar",
     "loading": "Cargando…",
     "subtasksByStatus": "Subtareas por estado",
-    "done": "Listo"
+    "done": "Listo",
+    "create": "Crear"
   },
   "nav": {
     "approvals": "Aprobaciones",
@@ -616,7 +617,13 @@
     "startsAnchor": "Comienza (ancla)",
     "endOnDate": "En fecha",
     "endAfterN": "Después de N veces",
-    "occurrences": "Ocurrencias"
+    "occurrences": "Ocurrencias",
+    "newProject": "+ Nuevo proyecto…",
+    "newSubproject": "+ Nuevo subproyecto…",
+    "newProjectPh": "Nombre del nuevo proyecto",
+    "newSubPh": "Nombre del nuevo subproyecto",
+    "nameRequired": "El nombre es obligatorio",
+    "createFailed": "No se pudo crear — el nombre puede estar en uso."
   },
   "ta": {
     "addMemberTitle": "Agregar miembro del equipo",

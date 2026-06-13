@@ -10,7 +10,8 @@
     "add": "যোগ করুন",
     "loading": "লোড হচ্ছে…",
     "subtasksByStatus": "স্ট্যাটাস অনুযায়ী সাবটাস্ক",
-    "done": "সম্পন্ন"
+    "done": "সম্পন্ন",
+    "create": "তৈরি করুন"
   },
   "nav": {
     "approvals": "অনুমোদন",
@@ -616,7 +617,13 @@
     "startsAnchor": "শুরু (অ্যাঙ্কর)",
     "endOnDate": "তারিখে",
     "endAfterN": "N বার পরে",
-    "occurrences": "পুনরাবৃত্তি"
+    "occurrences": "পুনরাবৃত্তি",
+    "newProject": "+ নতুন প্রকল্প…",
+    "newSubproject": "+ নতুন উপ-প্রকল্প…",
+    "newProjectPh": "নতুন প্রকল্পের নাম",
+    "newSubPh": "নতুন উপ-প্রকল্পের নাম",
+    "nameRequired": "নাম আবশ্যক",
+    "createFailed": "তৈরি করা যায়নি — নামটি ইতিমধ্যে নেওয়া থাকতে পারে।"
   },
   "ta": {
     "addMemberTitle": "টিম সদস্য যোগ করুন",

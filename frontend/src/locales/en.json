@@ -10,7 +10,8 @@
     "add": "Add",
     "loading": "Loading…",
     "subtasksByStatus": "Subtasks by status",
-    "done": "Done"
+    "done": "Done",
+    "create": "Create"
   },
   "nav": {
     "approvals": "Approvals",
@@ -616,7 +617,13 @@
     "startsAnchor": "Starts (anchor)",
     "endOnDate": "On date",
     "endAfterN": "After N times",
-    "occurrences": "Occurrences"
+    "occurrences": "Occurrences",
+    "newProject": "+ New project…",
+    "newSubproject": "+ New sub-project…",
+    "newProjectPh": "New project name",
+    "newSubPh": "New sub-project name",
+    "nameRequired": "Name is required",
+    "createFailed": "Couldn't create that — the name may already be taken."
   },
   "ta": {
     "addMemberTitle": "Add team member",

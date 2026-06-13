@@ -10,7 +10,8 @@
     "add": "Hinzufügen",
     "loading": "Wird geladen…",
     "subtasksByStatus": "Unteraufgaben nach Status",
-    "done": "Fertig"
+    "done": "Fertig",
+    "create": "Erstellen"
   },
   "nav": {
     "approvals": "Genehmigungen",
@@ -616,7 +617,13 @@
     "startsAnchor": "Beginnt (Anker)",
     "endOnDate": "An Datum",
     "endAfterN": "Nach N Malen",
-    "occurrences": "Vorkommen"
+    "occurrences": "Vorkommen",
+    "newProject": "+ Neues Projekt…",
+    "newSubproject": "+ Neues Teilprojekt…",
+    "newProjectPh": "Name des neuen Projekts",
+    "newSubPh": "Name des neuen Teilprojekts",
+    "nameRequired": "Name ist erforderlich",
+    "createFailed": "Konnte nicht erstellt werden — der Name ist evtl. vergeben."
   },
   "ta": {
     "addMemberTitle": "Teammitglied hinzufügen",

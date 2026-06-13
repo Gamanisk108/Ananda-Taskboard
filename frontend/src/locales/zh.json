@@ -10,7 +10,8 @@
     "add": "添加",
     "loading": "加载中…",
     "subtasksByStatus": "按状态分类的子任务",
-    "done": "完成"
+    "done": "完成",
+    "create": "创建"
   },
   "nav": {
     "approvals": "审批",
@@ -616,7 +617,13 @@
     "startsAnchor": "开始（锚点）",
     "endOnDate": "在某日期",
     "endAfterN": "N 次后",
-    "occurrences": "次数"
+    "occurrences": "次数",
+    "newProject": "+ 新建项目…",
+    "newSubproject": "+ 新建子项目…",
+    "newProjectPh": "新项目名称",
+    "newSubPh": "新子项目名称",
+    "nameRequired": "名称为必填项",
+    "createFailed": "无法创建——该名称可能已被使用。"
   },
   "ta": {
     "addMemberTitle": "添加团队成员",

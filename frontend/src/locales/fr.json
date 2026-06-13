@@ -10,7 +10,8 @@
     "add": "Ajouter",
     "loading": "Chargement…",
     "subtasksByStatus": "Sous-tâches par statut",
-    "done": "Terminé"
+    "done": "Terminé",
+    "create": "Créer"
   },
   "nav": {
     "approvals": "Approbations",
@@ -616,7 +617,13 @@
     "startsAnchor": "Commence (ancre)",
     "endOnDate": "À une date",
     "endAfterN": "Après N fois",
-    "occurrences": "Occurrences"
+    "occurrences": "Occurrences",
+    "newProject": "+ Nouveau projet…",
+    "newSubproject": "+ Nouveau sous-projet…",
+    "newProjectPh": "Nom du nouveau projet",
+    "newSubPh": "Nom du nouveau sous-projet",
+    "nameRequired": "Le nom est obligatoire",
+    "createFailed": "Création impossible — le nom est peut-être déjà pris."
   },
   "ta": {
     "addMemberTitle": "Ajouter un membre de l'équipe",

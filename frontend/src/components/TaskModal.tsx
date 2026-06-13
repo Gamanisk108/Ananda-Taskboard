@@ -8,7 +8,8 @@ import { buildSubLookup, writableProjects, todayISO } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, type TaskStatus } from "../statuses";
-import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
+import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, ColorPicker, useIsNarrow } from "./common";
+import { EmojiPicker } from "./EmojiPicker";
 import { useConfirm } from "./confirm";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
@@ -16,6 +17,9 @@ import { SubtaskDetail } from "./SubtaskDetail";
 import { Attachments } from "./Attachments";
 import { AssigneePicker } from "./AssigneePicker";
 import { PRIORITY_META, type Me, type Recurrence, type Subtask, type Task } from "../types";
+
+// Sentinel option value for the "+ New project/sub-project" entry in the pickers.
+const NEW_OPT = "__new__";
 
 interface Props {
   task: Task | null;
@@ -211,10 +215,24 @@ function useTaskFields(
 ) {
   const editing = !!task;
 
+  // Projects/sub-projects created inline from the picker (admin "+ New…"). Kept
+  // in local extras and merged over the prop list so the new entity is selectable
+  // immediately, without a mid-edit refresh that would reset the form. The real
+  // refresh happens via onChanged when the modal closes.
+  const [extraProjects, setExtraProjects] = useState<typeof projects>([]);
+  const [extraSubs, setExtraSubs] = useState<Record<number, { id: number; name: string }[]>>({});
+  const allProjects = useMemo(
+    () => [...projects, ...extraProjects].map((p) => ({
+      ...p,
+      subprojects: [...(p.subprojects ?? []), ...(extraSubs[p.id] ?? [])],
+    })),
+    [projects, extraProjects, extraSubs],
+  );
+
   // Project + Sub-project (cascading). When editing, fixed to the task's own.
   const initialProject = task?.project ?? defaultProject ?? projects[0]?.id ?? 0;
   const [projectId, setProjectId] = useState<number>(initialProject);
-  const subOptions = projects.find((p) => p.id === projectId)?.subprojects ?? [];
+  const subOptions = allProjects.find((p) => p.id === projectId)?.subprojects ?? [];
   const [subproject, setSubproject] = useState<number>(
     task?.subproject ?? defaultSubproject ?? subOptions[0]?.id ?? 0
   );
@@ -237,8 +255,20 @@ function useTaskFields(
 
   function pickProject(id: number) {
     setProjectId(id);
-    const subs = projects.find((p) => p.id === id)?.subprojects ?? [];
+    const subs = allProjects.find((p) => p.id === id)?.subprojects ?? [];
     setSubproject(subs[0]?.id ?? 0);
+  }
+
+  // Inline-created project: stash it, select it + its default "General" sub.
+  function addCreatedProject(p: (typeof projects)[number]) {
+    setExtraProjects((a) => [...a, p]);
+    setProjectId(p.id);
+    setSubproject(p.subprojects?.[0]?.id ?? 0);
+  }
+  // Inline-created sub-project under the current project: stash + select it.
+  function addCreatedSub(projId: number, s: { id: number; name: string }) {
+    setExtraSubs((m) => ({ ...m, [projId]: [...(m[projId] ?? []), s] }));
+    setSubproject(s.id);
   }
 
   function buildPayload(recurrence: Recurrence | null) {
@@ -263,6 +293,7 @@ function useTaskFields(
 
   return {
     projectId, pickProject, subproject, setSubproject, subOptions,
+    allProjects, addCreatedProject, addCreatedSub,
     title, setTitle, details, setDetails, requirements, setRequirements,
     startDate, setStartDate, deadline, setDeadline, startTime, setStartTime,
     endTime, setEndTime, priority, setPriority, links, setLinks,
@@ -299,6 +330,53 @@ function useRecurrenceState(task: Task | null) {
   return { repeats, setRepeats, fields, build };
 }
 
+// Create-on-the-fly panel shown beneath the project/sub-project pickers. Posts a
+// new Project (name + color + emoji) or Sub-project (name + color); blank color/
+// emoji let the backend auto-assign. On success the parent selects the new entity.
+function InlineCreate({ kind, projectId, onCreated, onCancel }: {
+  kind: "project" | "subproject";
+  projectId: number;
+  onCreated: (entity: unknown) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [name, setName] = useState("");
+  const [color, setColor] = useState("");
+  const [emoji, setEmoji] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function create() {
+    const nm = name.trim();
+    if (!nm) { setErr(t("tm.nameRequired", "Name is required")); return; }
+    setBusy(true); setErr("");
+    try {
+      const entity = kind === "project"
+        ? await api.post("/api/projects", { name: nm, color, emoji })
+        : await api.post("/api/subprojects", { project: projectId, name: nm, color });
+      onCreated(entity);
+    } catch {
+      setErr(t("tm.createFailed", "Couldn't create that — the name may already be taken."));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card" data-testid="inline-create"
+      style={{ padding: 10, marginBottom: 12, background: "var(--surface-sunk)", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+      {kind === "project" && <EmojiPicker value={emoji} onPick={setEmoji} title={t("mp.emojiTitle")} />}
+      <ColorPicker value={color} onChange={setColor} title={t("mp.colorTitle", "Color")} />
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
+        placeholder={kind === "project" ? t("tm.newProjectPh", "New project name") : t("tm.newSubPh", "New sub-project name")}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); create(); } }}
+        style={{ flex: 1, minWidth: 160 }} />
+      <button type="button" className="btn-primary" onClick={create} disabled={busy}>{t("common.create", "Create")}</button>
+      <button type="button" className="btn-ghost" onClick={onCancel}>{t("common.cancel")}</button>
+      {err && <div style={{ color: "var(--danger)", fontSize: 13, width: "100%" }}>{err}</div>}
+    </div>
+  );
+}
+
 export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose, onSaved, onChanged }: Props) {
   const { t } = useTranslation();
   const confirm = useConfirm();
@@ -314,6 +392,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   // form (one window, breadcrumb back — never a stacked modal). Capped at one level:
   // subtasks have no subtasks, so the breadcrumb is only ever two deep.
   const [openSub, setOpenSub] = useState<Subtask | null>(null);
+  // Inline create-on-the-fly from the project/sub-project pickers (admin only).
+  const [creating, setCreating] = useState<null | "project" | "subproject">(null);
   // 1-based position of the open subtask among its siblings → the `#parent.index`
   // breadcrumb id (design D12). Supplied by SubtaskEditor when a row is opened.
   const [openSubIndex, setOpenSubIndex] = useState(0);
@@ -337,6 +417,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const rec = useRecurrenceState(task);
   const {
     projectId, pickProject, subproject, setSubproject, subOptions,
+    allProjects, addCreatedProject, addCreatedSub,
     title, setTitle, details, setDetails, requirements, setRequirements,
     startDate, setStartDate, deadline, setDeadline, startTime, setStartTime,
     endTime, setEndTime, priority, setPriority, links, setLinks,
@@ -481,18 +562,41 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
             </div>
           </div>
         ) : (
+          <>
           <div className="row2">
             <div className="field">
               <label>{t("task.project")}</label>
-              <SingleSelect width="100%" value={String(projectId)} onChange={(v) => pickProject(Number(v))}
-                options={projects.map((p) => ({ value: String(p.id), label: p.name }))} />
+              <SingleSelect width="100%" value={String(projectId)}
+                onChange={(v) => (v === NEW_OPT ? setCreating("project") : pickProject(Number(v)))}
+                options={[
+                  ...allProjects.map((p) => ({ value: String(p.id), label: p.name })),
+                  ...(me.is_admin ? [{ value: NEW_OPT, label: t("tm.newProject", "+ New project…") }] : []),
+                ]} />
             </div>
             <div className="field">
               <label>{t("task.subproject")}</label>
-              <SingleSelect width="100%" value={String(subproject)} onChange={(v) => setSubproject(Number(v))}
-                options={subOptions.map((s) => ({ value: String(s.id), label: s.name }))} />
+              <SingleSelect width="100%" value={String(subproject)}
+                onChange={(v) => (v === NEW_OPT ? setCreating("subproject") : setSubproject(Number(v)))}
+                options={[
+                  ...subOptions.map((s) => ({ value: String(s.id), label: s.name })),
+                  ...(me.is_admin && projectId ? [{ value: NEW_OPT, label: t("tm.newSubproject", "+ New sub-project…") }] : []),
+                ]} />
             </div>
           </div>
+          {creating && (
+            <InlineCreate
+              kind={creating}
+              projectId={projectId}
+              onCancel={() => setCreating(null)}
+              onCreated={(entity) => {
+                if (creating === "project") addCreatedProject(entity as (typeof allProjects)[number]);
+                else addCreatedSub(projectId, entity as { id: number; name: string });
+                setCreating(null);
+                onChanged?.();
+              }}
+            />
+          )}
+          </>
         )}
 
         <div className="row2">

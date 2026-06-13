@@ -10,7 +10,8 @@
     "add": "जोड़ें",
     "loading": "लोड हो रहा है…",
     "subtasksByStatus": "स्थिति के अनुसार उप-कार्य",
-    "done": "हो गया"
+    "done": "हो गया",
+    "create": "बनाएँ"
   },
   "nav": {
     "approvals": "अनुमोदन",
@@ -616,7 +617,13 @@
     "startsAnchor": "शुरू (एंकर)",
     "endOnDate": "तिथि पर",
     "endAfterN": "N बार के बाद",
-    "occurrences": "घटनाएँ"
+    "occurrences": "घटनाएँ",
+    "newProject": "+ नई परियोजना…",
+    "newSubproject": "+ नई उप-परियोजना…",
+    "newProjectPh": "नई परियोजना का नाम",
+    "newSubPh": "नई उप-परियोजना का नाम",
+    "nameRequired": "नाम आवश्यक है",
+    "createFailed": "बनाया नहीं जा सका — हो सकता है नाम पहले से मौजूद हो।"
   },
   "ta": {
     "addMemberTitle": "टीम सदस्य जोड़ें",

@@ -10,7 +10,8 @@
     "add": "जोडा",
     "loading": "लोड होत आहे…",
     "subtasksByStatus": "स्थितीनुसार उप-कार्ये",
-    "done": "पूर्ण"
+    "done": "पूर्ण",
+    "create": "तयार करा"
   },
   "nav": {
     "approvals": "मंजुरी",
@@ -616,7 +617,13 @@
     "startsAnchor": "सुरू (अँकर)",
     "endOnDate": "तारखेला",
     "endAfterN": "N वेळांनंतर",
-    "occurrences": "घटना"
+    "occurrences": "घटना",
+    "newProject": "+ नवीन प्रकल्प…",
+    "newSubproject": "+ नवीन उप-प्रकल्प…",
+    "newProjectPh": "नवीन प्रकल्पाचे नाव",
+    "newSubPh": "नवीन उप-प्रकल्पाचे नाव",
+    "nameRequired": "नाव आवश्यक आहे",
+    "createFailed": "तयार करता आले नाही — नाव आधीच घेतलेले असू शकते."
   },
   "ta": {
     "addMemberTitle": "संघ सदस्य जोडा",
