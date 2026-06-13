@@ -59,7 +59,19 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   onOpenTask: (task: Task) => void;
 }) {
   const { t } = useTranslation();
-  const projects = useMemo(() => writableProjects(me), [me]);
+  const baseProjects = useMemo(() => writableProjects(me), [me]);
+  // Inline-created projects/subs kept locally so the picker updates INSTANTLY (no
+  // await on a network refresh). Merged + deduped over the prop list; a background
+  // refreshMe later folds them into me.tree for the board.
+  const [extraProjects, setExtraProjects] = useState<ReturnType<typeof writableProjects>>([]);
+  const [extraSubs, setExtraSubs] = useState<Record<number, { id: number; name: string }[]>>({});
+  const projects = useMemo(() => {
+    const seenP = new Set<number>();
+    return [...baseProjects, ...extraProjects].filter((p) => !seenP.has(p.id) && seenP.add(p.id)).map((p) => {
+      const seenS = new Set<number>();
+      return { ...p, subprojects: [...(p.subprojects ?? []), ...(extraSubs[p.id] ?? [])].filter((s) => !seenS.has(s.id) && seenS.add(s.id)) };
+    });
+  }, [baseProjects, extraProjects, extraSubs]);
   const users = useUsers();
   const groups = useAdminGroups(me);
   const statuses = useStatuses();
@@ -304,17 +316,21 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                   kind={creatingFor.kind}
                   projectId={r.projectId}
                   onCancel={() => setCreatingFor(null)}
-                  onCreated={async (entity) => {
+                  onCreated={(entity) => {
+                    const kind = creatingFor.kind;
                     setCreatingFor(null);
-                    // refreshMe so writableProjects(me) (used by every row) + the board's
-                    // tree learn the new project/sub; then select it in this row.
-                    await refreshMe();
-                    if (creatingFor.kind === "project") {
-                      const p = entity as { id: number; subprojects?: { id: number }[] };
+                    if (kind === "project") {
+                      const p = entity as { id: number; name: string; subprojects?: { id: number; name: string }[] };
+                      setExtraProjects((a) => [...a, { id: p.id, name: p.name, subprojects: p.subprojects ?? [] }]);
                       update(r.key, { projectId: p.id, subprojectId: p.subprojects?.[0]?.id ?? 0 });
                     } else {
-                      update(r.key, { subprojectId: (entity as { id: number }).id });
+                      const s = entity as { id: number; name: string };
+                      setExtraSubs((m) => ({ ...m, [r.projectId]: [...(m[r.projectId] ?? []), { id: s.id, name: s.name }] }));
+                      update(r.key, { subprojectId: s.id });
                     }
+                    // Background-refresh me.tree so the board knows the new entity too
+                    // (no await → the picker switches instantly; board catches up).
+                    refreshMe();
                   }}
                 />
               )}

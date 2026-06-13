@@ -219,11 +219,20 @@ function useTaskFields(
   // refresh happens via onChanged when the modal closes.
   const [extraProjects, setExtraProjects] = useState<typeof projects>([]);
   const [extraSubs, setExtraSubs] = useState<Record<number, { id: number; name: string }[]>>({});
+  // Merge prop projects + local extras, DEDUPED by id — once a background refreshMe
+  // pulls the new project into `projects`, the extras copy must not double it.
   const allProjects = useMemo(
-    () => [...projects, ...extraProjects].map((p) => ({
-      ...p,
-      subprojects: [...(p.subprojects ?? []), ...(extraSubs[p.id] ?? [])],
-    })),
+    () => {
+      const seenP = new Set<number>();
+      return [...projects, ...extraProjects].filter((p) => !seenP.has(p.id) && seenP.add(p.id)).map((p) => {
+        const seenS = new Set<number>();
+        return {
+          ...p,
+          subprojects: [...(p.subprojects ?? []), ...(extraSubs[p.id] ?? [])]
+            .filter((s) => !seenS.has(s.id) && seenS.add(s.id)),
+        };
+      });
+    },
     [projects, extraProjects, extraSubs],
   );
 
