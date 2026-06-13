@@ -106,6 +106,20 @@ export const api = {
   /** Authenticated GET returning the raw response text (e.g. a TSV export). */
   text: (p: string) => raw("GET", p).then((r) => r.text()),
   post: (p: string, b?: unknown) => raw("POST", p, b ?? {}).then(handle),
+  /** multipart POST (FormData) — browser sets the Content-Type boundary; no JSON. */
+  async postForm(p: string, form: FormData) {
+    if (!accessToken && getRefresh()) await refreshAccess();
+    const headers: Record<string, string> = {};
+    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+    const org = getActiveOrg();
+    if (org) headers["X-Org-Id"] = org;
+    let res = await fetch(p, { method: "POST", headers, body: form });
+    if (res.status === 401 && getRefresh() && (await refreshAccess())) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+      res = await fetch(p, { method: "POST", headers, body: form });
+    }
+    return handle(res);
+  },
   put: (p: string, b: unknown) => raw("PUT", p, b).then(handle),
   patch: (p: string, b: unknown) => raw("PATCH", p, b).then(handle),
   del: (p: string, b?: unknown) => raw("DELETE", p, b).then(handle),
