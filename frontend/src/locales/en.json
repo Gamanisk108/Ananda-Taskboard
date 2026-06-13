@@ -11,7 +11,8 @@
     "loading": "Loading…",
     "subtasksByStatus": "Subtasks by status",
     "done": "Done",
-    "create": "Create"
+    "create": "Create",
+    "saving": "Saving…"
   },
   "nav": {
     "approvals": "Approvals",
@@ -947,6 +948,17 @@
     "confirmDiscard": "Discard this AI draft? Your prompt, files, and any unsaved tasks here will be lost.",
     "discard": "Discard",
     "repeats": "Repeats",
-    "clearRecur": "Make one-time"
+    "clearRecur": "Make one-time",
+    "startDate": "Start date",
+    "generatingBody": "Reading your input and drafting tasks…"
+  },
+  "google": {
+    "or": "or",
+    "error": "Google sign-in failed. Please try again.",
+    "loadError": "Couldn't load Google sign-in.",
+    "orgError": "Couldn't create your organization.",
+    "nameOrg": "Name your organization",
+    "orgPh": "e.g. Ananda Portland",
+    "createOrg": "Create organization"
   }
 }

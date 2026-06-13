@@ -11,7 +11,8 @@
     "loading": "加载中…",
     "subtasksByStatus": "按状态分类的子任务",
     "done": "完成",
-    "create": "创建"
+    "create": "创建",
+    "saving": "保存中…"
   },
   "nav": {
     "approvals": "审批",
@@ -947,6 +948,17 @@
     "confirmDiscard": "放弃此 AI 草稿？你的文字、文件和未保存的任务将会丢失。",
     "discard": "放弃",
     "repeats": "重复",
-    "clearRecur": "设为一次性"
+    "clearRecur": "设为一次性",
+    "startDate": "开始日期",
+    "generatingBody": "正在读取并起草任务…"
+  },
+  "google": {
+    "or": "或",
+    "error": "Google 登录失败，请重试。",
+    "loadError": "无法加载 Google 登录。",
+    "orgError": "无法创建你的组织。",
+    "nameOrg": "为你的组织命名",
+    "orgPh": "例如 Ananda Portland",
+    "createOrg": "创建组织"
   }
 }

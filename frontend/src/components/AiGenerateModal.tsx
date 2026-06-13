@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Upload, X, Trash2, FileText, Repeat } from "lucide-react";
+import { Sparkles, Download, X, Trash2, FileText, Repeat } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { uploadAttachment, fmtSize } from "../attachments";
 import { writableProjects } from "../lookup";
@@ -35,6 +35,8 @@ interface Row {
   newProject: string | null;
   subtasks: string[];
   recurrence: Recurrence | null;
+  startDate: string | null;
+  deadline: string | null;
 }
 
 const WD_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -102,6 +104,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
       status: "todo", sourceFileIndex: tk.source_file_index,
       attach: tk.source_file_index != null, newProject: tk.new_project,
       subtasks: tk.subtasks ?? [], recurrence: tk.recurrence ?? null,
+      startDate: tk.start_date ?? null, deadline: tk.deadline ?? null,
     };
   }
 
@@ -135,29 +138,27 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   async function save() {
     if (submitting.current || !canSave) return;
     submitting.current = true; setStep("saving"); setErr("");
-    const out: Task[] = [];
-    const failed = new Set<number>();
-    // Per-row: a failure must NOT abort the rest, and successfully-created rows are
-    // dropped so a retry can't duplicate them (only failed rows remain in review).
-    for (const r of rows) {
+    // Save all rows in PARALLEL (was sequential → slow for many tasks). Each row's
+    // own failure is isolated; succeeded rows are dropped so a retry can't duplicate.
+    const settled = await Promise.all(rows.map(async (r) => {
       try {
         const task = await api.post("/api/tasks", {
           subproject: r.subprojectId, title: r.title.trim(), priority: r.priority,
           assignees: r.assignees, assignee_groups: r.assigneeGroups, status: r.status,
-          recurrence: r.recurrence,
+          recurrence: r.recurrence, timeline_start: r.startDate, deadline: r.deadline,
         }) as Task;
-        for (const st of r.subtasks) {
-          const title = st.trim();
-          if (title) { try { await api.post("/api/subtasks", { task: task.id, title }); } catch { /* keep the task even if a subtask fails */ } }
-        }
+        await Promise.all(r.subtasks.map((st) =>
+          st.trim() ? api.post("/api/subtasks", { task: task.id, title: st.trim() }).catch(() => {}) : null));
         if (r.attach && r.sourceFileIndex != null && files[r.sourceFileIndex]) {
           try { await uploadAttachment("task", task.id, files[r.sourceFileIndex]); } catch { /* keep the task even if its attachment fails */ }
         }
-        out.push(task);
+        return { ok: true as const, task, key: r.key };
       } catch {
-        failed.add(r.key);
+        return { ok: false as const, key: r.key };
       }
-    }
+    }));
+    const out: Task[] = settled.filter((x) => x.ok).map((x) => (x as { task: Task }).task);
+    const failed = new Set(settled.filter((x) => !x.ok).map((x) => x.key));
     submitting.current = false;
     if (out.length) { setCreated((c) => [...c, ...out]); onChanged?.(); }
     if (failed.size) {
@@ -195,7 +196,13 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
 
   return (
     <Modal fullScreenOnNarrow wide icon={<Sparkles />} title={t("ai.title", "Generate tasks with AI")} onClose={guardedClose} footer={footer}>
-      {step === "input" && (
+      {step === "input" && busy && (
+        <div style={{ padding: 28, textAlign: "center" }}>
+          <Spinner />
+          <div className="muted" style={{ marginTop: 10 }}>{t("ai.generatingBody", "Reading your input and drafting tasks…")}</div>
+        </div>
+      )}
+      {step === "input" && !busy && (
         // Drop anywhere in the body: the whole input step is the drop target.
         <div
           className={`ai-input${dragOver ? " dragover" : ""}`}
@@ -210,7 +217,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
           </div>
 
           <label className="ai-dropzone">
-            <Upload size={20} />
+            <Download size={20} />
             <span className="ai-dz-text">
               {t("ai.dropPrompt", "Drag files anywhere here, or ")}<span className="ai-dz-browse">{t("ai.browse", "browse")}</span>
             </span>
@@ -237,7 +244,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
             </div>
           )}
 
-          {dragOver && <div className="ai-drop-overlay">{t("ai.dropNow", "Drop to add")}</div>}
+          {dragOver && <div className="ai-drop-overlay"><Download size={22} /> {t("ai.dropNow", "Drop to add")}</div>}
           <div className="hint" style={{ fontSize: 12.5, marginTop: 12 }}>{t("ai.privacyNotice", "Your text and files are sent to our AI provider to generate tasks. Don't upload anything you wouldn't want processed externally.")}</div>
           {err && <div style={{ color: "var(--danger)", fontSize: 13, marginTop: 8 }}>{err}</div>}
         </div>
@@ -254,14 +261,17 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
           {truncated && <div className="hint" style={{ fontSize: 12, marginBottom: 8 }}>{t("ai.truncated", "Only the first batch is shown.")}</div>}
           {rows.map((r) => (
             <div key={r.key} className="card" style={{ padding: 10, marginBottom: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* Row 1: Task name (top-left) + Assignees (top-right) — matches the app. */}
               <div className="row2">
-                <div className="field" style={{ maxWidth: 160 }}>
-                  <label>{t("task.priority")}</label>
-                  <SingleSelect value={String(r.priority)} onChange={(v) => update(r.key, { priority: Number(v) })} options={PRIO_OPTS} />
-                </div>
                 <div className="field">
                   <label>{t("list.colTask", "Task")}</label>
                   <input value={r.title} onChange={(e) => update(r.key, { title: e.target.value })} />
+                </div>
+                <div className="field">
+                  {/* AssigneePicker renders its own "Assignees" heading — no extra label. */}
+                  <AssigneePicker users={users} groups={groups} subproject={r.subprojectId} isAdmin={me.is_admin}
+                    assignees={r.assignees} setAssignees={(ids) => update(r.key, { assignees: ids })}
+                    assigneeGroups={r.assigneeGroups} setAssigneeGroups={(ids) => update(r.key, { assigneeGroups: ids })} />
                 </div>
               </div>
               <div className="row2">
@@ -281,16 +291,26 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
               {r.newProject && !r.projectId && (
                 <div className="hint" style={{ fontSize: 12 }}>{t("ai.newProjectHint", "AI suggested a new project “{{name}}” — pick an existing project/sub-project to file this under.", { name: r.newProject })}</div>
               )}
+              {/* Row 3: Priority + Status */}
               <div className="row2">
                 <div className="field">
-                  <label>{t("task.assignees", "Assignee")}</label>
-                  <AssigneePicker users={users} groups={groups} subproject={r.subprojectId} isAdmin={me.is_admin}
-                    assignees={r.assignees} setAssignees={(ids) => update(r.key, { assignees: ids })}
-                    assigneeGroups={r.assigneeGroups} setAssigneeGroups={(ids) => update(r.key, { assigneeGroups: ids })} />
+                  <label>{t("task.priority")}</label>
+                  <SingleSelect width="100%" value={String(r.priority)} onChange={(v) => update(r.key, { priority: Number(v) })} options={PRIO_OPTS} />
                 </div>
                 <div className="field">
                   <label>{t("task.status", "Status")}</label>
                   <StatusPillSelect value={r.status} statuses={statuses} onChange={(s) => update(r.key, { status: s })} />
+                </div>
+              </div>
+              {/* Row 4: dates */}
+              <div className="row2">
+                <div className="field">
+                  <label>{t("ai.startDate", "Start date")}</label>
+                  <input type="date" value={r.startDate || ""} onChange={(e) => update(r.key, { startDate: e.target.value || null })} />
+                </div>
+                <div className="field">
+                  <label>{t("task.deadline", "Due date")}</label>
+                  <input type="date" value={r.deadline || ""} onChange={(e) => update(r.key, { deadline: e.target.value || null })} />
                 </div>
               </div>
               {r.recurrence && (

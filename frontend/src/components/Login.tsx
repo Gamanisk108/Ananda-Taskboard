@@ -4,6 +4,7 @@ import { useAuth } from "../state/auth";
 import { ForgotPassword } from "./ForgotPassword";
 import { Signup } from "./Signup";
 import { PasswordInput } from "./PasswordInput";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 export function Login() {
   const { t } = useTranslation();
@@ -59,6 +60,7 @@ export function Login() {
         <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("login.signingIn") : t("login.signIn")}
         </button>
+        <GoogleSignInButton />
         <div style={{ marginTop: 14, textAlign: "center" }}>
           <button
             type="button"

@@ -134,6 +134,22 @@ export const api = {
     setTokens(data.access, data.refresh);
     return data;
   },
+  /** Social login: exchange a Google ID token for our JWTs. Returns {needs_org}. */
+  async googleLogin(credential: string): Promise<{ access: string; refresh: string; needs_org: boolean; created: boolean }> {
+    const res = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }),
+    });
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    const data = await res.json();
+    setTokens(data.access, data.refresh);
+    return data;
+  },
+  /** Create a new org owned by the current user (e.g. after social signup). */
+  createOrg(payload: { organization: string; city?: string; state?: string; country?: string }) {
+    return raw("POST", "/api/orgs", payload).then(handle);
+  },
   logout() {
     setTokens(null, null);
     setActiveOrg(null);

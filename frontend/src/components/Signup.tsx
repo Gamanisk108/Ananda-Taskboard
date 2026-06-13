@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
 import { PasswordInput } from "./PasswordInput";
 import { BackLabel } from "./common";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 const linkBtn: React.CSSProperties = {
   background: "none", border: "none", padding: 0,
@@ -96,6 +97,7 @@ export function Signup({ onBack }: { onBack: () => void }) {
         <button className="btn-primary btn-full" disabled={busy}>
           {busy ? t("signup.creating") : t("signup.create")}
         </button>
+        <GoogleSignInButton />
         <div style={{ marginTop: 14, textAlign: "center" }}>
           <button type="button" onClick={onBack} style={linkBtn}><BackLabel>{t("reset.backToSignIn")}</BackLabel></button>
         </div>

@@ -197,6 +197,10 @@
 .modal:not(.fs) .modal-head { cursor: move; touch-action: none; user-select: none; }
 .modal:not(.fs) .modal-head h2 { cursor: move; }
 
+/* "or" divider above the Google button */
+.or-divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+.or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
 /* AI generator — upload dropzone + file thumbnails */
 .ai-input { position: relative; }
 .ai-dropzone { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 16px; margin-top: 6px;

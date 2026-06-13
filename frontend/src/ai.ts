@@ -16,6 +16,8 @@ export interface ProposedTask {
   source_file_index: number | null;
   subtasks: string[];
   recurrence: Recurrence | null;
+  start_date: string | null;
+  deadline: string | null;
 }
 
 export interface GenerateResult {

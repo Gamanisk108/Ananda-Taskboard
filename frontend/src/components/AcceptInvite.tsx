@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ApiError } from "../api/client";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 interface Preview {
   organization: string;
@@ -120,6 +121,11 @@ export function AcceptInvite() {
       <button type="button" className="btn-primary btn-full" disabled={busy} onClick={accept}>
         {busy ? t("accept.joining") : t("accept.join", { org: preview.organization })}
       </button>
+      <GoogleSignInButton onAuthed={async () => {
+        // Google created/linked the account; now join THIS org via the invite, then reload authed.
+        try { await api.acceptInvite(id, { token }); } catch { /* surfaced on reload */ }
+        goLogin();
+      }} />
       <div style={{ marginTop: 14, textAlign: "center" }}>
         <button type="button" onClick={goLogin}
           style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontSize: 13, cursor: "pointer" }}>

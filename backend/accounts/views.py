@@ -600,13 +600,86 @@ class SignupView(APIView):
         )
         ensure_default_tiers(org)
         Membership.objects.create(
-            user=user, organization=org, role=Membership.Role.ADMIN, is_active=True
+            user=user, organization=org, role=Membership.Role.OWNER, is_active=True
         )
         _send_verification_email(user)
         return Response(
             {"detail": "Account created. Check your email to verify and activate it."},
             status=201,
         )
+
+
+class GoogleAuthView(APIView):
+    """Sign in / sign up with Google. Verify the GIS ID token, then link by the
+    Google-verified email (existing account) or create a new active account, and
+    issue the app's JWTs (same as password login). A brand-new account with no org
+    yet comes back with needs_org=true so the client can run the org-create step."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_reset"
+
+    def post(self, request):
+        if not settings.GOOGLE_CLIENT_ID:
+            return Response({"detail": "Google sign-in isn't configured yet."}, status=503)
+        credential = request.data.get("credential") or ""
+        if not credential:
+            raise ValidationError({"detail": "Missing Google credential."})
+        try:
+            from google.auth.transport import requests as g_requests
+            from google.oauth2 import id_token
+            info = id_token.verify_oauth2_token(credential, g_requests.Request(), settings.GOOGLE_CLIENT_ID)
+        except Exception:
+            return Response({"detail": "Couldn't verify your Google sign-in. Please try again."}, status=401)
+        if info.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+            return Response({"detail": "Invalid token issuer."}, status=401)
+        email = (info.get("email") or "").strip().lower()
+        if not email or not info.get("email_verified"):
+            return Response({"detail": "Your Google account email isn't verified."}, status=401)
+
+        user = User.objects.filter(email=email).first()
+        created = False
+        if not user:
+            user = User.objects.create_user(email=email, name=info.get("name") or "", is_active=True)
+            user.set_unusable_password()
+            user.save(update_fields=["password"])
+            created = True
+        elif not user.is_active:
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        has_org = Membership.objects.filter(user=user, is_active=True).exists()
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "needs_org": not has_org,
+            "created": created,
+        })
+
+
+class CreateOrgView(APIView):
+    """An authenticated user creates a new organization they OWN. Used after social
+    signup (no org yet); active immediately since the account is already verified."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        name = (request.data.get("organization") or request.data.get("name") or "").strip()
+        if not name:
+            raise ValidationError({"organization": "Organization name is required."})
+        org = Organization.objects.create(
+            name=name[:200], city=(request.data.get("city") or "")[:120],
+            state=(request.data.get("state") or "")[:120], country=(request.data.get("country") or "")[:120],
+            created_by=request.user, is_active=True,
+        )
+        ensure_default_tiers(org)
+        Membership.objects.create(
+            user=request.user, organization=org, role=Membership.Role.OWNER, is_active=True
+        )
+        return Response({"org_id": org.id, "name": org.name}, status=201)
 
 
 class PlatformStatsView(APIView):

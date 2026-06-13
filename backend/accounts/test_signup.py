@@ -38,7 +38,7 @@ SIGNUP = {
 }
 
 
-def test_signup_creates_inactive_account_org_and_admin_membership(api):
+def test_signup_creates_inactive_account_org_and_owner_membership(api):
     res = api.post("/api/auth/signup", SIGNUP, format="json")
     assert res.status_code == 201
     user = User.objects.get(email="lead@portland.org")
@@ -48,7 +48,8 @@ def test_signup_creates_inactive_account_org_and_admin_membership(api):
     assert org.state == "Oregon"
     assert org.created_by_id == user.id
     m = Membership.objects.get(user=user, organization=org)
-    assert m.role == Membership.Role.ADMIN and m.is_active is True
+    # The org creator is now the OWNER (top authority), not a plain admin.
+    assert m.role == Membership.Role.OWNER and m.is_active is True
     assert len(mail.outbox) == 1 and mail.outbox[0].to == ["lead@portland.org"]
     assert "verify" in mail.outbox[0].body
 

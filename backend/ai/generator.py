@@ -30,6 +30,8 @@ EMIT_TASKS_TOOL = {
                         "new_project": {"type": ["string", "null"], "description": "Only if NO existing project fits: a proposed new project name. Rare."},
                         "source_file_index": {"type": ["integer", "null"], "description": "0-based index of the uploaded file this task came from, or null."},
                         "subtasks": {"type": "array", "items": {"type": "string"}, "description": "If this task naturally breaks into smaller steps, the subtask titles (short, imperative). Otherwise omit or leave empty."},
+                        "start_date": {"type": ["string", "null"], "description": "Start date YYYY-MM-DD if the work begins on a specific day; else null. For a recurring task, the first occurrence."},
+                        "deadline": {"type": ["string", "null"], "description": "Due date YYYY-MM-DD if one is stated/implied; else null."},
                         "recurrence": {
                             "type": ["object", "null"],
                             "description": "If the task repeats on a schedule, the rule; else null. Steps done each occurrence go in subtasks (do NOT enumerate per occurrence).",
@@ -95,6 +97,8 @@ def _build_system(projects, members, today="") -> str:
         "“Answer brainstorm questionnaire”, “Lock design”]. Only emit separate top-level tasks "
         "for genuinely separate deliverables. A short list of distinct, unrelated to-dos (e.g. "
         "“set up the bedrooms, help them move in, fix the balcony door”) stays as separate tasks.\n"
+        "- Capture dates: if a task has a due date set deadline (YYYY-MM-DD); if it starts "
+        "on a specific day set start_date. Resolve relative dates against TODAY below.\n"
         "- If a task REPEATS on a schedule (e.g. “every Saturday for 8 weeks”), set its "
         "recurrence (weekdays use Mon=0 … Sun=6, so Saturday=5; “for 8 weeks” → count 8) and "
         "compute a concrete anchor date. Put the steps done EACH occurrence in subtasks — do "
@@ -172,10 +176,15 @@ def _validate(raw: dict, projects, members, n_files: int, today="") -> dict:
         if not isinstance(raw_subs, (list, tuple)):
             raw_subs = []
         subtasks = [s.strip()[:300] for s in raw_subs if isinstance(s, str) and s.strip()][:20]
+        rec = _valid_recurrence(t.get("recurrence"), today)
+        start = t.get("start_date") if isinstance(t.get("start_date"), str) and _DATE_RE.match(t.get("start_date") or "") else None
+        deadline = t.get("deadline") if isinstance(t.get("deadline"), str) and _DATE_RE.match(t.get("deadline") or "") else None
+        if rec and not start:
+            start = rec.get("anchor")     # recurring task starts on its first occurrence
         out.append({
             "title": title[:200], "priority": pr, "project_id": proj, "subproject_id": sub,
             "assignee_ids": assignees, "new_project": new_project, "source_file_index": sfi,
-            "subtasks": subtasks, "recurrence": _valid_recurrence(t.get("recurrence"), today),
+            "subtasks": subtasks, "recurrence": rec, "start_date": start, "deadline": deadline,
         })
     capped = out[: settings.AI_MAX_TASKS]
     return {"tasks": capped, "truncated": len(out) > len(capped)}

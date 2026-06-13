@@ -4,7 +4,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     ChangePasswordView,
+    CreateOrgView,
     DeleteAccountView,
+    GoogleAuthView,
     GroupViewSet,
     InvitationAcceptView,
     InvitationPreviewView,
@@ -35,6 +37,8 @@ urlpatterns = [
     path("auth/password/confirm", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
     path("auth/password/change", ChangePasswordView.as_view(), name="password-change"),
     path("auth/signup", SignupView.as_view(), name="signup"),
+    path("auth/google", GoogleAuthView.as_view(), name="auth-google"),
+    path("orgs", CreateOrgView.as_view(), name="orgs-create"),
     path("auth/verify", VerifyEmailView.as_view(), name="verify-email"),
     # Public, token-gated invite preview + accept (before the router's detail routes).
     path("invitations/<int:pk>/preview", InvitationPreviewView.as_view(), name="invitation-preview"),

@@ -11,7 +11,8 @@
     "loading": "Chargement…",
     "subtasksByStatus": "Sous-tâches par statut",
     "done": "Terminé",
-    "create": "Créer"
+    "create": "Créer",
+    "saving": "Enregistrement…"
   },
   "nav": {
     "approvals": "Approbations",
@@ -947,6 +948,17 @@
     "confirmDiscard": "Abandonner ce brouillon IA ? Votre texte, vos fichiers et les tâches non enregistrées seront perdus.",
     "discard": "Abandonner",
     "repeats": "Se répète",
-    "clearRecur": "Rendre unique"
+    "clearRecur": "Rendre unique",
+    "startDate": "Date de début",
+    "generatingBody": "Lecture de vos infos et rédaction des tâches…"
+  },
+  "google": {
+    "or": "ou",
+    "error": "Échec de la connexion Google. Réessayez.",
+    "loadError": "Impossible de charger la connexion Google.",
+    "orgError": "Impossible de créer votre organisation.",
+    "nameOrg": "Nommez votre organisation",
+    "orgPh": "ex. Ananda Portland",
+    "createOrg": "Créer l'organisation"
   }
 }

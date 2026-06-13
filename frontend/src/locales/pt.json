@@ -11,7 +11,8 @@
     "loading": "Carregando…",
     "subtasksByStatus": "Subtarefas por status",
     "done": "Concluído",
-    "create": "Criar"
+    "create": "Criar",
+    "saving": "Salvando…"
   },
   "nav": {
     "approvals": "Aprovações",
@@ -947,6 +948,17 @@
     "confirmDiscard": "Descartar este rascunho de IA? Seu texto, arquivos e tarefas não salvas serão perdidos.",
     "discard": "Descartar",
     "repeats": "Repete",
-    "clearRecur": "Tornar única"
+    "clearRecur": "Tornar única",
+    "startDate": "Data de início",
+    "generatingBody": "Lendo suas informações e criando tarefas…"
+  },
+  "google": {
+    "or": "ou",
+    "error": "Falha no login com Google. Tente novamente.",
+    "loadError": "Não foi possível carregar o login do Google.",
+    "orgError": "Não foi possível criar sua organização.",
+    "nameOrg": "Dê um nome à sua organização",
+    "orgPh": "ex. Ananda Portland",
+    "createOrg": "Criar organização"
   }
 }

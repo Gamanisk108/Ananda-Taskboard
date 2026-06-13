@@ -11,7 +11,8 @@
     "loading": "Cargando…",
     "subtasksByStatus": "Subtareas por estado",
     "done": "Listo",
-    "create": "Crear"
+    "create": "Crear",
+    "saving": "Guardando…"
   },
   "nav": {
     "approvals": "Aprobaciones",
@@ -947,6 +948,17 @@
     "confirmDiscard": "¿Descartar este borrador de IA? Se perderán tu texto, archivos y las tareas no guardadas.",
     "discard": "Descartar",
     "repeats": "Se repite",
-    "clearRecur": "Hacer único"
+    "clearRecur": "Hacer único",
+    "startDate": "Fecha de inicio",
+    "generatingBody": "Leyendo tu información y redactando tareas…"
+  },
+  "google": {
+    "or": "o",
+    "error": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+    "loadError": "No se pudo cargar el inicio de sesión de Google.",
+    "orgError": "No se pudo crear tu organización.",
+    "nameOrg": "Nombra tu organización",
+    "orgPh": "p. ej. Ananda Portland",
+    "createOrg": "Crear organización"
   }
 }

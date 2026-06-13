@@ -11,7 +11,8 @@
     "loading": "Caricamento…",
     "subtasksByStatus": "Sottoattività per stato",
     "done": "Fatto",
-    "create": "Crea"
+    "create": "Crea",
+    "saving": "Salvataggio…"
   },
   "nav": {
     "approvals": "Approvazioni",
@@ -947,6 +948,17 @@
     "confirmDiscard": "Scartare questa bozza IA? Testo, file e attività non salvate andranno persi.",
     "discard": "Scarta",
     "repeats": "Si ripete",
-    "clearRecur": "Rendi singola"
+    "clearRecur": "Rendi singola",
+    "startDate": "Data di inizio",
+    "generatingBody": "Lettura dei dati e creazione delle attività…"
+  },
+  "google": {
+    "or": "oppure",
+    "error": "Accesso con Google non riuscito. Riprova.",
+    "loadError": "Impossibile caricare l'accesso con Google.",
+    "orgError": "Impossibile creare la tua organizzazione.",
+    "nameOrg": "Dai un nome alla tua organizzazione",
+    "orgPh": "es. Ananda Portland",
+    "createOrg": "Crea organizzazione"
   }
 }

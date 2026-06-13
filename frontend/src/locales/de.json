@@ -11,7 +11,8 @@
     "loading": "Wird geladen…",
     "subtasksByStatus": "Unteraufgaben nach Status",
     "done": "Fertig",
-    "create": "Erstellen"
+    "create": "Erstellen",
+    "saving": "Wird gespeichert…"
   },
   "nav": {
     "approvals": "Genehmigungen",
@@ -947,6 +948,17 @@
     "confirmDiscard": "Diesen KI-Entwurf verwerfen? Text, Dateien und nicht gespeicherte Aufgaben gehen verloren.",
     "discard": "Verwerfen",
     "repeats": "Wiederholt sich",
-    "clearRecur": "Einmalig machen"
+    "clearRecur": "Einmalig machen",
+    "startDate": "Startdatum",
+    "generatingBody": "Eingaben werden gelesen, Aufgaben entworfen…"
+  },
+  "google": {
+    "or": "oder",
+    "error": "Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen.",
+    "loadError": "Google-Anmeldung konnte nicht geladen werden.",
+    "orgError": "Organisation konnte nicht erstellt werden.",
+    "nameOrg": "Benenne deine Organisation",
+    "orgPh": "z. B. Ananda Portland",
+    "createOrg": "Organisation erstellen"
   }
 }

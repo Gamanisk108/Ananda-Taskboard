@@ -252,6 +252,9 @@ if SENTRY_DSN:
 
 # AI task generation (Claude). Key is server-only — never sent to the client.
 # Feature is inert (endpoint returns 503) unless ANTHROPIC_API_KEY is set.
+# Social login — Google ID-token audience. Public Client ID (no secret needed for
+# the GIS flow). Feature is inert until set.
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", "")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", "")
 AI_MODEL = env("AI_MODEL", "claude-haiku-4-5-20251001")
 AI_MAX_TASKS = int(env("AI_MAX_TASKS", "25"))            # cap per generation
