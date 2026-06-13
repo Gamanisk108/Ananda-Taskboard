@@ -72,7 +72,12 @@ until Gordon approves (Phase 4).
 ## Open / Gordon-action
 - 🟡 Confirm `ANTHROPIC_API_KEY` set on Render (backend env). Needed to ship.
 - 🟡 Spend: Haiku ~ fractions of a cent/generation; 20/user/day caps it. OK?
-- AI suggesting **assignees** is OUT of v1 (blank, user sets) unless you want it in.
+- **Assignees: IN v1** (Gordon 2026-06-12). Model gets the org member roster (id+name)
+  and suggests assignees per task; pre-filled in the review row's existing Assignee
+  field, user edits. AI suggestion only — never silently final.
+
+## APPROVED 2026-06-12 (Gordon "Yes"). Building in 5 slices.
+## Slice 1 DONE: ai/ app + AiGeneration model + daily rate guard + tests.
 
 ## Complexity: LARGE (multi-day). Recommend shipping in the 5 build-order slices,
 ## each its own PR + deploy, not one mega-drop.

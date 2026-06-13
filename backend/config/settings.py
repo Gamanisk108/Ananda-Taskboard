@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "translations",
     "feedback",
     "attachments",
+    "ai",
 ]
 
 MIDDLEWARE = [
