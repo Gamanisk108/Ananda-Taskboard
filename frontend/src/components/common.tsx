@@ -471,6 +471,27 @@ export function Modal({
   const { t } = useTranslation();
   const narrow = useIsNarrow();
   const fs = !!fullScreenOnNarrow && narrow;
+  // Draggable by its header (desktop only). Offset from the centered resting
+  // position; null until first drag so the entrance animation isn't overridden.
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+  function startDrag(e: React.PointerEvent) {
+    if (fs) return;                                   // mobile full-screen: no drag
+    if ((e.target as HTMLElement).closest("button,input,select,textarea,a,label")) return;
+    const cur = pos ?? { x: 0, y: 0 };
+    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: cur.x, oy: cur.y };
+    const move = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (d) setPos({ x: d.ox + ev.clientX - d.sx, y: d.oy + ev.clientY - d.sy });
+    };
+    const up = () => {
+      dragRef.current = null;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
   // Escape closes the modal (app-wide expectation). Backdrop click closes too
   // (onClick below); the inner card stops propagation so clicks inside don't.
   useEffect(() => {
@@ -524,7 +545,10 @@ export function Modal({
     <div className={`modal-backdrop${fs ? " fs" : ""}`} onClick={onClose}>
       <div
         className={`card modal sheet rise${fs ? " fs" : ""}`}
-        style={fs ? undefined : { maxWidth: wide ? 760 : 520 }}
+        style={fs ? undefined : {
+          maxWidth: wide ? 760 : 520,
+          ...(pos ? { transform: `translate(${pos.x}px, ${pos.y}px)` } : {}),
+        }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -539,7 +563,7 @@ export function Modal({
             {headerAction}
           </div>
         ) : (
-          <div className="modal-head">
+          <div className="modal-head" onPointerDown={startDrag}>
             <h2 style={{ fontSize: 18 }}>
               {icon && <span className="sh-icn">{icon}</span>}
               {title}
