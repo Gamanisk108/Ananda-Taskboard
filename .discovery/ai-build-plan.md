@@ -78,6 +78,15 @@ until Gordon approves (Phase 4).
 
 ## APPROVED 2026-06-12 (Gordon "Yes"). Building in 5 slices.
 
+### STATUS 2026-06-13 — FEATURE LIVE
+ANTHROPIC_API_KEY set on Render (Gordon). Backend + frontend deployed; live
+generate verified end-to-end (real Haiku tasks, daily counter decrementing).
+- Slices 1–4 DONE + deployed. Assignees IN (AI suggests). Images: vision + attach.
+- **Remaining (Phase 6–13):** in-browser click-through of the modal/review/save/attach
+  (Playwright was locked by a parallel session — Gordon to click through), CodeRabbit
+  on the AI batch, /security-review (key handling, file caps, member assign-scope —
+  save path enforces), and watching real usage.
+
 ### STATUS 2026-06-12
 - **Slice 1 DONE + deployed:** ai/ app + AiGeneration model + daily rate guard + 4 tests.
 - **Slice 2 DONE + deployed:** POST /api/ai/generate (text extract + image vision +
