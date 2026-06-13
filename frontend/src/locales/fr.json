@@ -106,7 +106,15 @@
     "badBody": "Ce lien est invalide ou a expiré. Veuillez vous réinscrire ou demander un nouveau lien."
   },
   "org": {
-    "switch": "Changer d'organisation"
+    "switch": "Changer d'organisation",
+    "welcomeTitle": "Configurez votre équipe",
+    "welcomeBody": "Bienvenue{{name}} ! Créez votre organisation pour commencer — vous en serez le propriétaire et pourrez inviter d'autres personnes.",
+    "nameLabel": "Nom de l'organisation",
+    "namePh": "ex. Ananda Portland",
+    "create": "Créer l'organisation",
+    "creating": "Création…",
+    "signOut": "Se déconnecter",
+    "createError": "Impossible de créer votre organisation. Réessayez."
   },
   "platform": {
     "nav": "Plateforme",

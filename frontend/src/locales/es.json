@@ -106,7 +106,15 @@
     "badBody": "Este enlace no es válido o ha caducado. Regístrate de nuevo o solicita uno nuevo."
   },
   "org": {
-    "switch": "Cambiar de organización"
+    "switch": "Cambiar de organización",
+    "welcomeTitle": "Configura tu equipo",
+    "welcomeBody": "¡Bienvenido{{name}}! Crea tu organización para empezar: serás su propietario y podrás invitar a otros.",
+    "nameLabel": "Nombre de la organización",
+    "namePh": "p. ej. Ananda Portland",
+    "create": "Crear organización",
+    "creating": "Creando…",
+    "signOut": "Cerrar sesión",
+    "createError": "No se pudo crear tu organización. Inténtalo de nuevo."
   },
   "platform": {
     "nav": "Plataforma",

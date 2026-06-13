@@ -14,6 +14,7 @@ import { ResetPassword } from "./components/ResetPassword";
 import { Privacy, Terms } from "./components/Legal";
 import { VerifyEmail } from "./components/VerifyEmail";
 import { AcceptInvite } from "./components/AcceptInvite";
+import { CreateOrganization } from "./components/CreateOrganization";
 import { AiGenerateModal } from "./components/AiGenerateModal";
 import { PlatformStats } from "./components/PlatformStats";
 import { Spinner, ColorDot, SingleSelect, Drawer, useIsNarrow } from "./components/common";
@@ -254,6 +255,8 @@ export default function App() {
   if (new URLSearchParams(window.location.search).has("invite")) return <AcceptInvite />;
   if (loading) return <Spinner />;
   if (!me) return <Login />;
+  // Authenticated but in no org (social signup, or left their only team) → onboard.
+  if (!me.memberships || me.memberships.length === 0) return <CreateOrganization />;
 
   const isGlobal = effectiveTop === "global";
   const projectId = !isGlobal && currentProject ? currentProject.id : undefined;

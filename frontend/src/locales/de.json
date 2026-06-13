@@ -106,7 +106,15 @@
     "badBody": "Dieser Link ist ungültig oder abgelaufen. Bitte registrieren Sie sich erneut oder fordern Sie einen neuen Link an."
   },
   "org": {
-    "switch": "Organisation wechseln"
+    "switch": "Organisation wechseln",
+    "welcomeTitle": "Richte dein Team ein",
+    "welcomeBody": "Willkommen{{name}}! Erstelle deine Organisation, um zu starten — du wirst Eigentümer und kannst andere einladen.",
+    "nameLabel": "Name der Organisation",
+    "namePh": "z. B. Ananda Portland",
+    "create": "Organisation erstellen",
+    "creating": "Wird erstellt…",
+    "signOut": "Abmelden",
+    "createError": "Organisation konnte nicht erstellt werden. Bitte erneut versuchen."
   },
   "platform": {
     "nav": "Plattform",

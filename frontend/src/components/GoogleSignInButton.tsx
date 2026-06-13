@@ -46,9 +46,6 @@ export function GoogleSignInButton({ onAuthed }: {
   const { t } = useTranslation();
   const { refreshMe } = useAuth();
   const holder = useRef<HTMLDivElement>(null);
-  const [needsOrg, setNeedsOrg] = useState(false);
-  const [orgName, setOrgName] = useState("");
-  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
   async function onCredential(resp: { credential: string }) {
@@ -56,23 +53,12 @@ export function GoogleSignInButton({ onAuthed }: {
     try {
       const data = await api.googleLogin(resp.credential);
       if (onAuthed) { await onAuthed(data); return; }
-      if (data.needs_org) setNeedsOrg(true);
-      else await refreshMe();
+      // Either way, load the session: App routes a no-org user to the dedicated
+      // "create your organization" onboarding screen (not crammed into login).
+      await refreshMe();
     } catch (e) {
       const detail = e instanceof ApiError ? (e.data as { detail?: string })?.detail : "";
       setErr(detail || t("google.error", "Google sign-in failed. Please try again."));
-    }
-  }
-
-  async function createOrg() {
-    if (!orgName.trim() || busy) return;
-    setBusy(true); setErr("");
-    try {
-      await api.createOrg({ organization: orgName.trim() });
-      await refreshMe();
-    } catch {
-      setErr(t("google.orgError", "Couldn't create your organization."));
-      setBusy(false);
     }
   }
 
@@ -91,21 +77,6 @@ export function GoogleSignInButton({ onAuthed }: {
   }, []);
 
   if (!CLIENT_ID) return null;
-
-  if (needsOrg) {
-    return (
-      <div className="field" style={{ marginTop: 12 }}>
-        <label>{t("google.nameOrg", "Name your organization")}</label>
-        <input value={orgName} autoFocus onChange={(e) => setOrgName(e.target.value)}
-          placeholder={t("google.orgPh", "e.g. Ananda Portland")}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); createOrg(); } }} />
-        <button type="button" className="btn-primary btn-full" style={{ marginTop: 8 }} disabled={!orgName.trim() || busy} onClick={createOrg}>
-          {busy ? t("common.saving", "Saving…") : t("google.createOrg", "Create organization")}
-        </button>
-        {err && <div style={{ color: "var(--danger)", fontSize: 13, marginTop: 6 }}>{err}</div>}
-      </div>
-    );
-  }
 
   return (
     <div className="google-signin" style={{ marginTop: 14 }}>

@@ -106,7 +106,15 @@
     "badBody": "此链接无效或已过期。请重新注册或申请新链接。"
   },
   "org": {
-    "switch": "切换组织"
+    "switch": "切换组织",
+    "welcomeTitle": "设置你的团队",
+    "welcomeBody": "欢迎{{name}}！创建你的组织即可开始——你将成为所有者，并可邀请他人。",
+    "nameLabel": "组织名称",
+    "namePh": "例如 Ananda Portland",
+    "create": "创建组织",
+    "creating": "创建中…",
+    "signOut": "退出登录",
+    "createError": "无法创建你的组织，请重试。"
   },
   "platform": {
     "nav": "平台",
