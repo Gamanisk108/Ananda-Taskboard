@@ -936,6 +936,8 @@
     "attachFile": "{{name}} संलग्न करें",
     "dropTask": "हटाएँ",
     "createdTitle": "{{n}} कार्य बनाए गए। संपादन जारी रखने के लिए किसी पर क्लिक करें।",
-    "generateMore": "और बनाएँ"
+    "generateMore": "और बनाएँ",
+    "subtasks": "उप-कार्य",
+    "addSubtask": "उप-कार्य जोड़ें"
   }
 }

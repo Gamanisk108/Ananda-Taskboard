@@ -936,6 +936,8 @@
     "attachFile": "Adjuntar {{name}}",
     "dropTask": "Quitar",
     "createdTitle": "Se crearon {{n}} tarea(s). Haz clic en cualquiera para seguir editando.",
-    "generateMore": "Generar más"
+    "generateMore": "Generar más",
+    "subtasks": "Subtareas",
+    "addSubtask": "Añadir subtarea"
   }
 }

@@ -936,6 +936,8 @@
     "attachFile": "Attach {{name}}",
     "dropTask": "Remove",
     "createdTitle": "Created {{n}} task(s). Click any to keep editing.",
-    "generateMore": "Generate more"
+    "generateMore": "Generate more",
+    "subtasks": "Subtasks",
+    "addSubtask": "Add subtask"
   }
 }

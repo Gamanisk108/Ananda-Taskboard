@@ -936,6 +936,8 @@
     "attachFile": "{{name}} જોડો",
     "dropTask": "દૂર કરો",
     "createdTitle": "{{n}} કાર્ય બન્યા. સંપાદન ચાલુ રાખવા કોઈપણ પર ક્લિક કરો.",
-    "generateMore": "વધુ બનાવો"
+    "generateMore": "વધુ બનાવો",
+    "subtasks": "ઉપ-કાર્યો",
+    "addSubtask": "ઉપ-કાર્ય ઉમેરો"
   }
 }

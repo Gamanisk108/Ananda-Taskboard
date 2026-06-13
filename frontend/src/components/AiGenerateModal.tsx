@@ -32,6 +32,7 @@ interface Row {
   sourceFileIndex: number | null;
   attach: boolean;
   newProject: string | null;
+  subtasks: string[];
 }
 
 const ACCEPT = ".pdf,.txt,.md,.docx,image/png,image/jpeg,image/webp,image/gif";
@@ -71,6 +72,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
       assignees: tk.assignee_ids ?? [], assigneeGroups: [],
       status: "todo", sourceFileIndex: tk.source_file_index,
       attach: tk.source_file_index != null, newProject: tk.new_project,
+      subtasks: tk.subtasks ?? [],
     };
   }
 
@@ -95,6 +97,9 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
     update(key, { projectId: pid, subprojectId: subsFor(pid)[0]?.id ?? 0 });
   }
   const dropRow = (key: number) => setRows((rs) => rs.filter((r) => r.key !== key));
+  const setSub = (key: number, i: number, v: string) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, subtasks: r.subtasks.map((s, j) => (j === i ? v : s)) } : r)));
+  const addSub = (key: number) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, subtasks: [...r.subtasks, ""] } : r)));
+  const removeSub = (key: number, i: number) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, subtasks: r.subtasks.filter((_, j) => j !== i) } : r)));
 
   const canSave = rows.length > 0 && rows.every((r) => r.title.trim() && r.subprojectId);
 
@@ -111,6 +116,10 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
           subproject: r.subprojectId, title: r.title.trim(), priority: r.priority,
           assignees: r.assignees, assignee_groups: r.assigneeGroups, status: r.status,
         }) as Task;
+        for (const st of r.subtasks) {
+          const title = st.trim();
+          if (title) { try { await api.post("/api/subtasks", { task: task.id, title }); } catch { /* keep the task even if a subtask fails */ } }
+        }
         if (r.attach && r.sourceFileIndex != null && files[r.sourceFileIndex]) {
           try { await uploadAttachment("task", task.id, files[r.sourceFileIndex]); } catch { /* keep the task even if its attachment fails */ }
         }
@@ -236,6 +245,18 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                   <label>{t("task.status", "Status")}</label>
                   <StatusPillSelect value={r.status} statuses={statuses} onChange={(s) => update(r.key, { status: s })} />
                 </div>
+              </div>
+              {/* Subtasks — small editable title list (one level, matches the app). */}
+              <div className="ai-subtasks" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label className="muted" style={{ fontSize: 12 }}>{t("ai.subtasks", "Subtasks")}</label>
+                {r.subtasks.map((st, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span aria-hidden style={{ color: "var(--muted)" }}>↳</span>
+                    <input value={st} onChange={(e) => setSub(r.key, i, e.target.value)} style={{ flex: 1, minWidth: 0 }} />
+                    <button type="button" className="btn-ghost icon-only" aria-label={t("common.remove", "Remove")} onClick={() => removeSub(r.key, i)}><X size={14} /></button>
+                  </div>
+                ))}
+                <button type="button" className="btn-ghost" style={{ width: "fit-content", fontSize: 13 }} onClick={() => addSub(r.key)}>+ {t("ai.addSubtask", "Add subtask")}</button>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {r.sourceFileIndex != null && files[r.sourceFileIndex] && (

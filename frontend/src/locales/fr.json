@@ -936,6 +936,8 @@
     "attachFile": "Joindre {{name}}",
     "dropTask": "Retirer",
     "createdTitle": "{{n}} tâche(s) créée(s). Cliquez sur l'une pour continuer à modifier.",
-    "generateMore": "Générer plus"
+    "generateMore": "Générer plus",
+    "subtasks": "Sous-tâches",
+    "addSubtask": "Ajouter une sous-tâche"
   }
 }

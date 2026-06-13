@@ -936,6 +936,8 @@
     "attachFile": "附加 {{name}}",
     "dropTask": "移除",
     "createdTitle": "已创建 {{n}} 个任务。点击任意一个继续编辑。",
-    "generateMore": "生成更多"
+    "generateMore": "生成更多",
+    "subtasks": "子任务",
+    "addSubtask": "添加子任务"
   }
 }

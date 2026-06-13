@@ -936,6 +936,8 @@
     "attachFile": "Anexar {{name}}",
     "dropTask": "Remover",
     "createdTitle": "{{n}} tarefa(s) criada(s). Clique em qualquer uma para continuar editando.",
-    "generateMore": "Gerar mais"
+    "generateMore": "Gerar mais",
+    "subtasks": "Subtarefas",
+    "addSubtask": "Adicionar subtarefa"
   }
 }

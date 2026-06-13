@@ -29,6 +29,7 @@ EMIT_TASKS_TOOL = {
                         "assignee_ids": {"type": "array", "items": {"type": "integer"}, "description": "Existing member ids this task suits, or empty."},
                         "new_project": {"type": ["string", "null"], "description": "Only if NO existing project fits: a proposed new project name. Rare."},
                         "source_file_index": {"type": ["integer", "null"], "description": "0-based index of the uploaded file this task came from, or null."},
+                        "subtasks": {"type": "array", "items": {"type": "string"}, "description": "If this task naturally breaks into smaller steps, the subtask titles (short, imperative). Otherwise omit or leave empty."},
                     },
                     "required": ["title"],
                 },
@@ -74,6 +75,8 @@ def _build_system(projects, members) -> str:
         "- Only propose a new_project name in rare cases where nothing existing fits; never invent ids.\n"
         "- Suggest assignee_ids from the member list when the work clearly suits someone; else leave empty.\n"
         "- If a task came from a specific uploaded file, set source_file_index to that file's index.\n"
+        "- When a task is a big job made of smaller steps, list those steps as subtasks "
+        "(short titles). Keep subtasks only for genuine breakdowns — don't pad simple tasks.\n"
         "- Do not duplicate tasks. Be concise and practical.\n\n"
         f"EXISTING PROJECTS / SUB-PROJECTS:\n{chr(10).join(proj_lines) or '(none)'}\n\n"
         f"TEAM MEMBERS:\n{chr(10).join(member_lines) or '(none)'}"
@@ -113,9 +116,14 @@ def _validate(raw: dict, projects, members, n_files: int) -> dict:
         sfi = t.get("source_file_index")
         if not isinstance(sfi, int) or not (0 <= sfi < n_files):
             sfi = None
+        raw_subs = t.get("subtasks")
+        if not isinstance(raw_subs, (list, tuple)):
+            raw_subs = []
+        subtasks = [s.strip()[:300] for s in raw_subs if isinstance(s, str) and s.strip()][:20]
         out.append({
             "title": title[:200], "priority": pr, "project_id": proj, "subproject_id": sub,
             "assignee_ids": assignees, "new_project": new_project, "source_file_index": sfi,
+            "subtasks": subtasks,
         })
     capped = out[: settings.AI_MAX_TASKS]
     return {"tasks": capped, "truncated": len(out) > len(capped)}

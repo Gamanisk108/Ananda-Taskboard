@@ -936,6 +936,8 @@
     "attachFile": "{{name}} जोडा",
     "dropTask": "काढा",
     "createdTitle": "{{n}} कार्ये तयार झाली. संपादन सुरू ठेवण्यासाठी कोणत्याहीवर क्लिक करा.",
-    "generateMore": "आणखी तयार करा"
+    "generateMore": "आणखी तयार करा",
+    "subtasks": "उप-कार्ये",
+    "addSubtask": "उप-कार्य जोडा"
   }
 }

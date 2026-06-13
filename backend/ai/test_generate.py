@@ -75,6 +75,19 @@ def test_validate_drops_hallucinated_ids(project):
     assert out["source_file_index"] is None         # 50 out of range
 
 
+def test_validate_subtasks(project):
+    raw = {"tasks": [{"title": "Big job", "subtasks": ["Step one", "  ", "Step two", 42, ""] + [f"s{i}" for i in range(30)]}]}
+    out = _validate(raw, _proj_fixture(project), [], n_files=0)["tasks"][0]
+    assert "Step one" in out["subtasks"] and "Step two" in out["subtasks"]
+    assert "" not in out["subtasks"] and 42 not in out["subtasks"]  # blanks + non-strings dropped
+    assert len(out["subtasks"]) <= 20                                # capped
+
+
+def test_validate_subtasks_default_empty(project):
+    out = _validate({"tasks": [{"title": "Plain"}]}, _proj_fixture(project), [], n_files=0)["tasks"][0]
+    assert out["subtasks"] == []
+
+
 def test_validate_sub_implies_project(project):
     sub = project.subprojects.first()
     out = _validate({"tasks": [{"title": "T", "subproject_id": sub.id}]},

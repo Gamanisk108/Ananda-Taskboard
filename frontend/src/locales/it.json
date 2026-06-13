@@ -936,6 +936,8 @@
     "attachFile": "Allega {{name}}",
     "dropTask": "Rimuovi",
     "createdTitle": "Create {{n}} attività. Clicca su una per continuare a modificarla.",
-    "generateMore": "Genera altre"
+    "generateMore": "Genera altre",
+    "subtasks": "Sottoattività",
+    "addSubtask": "Aggiungi sottoattività"
   }
 }

@@ -13,6 +13,7 @@ export interface ProposedTask {
   assignee_ids: number[];
   new_project: string | null;
   source_file_index: number | null;
+  subtasks: string[];
 }
 
 export interface GenerateResult {

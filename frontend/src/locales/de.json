@@ -936,6 +936,8 @@
     "attachFile": "{{name}} anhängen",
     "dropTask": "Entfernen",
     "createdTitle": "{{n}} Aufgabe(n) erstellt. Klicke eine an, um weiter zu bearbeiten.",
-    "generateMore": "Mehr erstellen"
+    "generateMore": "Mehr erstellen",
+    "subtasks": "Teilaufgaben",
+    "addSubtask": "Teilaufgabe hinzufügen"
   }
 }
