@@ -118,7 +118,17 @@ export function ManageProjects({ onClose, onChanged }: { onClose: () => void; on
         name={deleting.name}
         projects={projects}
         onClose={() => setDeleting(null)}
-        onDone={() => { setDeleting(null); load(); onChanged(); }}
+        onDone={() => {
+          // Optimistic: drop the deleted project/sub from the list NOW (no wait on
+          // the reload), then reconcile in the background.
+          const d = deleting;
+          setDeleting(null);
+          setProjects((ps) => !ps || !d ? ps : d.kind === "project"
+            ? ps.filter((p) => p.id !== d.id)
+            : ps.map((p) => ({ ...p, subprojects: p.subprojects.filter((s) => s.id !== d.id) })));
+          onChanged();
+          load();
+        }}
       />
     );
   }

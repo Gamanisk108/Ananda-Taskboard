@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Eye, Archive, Share2, Pencil, ArrowLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
@@ -341,6 +342,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const { t } = useTranslation();
   const { refreshMe } = useAuth();
   const confirm = useConfirm();
+  const queryClient = useQueryClient();
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
@@ -423,11 +425,17 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
   async function del() {
     if (!(await confirm({ body: t("tm.confirmDelete"), danger: true, confirmLabel: t("common.delete") }))) return;
+    const id = task!.id;
+    // Optimistic: drop the task from every cached list NOW + close the modal, so it
+    // vanishes instantly (no wait on the DELETE round-trip). Delete in the
+    // background; reconcile (and restore on failure) via invalidate.
+    queryClient.setQueriesData({ queryKey: ["tasks"] }, (old) =>
+      Array.isArray(old) ? (old as Task[]).filter((t) => t.id !== id) : old);
+    onClose();
     try {
-      await api.del(`/api/tasks/${task!.id}`);
-      onSaved();
-    } catch {
-      setErr(t("tm.errDelete"));
+      await api.del(`/api/tasks/${id}`);
+    } finally {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   }
 
