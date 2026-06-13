@@ -17,7 +17,9 @@ import { generateTasks, type ProposedTask } from "../ai";
 import { PRIORITY_META, type Me, type Task, type Recurrence } from "../types";
 import { Modal, SingleSelect, StatusPillSelect, PriorityIcon, Spinner } from "./common";
 import { AssigneePicker } from "./AssigneePicker";
+import { InlineCreate, NEW_OPT } from "./InlineCreate";
 import { useConfirm } from "./confirm";
+import { useAuth } from "../state/auth";
 
 type Step = "input" | "review" | "saving" | "done";
 
@@ -72,8 +74,10 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [creatingFor, setCreatingFor] = useState<{ key: number; kind: "project" | "subproject" } | null>(null);
   const submitting = useRef(false);
   const confirm = useConfirm();
+  const { refreshMe } = useAuth();
 
   // Drag-anywhere file intake + thumbnails for visual confirmation.
   const isImg = (f: File) => /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif)$/i.test(f.name);
@@ -279,16 +283,41 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                 <div className="field">
                   <label>{t("task.project")}</label>
                   <SingleSelect width="100%" value={r.projectId ? String(r.projectId) : ""} placeholder={t("ta.select", "Select…")}
-                    onChange={(v) => pickProject(r.key, Number(v))}
-                    options={projects.map((p) => ({ value: String(p.id), label: p.name }))} />
+                    onChange={(v) => (v === NEW_OPT ? setCreatingFor({ key: r.key, kind: "project" }) : pickProject(r.key, Number(v)))}
+                    options={[
+                      ...projects.map((p) => ({ value: String(p.id), label: p.name })),
+                      ...(me.is_admin ? [{ value: NEW_OPT, label: t("tm.newProject", "+ New project…") }] : []),
+                    ]} />
                 </div>
                 <div className="field">
                   <label>{t("task.subproject")}</label>
                   <SingleSelect width="100%" value={r.subprojectId ? String(r.subprojectId) : ""} placeholder={t("ta.select", "Select…")}
-                    onChange={(v) => update(r.key, { subprojectId: Number(v) })}
-                    options={subsFor(r.projectId).map((s) => ({ value: String(s.id), label: s.name }))} />
+                    onChange={(v) => (v === NEW_OPT ? setCreatingFor({ key: r.key, kind: "subproject" }) : update(r.key, { subprojectId: Number(v) }))}
+                    options={[
+                      ...subsFor(r.projectId).map((s) => ({ value: String(s.id), label: s.name })),
+                      ...(me.is_admin && r.projectId ? [{ value: NEW_OPT, label: t("tm.newSubproject", "+ New sub-project…") }] : []),
+                    ]} />
                 </div>
               </div>
+              {creatingFor?.key === r.key && (
+                <InlineCreate
+                  kind={creatingFor.kind}
+                  projectId={r.projectId}
+                  onCancel={() => setCreatingFor(null)}
+                  onCreated={async (entity) => {
+                    setCreatingFor(null);
+                    // refreshMe so writableProjects(me) (used by every row) + the board's
+                    // tree learn the new project/sub; then select it in this row.
+                    await refreshMe();
+                    if (creatingFor.kind === "project") {
+                      const p = entity as { id: number; subprojects?: { id: number }[] };
+                      update(r.key, { projectId: p.id, subprojectId: p.subprojects?.[0]?.id ?? 0 });
+                    } else {
+                      update(r.key, { subprojectId: (entity as { id: number }).id });
+                    }
+                  }}
+                />
+              )}
               {r.newProject && !r.projectId && (
                 <div className="hint" style={{ fontSize: 12 }}>{t("ai.newProjectHint", "AI suggested a new project “{{name}}” — pick an existing project/sub-project to file this under.", { name: r.newProject })}</div>
               )}
