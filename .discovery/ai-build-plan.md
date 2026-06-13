@@ -77,7 +77,45 @@ until Gordon approves (Phase 4).
   field, user edits. AI suggestion only — never silently final.
 
 ## APPROVED 2026-06-12 (Gordon "Yes"). Building in 5 slices.
-## Slice 1 DONE: ai/ app + AiGeneration model + daily rate guard + tests.
+
+### STATUS 2026-06-12
+- **Slice 1 DONE + deployed:** ai/ app + AiGeneration model + daily rate guard + 4 tests.
+- **Slice 2 DONE + deployed:** POST /api/ai/generate (text extract + image vision +
+  Haiku structured output + strict org-id validation + cap + 503 gate + audit), 11 tests.
+  **LIVE-VERIFIED:** route up, returns 503 → so `ANTHROPIC_API_KEY` is NOT set on Render yet.
+- **Slice 3 (prep) DONE:** `api.postForm` multipart helper shipped.
+- **🟡 BLOCKER:** Gordon must set `ANTHROPIC_API_KEY` on Render (backend env). Until then
+  the endpoint 503s and the feature can't be end-to-end verified. I have RENDER_API_KEY
+  to set it but NOT the Anthropic key value — Gordon supplies it.
+
+### Frontend slice (NEXT — spec, build once key is set so it verifies live)
+Reuse, in this EXACT field order (memory feedback-reuse-existing-ui-patterns):
+**Priority · Task Name · Project · Sub-Project · Assignee · Status.**
+- **Helpers ready:** `attachments.ts` → `compressImageToBlob(file, maxBytes)` +
+  `uploadAttachment("task", taskId, file)` (presign→PUT→confirm, compresses images).
+  `api.postForm`. `writableProjects(me)` for the cascading pickers. `useUsers`,
+  `useAdminGroups`, `useStatuses`.
+- **`ai.ts`:** `generateTasks(prompt, files)` → compress image files via
+  compressImageToBlob (~1.5 MB), build FormData (prompt + files[]), `api.postForm`.
+- **`AiGenerateModal.tsx`:**
+  1. Input step: prompt textarea + dropzone (accept PDF/txt/docx/images), privacy
+     notice line, "X/20 today" counter (from /api/me or the generate response), Generate.
+  2. Loading: single spinner.
+  3. Review step: one row per proposed task using the SAME components — PriorityIcon+
+     SingleSelect, title input, project SingleSelect (writableProjects + inline "+ New"
+     reuse), sub SingleSelect, AssigneePicker (users/groups, subproject-scoped),
+     StatusPillSelect. Per-row: show AI-suggested attachment (source_file_index) +
+     remove; drop-row; new_project → reuse inline-create. Save button.
+  4. Save: for each row → api.post("/api/tasks", payload); if source_file_index!=null →
+     uploadAttachment("task", newId, files[idx]). Collect created.
+  5. Post-save: keep modal open listing created tasks; each opens the normal TaskModal
+     (don't scatter). Reuses onChanged to refresh the board.
+- **Entry:** "✨ Generate with AI" button by the board add-task control.
+- **States:** empty (no prompt/file) · loading · 503 "not configured" · 429 cap reached
+  (show remaining) · per-row save failure (mark which) · oversized/unsupported file.
+- **i18n:** all new strings ×13 locales (parity test).
+- Then Phases 6–13 incl. **/security-review** (key handling, file limits, member
+  can't assign past their access — save path enforces) + live verify with the key set.
 
 ## Complexity: LARGE (multi-day). Recommend shipping in the 5 build-order slices,
 ## each its own PR + deploy, not one mega-drop.
