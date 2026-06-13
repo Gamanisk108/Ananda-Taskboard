@@ -47,6 +47,7 @@ export interface Me {
   name: string;
   role: "admin" | "member";
   is_admin: boolean;          // admin OF THE ACTIVE ORG (per-org)
+  is_owner?: boolean;         // the single top authority of the active org
   tier: number | null;
   language: string;
   theme: string;                 // personal UI theme ("" = follow app default)

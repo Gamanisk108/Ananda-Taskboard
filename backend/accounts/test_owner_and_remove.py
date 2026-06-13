@@ -189,3 +189,40 @@ def test_lone_owner_can_delete_and_org_is_left_ownerless(owner, org):
     r = client(owner).post("/api/me/delete", {"password": PW}, format="json", **h(org))
     assert r.status_code == 200
     assert not Membership.objects.filter(organization=org).exists()
+
+
+# ── Leave organization (self-service) ───────────────────────────────────────
+
+def test_member_leaves_org(member, admin, org):
+    r = client(member).post("/api/me/leave", {}, format="json", **h(org))
+    assert r.status_code == 200
+    assert not Membership.objects.filter(user=member, organization=org).exists()
+    assert User.objects.filter(id=member.id).exists()  # account survives
+
+
+def test_leave_is_org_scoped(member, org):
+    other = Organization.objects.create(name="Other", is_active=True)
+    Membership.objects.create(user=member, organization=other, role="member")
+    client(member).post("/api/me/leave", {}, format="json", **h(org))
+    assert not Membership.objects.filter(user=member, organization=org).exists()
+    assert Membership.objects.filter(user=member, organization=other).exists()
+
+
+def test_owner_leaving_promotes_successor(owner, admin, org):
+    r = client(owner).post("/api/me/leave", {}, format="json", **h(org))
+    assert r.status_code == 200
+    assert not Membership.objects.filter(user=owner, organization=org).exists()
+    assert Membership.objects.get(user=admin, organization=org).role == "owner"
+
+
+def test_sole_admin_cannot_leave_with_members_remaining(admin, member, org):
+    r = client(admin).post("/api/me/leave", {}, format="json", **h(org))
+    assert r.status_code == 400
+    assert Membership.objects.filter(user=admin, organization=org).exists()
+
+
+def test_leave_strips_org_group_membership(member, org):
+    g = Group.objects.create(organization=org, name="Seva")
+    g.members.add(member)
+    client(member).post("/api/me/leave", {}, format="json", **h(org))
+    assert member.id not in set(g.members.values_list("id", flat=True))

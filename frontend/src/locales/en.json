@@ -453,7 +453,10 @@
     "deleteAccountSub": "This permanently removes your account, sign-in, and personal data. Tasks and comments your team still needs stay, without your name on them. This can't be undone.",
     "deleteConfirmPw": "Enter your password to confirm",
     "deleteAccountCta": "Delete my account",
-    "deleteError": "Couldn't delete the account."
+    "deleteError": "Couldn't delete the account.",
+    "leaveOrg": "Leave organization",
+    "leaveError": "Couldn't leave the organization.",
+    "confirmLeaveOrg": "Leave “{{org}}”? You'll lose access to this team's projects and tasks. Your account stays, and an admin can invite you back. If you're the owner, ownership passes to another member."
   },
   "mp": {
     "newProjectPh": "New project name…",

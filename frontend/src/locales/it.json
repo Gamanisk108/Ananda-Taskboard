@@ -453,7 +453,10 @@
     "deleteAccountSub": "Questo rimuove definitivamente il tuo account, l'accesso e i dati personali. Le attività e i commenti che servono ancora al tuo team restano, senza il tuo nome. L'azione non può essere annullata.",
     "deleteConfirmPw": "Inserisci la password per confermare",
     "deleteAccountCta": "Elimina il mio account",
-    "deleteError": "Impossibile eliminare l'account."
+    "deleteError": "Impossibile eliminare l'account.",
+    "leaveOrg": "Lascia l'organizzazione",
+    "leaveError": "Impossibile lasciare l'organizzazione.",
+    "confirmLeaveOrg": "Lasciare «{{org}}»? Perderai l'accesso ai progetti e alle attività di questo team. Il tuo account resta e un amministratore può reinvitarti. Se sei il proprietario, la proprietà passa a un altro membro."
   },
   "mp": {
     "newProjectPh": "Nome nuovo progetto…",

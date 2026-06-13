@@ -9,7 +9,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon,
-  UserRound, Bell, ListChecks, Heart, ArrowLeft, Lock, Check, GripVertical, Info, Trash2,
+  UserRound, Bell, ListChecks, Heart, ArrowLeft, Lock, Check, GripVertical, Info, Trash2, LogOut,
 } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../state/auth";
@@ -100,14 +100,31 @@ function AccountPane({ me, language, onLanguage, theme, onTheme }: {
   me: Me; language: string; onLanguage: (lang: string) => void; theme: string; onTheme: (v: string) => void;
 }) {
   const { t } = useTranslation();
+  const { logout } = useAuth();
+  const confirm = useConfirm();
   const [pwView, setPwView] = useState(false);
   const [delView, setDelView] = useState(false);
   const [name, setName] = useState(me.name);
+  const orgName = me.memberships.find((x) => x.org_id === me.active_org)?.name ?? "";
 
   function saveName() {
     const v = name.trim();
     if (!v || v === me.name) return;
     api.patch("/api/me", { name: v }).catch(() => { /* keep local */ });
+  }
+
+  // Leave just this org (keep the account + any other orgs). Reversible by
+  // re-invite, so a single confirm — no password re-auth (unlike Delete account).
+  async function leaveOrg() {
+    if (!(await confirm({
+      body: t("settings.confirmLeaveOrg", { org: orgName }),
+      danger: true, confirmLabel: t("settings.leaveOrg", "Leave organization"),
+    }))) return;
+    try { await api.post("/api/me/leave", {}); logout(); }
+    catch (e) {
+      const detail = (e as { data?: { detail?: string } })?.data;
+      alert(detail?.detail || t("settings.leaveError", "Couldn't leave the organization."));
+    }
   }
 
   if (pwView) return <ChangePassword onBack={() => setPwView(false)} />;
@@ -145,9 +162,15 @@ function AccountPane({ me, language, onLanguage, theme, onTheme }: {
       <button type="button" className="btn-secondary" onClick={() => setPwView(true)}>
         <Lock size={15} /> {t("settings.changePassword")}
       </button>
-      {/* Danger zone (store-readiness: in-app account deletion). Delete sits
-          LEFT-most by being the only control on its own row (D5 spirit). */}
+      {/* Danger zone (store-readiness): Leave organization (this team only) then
+          Delete account (the whole account). Each on its own row, LEFT-most (D5). */}
       <div className="set-divider" />
+      {orgName && (
+        <button type="button" className="btn-secondary" data-testid="leave-org"
+          style={{ marginBottom: 10 }} onClick={leaveOrg}>
+          <LogOut size={15} /> {t("settings.leaveOrg", "Leave organization")}
+        </button>
+      )}
       <button type="button" className="btn-danger" data-testid="open-delete-account" onClick={() => setDelView(true)}>
         <Trash2 size={15} /> {t("settings.deleteAccount", "Delete account")}
       </button>

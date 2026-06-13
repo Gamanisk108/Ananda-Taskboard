@@ -161,16 +161,7 @@ class DeleteAccountView(APIView):
         # admin, else longest-tenured active member) so the team is never left
         # ownerless. (To choose who, the owner can transfer ownership first.)
         for m in Membership.objects.filter(user=user, is_active=True, role="owner"):
-            org = m.organization
-            successor = (
-                Membership.objects.filter(organization=org, is_active=True)
-                .exclude(user=user)
-                .order_by("role", "created_at")  # 'admin' < 'member' lexically → admins first, then oldest
-                .first()
-            )
-            if successor:
-                successor.role = "owner"
-                successor.save(update_fields=["role"])
+            _promote_owner_successor(m.organization, user)
         # Sole-admin guard, per org (an owner counts as an admin, so a promoted
         # successor above already satisfies this).
         for m in Membership.objects.filter(user=user, is_active=True, role="admin"):
@@ -256,6 +247,45 @@ class UsersView(APIView):
         return Response(UserSerializer(user).data, status=201)
 
 
+def _detach_user_from_org(user, org):
+    """Remove a user's standing in ONE org: delete their Membership plus this org's
+    group memberships and org-scoped access grants. Exclusions only restrict access
+    (never widen it), so they're safely left. The account and any memberships in
+    other orgs are untouched. Returns False if there was no membership to remove."""
+    from django.db.models import Q
+
+    from permissions.models import AccessGrant
+    from projects.models import Project, SubProject
+    m = Membership.objects.filter(user=user, organization=org).first()
+    if not m:
+        return False
+    sub_ids = list(SubProject.objects.filter(project__organization=org).values_list("id", flat=True))
+    proj_ids = list(Project.objects.filter(organization=org).values_list("id", flat=True))
+    AccessGrant.objects.filter(user=user).filter(
+        Q(subproject_id__in=sub_ids) | Q(project_id__in=proj_ids)
+    ).delete()
+    for g in Group.objects.filter(organization=org, members=user):
+        g.members.remove(user)
+    m.delete()
+    return True
+
+
+def _promote_owner_successor(org, leaving_user):
+    """When the owner leaves an org that still has other active members, hand
+    ownership to a successor (longest-tenured active admin, else member) so the
+    team is never left ownerless. Returns the new owner's Membership, or None."""
+    successor = (
+        Membership.objects.filter(organization=org, is_active=True)
+        .exclude(user=leaving_user)
+        .order_by("role", "created_at")  # 'admin' < 'member' lexically → admins first, then oldest
+        .first()
+    )
+    if successor:
+        successor.role = Membership.Role.OWNER
+        successor.save(update_fields=["role"])
+    return successor
+
+
 class UserDetailView(APIView):
     """Admin edit a member: name, role, active, or reset password. DELETE removes
     the user from the active org (their Membership) — not their whole account."""
@@ -325,20 +355,8 @@ class UserDetailView(APIView):
             raise PermissionDenied("The owner can't be removed. Transfer ownership first.")
 
         who = user.name or user.email
-        from django.db.models import Q
-
-        from permissions.models import AccessGrant, audit
-        from projects.models import Project, SubProject
-        sub_ids = list(SubProject.objects.filter(project__organization=org).values_list("id", flat=True))
-        proj_ids = list(Project.objects.filter(organization=org).values_list("id", flat=True))
-        # Drop org-scoped grants so a future re-invite starts clean (exclusions only
-        # restrict access, never widen it, so leaving them is safe).
-        AccessGrant.objects.filter(user=user).filter(
-            Q(subproject_id__in=sub_ids) | Q(project_id__in=proj_ids)
-        ).delete()
-        for g in Group.objects.filter(organization=org, members=user):
-            g.members.remove(user)
-        m.delete()
+        from permissions.models import audit
+        _detach_user_from_org(user, org)
         audit(request.user, "user.remove", f"Removed {who} from the team")
         return Response(status=204)
 
@@ -379,6 +397,44 @@ class TransferOwnershipView(APIView):
         who = target.name or target.email
         audit(request.user, "user.ownership", f"Transferred ownership to {who}")
         return Response({"detail": f"{who} is now the owner."})
+
+
+class LeaveOrgView(APIView):
+    """Self-service: leave the ACTIVE organization (delete your own Membership)
+    while keeping your account and any other orgs. If you're the owner, ownership
+    is handed to a successor first (so the team is never left ownerless); if you're
+    the only admin with other members remaining, you're asked to promote someone
+    before leaving (mirrors the account-deletion guard)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from permissions.models import audit
+
+        org = getattr(request, "org", None)
+        if org is None:
+            raise ValidationError({"detail": "No active organization."})
+        user = request.user
+        m = Membership.objects.filter(user=user, organization=org).first()
+        if not m:
+            raise ValidationError({"detail": "You're not a member of this organization."})
+        if m.role == Membership.Role.OWNER:
+            _promote_owner_successor(org, user)  # hand off if anyone remains; else org left empty
+        elif m.role == Membership.Role.ADMIN:
+            other_admins = Membership.objects.filter(
+                organization=org, role__in=["admin", "owner"], is_active=True
+            ).exclude(user=user).exists()
+            other_members = Membership.objects.filter(
+                organization=org, is_active=True
+            ).exclude(user=user).exists()
+            if other_members and not other_admins:
+                raise ValidationError({
+                    "detail": f"You're the only admin of “{org.name}”. "
+                              "Promote another admin (Team → Members) before leaving.",
+                })
+        _detach_user_from_org(user, org)
+        audit(user, "user.leave", f"Left {org.name}")
+        return Response({"detail": "You've left the organization."})
 
 
 class GroupViewSet(viewsets.ModelViewSet):

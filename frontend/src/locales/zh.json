@@ -453,7 +453,10 @@
     "deleteAccountSub": "这将永久删除您的账户、登录信息和个人数据。团队仍需要的任务和评论将保留，但不再显示您的名字。此操作无法撤销。",
     "deleteConfirmPw": "输入密码以确认",
     "deleteAccountCta": "删除我的账户",
-    "deleteError": "无法删除账户。"
+    "deleteError": "无法删除账户。",
+    "leaveOrg": "退出组织",
+    "leaveError": "无法退出该组织。",
+    "confirmLeaveOrg": "退出“{{org}}”？您将失去对该团队项目和任务的访问权限。您的账户仍保留，管理员可以再次邀请您。如果您是所有者，所有权将转交给其他成员。"
   },
   "mp": {
     "newProjectPh": "新项目名称…",

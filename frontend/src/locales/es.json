@@ -453,7 +453,10 @@
     "deleteAccountSub": "Esto elimina permanentemente tu cuenta, tu acceso y tus datos personales. Las tareas y comentarios que tu equipo aún necesita se conservan, sin tu nombre. Esto no se puede deshacer.",
     "deleteConfirmPw": "Introduce tu contraseña para confirmar",
     "deleteAccountCta": "Eliminar mi cuenta",
-    "deleteError": "No se pudo eliminar la cuenta."
+    "deleteError": "No se pudo eliminar la cuenta.",
+    "leaveOrg": "Salir de la organización",
+    "leaveError": "No se pudo salir de la organización.",
+    "confirmLeaveOrg": "¿Salir de «{{org}}»? Perderás el acceso a los proyectos y tareas de este equipo. Tu cuenta permanece y un administrador puede volver a invitarte. Si eres el propietario, la propiedad pasa a otro miembro."
   },
   "mp": {
     "newProjectPh": "Nombre del nuevo proyecto…",

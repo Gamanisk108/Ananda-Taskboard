@@ -453,7 +453,10 @@
     "deleteAccountSub": "Dies entfernt Ihr Konto, Ihre Anmeldung und Ihre persönlichen Daten dauerhaft. Aufgaben und Kommentare, die Ihr Team noch braucht, bleiben ohne Ihren Namen erhalten. Dies kann nicht rückgängig gemacht werden.",
     "deleteConfirmPw": "Geben Sie zur Bestätigung Ihr Passwort ein",
     "deleteAccountCta": "Mein Konto löschen",
-    "deleteError": "Das Konto konnte nicht gelöscht werden."
+    "deleteError": "Das Konto konnte nicht gelöscht werden.",
+    "leaveOrg": "Organisation verlassen",
+    "leaveError": "Organisation konnte nicht verlassen werden.",
+    "confirmLeaveOrg": "„{{org}}“ verlassen? Sie verlieren den Zugriff auf die Projekte und Aufgaben dieses Teams. Ihr Konto bleibt bestehen und ein Admin kann Sie wieder einladen. Wenn Sie Eigentümer sind, geht die Eigentümerschaft an ein anderes Mitglied über."
   },
   "mp": {
     "newProjectPh": "Neuer Projektname…",
