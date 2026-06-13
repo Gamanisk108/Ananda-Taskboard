@@ -255,6 +255,10 @@ if SENTRY_DSN:
 # Social login — Google ID-token audience. Public Client ID (no secret needed for
 # the GIS flow). Feature is inert until set.
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", "")
+# Google Identity Services opens a sign-in popup that must postMessage its result
+# back to our page. Django 4+ defaults COOP to "same-origin", which severs that
+# channel and leaves the popup hanging white. Allow popups while keeping COOP.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", "")
 AI_MODEL = env("AI_MODEL", "claude-haiku-4-5-20251001")
 AI_MAX_TASKS = int(env("AI_MAX_TASKS", "25"))            # cap per generation
