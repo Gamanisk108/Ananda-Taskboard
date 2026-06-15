@@ -1,38 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FC, type SVGProps } from "react";
 
 import "./LightOfMasters.css";
 
-// Raw SVG markup (Vite `?raw`) so we can recolor the figures — the source art
-// hardcodes fill/stroke #1E3561 (Connect's navy), and an <img> can't be themed.
-// We swap that navy for `currentColor` and drive `color` from a Taskboard theme
-// variable (navy ink on the warm-ivory shell, cream on the deep-blue dark shell).
-// The per-figure stroke-widths and the transparent background are left untouched
-// (masters handoff: never normalize stroke weights).
-import babaji from "../assets/masters/Babaji_LineArt_2x.svg?raw";
-import jesus from "../assets/masters/Jesus_LineArt_2x.svg?raw";
-import lahiri from "../assets/masters/Lahiri_LineArt_2x.svg?raw";
-import sriYukteswar from "../assets/masters/Sri_Yukteswar_LineArt_2x.svg?raw";
-import yogananda from "../assets/masters/Yogananda_LineArt_2x.svg?raw";
+// SVG → React component (vite-plugin-svgr `?react`). The assets are pre-set to
+// `currentColor`, so the figure inherits the themed `color` (navy on the ivory
+// light shell, cream on the deep-blue dark shell) — no <img> (can't theme) and
+// no runtime string-replace. svgo is OFF in vite.config so per-figure
+// stroke-widths + transparent bg are byte-preserved (handoff: never normalize).
+import Babaji from "../assets/masters/Babaji_LineArt_2x.svg?react";
+import Jesus from "../assets/masters/Jesus_LineArt_2x.svg?react";
+import Lahiri from "../assets/masters/Lahiri_LineArt_2x.svg?react";
+import SriYukteswar from "../assets/masters/Sri_Yukteswar_LineArt_2x.svg?react";
+import Yogananda from "../assets/masters/Yogananda_LineArt_2x.svg?react";
 
 /** The five _2x figures, in canonical lineage order. Names are decorative only. */
-const FIGURES: { name: string; raw: string }[] = [
-  { name: "Babaji", raw: babaji },
-  { name: "Lahiri Mahasaya", raw: lahiri },
-  { name: "Sri Yukteswar", raw: sriYukteswar },
-  { name: "Yogananda", raw: yogananda },
-  { name: "Jesus", raw: jesus },
+const FIGURES: { name: string; Svg: FC<SVGProps<SVGSVGElement>> }[] = [
+  { name: "Babaji", Svg: Babaji },
+  { name: "Lahiri Mahasaya", Svg: Lahiri },
+  { name: "Sri Yukteswar", Svg: SriYukteswar },
+  { name: "Yogananda", Svg: Yogananda },
+  { name: "Jesus", Svg: Jesus },
 ];
-
-/**
- * Replace the hardcoded navy (#1E3561, any case) with `currentColor` so the
- * figure inherits the themed `color`. We also strip the fixed width/height so the
- * SVG scales to its flex cell via the viewBox; transparent bg is already baked in.
- */
-function themable(raw: string): string {
-  return raw.replace(/#1E3561/gi, "currentColor").replace(/\s(width|height)="[^"]*"/gi, "");
-}
-
-const PREPARED = FIGURES.map((f) => ({ ...f, html: themable(f.raw) }));
 
 function prefersReducedMotion(): boolean {
   return (
@@ -74,7 +62,7 @@ export function LightOfMasters({ size = 96, className }: LightOfMastersProps) {
     const id = window.setInterval(() => {
       setActive((cur) => {
         let next = cur;
-        while (next === cur) next = Math.floor(Math.random() * PREPARED.length);
+        while (next === cur) next = Math.floor(Math.random() * FIGURES.length);
         return next;
       });
     }, 1700);
@@ -91,16 +79,16 @@ export function LightOfMasters({ size = 96, className }: LightOfMastersProps) {
       aria-label="Loading"
     >
       <div className="tb-masters__row" style={{ ["--tb-master-h" as string]: `${size}px` }}>
-        {PREPARED.map((f, i) => (
+        {FIGURES.map((f, i) => (
           <div
             key={f.name}
             className={
               "tb-masters__figure" + (!reduced && i === active ? " tb-masters__figure--active" : "")
             }
             aria-hidden="true"
-            // Markup is our own checked-in, color-normalized asset (no user input).
-            dangerouslySetInnerHTML={{ __html: f.html }}
-          />
+          >
+            <f.Svg />
+          </div>
         ))}
       </div>
     </div>
