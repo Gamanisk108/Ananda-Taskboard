@@ -538,8 +538,11 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 /* ---- List table: frozen task col, cells, pills, avatars ---- */
 .tbl { border-collapse: separate; border-spacing: 0; }
 /* Tables inside modals (Team members, Access, Approvals…) can outgrow the
-   dialog — scroll sideways instead of hard-clipping at the card edge (D42). */
-.modal-body .tbl { display: block; overflow-x: auto; }
+   dialog — scroll sideways instead of hard-clipping at the card edge (D42).
+   width:max-content makes the block-table hug its columns (so a narrow table
+   like Pending invitations doesn't paint an empty white box out to the modal
+   edge); max-width:100% caps it at the dialog and lets overflow-x scroll. */
+.modal-body .tbl { display: block; overflow-x: auto; width: max-content; max-width: 100%; }
 .tbl tbody td { height: 34px; padding: 0 12px; }
 .task-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .task-name { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -916,8 +919,9 @@ th.c-task, td.c-task { position: sticky; left: 0; z-index: 4; background: var(--
      the off-center Sign-in class of bug, caught by the §2a geometry sweep). */
   .modal-foot button { flex: 1 1 auto; justify-content: center; }
 
-  /* Wide tables scroll sideways instead of squishing */
-  .tbl { display: block; overflow-x: auto; white-space: nowrap; }
+  /* Wide tables scroll sideways instead of squishing; max-content keeps a
+     narrow table hugging its columns (no empty white box) — see modal note. */
+  .tbl { display: block; overflow-x: auto; white-space: nowrap; width: max-content; max-width: 100%; }
 
   /* Calendars scroll horizontally so columns stay legible */
   .rise { overflow-x: auto; }
