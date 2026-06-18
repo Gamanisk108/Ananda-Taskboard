@@ -12,6 +12,7 @@ import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
 import { useConfirm } from "./confirm";
 import { useAuth } from "../state/auth";
+import { patchTaskInCaches, upsertTaskInCaches } from "../cache";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
@@ -416,11 +417,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   async function changeStatus(s: string) {
+    const prev = curStatus;
+    setCurStatus(s);                                   // instant in the modal
+    patchTaskInCaches(queryClient, task!.id, { status: s });  // instant in the list behind it
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
-      setCurStatus(s);          // update in place — do NOT close the modal
-      onChanged?.();            // refresh the list behind the modal
+      onChanged?.();            // background reconcile (filter membership, counts)
     } catch {
+      setCurStatus(prev);                              // roll back on failure
+      patchTaskInCaches(queryClient, task!.id, { status: prev });
       setErr(t("tm.errStatus"));
     }
   }
@@ -437,8 +442,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     submitting.current = true;
     setBusy(true);
     try {
-      if (editing) await api.patch(`/api/tasks/${task!.id}`, payload);
-      else await api.post("/api/tasks", payload);
+      if (editing) {
+        // Write the server's updated task straight into the cache so the list (and
+        // any row reopened next) reflects it NOW — no waiting on the refetch, and
+        // no stale-row re-save dropping a just-added assignee.
+        const updated = (await api.patch(`/api/tasks/${task!.id}`, payload)) as Task;
+        upsertTaskInCaches(queryClient, updated);
+      } else {
+        await api.post("/api/tasks", payload);
+      }
       onSaved();
     } catch (e) {
       const ae = e as ApiError;

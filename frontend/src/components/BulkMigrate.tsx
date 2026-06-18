@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeftRight } from "lucide-react";
 import { api } from "../api/client";
+import { patchTasksInCaches, removeTasksFromCaches } from "../cache";
 import { useUsers, userName } from "../users";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
-import { Modal, Spinner, StatusPill, PriorityIcon, ProjPill, SingleSelect } from "./common";
+import { Modal, Spinner, StatusPill, PriorityIcon, ProjPill, SingleSelect, SearchInput } from "./common";
 import { useConfirm } from "./confirm";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -14,6 +16,7 @@ import { PRIORITY_META, type Me, type Task } from "../types";
 export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () => void; onChanged: () => void }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
+  const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
   const [q, setQ] = useState("");
@@ -54,9 +57,18 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
 
   async function applyBulk(action: string, value: unknown) {
     if (sel.size === 0) return;
+    const ids = [...sel];
     setBusy(true); setMsg("");
     try {
-      const r = await api.post("/api/tasks/bulk", { ids: [...sel], action, value }) as { updated: number; skipped?: number };
+      const r = await api.post("/api/tasks/bulk", { ids, action, value }) as { updated: number; skipped?: number };
+      // Reflect the change in the list behind this modal INSTANTLY (the /bulk route
+      // returns only counts, so derive the field patch from the action). The
+      // background bump()/load() then reconciles anything the server skipped.
+      if (action === "assign") patchTasksInCaches(queryClient, ids, { assignees: (value as number[]) ?? [] });
+      else if (action === "status") patchTasksInCaches(queryClient, ids, { status: value as string });
+      else if (action === "deadline") patchTasksInCaches(queryClient, ids, { deadline: (value as string) || null });
+      else if (action === "move") patchTasksInCaches(queryClient, ids, { subproject: value as number });
+      else if (action === "archive") removeTasksFromCaches(queryClient, ids);
       setMsg(r.skipped ? t("bulk.updatedSkipped", { n: r.updated, skipped: r.skipped }) : t("bulk.updated", { n: r.updated }));
       onChanged(); load();
     } catch { setMsg(t("bulk.error")); }
@@ -74,7 +86,7 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
       <div className="muted" style={{ marginTop: 0, fontSize: 13 }}>{t("bulk.intro")}</div>
 
       <div className="filters" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0" }}>
-        <input placeholder={t("common.search")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 200 }} />
+        <SearchInput value={q} onChange={setQ} />
         <SingleSelect value={fProject ? String(fProject) : ""} onChange={(v) => setFProject(Number(v) || 0)}
           options={[
             { value: "", label: t("list.allProjects") },
