@@ -1,26 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2 } from "lucide-react";
-import { api } from "../api/client";
+import { Trash2, Sparkles, X } from "lucide-react";
+import { api, ApiError } from "../api/client";
 import { useStatuses } from "../statuses";
 import { avatarColor, userInitials, useUsers } from "../users";
 import { PriorityIcon, StatusPillSelect, SubtaskDots, SubtaskBar } from "./common";
 import { PRIORITY_META, type Subtask } from "../types";
+import { generateTasks } from "../ai";
 
 /** A task's subtasks rendered as mini-tasks (design D11): the header carries
  *  status-count dots + a done/total progress bar; each row shows priority ·
  *  title · an aligned avatar column · a status pill+popover · delete, and opens
  *  the full subtask detail (SubtaskDetail) on click. Quick-add stays inline.
+ *  An "AI" panel turns a pasted breakdown into subtasks for THIS task.
  *  Calls onChanged so the parent's status dots refresh. */
 export function SubtaskEditor({
-  taskId, onOpen, onChanged,
-}: { taskId: number; onOpen: (s: Subtask, index: number) => void; onChanged?: () => void }) {
+  taskId, taskTitle, onOpen, onChanged,
+}: { taskId: number; taskTitle?: string; onOpen: (s: Subtask, index: number) => void; onChanged?: () => void }) {
   const { t } = useTranslation();
   const [subs, setSubs] = useState<Subtask[]>([]);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const statuses = useStatuses();
   const users = useUsers();
+
+  // ── AI subtasks panel ──────────────────────────────────────────────────────
+  // Paste a breakdown (or describe the work) → Claude proposes subtask titles for
+  // THIS task → review the checklist → add the ticked ones. No new task is created.
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiErr, setAiErr] = useState("");
+  const [aiRemaining, setAiRemaining] = useState<number | null>(null);
+  const [proposed, setProposed] = useState<{ title: string; checked: boolean }[] | null>(null);
 
   function load() {
     api.get(`/api/subtasks?task=${taskId}`).then(setSubs).catch(() => setSubs([]));
@@ -56,6 +68,52 @@ export function SubtaskEditor({
     await api.del(`/api/subtasks/${id}`);
     load();
     onChanged?.();
+  }
+
+  async function aiGenerate() {
+    if (aiBusy) return;
+    setAiBusy(true); setAiErr(""); setProposed(null);
+    try {
+      const res = await generateTasks(aiPrompt, [], taskId);
+      setAiRemaining(res.remaining);
+      // Focused breakdown → the server attaches everything to this task; collect
+      // every proposed subtask (plus any titled-but-stepless row as a single step).
+      const steps: string[] = [];
+      for (const tk of res.tasks) {
+        if (tk.subtasks?.length) steps.push(...tk.subtasks);
+        else if (tk.title?.trim()) steps.push(tk.title.trim());
+      }
+      const seen = new Set<string>();
+      const unique = steps.filter((s) => s.trim() && !seen.has(s) && seen.add(s));
+      if (unique.length === 0) { setAiErr(t("ai.noSteps", "No subtasks came back — try describing the steps.")); return; }
+      setProposed(unique.map((s) => ({ title: s, checked: true })));
+    } catch (e) {
+      const detail = e instanceof ApiError ? (e.data as { detail?: string })?.detail : "";
+      setAiErr(detail || t("ai.genError", "Couldn't generate subtasks. Try again."));
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  async function addProposed() {
+    if (!proposed) return;
+    const picks = proposed.filter((p) => p.checked && p.title.trim());
+    if (picks.length === 0) return;
+    setAiBusy(true);
+    try {
+      for (const p of picks) {
+        await api.post("/api/subtasks", { task: taskId, title: p.title.trim() }).catch(() => {});
+      }
+      load();
+      onChanged?.();
+      closeAi();
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  function closeAi() {
+    setAiOpen(false); setAiPrompt(""); setProposed(null); setAiErr("");
   }
 
   return (
@@ -101,7 +159,73 @@ export function SubtaskEditor({
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} />
         <button type="button" className="btn-secondary" data-testid="subtask-add-button" disabled={busy} onClick={add}>{t("common.add")}</button>
+        {!aiOpen && (
+          <button type="button" className="btn-ghost" data-testid="subtask-ai-button"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            onClick={() => setAiOpen(true)} title={t("ai.subtasksWithAi", "Suggest subtasks with AI")}>
+            <Sparkles size={15} /> {t("ai.button", "AI")}
+          </button>
+        )}
       </div>
+
+      {aiOpen && (
+        <div className="card" data-testid="subtask-ai-panel" style={{ padding: 10, marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Sparkles size={15} aria-hidden />
+            <strong style={{ fontSize: 13 }}>
+              {taskTitle
+                ? t("ai.subtasksForNamed", "Suggest subtasks for “{{name}}”", { name: taskTitle })
+                : t("ai.subtasksWithAi", "Suggest subtasks with AI")}
+            </strong>
+            <button type="button" className="btn-ghost icon-only" style={{ marginLeft: "auto" }}
+              aria-label={t("common.close", "Close")} onClick={closeAi}><X size={15} /></button>
+          </div>
+
+          {!proposed && (
+            <>
+              <textarea rows={4} value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} disabled={aiBusy}
+                placeholder={t("ai.subtasksPh", "Paste a breakdown, or describe the steps to complete this task…")}
+                style={{ fontSize: 13 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button type="button" className="btn-primary" disabled={aiBusy || !aiPrompt.trim()} onClick={aiGenerate}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <Sparkles size={14} />
+                  {aiBusy ? t("ai.generating", "Generating…") : t("ai.generate", "Generate")}
+                </button>
+                <span className="hint" style={{ fontSize: 11.5 }}>{t("ai.subtasksPrivacy", "Your text is sent to our AI provider.")}</span>
+              </div>
+            </>
+          )}
+
+          {proposed && (
+            <>
+              <div className="muted" style={{ fontSize: 12 }}>{t("ai.subtasksReview", "Tick the ones to add, edit any wording, then add them.")}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {proposed.map((p, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <input type="checkbox" style={{ width: "auto" }} checked={p.checked}
+                      onChange={(e) => setProposed((cur) => cur!.map((x, j) => (j === i ? { ...x, checked: e.target.checked } : x)))} />
+                    <input value={p.title} aria-label={t("ai.subtaskN", "Subtask {{n}}", { n: i + 1 })}
+                      onChange={(e) => setProposed((cur) => cur!.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+                      style={{ flex: 1, minWidth: 0, fontSize: 13 }} />
+                    <button type="button" className="btn-ghost icon-only" aria-label={t("common.remove", "Remove")}
+                      onClick={() => setProposed((cur) => cur!.filter((_, j) => j !== i))}><X size={14} /></button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button type="button" className="btn-primary" disabled={aiBusy || !proposed.some((p) => p.checked && p.title.trim())} onClick={addProposed}>
+                  {t("ai.addSubtasksN", "Add {{n}} subtask(s)", { n: proposed.filter((p) => p.checked && p.title.trim()).length })}
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setProposed(null)}>{t("ai.back", "Back")}</button>
+                {aiRemaining != null && <span className="hint" style={{ fontSize: 11.5, marginLeft: "auto" }}>{t("ai.remaining", "{{n}} AI generations left today", { n: aiRemaining })}</span>}
+              </div>
+            </>
+          )}
+
+          {aiErr && <div style={{ color: "var(--danger)", fontSize: 12.5 }}>{aiErr}</div>}
+        </div>
+      )}
     </div>
   );
 }

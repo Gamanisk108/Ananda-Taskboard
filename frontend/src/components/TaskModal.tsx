@@ -697,7 +697,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
       </form>
-      {editing && <SubtaskEditor taskId={task!.id} onOpen={(s, i) => { setOpenSub(s); setOpenSubIndex(i); }} onChanged={onChanged} />}
+      {editing && <SubtaskEditor taskId={task!.id} taskTitle={task!.title} onOpen={(s, i) => { setOpenSub(s); setOpenSubIndex(i); }} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}
     </Modal>
   );
