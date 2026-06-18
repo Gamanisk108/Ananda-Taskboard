@@ -30,6 +30,18 @@ const COLUMNS: { key: string; i18nKey: string }[] = [
 
 type Fmt = "csv" | "xlsx" | "json";
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+// Default download name: Taskboard_OrganizationName_YYYY-MM-DD--HH-mm.<fmt>
+// Org name is stripped to filename-safe alphanumerics (spaces removed); the
+// timestamp is local time so it matches what the user sees.
+function exportFilename(orgName: string, fmt: string): string {
+  const d = new Date();
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}--${pad(d.getHours())}-${pad(d.getMinutes())}`;
+  const safeOrg = orgName.replace(/[^\p{L}\p{N}]+/gu, "") || "Org";
+  return `Taskboard_${safeOrg}_${stamp}.${fmt}`;
+}
+
 export function ExportDialog({ me }: { me: Me }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -80,7 +92,8 @@ export function ExportDialog({ me }: { me: Me }) {
   }
 
   function run() {
-    api.download(`/api/export?${buildParams()}`, `tasks.${fmt}`);
+    const orgName = me.memberships.find((m) => m.org_id === me.active_org)?.name ?? "Taskboard";
+    api.download(`/api/export?${buildParams()}`, exportFilename(orgName, fmt));
     setOpen(false);
   }
 
