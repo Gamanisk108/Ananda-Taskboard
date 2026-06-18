@@ -17,7 +17,8 @@ import { AcceptInvite } from "./components/AcceptInvite";
 import { CreateOrganization } from "./components/CreateOrganization";
 import { AiGenerateModal } from "./components/AiGenerateModal";
 import { PlatformStats } from "./components/PlatformStats";
-import { Spinner, ColorDot, SingleSelect, Drawer, useIsNarrow } from "./components/common";
+import { ColorDot, SingleSelect, Drawer, useIsNarrow } from "./components/common";
+import { LightOfMasters } from "./components/LightOfMasters";
 import { ListView } from "./components/ListView";
 import { WeeklyView } from "./components/WeeklyView";
 import { MonthlyView } from "./components/MonthlyView";
@@ -253,7 +254,15 @@ export default function App() {
   if (new URLSearchParams(window.location.search).has("verify")) return <VerifyEmail />;
   // Invitation accept deep-link (?invite=<id>&token=…) — also pre-auth.
   if (new URLSearchParams(window.location.search).has("invite")) return <AcceptInvite />;
-  if (loading) return <Spinner />;
+  // Primary full-screen app loader: the "Light of the Masters" devotional loader
+  // (the lineage line-art with a traveling light). Inline list/modal loaders keep
+  // the small text <Spinner /> — the masters row only reads right at full size.
+  if (loading)
+    return (
+      <div className="tb-masters-screen">
+        <LightOfMasters size={104} />
+      </div>
+    );
   if (!me) return <Login />;
   // Authenticated but in no org (social signup, or left their only team) → onboard.
   if (!me.memberships || me.memberships.length === 0) return <CreateOrganization />;

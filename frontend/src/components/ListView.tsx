@@ -2,13 +2,13 @@ import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { Search, RefreshCw, Archive, SlidersHorizontal } from "lucide-react";
+import { RefreshCw, Archive, SlidersHorizontal } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, useIsNarrow, type MultiSelectOption } from "./common";
+import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, SearchInput, useIsNarrow, type MultiSelectOption } from "./common";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
@@ -185,10 +185,7 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
       {narrow ? (
         <>
           <div className="filters-mobile">
-            <label className={`search${q ? " has-text" : ""}`}>
-              <Search />
-              <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
-            </label>
+            <SearchInput value={q} onChange={setQ} />
             <button type="button" className={`btn-filters${sheetFilterCount > 0 ? " on" : ""}`} data-testid="filters-button" onClick={() => setFiltersOpen(true)}>
               <SlidersHorizontal size={15} /> {tr("list.filters", "Filters")}
               {sheetFilterCount > 0 && <span className="fcount">{sheetFilterCount}</span>}
@@ -213,10 +210,7 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
         </>
       ) : (
         <div className="filters">
-          <label className={`search${q ? " has-text" : ""}`}>
-            <Search />
-            <input placeholder={tr("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </label>
+          <SearchInput value={q} onChange={setQ} />
           {filterControls.map((c, i) => <Fragment key={i}>{c.node}</Fragment>)}
           {activeFilters > 0 && <button className="btn-ghost" onClick={clearFilters}>{tr("list.clear", "Clear")} ({activeFilters})</button>}
           {showArchived && <span className="pill" style={{ background: "var(--surface-sunk)", display: "inline-flex", alignItems: "center", gap: 5 }}><Archive size={13} /> {tr("list.showingArchive", "Showing archive")}</span>}

@@ -157,6 +157,7 @@
     "error": "出了点问题。请重试。"
   },
   "task": {
+    "confirmDiscard": "放弃更改？此任务未保存的修改将丢失。",
     "edit": "编辑任务",
     "new": "新建任务",
     "name": "任务名称",
@@ -551,6 +552,8 @@
     "intro": "粘贴从电子表格复制的行（包含表头行），或上传 CSV / TSV / JSON / Excel 文件。行通过 ID 列与现有任务匹配；没有已知 ID 的行会创建新任务。缺失的项目/子项目会自动创建。",
     "pasteLabel": "从电子表格粘贴",
     "uploadLabel": "…或上传文件",
+    "dropHint": "将文件拖到此处，或点击浏览",
+    "dropActive": "释放文件即可上传",
     "formatLabel": "格式",
     "fmtCsv": "CSV（逗号）",
     "fmtTsv": "TSV / Google 表格粘贴（制表符）",

@@ -6,14 +6,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Download, X, Trash2, FileText, Repeat } from "lucide-react";
+import { Sparkles, Download, X, Trash2, FileText, Repeat, CheckCircle2 } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { uploadAttachment, fmtSize } from "../attachments";
 import { writableProjects } from "../lookup";
 import { useUsers } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses } from "../statuses";
-import { generateTasks, type ProposedTask } from "../ai";
+import { generateTasks, type ProposedTask, type ExistingTaskOption } from "../ai";
 import { PRIORITY_META, type Me, type Task, type Recurrence } from "../types";
 import { Modal, SingleSelect, StatusPillSelect, PriorityIcon, Spinner } from "./common";
 import { AssigneePicker } from "./AssigneePicker";
@@ -39,6 +39,8 @@ interface Row {
   recurrence: Recurrence | null;
   startDate: string | null;
   deadline: string | null;
+  /** When set, this row ADDS its subtasks to that existing task — no new task. */
+  existingTaskId: number | null;
 }
 
 const WD_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -82,7 +84,9 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   const [rows, setRows] = useState<Row[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [truncated, setTruncated] = useState(false);
+  const [existingTasks, setExistingTasks] = useState<ExistingTaskOption[]>([]);
   const [created, setCreated] = useState<Task[]>([]);
+  const [attached, setAttached] = useState<{ taskId: number; title: string; count: number }[]>([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -122,6 +126,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
       attach: tk.source_file_index != null, newProject: tk.new_project,
       subtasks: tk.subtasks ?? [], recurrence: tk.recurrence ?? null,
       startDate: tk.start_date ?? null, deadline: tk.deadline ?? null,
+      existingTaskId: tk.existing_task_id ?? null,
     };
   }
 
@@ -132,6 +137,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
     try {
       const res = await generateTasks(prompt, files);
       setRemaining(res.remaining); setTruncated(res.truncated);
+      setExistingTasks(res.existing_tasks ?? []);
       setRows(res.tasks.map(toRow));
       if (res.tasks.length === 0) setErr(t("ai.noTasks", "No tasks came back — try a clearer prompt."));
       else setStep("review");
@@ -150,7 +156,11 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
   const addSub = (key: number) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, subtasks: [...r.subtasks, ""] } : r)));
   const removeSub = (key: number, i: number) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, subtasks: r.subtasks.filter((_, j) => j !== i) } : r)));
 
-  const canSave = rows.length > 0 && rows.every((r) => r.title.trim() && r.subprojectId);
+  // A row is saveable as a NEW task (needs title + sub-project) or as an ATTACH
+  // row (needs a destination + at least one non-empty subtask).
+  const rowReady = (r: Row) =>
+    r.existingTaskId != null ? r.subtasks.some((s) => s.trim()) : !!(r.title.trim() && r.subprojectId);
+  const canSave = rows.length > 0 && rows.every(rowReady);
 
   async function save() {
     if (submitting.current || !canSave) return;
@@ -159,6 +169,18 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
     // own failure is isolated; succeeded rows are dropped so a retry can't duplicate.
     const settled = await Promise.all(rows.map(async (r) => {
       try {
+        // Attach row: add the subtasks to the chosen existing task — no new task.
+        if (r.existingTaskId != null) {
+          const subs = r.subtasks.map((s) => s.trim()).filter(Boolean);
+          let n = 0, lastErr: unknown = null;
+          for (const st of subs) {
+            try { await api.post("/api/subtasks", { task: r.existingTaskId, title: st }); n++; }
+            catch (e) { lastErr = e; }
+          }
+          if (subs.length && n === 0) throw lastErr ?? new Error("attach failed");
+          const et = existingTasks.find((e) => e.id === r.existingTaskId);
+          return { ok: true as const, key: r.key, attach: { taskId: r.existingTaskId, title: et?.title ?? r.title, count: n } };
+        }
         const task = await api.post("/api/tasks", {
           subproject: r.subprojectId, title: r.title.trim(), priority: r.priority,
           assignees: r.assignees, assignee_groups: r.assigneeGroups, status: r.status,
@@ -174,10 +196,13 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
         return { ok: false as const, key: r.key };
       }
     }));
-    const out: Task[] = settled.filter((x) => x.ok).map((x) => (x as { task: Task }).task);
+    const out: Task[] = settled.filter((x) => x.ok && "task" in x).map((x) => (x as { task: Task }).task);
+    const att = settled.filter((x) => x.ok && "attach" in x).map((x) => (x as { attach: { taskId: number; title: string; count: number } }).attach);
     const failed = new Set(settled.filter((x) => !x.ok).map((x) => x.key));
     submitting.current = false;
-    if (out.length) { setCreated((c) => [...c, ...out]); onChanged?.(); }
+    if (out.length) setCreated((c) => [...c, ...out]);
+    if (att.length) setAttached((a) => [...a, ...att]);
+    if (out.length || att.length) onChanged?.();
     if (failed.size) {
       setRows((rs) => rs.filter((r) => failed.has(r.key)));   // keep only the failures
       setErr(t("ai.saveError", "Some tasks couldn't be saved — retry the ones still listed."));
@@ -206,7 +231,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
       </div>
     ) : step === "done" ? (
       <div className="set-actions">
-        <button type="button" className="btn-ghost" onClick={() => { setRows([]); setCreated([]); setPrompt(""); setFiles([]); setStep("input"); }}>{t("ai.generateMore", "Generate more")}</button>
+        <button type="button" className="btn-ghost" onClick={() => { setRows([]); setCreated([]); setAttached([]); setExistingTasks([]); setPrompt(""); setFiles([]); setStep("input"); }}>{t("ai.generateMore", "Generate more")}</button>
         <button type="button" className="btn-primary" style={{ marginLeft: "auto" }} onClick={onClose}>{t("common.done", "Done")}</button>
       </div>
     ) : undefined;
@@ -276,8 +301,29 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
             {remaining != null && ` · ${t("ai.remaining", "{{n}} AI generations left today", { n: remaining })}`}
           </div>
           {truncated && <div className="hint" style={{ fontSize: 12, marginBottom: 8 }}>{t("ai.truncated", "Only the first batch is shown.")}</div>}
-          {rows.map((r) => (
+          {rows.map((r) => {
+            const attach = r.existingTaskId != null;
+            const destTask = attach ? existingTasks.find((e) => e.id === r.existingTaskId) : null;
+            return (
             <div key={r.key} className="card" style={{ padding: 10, marginBottom: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* Destination: a brand-new task, or add these subtasks to an existing one. */}
+              {existingTasks.length > 0 && (
+                <div className="field">
+                  <label>{t("ai.fileUnder", "File under")}</label>
+                  <SingleSelect width="100%" value={attach ? String(r.existingTaskId) : "new"}
+                    onChange={(v) => update(r.key, { existingTaskId: v === "new" ? null : Number(v) })}
+                    options={[
+                      { value: "new", label: t("ai.destNew", "Create new task") },
+                      ...existingTasks.map((e) => ({ value: String(e.id), label: `${e.title} — ${e.project} / ${e.subproject}` })),
+                    ]} />
+                </div>
+              )}
+              {attach ? (
+                <div className="hint" style={{ fontSize: 12 }}>
+                  {t("ai.attachNote", "These subtasks will be added to “{{name}}”. No new task is created.", { name: destTask?.title ?? r.title })}
+                </div>
+              ) : (
+              <>
               {/* Row 1: Task name (top-left) + Assignees (top-right) — matches the app. */}
               <div className="row2">
                 <div className="field">
@@ -367,6 +413,8 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                     onClick={() => update(r.key, { recurrence: null })}><X size={13} /></button>
                 </div>
               )}
+              </>
+              )}
               {/* Subtasks — small editable title list (one level, matches the app). */}
               <div className="ai-subtasks" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <label className="muted" style={{ fontSize: 12 }}>{t("ai.subtasks", "Subtasks")}</label>
@@ -380,7 +428,7 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                 <button type="button" className="btn-ghost" style={{ width: "fit-content", fontSize: 13 }} onClick={() => addSub(r.key)}>+ {t("ai.addSubtask", "Add subtask")}</button>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {r.sourceFileIndex != null && files[r.sourceFileIndex] && (
+                {!attach && r.sourceFileIndex != null && files[r.sourceFileIndex] && (
                   <label className="muted" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12 }}>
                     <input type="checkbox" style={{ width: "auto" }} checked={r.attach} onChange={(e) => update(r.key, { attach: e.target.checked })} />
                     {t("ai.attachFile", "Attach {{name}}", { name: files[r.sourceFileIndex].name })}
@@ -391,23 +439,41 @@ export function AiGenerateModal({ me, onClose, onChanged, onOpenTask }: {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
           {err && <div style={{ color: "var(--danger)", fontSize: 13 }}>{err}</div>}
         </>
       )}
 
       {step === "done" && (
         <>
-          <div className="muted" style={{ fontSize: 13, marginBottom: 10 }}>{t("ai.createdTitle", "Created {{n}} task(s). Click any to keep editing.", { n: created.length })}</div>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-            {created.map((tk) => (
-              <li key={tk.id}>
-                <button type="button" className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => onOpenTask(tk)}>
-                  <PriorityIcon level={tk.priority} size={14} /> {tk.title}
-                </button>
-              </li>
-            ))}
-          </ul>
+          {created.length > 0 && (
+            <>
+              <div className="muted" style={{ fontSize: 13, marginBottom: 10 }}>{t("ai.createdTitle", "Created {{n}} task(s). Click any to keep editing.", { n: created.length })}</div>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                {created.map((tk) => (
+                  <li key={tk.id}>
+                    <button type="button" className="btn-secondary" style={{ width: "100%", justifyContent: "flex-start" }} onClick={() => onOpenTask(tk)}>
+                      <PriorityIcon level={tk.priority} size={14} /> {tk.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {attached.length > 0 && (
+            <div style={{ marginTop: created.length ? 14 : 0 }}>
+              <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>{t("ai.attachedTitle", "Added subtasks to existing tasks:")}</div>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                {attached.map((a, i) => (
+                  <li key={i} className="card" style={{ padding: "8px 10px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircle2 size={15} aria-hidden style={{ color: "var(--success)", flex: "none" }} />
+                    <span>{t("ai.attachedRow", "{{count}} subtask(s) → “{{name}}”", { count: a.count, name: a.title })}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
     </Modal>

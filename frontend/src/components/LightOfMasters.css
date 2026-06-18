@@ -1,0 +1,117 @@
+/*
+ * "Light of the Masters" loader. Five line-art masters in a row; a soft light
+ * passes from one to another (the active master full-opacity + warm gold glow,
+ * the rest faded). Ported from the Ananda Connect reference and recolored to
+ * Taskboard's "Temple of Light" tokens.
+ *
+ * Theming: the figures render in `currentColor`, set here by --tb-master-line,
+ * which flips with the app theme — nayaswami navy (--primary) on the ivory light
+ * shell, cream (--primary-ink) on the deep-blue dark shell. The SVGs keep their
+ * transparent background + per-figure stroke weights (handoff: never normalize).
+ */
+
+.tb-masters {
+  /* Line color = navy ink on the warm-ivory light shell. */
+  --tb-master-line: var(--primary);
+  /* Resting vs. lifted opacity of a figure. */
+  --tb-master-dim: 0.26;
+  --tb-master-lit: 1;
+  /* Warm light tint for the active master's glow (temple gold). */
+  --tb-master-glow: color-mix(in srgb, var(--gold) 55%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Dark shell: line becomes cream so the figures read against the deep-blue
+ * canvas; the gold glow warms up a touch. */
+html[data-theme="dark"] .tb-masters {
+  --tb-master-line: var(--primary-ink);
+  --tb-master-dim: 0.3;
+  --tb-master-glow: color-mix(in srgb, var(--gold) 50%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .tb-masters {
+    --tb-master-line: var(--primary-ink);
+    --tb-master-dim: 0.3;
+    --tb-master-glow: color-mix(in srgb, var(--gold) 50%, transparent);
+  }
+}
+
+.tb-masters__row {
+  /* --tb-master-h is set inline (the `size` prop). */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: calc(var(--tb-master-h, 96px) * 0.08);
+}
+
+.tb-masters__figure {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: var(--tb-master-h, 96px);
+  color: var(--tb-master-line);
+  opacity: var(--tb-master-dim);
+  /* the traveling light: ease opacity + glow as it lifts/leaves each master */
+  transition:
+    opacity 1.1s ease-in-out,
+    filter 1.1s ease-in-out;
+  filter: drop-shadow(0 0 0 transparent);
+  will-change: opacity, filter;
+}
+
+.tb-masters__figure svg {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+/* The master the light is resting on — full presence + soft gold bloom. */
+.tb-masters__figure--active {
+  opacity: var(--tb-master-lit);
+  filter: drop-shadow(0 0 calc(var(--tb-master-h, 96px) * 0.12) var(--tb-master-glow))
+    drop-shadow(0 0 calc(var(--tb-master-h, 96px) * 0.3) var(--tb-master-glow));
+  animation: tb-masters-breath 1.7s ease-in-out infinite;
+}
+
+/* A gentle breath on the lifted master so the light feels alive, not a hard cut. */
+@keyframes tb-masters-breath {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: no traveling light. Show the row evenly present + still. */
+.tb-masters--static .tb-masters__figure {
+  opacity: 0.72;
+  transition: none;
+  filter: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-masters__figure {
+    transition: none;
+    animation: none;
+  }
+  .tb-masters__figure--active {
+    animation: none;
+  }
+}
+
+/* The full-screen app loader: center the masters in the viewport. */
+.tb-masters-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas);
+}

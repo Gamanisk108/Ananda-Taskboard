@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import svgr from 'vite-plugin-svgr'
 
 // Ananda Taskboard — PWA, dev-proxies /api to Django on :8000.
 // Architected Capacitor-ready: the built dist/ is a static bundle that Capacitor
@@ -8,6 +9,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+    // SVG → React component on the `?react` suffix. svgo OFF so the master
+    // line-art is preserved byte-for-byte (per-figure stroke-widths intact);
+    // the assets are pre-set to currentColor for theming.
+    svgr({ svgrOptions: { svgo: false } }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['pwa-192.png', 'apple-touch-icon.png'],

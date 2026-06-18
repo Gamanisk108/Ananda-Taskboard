@@ -121,6 +121,38 @@ def test_validate_skips_empty_titles_and_caps(project):
     assert len(res["tasks"]) == settings.AI_MAX_TASKS and res["truncated"] is True
 
 
+def test_validate_routes_to_existing_task(project):
+    """A valid existing_task_id makes an attach row: kept + new-task fields cleared."""
+    sub = project.subprojects.first()
+    raw = {"tasks": [{
+        "title": "Define SKU standard", "existing_task_id": 77, "priority": 5,
+        "project_id": project.id, "subproject_id": sub.id, "deadline": "2026-07-01",
+        "subtasks": ["Pull a QuickBooks sample", "Decide the structure"],
+    }]}
+    out = _validate(raw, _proj_fixture(project), [], n_files=0, existing_task_ids={77})["tasks"][0]
+    assert out["existing_task_id"] == 77
+    assert out["project_id"] is None and out["subproject_id"] is None   # cleared for attach
+    assert out["deadline"] is None
+    assert out["subtasks"] == ["Pull a QuickBooks sample", "Decide the structure"]
+
+
+def test_validate_drops_hallucinated_existing_task(project):
+    """An existing_task_id the user can't see → dropped; row stays a NEW task."""
+    raw = {"tasks": [{"title": "New thing", "existing_task_id": 12345, "subtasks": ["a"]}]}
+    out = _validate(raw, _proj_fixture(project), [], n_files=0, existing_task_ids={77})["tasks"][0]
+    assert out["existing_task_id"] is None
+    assert out["title"] == "New thing"
+
+
+def test_validate_target_forces_routing_even_without_title(project):
+    """Focused breakdown: every row attaches to the target task, titleless rows survive."""
+    raw = {"tasks": [{"subtasks": ["Step A", "Step B"]}]}
+    out = _validate(raw, _proj_fixture(project), [], n_files=0,
+                    existing_task_ids=set(), target_task_id=55)["tasks"][0]
+    assert out["existing_task_id"] == 55
+    assert out["subtasks"] == ["Step A", "Step B"]
+
+
 # ── endpoint ─────────────────────────────────────────────────────────────────
 
 @override_settings(ANTHROPIC_API_KEY="")
@@ -143,6 +175,57 @@ def test_generate_happy_path(admin, org, project, monkeypatch):
     assert r.data["tasks"][0]["subproject_id"] == sub.id
     assert r.data["remaining"] == DAILY_LIMIT - 1
     assert AiGeneration.objects.filter(user=admin, organization=org).count() == 1
+
+
+@override_settings(ANTHROPIC_API_KEY="test-key")
+def test_generate_routes_to_existing_task(admin, org, project, monkeypatch):
+    """The model routes pasted work onto a real existing task; the response carries
+    the attach row + the candidate list the review UI uses."""
+    from tasks.models import Task
+    sub = project.subprojects.first()
+    existing = Task.objects.create(subproject=sub, title="Define SKU standard", created_by=admin)
+    monkeypatch.setattr(generator, "_call_model", lambda system, blocks: {"tasks": [
+        {"title": "Define SKU standard", "existing_task_id": existing.id,
+         "subtasks": ["Pull a QuickBooks sample", "Write the rules"]},
+    ]})
+    r = client(admin).post("/api/ai/generate", {"prompt": "Define SKU standard\n- pull sample\n- write rules"},
+                           format="multipart", **h(org))
+    assert r.status_code == 200, r.data
+    assert r.data["tasks"][0]["existing_task_id"] == existing.id
+    assert any(t["id"] == existing.id for t in r.data["existing_tasks"])
+
+
+@override_settings(ANTHROPIC_API_KEY="test-key")
+def test_target_task_breakdown_forces_routing(admin, org, project, monkeypatch):
+    """target_task_id: every returned row attaches to that one task."""
+    from tasks.models import Task
+    sub = project.subprojects.first()
+    target = Task.objects.create(subproject=sub, title="Launch newsletter", created_by=admin)
+    monkeypatch.setattr(generator, "_call_model", lambda system, blocks: {"tasks": [
+        {"title": "ignored", "subtasks": ["Draft copy", "Pick send date"]},
+    ]})
+    r = client(admin).post("/api/ai/generate",
+                           {"prompt": "draft copy; pick date", "target_task_id": str(target.id)},
+                           format="multipart", **h(org))
+    assert r.status_code == 200, r.data
+    assert r.data["tasks"][0]["existing_task_id"] == target.id
+    assert r.data["tasks"][0]["subtasks"] == ["Draft copy", "Pick send date"]
+
+
+@override_settings(ANTHROPIC_API_KEY="test-key")
+def test_target_task_rejected_when_not_visible(admin, org, project, monkeypatch):
+    """A target task in ANOTHER org must be refused (and the slot refunded)."""
+    from tasks.models import Task
+    other = Organization.objects.create(name="Other Co", is_active=True)
+    op = Project.objects.create(organization=other, name="Theirs")
+    osub = SubProject.objects.create(project=op, name="Sub")
+    foreign = Task.objects.create(subproject=osub, title="Not yours", created_by=admin)
+    monkeypatch.setattr(generator, "_call_model", lambda system, blocks: {"tasks": []})
+    r = client(admin).post("/api/ai/generate",
+                           {"prompt": "x", "target_task_id": str(foreign.id)},
+                           format="multipart", **h(org))
+    assert r.status_code == 400
+    assert AiGeneration.objects.filter(user=admin, organization=org).count() == 0
 
 
 @override_settings(ANTHROPIC_API_KEY="test-key")

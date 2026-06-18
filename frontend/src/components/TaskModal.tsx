@@ -12,6 +12,7 @@ import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
 import { useConfirm } from "./confirm";
 import { useAuth } from "../state/auth";
+import { patchTaskInCaches, upsertTaskInCaches } from "../cache";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
@@ -389,12 +390,42 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     curStatus, setCurStatus, canChangeStatus, buildPayload,
   } = fields;
 
+  // Unsaved-changes guard: snapshot the form on first render, compare on every
+  // close. Status edits on an existing task apply immediately via their own
+  // endpoint, so curStatus is excluded when editing. A read-only form can't be
+  // dirty. Mirrors AiGenerateModal's guardedClose.
+  const formSnapshot = JSON.stringify({
+    title, details, requirements, startDate, deadline, startTime, endTime,
+    priority, links,
+    assignees: [...assignees].sort((a, b) => a - b),
+    assigneeGroups: [...assigneeGroups].sort((a, b) => a - b),
+    monitor, autoComplete, subproject,
+    recurrence: rec.build(),
+    ...(editing ? {} : { curStatus }),
+  });
+  const initialSnapshot = useRef<string | null>(null);
+  if (initialSnapshot.current === null) initialSnapshot.current = formSnapshot;
+  const dirty = !readOnly && initialSnapshot.current !== formSnapshot;
+
+  async function guardedClose() {
+    if (busy || submitting.current) return;   // never abandon a save in flight
+    if (dirty && !(await confirm({
+      body: t("task.confirmDiscard", "Discard your changes? Your unsaved edits to this task will be lost."),
+      danger: true, confirmLabel: t("ai.discard", "Discard"),
+    }))) return;
+    onClose();
+  }
+
   async function changeStatus(s: string) {
+    const prev = curStatus;
+    setCurStatus(s);                                   // instant in the modal
+    patchTaskInCaches(queryClient, task!.id, { status: s });  // instant in the list behind it
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
-      setCurStatus(s);          // update in place — do NOT close the modal
-      onChanged?.();            // refresh the list behind the modal
+      onChanged?.();            // background reconcile (filter membership, counts)
     } catch {
+      setCurStatus(prev);                              // roll back on failure
+      patchTaskInCaches(queryClient, task!.id, { status: prev });
       setErr(t("tm.errStatus"));
     }
   }
@@ -411,8 +442,15 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     submitting.current = true;
     setBusy(true);
     try {
-      if (editing) await api.patch(`/api/tasks/${task!.id}`, payload);
-      else await api.post("/api/tasks", payload);
+      if (editing) {
+        // Write the server's updated task straight into the cache so the list (and
+        // any row reopened next) reflects it NOW — no waiting on the refetch, and
+        // no stale-row re-save dropping a just-added assignee.
+        const updated = (await api.patch(`/api/tasks/${task!.id}`, payload)) as Task;
+        upsertTaskInCaches(queryClient, updated);
+      } else {
+        await api.post("/api/tasks", payload);
+      }
       onSaved();
     } catch (e) {
       const ae = e as ApiError;
@@ -462,7 +500,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       </>
     );
     return (
-      <Modal fullScreenOnNarrow title={crumb} onClose={onClose} wide>
+      <Modal fullScreenOnNarrow title={crumb} onClose={guardedClose} wide>
         <SubtaskDetail
           subtask={openSub}
           users={users}
@@ -478,7 +516,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal fullScreenOnNarrow onClose={onClose} wide
+    <Modal fullScreenOnNarrow onClose={guardedClose} wide
       /* D49: on phones Share is a ghost icon at the right end of the fs-head
          (echoes D12's subtask-breadcrumb Share); the footer drops it. */
       headerAction={editing && !readOnly ? (
@@ -499,7 +537,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
           {editing && <span className="task-id-chip">#{task!.id}</span>}
         </span>}
-      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} hideShare={narrow} />}>
+      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={guardedClose} del={del} hideShare={narrow} />}>
       <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
           <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>
@@ -671,7 +709,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
 
         {err && <div style={{ color: "var(--danger)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
       </form>
-      {editing && <SubtaskEditor taskId={task!.id} onOpen={(s, i) => { setOpenSub(s); setOpenSubIndex(i); }} onChanged={onChanged} />}
+      {editing && <SubtaskEditor taskId={task!.id} taskTitle={task!.title} onOpen={(s, i) => { setOpenSub(s); setOpenSubIndex(i); }} onChanged={onChanged} />}
       {editing && <CommentSection taskId={task!.id} meId={me.id} meIsAdmin={me.is_admin} />}
     </Modal>
   );

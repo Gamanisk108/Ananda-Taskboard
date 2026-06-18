@@ -29,6 +29,7 @@ EMIT_TASKS_TOOL = {
                         "assignee_ids": {"type": "array", "items": {"type": "integer"}, "description": "Existing member ids this task suits, or empty."},
                         "new_project": {"type": ["string", "null"], "description": "Only if NO existing project fits: a proposed new project name. Rare."},
                         "source_file_index": {"type": ["integer", "null"], "description": "0-based index of the uploaded file this task came from, or null."},
+                        "existing_task_id": {"type": ["integer", "null"], "description": "If this work belongs UNDER an EXISTING task listed below (it extends or is the breakdown of that task), set that task's id. Then NO new task is created — the 'subtasks' are ADDED to that existing task and 'title' is ignored. Prefer this over creating a near-duplicate task. Else null."},
                         "subtasks": {"type": "array", "items": {"type": "string"}, "description": "If this task naturally breaks into smaller steps, the subtask titles (short, imperative). Otherwise omit or leave empty."},
                         "start_date": {"type": ["string", "null"], "description": "Start date YYYY-MM-DD if the work begins on a specific day; else null. For a recurring task, the first occurrence."},
                         "deadline": {"type": ["string", "null"], "description": "Due date YYYY-MM-DD if one is stated/implied; else null."},
@@ -75,12 +76,36 @@ def _call_model(system: str, content_blocks: list) -> dict:
     return {"tasks": []}
 
 
-def _build_system(projects, members, today="") -> str:
+def _build_system(projects, members, today="", existing_tasks=None, target_task=None) -> str:
     proj_lines = []
     for p in projects:
         subs = ", ".join(f"{s['name']} (sub#{s['id']})" for s in p.get("subprojects", []))
         proj_lines.append(f"- {p['name']} (project#{p['id']}) → sub-projects: {subs or 'none'}")
     member_lines = [f"- {m['name']} (user#{m['id']})" for m in members]
+
+    if target_task:
+        # Focused breakdown: the user opened ONE existing task and wants its subtasks.
+        # Everything returned attaches to that task (the view forces existing_task_id),
+        # so we only need the model to produce good, granular steps.
+        return (
+            "You break an existing to-do task down into concrete subtasks (checklist "
+            "steps) for a team task board. Rules:\n"
+            "- Return ONE task whose `subtasks` are the steps to complete the task below. "
+            "Each subtask: a short imperative step (e.g. “Pull a sample from QuickBooks”).\n"
+            "- Use the user's notes and any attached documents/images as the source of the "
+            "steps; if they pasted a breakdown, turn each point into a subtask.\n"
+            "- Do NOT invent unrelated work and do NOT create extra top-level tasks. Title, "
+            "project, dates and assignees are ignored — only the subtasks matter.\n"
+            "- Be concise and practical; 3–12 steps is typical.\n\n"
+            + (f"TODAY IS {today}.\n\n" if today else "")
+            + f"THE TASK TO BREAK DOWN:\n- {target_task['title']} (task#{target_task['id']})"
+            + (f"\n  Details: {target_task['details']}" if target_task.get("details") else "")
+        )
+
+    et_lines = [
+        f"- {t['title']} (task#{t['id']}) [{t.get('project', '')} / {t.get('subproject', '')}]"
+        for t in (existing_tasks or [])
+    ]
     return (
         "You turn a request and any attached documents/images into concrete to-do tasks "
         "for a team task board. Rules:\n"
@@ -97,6 +122,11 @@ def _build_system(projects, members, today="") -> str:
         "“Answer brainstorm questionnaire”, “Lock design”]. Only emit separate top-level tasks "
         "for genuinely separate deliverables. A short list of distinct, unrelated to-dos (e.g. "
         "“set up the bedrooms, help them move in, fix the balcony door”) stays as separate tasks.\n"
+        "- ROUTE TO AN EXISTING TASK when the work extends or IS the breakdown of one of the "
+        "EXISTING TASKS below (same deliverable, e.g. pasted notes titled like an existing "
+        "task): set existing_task_id to that task's id and put the steps in `subtasks`. Then NO "
+        "new task is created — the subtasks are added to that task. Prefer this over creating a "
+        "near-duplicate. Only create a NEW task when nothing existing fits.\n"
         "- Capture dates: if a task has a due date set deadline (YYYY-MM-DD); if it starts "
         "on a specific day set start_date. Resolve relative dates against TODAY below.\n"
         "- If a task REPEATS on a schedule (e.g. “every Saturday for 8 weeks”), set its "
@@ -106,7 +136,8 @@ def _build_system(projects, members, today="") -> str:
         "- Do not duplicate tasks. Be concise and practical.\n\n"
         + (f"TODAY IS {today}. Resolve relative dates (e.g. '2nd week of July') against it.\n\n" if today else "")
         + f"EXISTING PROJECTS / SUB-PROJECTS:\n{chr(10).join(proj_lines) or '(none)'}\n\n"
-        f"TEAM MEMBERS:\n{chr(10).join(member_lines) or '(none)'}"
+        + f"EXISTING TASKS (add subtasks to one of these instead of creating a duplicate):\n{chr(10).join(et_lines) or '(none)'}\n\n"
+        + f"TEAM MEMBERS:\n{chr(10).join(member_lines) or '(none)'}"
     )
 
 
@@ -139,17 +170,28 @@ def _valid_recurrence(rec, today=""):
     }
 
 
-def _validate(raw: dict, projects, members, n_files: int, today="") -> dict:
+def _validate(raw: dict, projects, members, n_files: int, today="",
+              existing_task_ids=None, target_task_id=None) -> dict:
     """Drop anything the model hallucinated: ids must belong to this org; a sub-project
-    must belong to its stated project; priority clamps to 1–5; tasks cap at AI_MAX_TASKS."""
+    must belong to its stated project; priority clamps to 1–5; tasks cap at AI_MAX_TASKS.
+
+    existing_task_id is kept only if it's a real visible task id; when set, the row is an
+    "attach subtasks to that task" row (no new task), so project/sub/new_project are
+    cleared. target_task_id (focused breakdown) forces every row onto that one task."""
     valid_proj = {p["id"] for p in projects}
     sub_to_proj = {s["id"]: p["id"] for p in projects for s in p.get("subprojects", [])}
     valid_members = {m["id"] for m in members}
+    valid_tasks = set(existing_task_ids or [])
     out = []
     for t in (raw or {}).get("tasks", []):
         title = (t.get("title") or "").strip()
-        if not title:
+        # A pure attach row may carry only subtasks; keep it if it has any.
+        eid = target_task_id if target_task_id is not None else t.get("existing_task_id")
+        eid = eid if isinstance(eid, int) and (target_task_id is not None or eid in valid_tasks) else None
+        if not title and eid is None:
             continue
+        if not title:
+            title = "Subtasks"   # label only; ignored for attach rows
         try:
             pr = int(t.get("priority") or 3)
         except (TypeError, ValueError):
@@ -181,8 +223,14 @@ def _validate(raw: dict, projects, members, n_files: int, today="") -> dict:
         deadline = t.get("deadline") if isinstance(t.get("deadline"), str) and _DATE_RE.match(t.get("deadline") or "") else None
         if rec and not start:
             start = rec.get("anchor")     # recurring task starts on its first occurrence
+        if eid is not None:
+            # Attach row: the subtasks go onto the existing task; the new-task fields
+            # are meaningless here, so clear them to keep the proposal honest.
+            proj = sub = new_project = rec = start = deadline = None
+            assignees = []
         out.append({
             "title": title[:200], "priority": pr, "project_id": proj, "subproject_id": sub,
+            "existing_task_id": eid,
             "assignee_ids": assignees, "new_project": new_project, "source_file_index": sfi,
             "subtasks": subtasks, "recurrence": rec, "start_date": start, "deadline": deadline,
         })
@@ -190,17 +238,24 @@ def _validate(raw: dict, projects, members, n_files: int, today="") -> dict:
     return {"tasks": capped, "truncated": len(out) > len(capped)}
 
 
-def propose_tasks(prompt, documents, projects, members, images=None, n_files=0, today=""):
+def propose_tasks(prompt, documents, projects, members, images=None, n_files=0, today="",
+                  existing_tasks=None, target_task=None):
     """documents: [(filename, text)]; images: [(index, media_type, b64)];
-    projects: [{id,name,subprojects:[{id,name}]}]; members: [{id,name}].
+    projects: [{id,name,subprojects:[{id,name}]}]; members: [{id,name}];
+    existing_tasks: [{id,title,project,subproject}] the model may attach subtasks to;
+    target_task: {id,title,details} for a focused single-task breakdown (forces routing).
     Returns {"tasks": [...], "truncated": bool}."""
     blocks = []
-    user_text = (prompt or "").strip() or "Generate to-do tasks from the attached documents."
+    default_text = ("List the subtasks for the task." if target_task
+                    else "Generate to-do tasks from the attached documents.")
+    user_text = (prompt or "").strip() or default_text
     blocks.append({"type": "text", "text": user_text})
     for fname, text in documents:
         if text:
             blocks.append({"type": "text", "text": f"\n--- Document: {fname} ---\n{text[:20000]}"})
     for _idx, media_type, b64 in (images or []):
         blocks.append({"type": "image", "source": {"type": "base64", "media_type": media_type, "data": b64}})
-    raw = _call_model(_build_system(projects, members, today), blocks)
-    return _validate(raw, projects, members, n_files, today)
+    raw = _call_model(_build_system(projects, members, today, existing_tasks, target_task), blocks)
+    return _validate(raw, projects, members, n_files, today,
+                     existing_task_ids=[t["id"] for t in (existing_tasks or [])],
+                     target_task_id=(target_task["id"] if target_task else None))

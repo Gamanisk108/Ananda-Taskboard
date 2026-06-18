@@ -157,6 +157,7 @@
     "error": "Une erreur s'est produite. Veuillez réessayer."
   },
   "task": {
+    "confirmDiscard": "Annuler vos modifications ? Les changements non enregistrés de cette tâche seront perdus.",
     "edit": "Modifier la tâche",
     "new": "Nouvelle tâche",
     "name": "Nom de la tâche",
@@ -551,6 +552,8 @@
     "intro": "Collez les lignes copiées depuis un tableur (y compris la ligne d'en-tête), ou importez un fichier CSV / TSV / JSON / Excel. Les lignes sont associées aux tâches existantes par la colonne ID ; les lignes sans ID connu créent de nouvelles tâches. Les projets/sous-projets manquants sont créés automatiquement.",
     "pasteLabel": "Coller depuis un tableur",
     "uploadLabel": "…ou importer un fichier",
+    "dropHint": "Glissez un fichier ici, ou cliquez pour parcourir",
+    "dropActive": "Déposez le fichier pour l'importer",
     "formatLabel": "Format",
     "fmtCsv": "CSV (virgule)",
     "fmtTsv": "TSV / collage Google Sheets (tab)",

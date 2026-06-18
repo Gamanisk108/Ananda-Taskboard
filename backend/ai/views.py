@@ -64,8 +64,22 @@ class GenerateTasksView(APIView):
             today = timezone.now().strftime("%Y-%m-%d (%A)")
             projects = self._projects_for(user, org)
             members = self._members_for(org)
+
+            # Optional focused breakdown: the client opened ONE existing task and wants
+            # subtasks for it. Validate the user may add subtasks there, then force routing.
+            target_task = None
+            raw_target = request.data.get("target_task_id")
+            if raw_target not in (None, "", "null"):
+                target_task = self._target_task(user, org, raw_target)
+
+            existing_tasks = (
+                [{"id": target_task["id"], "title": target_task["title"],
+                  "project": "", "subproject": ""}]
+                if target_task else self._existing_tasks_for(user, org)
+            )
             result = generator.propose_tasks(
-                prompt, documents, projects, members, images=images, n_files=len(files), today=today
+                prompt, documents, projects, members, images=images, n_files=len(files),
+                today=today, existing_tasks=existing_tasks, target_task=target_task,
             )
         except Exception:
             gen.delete()   # refund the reserved slot
@@ -77,6 +91,8 @@ class GenerateTasksView(APIView):
         from permissions.models import audit
         audit(user, "ai.generate", f"Generated {len(result['tasks'])} task(s) via AI")
         result["remaining"] = remaining_today(user, org)
+        # The candidate list lets the review UI relabel/re-point a routed row.
+        result["existing_tasks"] = existing_tasks
         return Response(result)
 
     @staticmethod
@@ -106,3 +122,42 @@ class GenerateTasksView(APIView):
             {"id": m.user_id, "name": (m.user.name or m.user.email)}
             for m in Membership.objects.filter(organization=org, is_active=True).select_related("user")
         ]
+
+    # Cap on how many existing tasks we describe to the model — enough to route
+    # against, bounded so the system prompt stays small and cheap.
+    EXISTING_TASK_LIMIT = 200
+
+    @classmethod
+    def _existing_tasks_for(cls, user, org):
+        """Open (non-archived) tasks the user can SEE, newest first — the routing
+        candidates. The /api/subtasks save still enforces who may add subtasks where."""
+        from permissions.engine import visible_tasks_q
+        from tasks.models import Task
+        qs = (
+            Task.objects.filter(visible_tasks_q(user, org), archived_at__isnull=True)
+            .select_related("subproject__project")
+            .order_by("-id")
+            .distinct()[: cls.EXISTING_TASK_LIMIT]
+        )
+        return [
+            {"id": t.id, "title": t.title[:120],
+             "project": t.subproject.project.name, "subproject": t.subproject.name}
+            for t in qs
+        ]
+
+    @staticmethod
+    def _target_task(user, org, raw_id):
+        """Resolve + authorize a focused-breakdown target. Must be a task the user can
+        see AND add subtasks to (admin or member on its sub-project)."""
+        from permissions.engine import can_act_as_member, is_org_admin, visible_tasks_q
+        from tasks.models import Task
+        try:
+            tid = int(raw_id)
+        except (TypeError, ValueError):
+            raise ValidationError({"detail": "Invalid task."})
+        task = Task.objects.filter(visible_tasks_q(user, org), pk=tid).select_related("subproject").first()
+        if task is None:
+            raise ValidationError({"detail": "That task isn't available."})
+        if not (is_org_admin(user, org) or can_act_as_member(user, task.subproject_id, org)):
+            raise ValidationError({"detail": "You can't add subtasks to that task."})
+        return {"id": task.id, "title": task.title, "details": (task.details or "")[:2000]}
