@@ -5,7 +5,7 @@ import {
   useClick, useDismiss, useRole, useInteractions, FloatingPortal,
 } from "@floating-ui/react";
 import { useTranslation } from "react-i18next";
-import { X, Link2, Plus, Check, ChevronLeft } from "lucide-react";
+import { X, Link2, Plus, Check, ChevronLeft, Search } from "lucide-react";
 import { isComplete, statusColor, statusLabel } from "../statuses";
 import { avatarColor, userInitials, userName } from "../users";
 import { PRIORITY_META, type UserLite } from "../types";
@@ -77,6 +77,37 @@ export function BackLabel({ children }: { children: ReactNode }) {
       <ChevronLeft size={15} aria-hidden />
       {children}
     </span>
+  );
+}
+
+/** A search box: leading magnifier (hidden once typing) + a clear-X that appears
+ *  only when there's text. Reuses the `.search` styling; pass `className` to opt
+ *  into a context's variant (e.g. nothing extra inside a `.filters` bar). */
+export function SearchInput({
+  value, onChange, placeholder, testId, className, autoFocus,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  testId?: string;
+  className?: string;
+  autoFocus?: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <label className={`search${value ? " has-text" : ""}${className ? ` ${className}` : ""}`}>
+      <Search />
+      <input data-testid={testId} placeholder={placeholder ?? t("common.search")} value={value}
+        autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
+      {value && (
+        <button type="button" className="search-clear" aria-label={t("common.clear", "Clear")}
+          // onMouseDown (not onClick) so the field doesn't blur-then-miss the click;
+          // preventDefault keeps focus in the input after clearing.
+          onMouseDown={(e) => { e.preventDefault(); onChange(""); }}>
+          <X size={14} />
+        </button>
+      )}
+    </label>
   );
 }
 

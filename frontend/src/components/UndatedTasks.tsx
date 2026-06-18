@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarOff, Search } from "lucide-react";
-import { Modal, AvatarStack, StatusPill, PriorityIcon, ProjPill, MultiSelect, DueFlag, type MultiSelectOption } from "./common";
+import { CalendarOff } from "lucide-react";
+import { Modal, AvatarStack, StatusPill, PriorityIcon, ProjPill, MultiSelect, DueFlag, SearchInput, type MultiSelectOption } from "./common";
 import { useStatuses } from "../statuses";
 import { useUsers, userName } from "../users";
 import type { CalendarInstance } from "../types";
@@ -76,10 +76,7 @@ function UnscheduledTable({ items, onOpen }: { items: CalendarInstance[]; onOpen
   return (
     <div>
       <div className="filters">
-        <label className={`search${q ? " has-text" : ""}`}>
-          <Search />
-          <input placeholder={t("common.search")} value={q} onChange={(e) => setQ(e.target.value)} />
-        </label>
+        <SearchInput value={q} onChange={setQ} />
         <MultiSelect placeholder={t("list.anyAssignee")} options={assigneeOptions} selected={fAssignees} onChange={setFAssignees} />
         <MultiSelect placeholder={t("list.allProjects")} options={projectOptions} selected={fProjects} onChange={setFProjects} />
         <MultiSelect placeholder={t("list.anyStatus")} options={statusOptions} selected={fStatuses} onChange={setFStatuses} />

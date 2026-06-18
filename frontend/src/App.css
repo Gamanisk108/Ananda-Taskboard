@@ -518,7 +518,14 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .filters .search svg { position: absolute; left: 9px; width: 14px; height: 14px; color: var(--faint); pointer-events: none; transition: opacity .12s; }
 .filters .search.has-text svg { opacity: 0; }
 .filters .search input { width: auto; min-width: 180px; padding-left: 28px; }
-.filters .search.has-text input { padding-left: 11px; }
+.filters .search.has-text input { padding-left: 11px; padding-right: 28px; }
+/* Clear-X: appears only when the field has text (rendered conditionally). */
+.search-clear {
+  position: absolute; right: 6px; display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; padding: 0; border: none; background: transparent;
+  color: var(--muted); cursor: pointer; border-radius: 50%;
+}
+.search-clear:hover { background: var(--hover); color: var(--text); }
 .filters .clear { margin-left: auto; }
 
 /* ---- summary stat strip ---- */
@@ -643,7 +650,7 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 .filters-mobile .search svg { position: absolute; left: 11px; width: 15px; height: 15px; color: var(--faint); pointer-events: none; }
 .filters-mobile .search.has-text svg { opacity: 0; }
 .filters-mobile .search input { width: 100%; min-width: 0; padding-left: 32px; }
-.filters-mobile .search.has-text input { padding-left: 12px; }
+.filters-mobile .search.has-text input { padding-left: 12px; padding-right: 30px; }
 .btn-filters { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-ctl);
   font-family: var(--f-ui); font-weight: 600; font-size: 13px; color: var(--text); cursor: pointer; }
