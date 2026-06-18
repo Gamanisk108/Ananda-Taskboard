@@ -157,6 +157,7 @@
     "error": "Qualcosa è andato storto. Riprova."
   },
   "task": {
+    "confirmDiscard": "Annullare le modifiche? Le modifiche non salvate di questa attività andranno perse.",
     "edit": "Modifica attività",
     "new": "Nuova attività",
     "name": "Nome attività",
@@ -551,6 +552,8 @@
     "intro": "Incolla le righe copiate da un foglio di calcolo (inclusa la riga di intestazione), o carica un file CSV / TSV / JSON / Excel. Le righe vengono abbinate alle attività esistenti tramite la colonna ID; le righe senza un ID noto creano nuove attività. I progetti/sottoprogetti mancanti vengono creati automaticamente.",
     "pasteLabel": "Incolla da un foglio di calcolo",
     "uploadLabel": "…o carica un file",
+    "dropHint": "Trascina un file qui o fai clic per sfogliare",
+    "dropActive": "Rilascia il file per caricarlo",
     "formatLabel": "Formato",
     "fmtCsv": "CSV (virgola)",
     "fmtTsv": "TSV / incolla da Google Sheets (tab)",

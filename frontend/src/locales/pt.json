@@ -157,6 +157,7 @@
     "error": "Algo deu errado. Tente novamente."
   },
   "task": {
+    "confirmDiscard": "Descartar as alterações? As edições não salvas desta tarefa serão perdidas.",
     "edit": "Editar tarefa",
     "new": "Nova tarefa",
     "name": "Nome da tarefa",
@@ -551,6 +552,8 @@
     "intro": "Cole as linhas copiadas de uma planilha (incluindo a linha de cabeçalho), ou envie um arquivo CSV / TSV / JSON / Excel. As linhas são associadas a tarefas existentes pela coluna ID; linhas sem um ID conhecido criam novas tarefas. Projetos/subprojetos ausentes são criados automaticamente.",
     "pasteLabel": "Colar de uma planilha",
     "uploadLabel": "…ou envie um arquivo",
+    "dropHint": "Arraste um arquivo aqui ou clique para procurar",
+    "dropActive": "Solte o arquivo para enviar",
     "formatLabel": "Formato",
     "fmtCsv": "CSV (vírgula)",
     "fmtTsv": "TSV / colar do Google Sheets (tab)",

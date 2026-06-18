@@ -157,6 +157,7 @@
     "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
   },
   "task": {
+    "confirmDiscard": "Änderungen verwerfen? Ihre nicht gespeicherten Bearbeitungen dieser Aufgabe gehen verloren.",
     "edit": "Aufgabe bearbeiten",
     "new": "Neue Aufgabe",
     "name": "Aufgabenname",
@@ -551,6 +552,8 @@
     "intro": "Füge aus einer Tabelle kopierte Zeilen ein (einschließlich Kopfzeile) oder lade eine CSV-/TSV-/JSON-/Excel-Datei hoch. Zeilen werden über die ID-Spalte vorhandenen Aufgaben zugeordnet; Zeilen ohne bekannte ID erstellen neue Aufgaben. Fehlende Projekte/Unterprojekte werden automatisch erstellt.",
     "pasteLabel": "Aus einer Tabelle einfügen",
     "uploadLabel": "…oder eine Datei hochladen",
+    "dropHint": "Datei hierher ziehen oder zum Durchsuchen klicken",
+    "dropActive": "Datei zum Hochladen ablegen",
     "formatLabel": "Format",
     "fmtCsv": "CSV (Komma)",
     "fmtTsv": "TSV / Google Sheets-Einfügen (Tab)",

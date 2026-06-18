@@ -157,6 +157,7 @@
     "error": "Algo salió mal. Inténtalo de nuevo."
   },
   "task": {
+    "confirmDiscard": "¿Descartar los cambios? Se perderán las ediciones no guardadas de esta tarea.",
     "edit": "Editar tarea",
     "new": "Nueva tarea",
     "name": "Nombre de la tarea",
@@ -551,6 +552,8 @@
     "intro": "Pega las filas copiadas de una hoja de cálculo (incluida la fila de encabezado), o sube un archivo CSV / TSV / JSON / Excel. Las filas se asocian a tareas existentes por la columna ID; las filas sin un ID conocido crean tareas nuevas. Los proyectos/subproyectos que falten se crean automáticamente.",
     "pasteLabel": "Pegar desde una hoja de cálculo",
     "uploadLabel": "…o sube un archivo",
+    "dropHint": "Arrastra un archivo aquí o haz clic para buscar",
+    "dropActive": "Suelta el archivo para subirlo",
     "formatLabel": "Formato",
     "fmtCsv": "CSV (coma)",
     "fmtTsv": "TSV / pegado de Google Sheets (tab)",

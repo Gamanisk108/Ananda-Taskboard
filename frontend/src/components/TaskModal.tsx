@@ -389,6 +389,32 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     curStatus, setCurStatus, canChangeStatus, buildPayload,
   } = fields;
 
+  // Unsaved-changes guard: snapshot the form on first render, compare on every
+  // close. Status edits on an existing task apply immediately via their own
+  // endpoint, so curStatus is excluded when editing. A read-only form can't be
+  // dirty. Mirrors AiGenerateModal's guardedClose.
+  const formSnapshot = JSON.stringify({
+    title, details, requirements, startDate, deadline, startTime, endTime,
+    priority, links,
+    assignees: [...assignees].sort((a, b) => a - b),
+    assigneeGroups: [...assigneeGroups].sort((a, b) => a - b),
+    monitor, autoComplete, subproject,
+    recurrence: rec.build(),
+    ...(editing ? {} : { curStatus }),
+  });
+  const initialSnapshot = useRef<string | null>(null);
+  if (initialSnapshot.current === null) initialSnapshot.current = formSnapshot;
+  const dirty = !readOnly && initialSnapshot.current !== formSnapshot;
+
+  async function guardedClose() {
+    if (busy || submitting.current) return;   // never abandon a save in flight
+    if (dirty && !(await confirm({
+      body: t("task.confirmDiscard", "Discard your changes? Your unsaved edits to this task will be lost."),
+      danger: true, confirmLabel: t("ai.discard", "Discard"),
+    }))) return;
+    onClose();
+  }
+
   async function changeStatus(s: string) {
     try {
       await api.post(`/api/tasks/${task!.id}/status`, { status: s });
@@ -462,7 +488,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       </>
     );
     return (
-      <Modal fullScreenOnNarrow title={crumb} onClose={onClose} wide>
+      <Modal fullScreenOnNarrow title={crumb} onClose={guardedClose} wide>
         <SubtaskDetail
           subtask={openSub}
           users={users}
@@ -478,7 +504,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   }
 
   return (
-    <Modal fullScreenOnNarrow onClose={onClose} wide
+    <Modal fullScreenOnNarrow onClose={guardedClose} wide
       /* D49: on phones Share is a ghost icon at the right end of the fs-head
          (echoes D12's subtask-breadcrumb Share); the footer drops it. */
       headerAction={editing && !readOnly ? (
@@ -499,7 +525,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
           {editing && <span className="task-id-chip">#{task!.id}</span>}
         </span>}
-      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={onClose} del={del} hideShare={narrow} />}>
+      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={guardedClose} del={del} hideShare={narrow} />}>
       <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
           <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>

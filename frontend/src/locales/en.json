@@ -157,6 +157,7 @@
     "error": "Something went wrong. Please try again."
   },
   "task": {
+    "confirmDiscard": "Discard your changes? Your unsaved edits to this task will be lost.",
     "edit": "Edit task",
     "new": "New task",
     "name": "Task name",
@@ -551,6 +552,8 @@
     "intro": "Paste rows copied from a spreadsheet (including the header row), or upload a CSV / TSV / JSON / Excel file. Rows are matched to existing tasks by the ID column; rows without a known ID create new tasks. Missing projects/sub-projects are created automatically.",
     "pasteLabel": "Paste from a spreadsheet",
     "uploadLabel": "…or upload a file",
+    "dropHint": "Drag a file here, or click to browse",
+    "dropActive": "Drop the file to upload",
     "formatLabel": "Format",
     "fmtCsv": "CSV (comma)",
     "fmtTsv": "TSV / Google Sheets paste (tab)",

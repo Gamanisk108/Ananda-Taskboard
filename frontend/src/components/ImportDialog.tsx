@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Upload, CircleCheck } from "lucide-react";
 import { api, ApiError } from "../api/client";
@@ -52,6 +52,8 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
   const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function reset() {
     setContent(""); setFileName(""); setPreview(null); setDecisions({}); setResult(null); setErr(""); setFmt("csv");
@@ -129,8 +131,30 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                 </div>
                 <div className="field">
                   <label>{t("import.uploadLabel")}</label>
-                  <input data-testid="import-file" type="file" accept=".csv,.tsv,.txt,.json,.xlsx"
-                    onChange={(e) => onFile(e.target.files?.[0])} />
+                  <input ref={fileInputRef} data-testid="import-file" type="file" accept=".csv,.tsv,.txt,.json,.xlsx"
+                    style={{ display: "none" }}
+                    onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
+                  <div
+                    data-testid="import-dropzone"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={t("import.dropHint")}
+                    onClick={() => fileInputRef.current?.click()}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInputRef.current?.click(); } }}
+                    onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+                    onDrop={(e) => { e.preventDefault(); setDragOver(false); onFile(e.dataTransfer.files?.[0]); }}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      gap: 6, padding: "22px 16px", textAlign: "center", cursor: "pointer",
+                      border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`,
+                      borderRadius: "var(--r-ctl)",
+                      background: dragOver ? "var(--primary-weak)" : "transparent",
+                      transition: "border-color .15s, background .15s",
+                    }}>
+                    <Upload size={20} aria-hidden style={{ color: dragOver ? "var(--accent)" : "var(--muted)" }} />
+                    <span className="muted" style={{ fontSize: 13 }}>{dragOver ? t("import.dropActive") : t("import.dropHint")}</span>
+                  </div>
                   {fileName && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{fileName} ({fmt})</div>}
                   <label style={{ marginTop: 10 }}>{t("import.formatLabel")}</label>
                   <SingleSelect testId="import-format" width="100%" value={fmt} disabled={!!fileName} onChange={(v) => setFmt(v as Fmt)}
