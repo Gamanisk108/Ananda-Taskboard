@@ -29,6 +29,20 @@ interface Preview {
 
 const EXT_FMT: Record<string, Fmt> = { csv: "csv", tsv: "tsv", txt: "tsv", json: "json", xlsx: "xlsx" };
 
+/** Sniff the format of pasted text so the user never has to pick one. JSON starts
+ *  with a bracket/brace; a spreadsheet paste (incl. Google Sheets) is tab-delimited;
+ *  otherwise commas → CSV; a single bare column defaults to TSV (no delimiter either
+ *  way). xlsx is never pasted — it only arrives as an uploaded file. */
+function detectFmt(text: string): Fmt {
+  const s = text.trim();
+  if (!s) return "tsv";
+  if (s[0] === "[" || s[0] === "{") return "json";
+  const firstLine = s.split(/\r?\n/, 1)[0];
+  if (firstLine.includes("\t")) return "tsv";
+  if (firstLine.includes(",")) return "csv";
+  return "tsv";
+}
+
 async function fileToContent(file: File): Promise<{ fmt: Fmt; content: string }> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "csv";
   const fmt = EXT_FMT[ext] ?? "csv";
@@ -126,7 +140,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                   <textarea data-testid="import-paste" rows={6} value={fmt === "xlsx" ? "" : content}
                     placeholder={"ID\tProject\tSub-project\tTitle\n\tKaruna Devi\tMarketing\tNew task"}
                     disabled={fmt === "xlsx"}
-                    onChange={(e) => { setContent(e.target.value); setFileName(""); setPreview(null); setResult(null); if (fmt === "xlsx") setFmt("tsv"); }}
+                    onChange={(e) => { const v = e.target.value; setContent(v); setFileName(""); setPreview(null); setResult(null); setFmt(detectFmt(v)); }}
                     style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
                 </div>
                 <div className="field">
@@ -155,15 +169,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                     <Upload size={20} aria-hidden style={{ color: dragOver ? "var(--accent)" : "var(--muted)" }} />
                     <span className="muted" style={{ fontSize: 13 }}>{dragOver ? t("import.dropActive") : t("import.dropHint")}</span>
                   </div>
-                  {fileName && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{fileName} ({fmt})</div>}
-                  <label style={{ marginTop: 10 }}>{t("import.formatLabel")}</label>
-                  <SingleSelect testId="import-format" width="100%" value={fmt} disabled={!!fileName} onChange={(v) => setFmt(v as Fmt)}
-                    options={[
-                      { value: "csv", label: t("import.fmtCsv") },
-                      { value: "tsv", label: t("import.fmtTsv") },
-                      { value: "json", label: t("import.fmtJson") },
-                      { value: "xlsx", label: t("import.fmtXlsx") },
-                    ]} />
+                  {fileName && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{fileName}</div>}
                 </div>
               </div>
 
