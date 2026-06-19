@@ -136,7 +136,7 @@ describe("help registry integrity", () => {
 
 describe("what's new", () => {
   it("latestVersion is the newest addedISO", () => {
-    expect(latestVersion()).toBe("2026-06-11");
+    expect(latestVersion()).toBe("2026-06-19");
   });
 
   it("shows nothing once the user has seen the latest version", () => {

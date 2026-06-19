@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Upload, CircleCheck, CornerDownRight, ShieldCheck } from "lucide-react";
+import { Upload, CircleCheck, CornerDownRight, ShieldCheck, Download } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { Modal, SingleSelect, MultiSelect } from "./common";
 
@@ -49,6 +49,29 @@ function detectFmt(text: string): Fmt {
   if (firstLine.includes("\t")) return "tsv";
   if (firstLine.includes(",")) return "csv";
   return "tsv";
+}
+
+// A ready-to-edit sample so users see the expected shape: task rows + subtask
+// rows (Subtask column filled) with per-subtask assignees, across two tasks.
+const TEMPLATE_CSV = [
+  "Title,Project,Sub-project,Subtask,Assignees,Status,Priority,Deadline",
+  "Define SKU standard,Inventory,Standards,,,To Do,High,2026-07-01",
+  "Define SKU standard,,,Pull QuickBooks sample,Bryan,To Do,,",
+  "Define SKU standard,,,Write the rules,Mara,To Do,,",
+  "Launch newsletter,Marketing,General,,,In Progress,Medium,",
+  "Launch newsletter,,,Draft copy,Bryan,,,",
+].join("\r\n");
+
+function downloadTemplate() {
+  const blob = new Blob([TEMPLATE_CSV], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "taskboard-import-template.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 async function fileToContent(file: File): Promise<{ fmt: Fmt; content: string }> {
@@ -167,6 +190,11 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
               <p className="muted" style={{ marginTop: -4, fontSize: 12.5 }}>
                 {t("import.subtaskHelp", "To add subtasks, include a “Subtask” column: a row with it filled becomes a subtask of the task it names (Assignees, Status, Priority… apply to the subtask). Tasks match by ID or by name; blank cells on an update are left unchanged.")}
               </p>
+              <button type="button" className="btn-ghost" data-testid="import-template"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, padding: "2px 0", marginTop: -4, marginBottom: 8 }}
+                onClick={downloadTemplate}>
+                <Download size={14} aria-hidden /> {t("import.downloadTemplate", "Download a sample template (.csv)")}
+              </button>
 
               <div className="row2">
                 <div className="field">

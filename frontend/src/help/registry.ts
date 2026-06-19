@@ -58,6 +58,8 @@ export const ARTICLES: HelpArticle[] = [
 
   // ---- Everyday tasks ------------------------------------------------------
   { id: "new-task", category: "tasks", surface: "nav.newTask" },
+  { id: "inline-edit", category: "tasks", addedISO: "2026-06-19" },
+  { id: "ai-generate", category: "tasks", addedISO: "2026-06-19" },
   { id: "share-view", category: "tasks", surface: "view.shareView" },
   { id: "copy-summary", category: "tasks", surface: "view.copySummary" },
   {
@@ -82,6 +84,7 @@ export const ARTICLES: HelpArticle[] = [
     roles: ["admin"],
   },
   { id: "team", category: "admin", surface: "nav.team", roles: ["admin"] },
+  { id: "import", category: "admin", roles: ["admin"], addedISO: "2026-06-19" },
   {
     id: "approvals",
     category: "admin",

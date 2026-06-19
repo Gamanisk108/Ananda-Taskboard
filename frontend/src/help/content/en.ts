@@ -33,6 +33,14 @@ export const EN: Record<string, HelpContent> = {
     title: "Add a new task",
     body: "Tap the big blue + New task button at the top right.\n\nGive it a name, pick which project it belongs to, and (optionally) a due date and who should do it. Then tap Save. That's it.",
   },
+  "inline-edit": {
+    title: "Edit right on the list",
+    body: "On the List view you can change a task without opening it.\n\nHover over a task's name and click the pencil to rename it. Click the coloured status pill to pick a new status. Click the assignee area to add or change who's on it.\n\nEverything saves instantly. To edit the rest of a task's details, click the row to open it as usual.",
+  },
+  "ai-generate": {
+    title: "Generate tasks with AI",
+    body: "The sparkle (AI) button turns a description — or pasted notes, or an uploaded document — into ready-to-review tasks. Describe what needs doing, then check and adjust the tasks it drafts before you save them.\n\nIt can also add steps to a task you already have: if what you paste matches an existing task, the AI files the steps under it as subtasks instead of making a duplicate.\n\nYou can also break a single task into subtasks from inside it — open the task and use the AI button in its Subtasks section.",
+  },
   "share-view": {
     title: "Share what you're looking at",
     body: "The Share view button copies a link to exactly what's on your screen right now.\n\nPaste that link to a teammate and they'll open the same project and view you're seeing.",
@@ -98,6 +106,10 @@ export const EN: Record<string, HelpContent> = {
   "bulk-migrate": {
     title: "Bulk migrate",
     body: "Bulk migrate moves many tasks at once from one project or sub-project to another — far quicker than moving them one by one.",
+  },
+  import: {
+    title: "Import tasks from a spreadsheet",
+    body: "As an admin you can add or update lots of tasks at once from a spreadsheet — upload a CSV/Excel file, or just paste rows copied from Google Sheets. Open Import at the top right.\n\nEach row is a task. Use only the columns you need: Title, Project, Sub-project, Assignees, Status, Priority, Deadline. To update an existing task, fill in its ID, or simply its exact name (if a name matches more than one task, the preview asks you which to use).\n\nUpdates are safe: blank cells are left exactly as they are — they never erase what's there — and any Assignees you list are ADDED to a task, never removed.\n\nTo add subtasks, include a “Subtask” column. A row with that column filled becomes a subtask of the task it names, and that row's Assignees, Status and Priority apply to the subtask — so each subtask can have its own owner. (To add several subtasks to one task, repeat the task name down the rows.)\n\nAlways Preview first to see exactly what each row will do, then Confirm. A restore point is saved automatically before every import, so you can undo the whole thing from Restore points if needed.",
   },
   holidays: {
     title: "Automatic calendar holidays",
