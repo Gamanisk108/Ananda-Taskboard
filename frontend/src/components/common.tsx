@@ -393,7 +393,7 @@ export function StatusPillSelect({
       {open && (
         <FloatingPortal>
           {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter */}
-          <div ref={refs.setFloating} {...getFloatingProps()} className="ms-pop" role="listbox"
+          <div ref={refs.setFloating} {...getFloatingProps()} className="ms-pop ss-float" role="listbox"
             style={{ ...floatingStyles, zIndex: 200 }} onClick={(e) => e.stopPropagation()}>
             {statuses.map((s) => (
               <button key={s.key} type="button" className="ms-opt ss-opt" role="option" aria-selected={s.key === value}

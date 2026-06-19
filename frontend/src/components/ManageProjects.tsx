@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, X, LayoutGrid } from "lucide-react";
+import { Check, X, LayoutGrid, ChevronDown, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
@@ -163,8 +163,13 @@ function ProjectEditor({
   const { t } = useTranslation();
   const [p, setP] = useState(project);
   const [newSub, setNewSub] = useState("");
+  const [expanded, setExpanded] = useState(true);
   const saved = useRef(project);
   useEffect(() => { setP(project); saved.current = project; }, [project]);
+
+  // "General" (the default sub) is pinned to the top; the rest follow in creation
+  // order. Without this the server's order let a freshly-added sub jump above General.
+  const subs = [...p.subprojects].sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.id - b.id);
 
   // Hold the latest onSaveProject in a ref so the autosave effect below does NOT
   // list it as a dep. The parent recreates this callback every render; if it were
@@ -191,30 +196,43 @@ function ProjectEditor({
   return (
     <div className="card mp-card" style={{ padding: 12, marginBottom: 12 }}>
       <div className="mp-rows">
-        {/* Project row (emoji then color — swapped per Gordon; no trusted cell) */}
+        {/* Project row: a chevron toggles the sub-projects (accordion), then
+            emoji · color · name · Done-all · delete · (sub-count when collapsed) · date. */}
         <div className="mp-rowwrap">
+          <button type="button" className="btn-ghost icon-only mp-chevron" aria-expanded={expanded}
+            title={expanded ? t("mp.collapse", "Collapse") : t("mp.expand", "Expand")}
+            onClick={() => setExpanded((v) => !v)}>
+            {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </button>
           <EmojiPicker value={p.emoji} onPick={(em) => setP({ ...p, emoji: em })} title={t("mp.emojiTitle")} />
           <ColorPicker value={p.color} onChange={(v) => setP({ ...p, color: v })} title={t("mp.colorTitle", "Project color")} />
           <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
           <button className="btn-ghost mp-doneall" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
           <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
-          <span aria-hidden />{/* trusted column: projects have none */}
+          {!expanded && p.subprojects.length > 0
+            ? <span className="muted mp-subcount">{t("mp.nSubs", "{{n}} sub-projects", { n: p.subprojects.length })}</span>
+            : <span aria-hidden />}
           <span className="mp-date">{fmtCreated(project.created_at) ? t("mp.created", "Created {{date}}", { date: fmtCreated(project.created_at) }) : ""}</span>
         </div>
 
-        {p.subprojects.map((s) => (
-          <SubEditor key={s.id} sub={s} onSave={onSaveSub} onDelete={onDeleteSub} onMarkDone={onMarkDone} />
-        ))}
+        {expanded && (
+          <>
+            {subs.map((s) => (
+              <SubEditor key={s.id} sub={s} onSave={onSaveSub} onDelete={onDeleteSub} onMarkDone={onMarkDone} />
+            ))}
 
-        {/* New sub-project row: blank emoji + color, input aligned under the
-            names, add button after it. */}
-        <div className="mp-rowwrap">
-          <span aria-hidden />
-          <span aria-hidden />
-          <input placeholder={t("mp.newSubPh")} value={newSub} onChange={(e) => setNewSub(e.target.value)} />
-          <button className="btn-ghost mp-addsub" style={{ gridColumn: "4 / -1", justifySelf: "start" }}
-            onClick={() => { onAddSub(p.id, newSub); setNewSub(""); }}>{t("mp.addSub")}</button>
-        </div>
+            {/* New sub-project row: blank chevron + emoji + color, input aligned
+                under the names, add button after it. */}
+            <div className="mp-rowwrap">
+              <span aria-hidden />
+              <span aria-hidden />
+              <span aria-hidden />
+              <input placeholder={t("mp.newSubPh")} value={newSub} onChange={(e) => setNewSub(e.target.value)} />
+              <button className="btn-ghost mp-addsub" style={{ gridColumn: "5 / -1", justifySelf: "start" }}
+                onClick={() => { onAddSub(p.id, newSub); setNewSub(""); }}>{t("mp.addSub")}</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -248,6 +266,7 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
   // Default "General" has a blank Delete cell (can't be deleted).
   return (
     <div className="mp-rowwrap">
+      <span aria-hidden />{/* chevron column: only the project row has one */}
       <span aria-hidden />{/* emoji column: sub-projects have none */}
       <ColorPicker value={s.color} onChange={(v) => setS({ ...s, color: v })} title={t("mp.subColorTitle", "Sub-project color")} />
       <input value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} disabled={s.is_default && s.name === "General"} />
