@@ -9,11 +9,80 @@ import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
 import { useAdminGroups } from "../groups";
 import { useStatuses, isComplete } from "../statuses";
+import {
+  useFloating, autoUpdate, offset, flip, shift, size,
+  useClick, useDismiss, useInteractions, FloatingPortal,
+} from "@floating-ui/react";
 import { AvatarStack, StatusPill, StatusPillSelect, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, SearchInput, useIsNarrow, type MultiSelectOption } from "./common";
-import { AssigneePicker } from "./AssigneePicker";
+import { AssigneePicker, type GroupLite } from "./AssigneePicker";
 import { matchesFilters, type TaskFilters } from "../listFilters";
 import { patchTaskInCaches } from "../cache";
-import { PRIORITY_META, type Me, type Task } from "../types";
+import { PRIORITY_META, type Me, type Task, type UserLite } from "../types";
+
+/** The List view's inline assignee cell: an avatar-stack trigger that opens the
+ *  AssigneePicker in a popover. Portaled + flip/shift/size (Floating UI) so the
+ *  panel is never clipped by the list's scroll container near the table bottom,
+ *  and `useDismiss` closes it on an outside click (no manual backdrop). */
+function InlineAssigneeCell({
+  task, users, groups, isAdmin, canEdit, onSave, editLabel, doneLabel,
+}: {
+  task: Task;
+  users: UserLite[];
+  groups: GroupLite[];
+  isAdmin: boolean;
+  canEdit: boolean;
+  onSave: (assignees: number[], assigneeGroups: number[]) => void;
+  editLabel: string;
+  doneLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const { refs, floatingStyles, context } = useFloating({
+    open, onOpenChange: setOpen, placement: "bottom-start",
+    middleware: [
+      offset(4), flip({ padding: 8 }), shift({ padding: 8 }),
+      size({ padding: 8, apply({ elements, availableHeight }) {
+        Object.assign(elements.floating.style, {
+          maxHeight: `${Math.min(440, Math.max(220, availableHeight - 8))}px`,
+        });
+      } }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useClick(context),
+    // The picker contains a group-filter SingleSelect that portals its options to
+    // <body> (outside this popover's DOM). Don't treat clicking those as an
+    // outside-press, or selecting a group filter would close the whole picker.
+    useDismiss(context, { outsidePress: (e) => !(e.target as HTMLElement).closest(".ms-pop") }),
+  ]);
+
+  if (!canEdit) {
+    return <div className="who"><AvatarStack ids={task.assignees} users={users} /></div>;
+  }
+  return (
+    // stopPropagation here keeps a trigger/popover click from also opening the row.
+    <div className="who inline-assignee-cell" onClick={(e) => e.stopPropagation()}>
+      <button type="button" ref={refs.setReference} {...getReferenceProps()}
+        className="inline-assignee-trigger" data-testid="inline-assignee" aria-label={editLabel}>
+        <AvatarStack ids={task.assignees} users={users} />
+      </button>
+      {open && (
+        <FloatingPortal>
+          {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter */}
+          <div ref={refs.setFloating} {...getFloatingProps()} className="inline-assignee-pop"
+            style={{ ...floatingStyles, zIndex: 200, overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+            <AssigneePicker users={users} groups={groups} subproject={task.subproject} isAdmin={isAdmin} startEditing
+              assignees={task.assignees} setAssignees={(ids) => onSave(ids, task.assignee_groups)}
+              assigneeGroups={task.assignee_groups} setAssigneeGroups={(gids) => onSave(task.assignees, gids)} />
+            <div style={{ textAlign: "right", marginTop: 6 }}>
+              <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>{doneLabel}</button>
+            </div>
+          </div>
+        </FloatingPortal>
+      )}
+    </div>
+  );
+}
 
 function fmtDeadline(d: string): string {
   const dt = new Date(`${d}T00:00:00`);
@@ -57,8 +126,6 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   const queryClient = useQueryClient();
   // Inline row editing (no popup): which row's name is open + its draft value.
   const [editName, setEditName] = useState<{ id: number; val: string } | null>(null);
-  // Which row's assignee picker is open (one at a time).
-  const [editAssign, setEditAssign] = useState<number | null>(null);
 
   // A row is inline-editable when the user could edit it in the modal: admins
   // always, else a member on the task's sub-project. View-only/pending stay static.
@@ -368,28 +435,12 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
                   <td>{info && <ProjPill name={info.projectName} color={info.projectColor} />}</td>
                   <td>{info && <ProjPill name={info.name} color={info.color} />}</td>
                   <td>
-                    <div className="who inline-assignee-cell" style={{ position: "relative" }}>
-                      {canEditTask(t) ? (
-                        <button type="button" className="inline-assignee-trigger" data-testid="inline-assignee"
-                          aria-label={tr("list.editAssignees", "Edit assignees")}
-                          onClick={(e) => { e.stopPropagation(); setEditAssign(editAssign === t.id ? null : t.id); }}>
-                          <AvatarStack ids={t.assignees} users={users} />
-                        </button>
-                      ) : <AvatarStack ids={t.assignees} users={users} />}
-                      {editAssign === t.id && (
-                        <>
-                          <div className="inline-pop-backdrop" onClick={(e) => { e.stopPropagation(); setEditAssign(null); }} />
-                          <div className="inline-assignee-pop" onClick={(e) => e.stopPropagation()}>
-                            <AssigneePicker users={users} groups={adminGroups} subproject={t.subproject} isAdmin={me.is_admin} startEditing
-                              assignees={t.assignees} setAssignees={(ids) => inlineAssignees(t, ids, t.assignee_groups)}
-                              assigneeGroups={t.assignee_groups} setAssigneeGroups={(gids) => inlineAssignees(t, t.assignees, gids)} />
-                            <div style={{ textAlign: "right", marginTop: 6 }}>
-                              <button type="button" className="btn-secondary" onClick={() => setEditAssign(null)}>{tr("common.done", "Done")}</button>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <InlineAssigneeCell
+                      task={t} users={users} groups={adminGroups} isAdmin={me.is_admin}
+                      canEdit={canEditTask(t)}
+                      onSave={(ids, gids) => inlineAssignees(t, ids, gids)}
+                      editLabel={tr("list.editAssignees", "Edit assignees")}
+                      doneLabel={tr("common.done", "Done")} />
                   </td>
                   <td>{pending ? <span className="pill pill-pending">{tr("task.pendingApproval")}</span>
                     : canStatus(t) ? <span onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex" }}><StatusPillSelect value={t.status} statuses={statuses} onChange={(s) => inlineStatus(t, s)} /></span>

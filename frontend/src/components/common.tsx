@@ -364,35 +364,47 @@ export function StatusPillSelect({
   testId?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
-  }, [open]);
+  // Portaled + flip/shift/size (like SingleSelect) so the dropdown is never
+  // clipped by the list's scroll container when the row sits near the bottom.
+  const { refs, floatingStyles, context } = useFloating({
+    open, onOpenChange: setOpen, placement: "bottom-start",
+    middleware: [
+      offset(4), flip({ padding: 8 }), shift({ padding: 8 }),
+      size({ padding: 8, apply({ elements, availableHeight }) {
+        Object.assign(elements.floating.style, {
+          maxHeight: `${Math.min(320, Math.max(140, availableHeight - 8))}px`,
+        });
+      } }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useClick(context), useDismiss(context), useRole(context, { role: "listbox" }),
+  ]);
   const c = statusColor(value);
   return (
-    <span className="ms ss" ref={ref} data-testid={testId} onClick={(e) => e.stopPropagation()}>
-      <button type="button" className="pill status-pill" style={{ "--sc": c } as CSSProperties}
-        aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+    <span className="ms ss" data-testid={testId} onClick={(e) => e.stopPropagation()}>
+      <button type="button" ref={refs.setReference} {...getReferenceProps()}
+        className="pill status-pill" style={{ "--sc": c } as CSSProperties} aria-expanded={open}>
         <span className="dot" style={{ background: c }} />
         {statusLabel(value)}
         <span className="caret">▾</span>
       </button>
       {open && (
-        <div className="ms-pop" role="listbox">
-          {statuses.map((s) => (
-            <button key={s.key} type="button" className="ms-opt ss-opt" role="option" aria-selected={s.key === value}
-              onClick={() => { onChange(s.key); setOpen(false); }}>
-              <span className="dot" style={{ background: s.color }} />
-              <span className="ms-opt-label">{s.label}</span>
-              {s.key === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
-            </button>
-          ))}
-        </div>
+        <FloatingPortal>
+          {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter */}
+          <div ref={refs.setFloating} {...getFloatingProps()} className="ms-pop" role="listbox"
+            style={{ ...floatingStyles, zIndex: 200 }} onClick={(e) => e.stopPropagation()}>
+            {statuses.map((s) => (
+              <button key={s.key} type="button" className="ms-opt ss-opt" role="option" aria-selected={s.key === value}
+                onClick={() => { onChange(s.key); setOpen(false); }}>
+                <span className="dot" style={{ background: s.color }} />
+                <span className="ms-opt-label">{s.label}</span>
+                {s.key === value && <Check size={14} style={{ marginLeft: "auto", flex: "none" }} />}
+              </button>
+            ))}
+          </div>
+        </FloatingPortal>
       )}
     </span>
   );
