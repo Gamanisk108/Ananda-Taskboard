@@ -23,12 +23,6 @@ export function patchTasksInCaches(qc: QueryClient, ids: number[], patch: Partia
     Array.isArray(old) ? old.map((t) => (idSet.has(t.id) ? { ...t, ...patch } : t)) : old);
 }
 
-/** Replace the full task object (matched by id) in every cached ["tasks"] list. */
-export function upsertTaskInCaches(qc: QueryClient, task: Task) {
-  qc.setQueriesData<Task[] | undefined>({ queryKey: ["tasks"] }, (old) =>
-    Array.isArray(old) ? old.map((t) => (t.id === task.id ? { ...t, ...task } : t)) : old);
-}
-
 /** Remove tasks (by id) from every cached ["tasks"] list (archive/delete). */
 export function removeTasksFromCaches(qc: QueryClient, ids: number[]) {
   const idSet = new Set(ids);

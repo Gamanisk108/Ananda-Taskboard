@@ -12,7 +12,7 @@ import { useStatuses, type TaskStatus } from "../statuses";
 import { Modal, StatusPill, StatusPillSelect, PriorityIcon, LinksEditor, SingleSelect, useIsNarrow } from "./common";
 import { useConfirm } from "./confirm";
 import { useAuth } from "../state/auth";
-import { patchTaskInCaches, upsertTaskInCaches } from "../cache";
+import { useUpdateTask, useTaskStatus } from "../queries/taskMutations";
 import { CommentSection } from "./CommentSection";
 import { SubtaskEditor } from "./SubtaskEditor";
 import { SubtaskDetail } from "./SubtaskDetail";
@@ -344,6 +344,8 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const { refreshMe } = useAuth();
   const confirm = useConfirm();
   const queryClient = useQueryClient();
+  const updateTask = useUpdateTask();
+  const taskStatus = useTaskStatus();
   const editing = !!task;
   const projects = useMemo(() => writableProjects(me), [me]);
   const users = useUsers();
@@ -416,18 +418,12 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     onClose();
   }
 
-  async function changeStatus(s: string) {
+  function changeStatus(s: string) {
     const prev = curStatus;
-    setCurStatus(s);                                   // instant in the modal
-    patchTaskInCaches(queryClient, task!.id, { status: s });  // instant in the list behind it
-    try {
-      await api.post(`/api/tasks/${task!.id}/status`, { status: s });
-      onChanged?.();            // background reconcile (filter membership, counts)
-    } catch {
-      setCurStatus(prev);                              // roll back on failure
-      patchTaskInCaches(queryClient, task!.id, { status: prev });
-      setErr(t("tm.errStatus"));
-    }
+    setCurStatus(s);   // instant in the modal; the hook handles the list cache + rollback
+    taskStatus.mutate({ id: task!.id, status: s }, {
+      onError: () => { setCurStatus(prev); setErr(t("tm.errStatus")); },
+    });
   }
 
   async function save(e: React.FormEvent) {
@@ -443,11 +439,10 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     setBusy(true);
     try {
       if (editing) {
-        // Write the server's updated task straight into the cache so the list (and
-        // any row reopened next) reflects it NOW — no waiting on the refetch, and
-        // no stale-row re-save dropping a just-added assignee.
-        const updated = (await api.patch(`/api/tasks/${task!.id}`, payload)) as Task;
-        upsertTaskInCaches(queryClient, updated);
+        // The hook optimistically patches the cache + merges the server's row, so the
+        // list (and any row reopened next) reflects the edit NOW — no refetch wait, no
+        // stale-row re-save dropping a just-added assignee.
+        await updateTask.mutateAsync({ id: task!.id, patch: payload });
       } else {
         await api.post("/api/tasks", payload);
       }

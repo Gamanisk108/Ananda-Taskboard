@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { RefreshCw, Archive, SlidersHorizontal, Pencil } from "lucide-react";
@@ -16,7 +16,7 @@ import {
 import { AvatarStack, StatusPill, StatusPillSelect, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, SearchInput, useIsNarrow, type MultiSelectOption } from "./common";
 import { AssigneePicker, type GroupLite } from "./AssigneePicker";
 import { matchesFilters, type TaskFilters } from "../listFilters";
-import { patchTaskInCaches } from "../cache";
+import { useUpdateTask, useTaskStatus } from "../queries/taskMutations";
 import { PRIORITY_META, type Me, type Task, type UserLite } from "../types";
 
 /** The List view's inline assignee cell: an avatar-stack trigger that opens the
@@ -123,7 +123,6 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   const statuses = useStatuses();
   const statusOrder = useMemo(() => Object.fromEntries(statuses.map((s, i) => [s.key, i])), [statuses]);
   const adminGroups = useAdminGroups(me);
-  const queryClient = useQueryClient();
   // Inline row editing (no popup): which row's name is open + its draft value.
   const [editName, setEditName] = useState<{ id: number; val: string } | null>(null);
 
@@ -136,30 +135,18 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   // Status can also be changed by a (non-member) assignee — mirrors TaskModal.
   const canStatus = (t: Task) => canEditTask(t) || me.is_admin || t.assignees.includes(me.id);
 
-  // Optimistic inline mutations — patch the cache NOW (instant), reconcile via the
-  // ["tasks"] invalidate the queryFn triggers; roll back on failure.
-  async function inlineStatus(t: Task, s: string) {
-    if (s === t.status) return;
-    patchTaskInCaches(queryClient, t.id, { status: s });
-    try { await api.post(`/api/tasks/${t.id}/status`, { status: s }); }
-    catch { patchTaskInCaches(queryClient, t.id, { status: t.status }); }
-    queryClient.invalidateQueries({ queryKey: ["tasks"] });
-  }
-  async function inlineRename(t: Task, raw: string) {
+  // Inline mutations go through the shared optimistic hooks (instant cache patch,
+  // snapshot rollback on failure, background reconcile) — see queries/taskMutations.
+  const updateTask = useUpdateTask();
+  const taskStatus = useTaskStatus();
+  const inlineStatus = (t: Task, s: string) => { if (s !== t.status) taskStatus.mutate({ id: t.id, status: s }); };
+  const inlineRename = (t: Task, raw: string) => {
     const title = raw.trim();
     setEditName(null);
-    if (!title || title === t.title) return;
-    patchTaskInCaches(queryClient, t.id, { title });
-    try { const u = (await api.patch(`/api/tasks/${t.id}`, { title })) as Task; patchTaskInCaches(queryClient, t.id, u); }
-    catch { patchTaskInCaches(queryClient, t.id, { title: t.title }); }
-    queryClient.invalidateQueries({ queryKey: ["tasks"] });
-  }
-  async function inlineAssignees(t: Task, assignees: number[], assigneeGroups: number[]) {
-    patchTaskInCaches(queryClient, t.id, { assignees, assignee_groups: assigneeGroups });
-    try { const u = (await api.patch(`/api/tasks/${t.id}`, { assignees, assignee_groups: assigneeGroups })) as Task; patchTaskInCaches(queryClient, t.id, u); }
-    catch { patchTaskInCaches(queryClient, t.id, { assignees: t.assignees, assignee_groups: t.assignee_groups }); }
-    queryClient.invalidateQueries({ queryKey: ["tasks"] });
-  }
+    if (title && title !== t.title) updateTask.mutate({ id: t.id, patch: { title } });
+  };
+  const inlineAssignees = (t: Task, assignees: number[], assigneeGroups: number[]) =>
+    updateTask.mutate({ id: t.id, patch: { assignees, assignee_groups: assigneeGroups } });
 
   // Tab scope + the assignee/group filter are applied server-side (group needs
   // membership expansion the client can't see); the rest is filtered client-side.

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeftRight } from "lucide-react";
 import { api } from "../api/client";
-import { patchTasksInCaches, removeTasksFromCaches } from "../cache";
+import { useBulkTasks } from "../queries/taskMutations";
 import { useUsers, userName } from "../users";
 import { useStatuses } from "../statuses";
 import { buildSubLookup } from "../lookup";
@@ -16,7 +15,7 @@ import { PRIORITY_META, type Me, type Task } from "../types";
 export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () => void; onChanged: () => void }) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const queryClient = useQueryClient();
+  const bulk = useBulkTasks();
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [sel, setSel] = useState<Set<number>>(new Set());
   const [q, setQ] = useState("");
@@ -60,15 +59,10 @@ export function BulkMigrate({ me, onClose, onChanged }: { me: Me; onClose: () =>
     const ids = [...sel];
     setBusy(true); setMsg("");
     try {
-      const r = await api.post("/api/tasks/bulk", { ids, action, value }) as { updated: number; skipped?: number };
-      // Reflect the change in the list behind this modal INSTANTLY (the /bulk route
-      // returns only counts, so derive the field patch from the action). The
-      // background bump()/load() then reconciles anything the server skipped.
-      if (action === "assign") patchTasksInCaches(queryClient, ids, { assignees: (value as number[]) ?? [] });
-      else if (action === "status") patchTasksInCaches(queryClient, ids, { status: value as string });
-      else if (action === "deadline") patchTasksInCaches(queryClient, ids, { deadline: (value as string) || null });
-      else if (action === "move") patchTasksInCaches(queryClient, ids, { subproject: value as number });
-      else if (action === "archive") removeTasksFromCaches(queryClient, ids);
+      // The hook optimistically applies the derived field patch to every selected id
+      // (the /bulk route returns only counts) and rolls back on failure; load()/
+      // onChanged still reconcile anything the server skipped.
+      const r = await bulk.mutateAsync({ ids, action, value });
       setMsg(r.skipped ? t("bulk.updatedSkipped", { n: r.updated, skipped: r.skipped }) : t("bulk.updated", { n: r.updated }));
       onChanged(); load();
     } catch { setMsg(t("bulk.error")); }
