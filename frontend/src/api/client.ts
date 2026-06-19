@@ -120,6 +120,34 @@ export const api = {
     }
     return handle(res);
   },
+  /** POST JSON and consume a streamed NDJSON response, invoking onEvent for each
+   *  parsed line (used by the import commit for live progress). Resolves when the
+   *  stream ends; throws ApiError on a non-OK status. */
+  async postStream(p: string, body: unknown, onEvent: (evt: Record<string, unknown>) => void) {
+    if (!accessToken && getRefresh()) await refreshAccess();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+    const org = getActiveOrg();
+    if (org) headers["X-Org-Id"] = org;
+    let res = await fetch(p, { method: "POST", headers, body: JSON.stringify(body) });
+    if (res.status === 401 && getRefresh() && (await refreshAccess())) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+      res = await fetch(p, { method: "POST", headers, body: JSON.stringify(body) });
+    }
+    if (!res.ok || !res.body) throw new ApiError(res.status, await res.json().catch(() => null));
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    const flushLine = (line: string) => { const s = line.trim(); if (s) onEvent(JSON.parse(s)); };
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let nl: number;
+      while ((nl = buf.indexOf("\n")) >= 0) { flushLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); }
+    }
+    flushLine(buf);
+  },
   put: (p: string, b: unknown) => raw("PUT", p, b).then(handle),
   patch: (p: string, b: unknown) => raw("PATCH", p, b).then(handle),
   del: (p: string, b?: unknown) => raw("DELETE", p, b).then(handle),

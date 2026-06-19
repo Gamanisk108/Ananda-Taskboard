@@ -305,6 +305,32 @@ def test_commit_saves_restore_point(admin, karuna):
     assert RestorePoint.objects.count() == before + 1
 
 
+# ── streaming progress ───────────────────────────────────────────────────────
+
+def test_commit_iter_yields_progress_then_result(admin, karuna):
+    from django.db import transaction
+    rows = import_data.parse("csv",
+        "Project,Sub-project,Title\nKaruna Devi,Marketing,A\nKaruna Devi,Marketing,B\n")
+    with transaction.atomic():
+        events = list(import_data._commit_iter(admin, rows, {}))
+    assert any("done" in e and "result" not in e for e in events)   # progress beats
+    final = events[-1]
+    assert final["done"] == final["total"] == 2
+    assert final["result"]["created"] == 2
+    assert Task.objects.filter(title__in=["A", "B"]).count() == 2
+
+
+def test_import_stream_commit_endpoint(admin, karuna):
+    body = {"fmt": "csv", "content": "Project,Sub-project,Title\nKaruna Devi,Marketing,Streamed\n",
+            "action": "commit", "stream": True}
+    res = login(admin).post("/api/import", body, format="json")
+    assert res.status_code == 200
+    content = b"".join(res.streaming_content).decode()
+    lines = [json.loads(line) for line in content.strip().splitlines() if line.strip()]
+    assert lines[-1]["result"]["created"] == 1
+    assert Task.objects.filter(title="Streamed").exists()
+
+
 # ── export round-trip + API ──────────────────────────────────────────────────
 
 def test_export_includes_id_and_json_format(admin, karuna):

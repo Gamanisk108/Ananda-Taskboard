@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Upload, CircleCheck, CornerDownRight, ShieldCheck, Download } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import { Modal, SingleSelect, MultiSelect } from "./common";
+import { ProgressOverlay } from "./ProgressOverlay";
 
 type Fmt = "csv" | "tsv" | "json" | "xlsx";
 // "overwrite"/"create"/"skip" for a 1:1 row; {ids} = the chosen tasks for an
@@ -98,12 +99,14 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  // null = no overlay; "reading" = indeterminate (preview); {done,total} = commit bar.
+  const [progress, setProgress] = useState<{ done: number; total: number } | "reading" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function reset() {
     setContent(""); setFileName(""); setPreview(null); setDecisions({}); setResult(null); setErr(""); setFmt("csv");
   }
-  function close() { setOpen(false); reset(); }
+  function close() { if (busy) return; setOpen(false); reset(); }
 
   async function onFile(file: File | undefined) {
     if (!file) return;
@@ -112,7 +115,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
   }
 
   async function runPreview() {
-    setErr(""); setBusy(true); setResult(null);
+    setErr(""); setBusy(true); setResult(null); setProgress("reading");
     try {
       const pv = (await api.post("/api/import", { action: "preview", fmt, content })) as Preview;
       setPreview(pv);
@@ -121,18 +124,28 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
       setErr((e as ApiError)?.data && typeof (e as ApiError).data === "object"
         ? ((e as ApiError).data as { detail?: string }).detail ?? t("import.errRead")
         : t("import.errRead"));
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setProgress(null); }
   }
 
   async function runCommit() {
-    setErr(""); setBusy(true);
+    setErr(""); setBusy(true); setProgress({ done: 0, total: preview?.total ?? 0 });
+    let finalResult: typeof result = null;
+    let streamErr = "";
     try {
-      const res = (await api.post("/api/import", { action: "commit", fmt, content, decisions })) as typeof result;
-      setResult(res);
+      // Stream NDJSON progress so the overlay shows a live bar on big imports.
+      await api.postStream("/api/import", { action: "commit", fmt, content, decisions, stream: true }, (evt) => {
+        if (typeof evt.error === "string") streamErr = evt.error;
+        else if (evt.result) finalResult = evt.result as typeof result;
+        if (typeof evt.done === "number" && typeof evt.total === "number") {
+          setProgress({ done: evt.done as number, total: evt.total as number });
+        }
+      });
+      if (streamErr) { setErr(streamErr); return; }
+      setResult(finalResult);
       onImported();
     } catch (e) {
       setErr(((e as ApiError)?.data as { detail?: string })?.detail ?? t("import.errFailed"));
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setProgress(null); }
   }
 
   function setDecision(row: PreviewRow, d: Decision | "") {
@@ -182,6 +195,13 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
       <button className="btn-secondary" data-testid="import-button" onClick={() => setOpen(true)}>{t("import.button")}</button>
       {open && (
         <Modal fullScreenOnNarrow icon={<Upload />} title={t("modals.importTasks")} onClose={close} wide>
+          {progress && (
+            <ProgressOverlay
+              done={progress === "reading" ? null : progress.done}
+              total={progress === "reading" ? null : progress.total}
+              label={progress === "reading" ? t("import.reading", "Reading your sheet…") : t("import.saving", "Saving your import…")}
+            />
+          )}
           {!result && (
             <>
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>

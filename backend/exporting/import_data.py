@@ -419,9 +419,11 @@ def _add_subtask(task, res):
     return 1
 
 
-@transaction.atomic
-def commit(user, rows, decisions, org=None):
-    """Apply the import. `decisions` maps str(row_index) -> a decision:
+def _commit_iter(user, rows, decisions, org=None):
+    """The import engine as a GENERATOR: it yields {"done","total"} progress events
+    as it walks the rows and finally {"done","total","result": {...}}. The caller
+    runs it inside a transaction (commit() and the streaming view both do). `decisions`
+    maps str(row_index) -> a decision:
       "skip"               — do nothing for this row
       "create"             — force-create a new task (even if it matched a name)
       "overwrite"          — update the matched task (the default 1:1 match)
@@ -430,6 +432,8 @@ def commit(user, rows, decisions, org=None):
     decision is skipped (the user must choose). Rows with errors are skipped."""
     if len(rows) > MAX_ROWS:
         raise ValueError(f"Too many rows ({len(rows)}); max {MAX_ROWS}.")
+    total = len(rows)
+    every = max(1, total // 100)   # ~100 progress beats max, even for huge imports
     ctx = Ctx(org)
     proj_cache = dict(ctx.projects)
     sub_cache = dict(ctx.subs)
@@ -457,6 +461,8 @@ def commit(user, rows, decisions, org=None):
     valid_ids = set(ctx.task_ids)
 
     for i, row in enumerate(rows):
+        if i % every == 0:
+            yield {"done": i, "total": total}
         # pending grows as we go (like preview) so a subtask only attaches to a NEW
         # task whose row came ABOVE it; created_titles holds the real saved tasks.
         res = _resolve_row(row, ctx, pending)
@@ -532,4 +538,14 @@ def commit(user, rows, decisions, org=None):
             pending.add(task.title.lower())   # later subtask rows can attach to it
             result["created"] += 1
 
+    yield {"done": total, "total": total, "result": result}
+
+
+@transaction.atomic
+def commit(user, rows, decisions, org=None):
+    """Run the import to completion (no streaming) and return the result dict."""
+    result = {"created": 0, "updated": 0, "subtasks": 0, "skipped": 0, "errors": 0}
+    for evt in _commit_iter(user, rows, decisions, org):
+        if "result" in evt:
+            result = evt["result"]
     return result

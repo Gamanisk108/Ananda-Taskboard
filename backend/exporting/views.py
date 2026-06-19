@@ -49,13 +49,43 @@ class ImportView(APIView):
                 decisions = request.data.get("decisions") or {}
                 if isinstance(decisions, str):
                     decisions = json.loads(decisions or "{}")
-                # Safety net: snapshot the whole board before changing anything, so a
-                # bad import is one click to undo from Restore points.
+                if request.data.get("stream"):
+                    # Stream NDJSON progress for big imports so the UI shows a live bar.
+                    return self._stream_commit(request.user, rows, decisions, org)
                 if rows:
-                    from django.utils import timezone
-                    from restore_service import save_point
-                    save_point(f"Before import — {timezone.now().strftime('%Y-%m-%d %H:%M')}", auto=True)
+                    self._checkpoint()
                 return Response(import_data.commit(request.user, rows, decisions, org))
             return Response(import_data.preview(rows, org))
         except ValueError as e:
             return Response({"detail": str(e)}, status=400)
+
+    @staticmethod
+    def _checkpoint():
+        """Snapshot the whole board before changing anything, so a bad import is one
+        click to undo from Restore points."""
+        from django.utils import timezone
+        from restore_service import save_point
+        save_point(f"Before import — {timezone.now().strftime('%Y-%m-%d %H:%M')}", auto=True)
+
+    def _stream_commit(self, user, rows, decisions, org):
+        """Run the commit inside one transaction, streaming {done,total} progress
+        lines (NDJSON) and a final {…,result}. Any error rolls the whole import back
+        and is reported as a trailing {error} line (the 200 stream has already begun,
+        so we can't switch to a 4xx)."""
+        from django.db import transaction
+        from django.http import StreamingHttpResponse
+
+        def gen():
+            try:
+                with transaction.atomic():
+                    if rows:
+                        self._checkpoint()
+                    for evt in import_data._commit_iter(user, rows, decisions, org):
+                        yield json.dumps(evt) + "\n"
+            except Exception as e:   # transaction has rolled back; tell the client
+                yield json.dumps({"error": str(e)}) + "\n"
+
+        resp = StreamingHttpResponse(gen(), content_type="application/x-ndjson")
+        resp["Cache-Control"] = "no-cache"
+        resp["X-Accel-Buffering"] = "no"   # let events flush through any proxy buffer
+        return resp
