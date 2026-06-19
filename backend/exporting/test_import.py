@@ -187,6 +187,17 @@ def test_update_blank_columns_leave_existing_untouched(admin, member, karuna):
     assert list(t.assignees.values_list("id", flat=True)) == [member.id]  # blank → NOT wiped
 
 
+def test_update_assignees_are_added_not_replaced(admin, member, karuna):
+    """Importing assignees onto an existing task ADDS them — it never removes the
+    people already on the task."""
+    other = User.objects.create_user(email="o@example.com", name="Omar", password="pw-strong-123")
+    t = Task.objects.create(subproject=karuna["marketing"], title="Shared task")
+    t.assignees.add(member)                       # already on the task
+    rows = import_data.parse("csv", f"ID,Assignees\n{t.id},o@example.com\n")  # import a DIFFERENT person
+    import_data.commit(admin, rows, {})
+    assert set(t.assignees.values_list("id", flat=True)) == {member.id, other.id}  # member kept, Omar added
+
+
 def test_update_by_name_when_no_id(admin, karuna):
     t = Task.objects.create(subproject=karuna["marketing"], title="By Name", priority=3)
     rows = import_data.parse("csv", "Title,Priority\nBy Name,High\n")

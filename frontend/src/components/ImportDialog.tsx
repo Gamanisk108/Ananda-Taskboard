@@ -226,7 +226,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                   )}
                   <div className="muted" style={{ fontSize: 12, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
                     <ShieldCheck size={14} aria-hidden style={{ flex: "none", color: "var(--success)" }} />
-                    {t("import.safeNote", "Updates only change columns you filled in — blank cells are left as-is. A restore point is saved before importing, so you can undo it from Restore points.")}
+                    {t("import.safeNote", "Updates only change columns you filled in — blank cells are left as-is, and assignees you list are ADDED to a task (never removed). A restore point is saved before importing, so you can undo it from Restore points.")}
                   </div>
                   <div style={{ maxHeight: 260, overflow: "auto", border: "1px solid var(--border)", borderRadius: "var(--r-ctl)" }}>
                     <table className="tbl" style={{ border: "none" }} data-testid="import-preview">

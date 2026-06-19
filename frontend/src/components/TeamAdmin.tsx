@@ -198,6 +198,13 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
   const patch = (id: number, p: Partial<UserRow>) => setRows((rs) => rs.map((u) => (u.id === id ? { ...u, ...p } : u)));
   // Owner-only powers (transfer ownership) hinge on whether I am this org's owner.
   const iAmOwner = rows.find((u) => u.id === me?.id)?.is_owner ?? false;
+  // Display order is role-ranked: the owner is always at the top, then admins, then
+  // members, alphabetically within each — a newly-added member never jumps above the
+  // owner. (Kept separate from `rows` so optimistic patches still target by id.)
+  const sortedRows = useMemo(() => {
+    const rank = (u: UserRow) => (u.is_owner ? 0 : u.is_admin ? 1 : 2);
+    return [...rows].sort((a, b) => rank(a) - rank(b) || (a.name || a.email).localeCompare(b.name || b.email));
+  }, [rows]);
 
   async function setMemberRole(u: UserRow, r: string) { patch(u.id, { role: r, is_admin: r === "admin" }); try { await api.patch(`/api/users/${u.id}`, { role: r }); } catch { patch(u.id, { role: u.role }); } }
   async function setMemberTier(u: UserRow, t: string) { const tier = t ? Number(t) : null; patch(u.id, { tier }); try { await api.patch(`/api/users/${u.id}`, { tier }); } catch { patch(u.id, { tier: u.tier }); } }
@@ -224,7 +231,7 @@ function Members({ users, tiers, projects, reload }: { users: UserRow[]; tiers: 
       <table className="tbl">
         <thead><tr><th>{tr("ta.name")}</th><th>{tr("login.email")}</th><th>{tr("ta.role")}</th><th>{tr("ta.viewAccess", "Access")}</th><th>{tr("ta.active")}</th><th></th></tr></thead>
         <tbody>
-          {rows.map((u) => (
+          {sortedRows.map((u) => (
             <tr key={u.id}>
               <td>{u.name || "—"}</td>
               <td className="muted">{u.email}</td>

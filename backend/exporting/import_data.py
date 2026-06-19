@@ -378,8 +378,10 @@ def preview(rows, org=None):
 
 
 def _apply_task_update(task, res):
-    """Apply a row's partial fields + assignees to an existing task. A non-blank
-    Title renames the task (for a name-matched row it just equals the current one)."""
+    """Apply a row's partial fields to an existing task. A non-blank Title renames it
+    (for a name-matched row it just equals the current one). Assignees are ADDED to
+    the existing ones, never replaced — a sparse sheet can only grow the assignee
+    list, so importing never silently un-assigns someone."""
     changed = []
     if res["title"] and res["title"] != task.title:
         task.title = res["title"]
@@ -389,8 +391,8 @@ def _apply_task_update(task, res):
         changed.append(k)
     if changed:
         task.save(update_fields=changed)
-    if res["assignee_ids"] is not None:
-        task.assignees.set(res["assignee_ids"])
+    if res["assignee_ids"]:
+        task.assignees.add(*res["assignee_ids"])
 
 
 def _add_subtask(task, res):
@@ -409,7 +411,7 @@ def _add_subtask(task, res):
     )
     st.save()
     if res["assignee_ids"]:
-        st.assignees.set(res["assignee_ids"])
+        st.assignees.add(*res["assignee_ids"])
     return 1
 
 
@@ -521,7 +523,7 @@ def commit(user, rows, decisions, org=None):
             )
             task.save()
             if res["assignee_ids"]:
-                task.assignees.set(res["assignee_ids"])
+                task.assignees.add(*res["assignee_ids"])
             created_titles.setdefault(task.title.lower(), []).append(task)
             pending.add(task.title.lower())   # later subtask rows can attach to it
             result["created"] += 1
