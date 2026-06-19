@@ -21,10 +21,14 @@ interface Props {
   isAdmin: boolean;
   /** Open straight into the editor (used by the List view's inline popover). */
   startEditing?: boolean;
+  /** Render JUST the editor body (label + search + list) with no card, no Done, no
+   *  bottom sheet — the caller supplies the container + a single Done. Used by the
+   *  List view's inline tan popover so it isn't a white card-in-a-card with two Dones. */
+  bare?: boolean;
 }
 
 export function AssigneePicker({
-  users, groups, assignees, setAssignees, assigneeGroups, setAssigneeGroups, subproject, isAdmin, startEditing,
+  users, groups, assignees, setAssignees, assigneeGroups, setAssigneeGroups, subproject, isAdmin, startEditing, bare,
 }: Props) {
   const { t } = useTranslation();
   const narrow = useIsNarrow();
@@ -128,6 +132,17 @@ export function AssigneePicker({
   );
 
   if (!editing) return collapsedView;
+
+  // Bare: caller (the List view's tan popover) owns the container + the single Done,
+  // so render only the labelled editor body — no card, no Done, no bottom sheet.
+  if (bare) {
+    return (
+      <div className="field" style={{ margin: 0 }}>
+        <label>{t("task.assignees")}</label>
+        {editorBody}
+      </div>
+    );
+  }
 
   // On phones the editor opens as a bottom sheet over the collapsed chips, rather
   // than expanding inline inside the (already full-height) task modal.

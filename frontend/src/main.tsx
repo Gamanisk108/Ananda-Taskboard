@@ -11,6 +11,7 @@ import './i18n'
 import App from './App.tsx'
 import { AuthProvider } from './state/auth.tsx'
 import { ConfirmProvider } from './components/confirm.tsx'
+import { ReloadPrompt } from './components/ReloadPrompt.tsx'
 
 // One shared query cache for the app. Defaults tuned for this codebase: the api
 // client already does its own 401→refresh, so we keep network retries low; and we
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <ConfirmProvider>
           <App />
+          <ReloadPrompt />
         </ConfirmProvider>
       </AuthProvider>
     </QueryClientProvider>

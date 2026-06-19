@@ -14,7 +14,10 @@ export default defineConfig({
     // the assets are pre-set to currentColor for theming.
     svgr({ svgrOptions: { svgo: false } }),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' (not 'autoUpdate') so a newly-deployed build never silently leaves
+      // an open tab on a stale bundle AND never force-reloads mid-work: <ReloadPrompt>
+      // shows a "new version — Reload" toast and lets the user choose when.
+      registerType: 'prompt',
       includeAssets: ['pwa-192.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Ananda Taskboard',

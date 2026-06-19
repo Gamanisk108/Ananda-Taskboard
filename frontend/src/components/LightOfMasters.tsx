@@ -13,13 +13,14 @@ import Lahiri from "../assets/masters/Lahiri_LineArt_2x.svg?react";
 import SriYukteswar from "../assets/masters/Sri_Yukteswar_LineArt_2x.svg?react";
 import Yogananda from "../assets/masters/Yogananda_LineArt_2x.svg?react";
 
-/** The five _2x figures, in canonical lineage order. Names are decorative only. */
+/** The five _2x figures, in lineage order (Gordon 2026-06-19): Lahiri · Babaji ·
+ *  Jesus · Sri Yukteswar · Yogananda. Names are decorative only. */
 const FIGURES: { name: string; Svg: FC<SVGProps<SVGSVGElement>> }[] = [
-  { name: "Babaji", Svg: Babaji },
   { name: "Lahiri Mahasaya", Svg: Lahiri },
+  { name: "Babaji", Svg: Babaji },
+  { name: "Jesus", Svg: Jesus },
   { name: "Sri Yukteswar", Svg: SriYukteswar },
   { name: "Yogananda", Svg: Yogananda },
-  { name: "Jesus", Svg: Jesus },
 ];
 
 function prefersReducedMotion(): boolean {
@@ -53,7 +54,9 @@ export function LightOfMasters({ size = 96, className }: LightOfMastersProps) {
   // Evaluated once at mount; the loader is short-lived so we don't subscribe to
   // live media-query changes.
   const [reduced] = useState(prefersReducedMotion);
-  const [active, setActive] = useState(0);
+  // Start on a RANDOM master, not always the leftmost — so the light doesn't appear
+  // to begin at figure 0 every load (Gordon 2026-06-19, universal across our apps).
+  const [active, setActive] = useState(() => Math.floor(Math.random() * FIGURES.length));
 
   // The light wanders at random — pick a *different* master each beat so it
   // visibly hops rather than ever sitting twice. Held still under reduced-motion.

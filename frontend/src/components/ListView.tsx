@@ -71,7 +71,7 @@ function InlineAssigneeCell({
           {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter */}
           <div ref={refs.setFloating} {...getFloatingProps()} className="inline-assignee-pop"
             style={{ ...floatingStyles, zIndex: 200, overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-            <AssigneePicker users={users} groups={groups} subproject={task.subproject} isAdmin={isAdmin} startEditing
+            <AssigneePicker users={users} groups={groups} subproject={task.subproject} isAdmin={isAdmin} startEditing bare
               assignees={task.assignees} setAssignees={(ids) => onSave(ids, task.assignee_groups)}
               assigneeGroups={task.assignee_groups} setAssigneeGroups={(gids) => onSave(task.assignees, gids)} />
             <div style={{ textAlign: "right", marginTop: 6 }}>
