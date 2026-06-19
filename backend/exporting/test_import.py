@@ -242,6 +242,33 @@ def test_subtask_without_parent_is_error(admin, karuna):
     assert any("no task" in e for e in pv["rows"][0]["errors"])
 
 
+# ── multi-tenant isolation ───────────────────────────────────────────────────
+
+def test_org_isolation_name_match_candidates_and_decision_ids(admin, karuna):
+    """Name matching, ambiguous candidates, and decision-ids never cross the org
+    line: an import scoped to org A can't see, match, or target org B's tasks."""
+    from accounts.models import Organization
+    orgA = Organization.objects.create(name="Org A", is_active=True)
+    orgB = Organization.objects.create(name="Org B", is_active=True)
+    pA = Project.objects.create(name="PA", organization=orgA)
+    pB = Project.objects.create(name="PB", organization=orgB)
+    tA = Task.objects.create(subproject=pA.subprojects.get(is_default=True), title="Shared", priority=3)
+    tB = Task.objects.create(subproject=pB.subprojects.get(is_default=True), title="Shared", priority=3)
+
+    rows = import_data.parse("csv", "Title,Priority\nShared,High\n")
+    # Preview scoped to org A sees only tA → a clean single match (not ambiguous).
+    pv = import_data.preview(rows, org=orgA)
+    assert pv["rows"][0]["action"] == "update" and pv["rows"][0]["match_id"] == tA.id
+    # A decision pointing at org B's id is filtered out (not in org A's valid_ids).
+    import_data.commit(admin, rows, {"0": {"ids": [tB.id]}}, org=orgA)
+    tA.refresh_from_db(); tB.refresh_from_db()
+    assert tA.priority == 3 and tB.priority == 3   # neither touched (foreign id dropped)
+    # The natural name-match under org A updates ONLY tA; org B stays put.
+    import_data.commit(admin, rows, {}, org=orgA)
+    tA.refresh_from_db(); tB.refresh_from_db()
+    assert tA.priority == 4 and tB.priority == 3
+
+
 # ── pre-import checkpoint ────────────────────────────────────────────────────
 
 def test_commit_saves_restore_point(admin, karuna):

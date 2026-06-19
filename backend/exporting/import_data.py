@@ -467,7 +467,21 @@ def commit(user, rows, decisions, org=None):
         if decision == "create" and not res["is_subtask"]:
             target_ids = []
         elif isinstance(decision, dict) and isinstance(decision.get("ids"), list):
-            target_ids = [int(x) for x in decision["ids"] if int(x) in valid_ids]
+            # The user picked specific tasks. Coerce once + tolerate junk (a malformed
+            # client could send non-numerics); only ids visible in THIS org survive
+            # (valid_ids is org-scoped). If NONE survive, skip — never silently create.
+            chosen = []
+            for x in decision["ids"]:
+                try:
+                    tid = int(x)
+                except (ValueError, TypeError):
+                    continue
+                if tid in valid_ids:
+                    chosen.append(tid)
+            if not chosen:
+                result["skipped"] += 1
+                continue
+            target_ids = chosen
         elif res["match_id"]:
             target_ids = [res["match_id"]]
         elif res["candidates"]:                 # ambiguous, no pick → leave untouched
