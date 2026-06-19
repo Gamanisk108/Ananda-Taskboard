@@ -190,7 +190,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
               <p className="muted" style={{ marginTop: -4, fontSize: 12.5 }}>
                 {t("import.subtaskHelp", "To add subtasks, include a “Subtask” column: a row with it filled becomes a subtask of the task it names (Assignees, Status, Priority… apply to the subtask). Tasks match by ID or by name; blank cells on an update are left unchanged.")}
               </p>
-              <button type="button" className="btn-ghost" data-testid="import-template"
+              <button type="button" className="link-btn" data-testid="import-template"
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, padding: "2px 0", marginTop: -4, marginBottom: 8 }}
                 onClick={downloadTemplate}>
                 <Download size={14} aria-hidden /> {t("import.downloadTemplate", "Download a sample template (.csv)")}
@@ -200,10 +200,10 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                 <div className="field">
                   <label>{t("import.pasteLabel")}</label>
                   <textarea data-testid="import-paste" rows={6} value={fmt === "xlsx" ? "" : content}
-                    placeholder={"Title\tProject\tSub-project\tSubtask\tAssignees\nLaunch newsletter\tKaruna Devi\tMarketing\t\t\nLaunch newsletter\t\t\tDraft copy\tBryan"}
+                    placeholder={t("import.pastePh", "Paste rows copied from your spreadsheet here, including the header row (Title, Project, Subtask, Assignees…).\n\nNew here? Download the sample template below, or use the file uploader on the right.")}
                     disabled={fmt === "xlsx"}
                     onChange={(e) => { const v = e.target.value; setContent(v); setFileName(""); setPreview(null); setResult(null); setFmt(detectFmt(v)); }}
-                    style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
+                    style={{ fontSize: 13, lineHeight: 1.5 }} />
                 </div>
                 <div className="field">
                   <label>{t("import.uploadLabel")}</label>

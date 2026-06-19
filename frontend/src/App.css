@@ -531,6 +531,13 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
 }
 .search-clear:hover { background: var(--hover); color: var(--text); }
 
+/* A button that reads as a text link — blue + underlined, obviously clickable. */
+.link-btn {
+  border: none; background: none; padding: 0; cursor: pointer; font: inherit;
+  color: var(--accent); text-decoration: underline; text-underline-offset: 2px;
+}
+.link-btn:hover { filter: brightness(1.12); }
+
 /* PWA "new version available" toast (ReloadPrompt) — bottom-centre, above modals. */
 .pwa-toast {
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 300;
