@@ -49,8 +49,9 @@ _EXTRA_HEADERS = {"subtask": "subtask", "sub-task": "subtask",
 # ── header mapping ──────────────────────────────────────────────────────────
 
 def _col_key_for(header):
-    """Map an incoming header (label OR key, any case) to a column key."""
-    h = (header or "").strip().lower()
+    """Map an incoming header (label OR key, any case) to a column key. Coerces to
+    str first — xlsx cells come back as numbers/dates, not strings."""
+    h = ("" if header is None else str(header)).strip().lower()
     for key, (label, _) in COLUMNS.items():
         if h == key or h == label.lower():
             return key
@@ -81,12 +82,15 @@ def _rows_from_matrix(matrix):
     header_keys = [_col_key_for(h) for h in matrix[0]]
     out = []
     for raw in matrix[1:]:
-        if not any((c or "").strip() for c in raw):
+        # Coerce every cell to a trimmed string FIRST — xlsx gives numbers/dates,
+        # so the blank-line check and row build must never call .strip() on a raw int.
+        cells = ["" if c is None else str(c).strip() for c in raw]
+        if not any(cells):
             continue  # skip blank lines
         row = {}
-        for key, val in zip(header_keys, raw):
+        for key, val in zip(header_keys, cells):
             if key and key not in SKIP_COLUMNS:
-                row[key] = "" if val is None else str(val).strip()
+                row[key] = val
         out.append(row)
     return out
 

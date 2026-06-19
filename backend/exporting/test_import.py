@@ -65,6 +65,19 @@ def test_parse_xlsx(db):
     assert rows[0]["title"] == "Flyer" and rows[0]["project"] == "Karuna"
 
 
+def test_parse_xlsx_with_numeric_cells(db):
+    """Regression: openpyxl returns numbers (not strings) for numeric cells; parsing
+    must coerce them, not crash with 'int object has no attribute strip'."""
+    from openpyxl import Workbook
+    wb = Workbook(); ws = wb.active
+    ws.append(["ID", "Title", "Priority"])
+    ws.append([42, "Numbered task", 3])      # numeric ID + Priority cells
+    buf = io.BytesIO(); wb.save(buf)
+    rows = import_data.parse("xlsx", buf.getvalue())
+    assert rows[0]["title"] == "Numbered task"
+    assert rows[0]["id"] == "42" and rows[0]["priority"] == "3"
+
+
 # ── preview (dry-run, no writes) ─────────────────────────────────────────────
 
 def test_preview_create_update_and_new_structure(admin, karuna):
