@@ -19,14 +19,16 @@ interface Props {
   setAssigneeGroups: (ids: number[]) => void;
   subproject: number;
   isAdmin: boolean;
+  /** Open straight into the editor (used by the List view's inline popover). */
+  startEditing?: boolean;
 }
 
 export function AssigneePicker({
-  users, groups, assignees, setAssignees, assigneeGroups, setAssigneeGroups, subproject, isAdmin,
+  users, groups, assignees, setAssignees, assigneeGroups, setAssigneeGroups, subproject, isAdmin, startEditing,
 }: Props) {
   const { t } = useTranslation();
   const narrow = useIsNarrow();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(!!startEditing);
   const [query, setQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState<number>(0); // 0 = all people
 

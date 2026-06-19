@@ -526,6 +526,32 @@ html[data-theme="dark"] .brand .name b { color: var(--azure); }
   color: var(--muted); cursor: pointer; border-radius: 50%;
 }
 .search-clear:hover { background: var(--hover); color: var(--text); }
+
+/* ── Inline list-row editing (rename · assignees · status without the popup) ── */
+/* Rename pencil: quiet until the row is hovered/focused, so rows stay clean. */
+.inline-edit-pen {
+  border: none; background: transparent; color: var(--muted); cursor: pointer;
+  padding: 2px; margin-left: 2px; border-radius: 4px; line-height: 0;
+  opacity: 0; transition: opacity .12s, background .12s; flex: none;
+}
+tr:hover .inline-edit-pen, .inline-edit-pen:focus-visible { opacity: .65; }
+.inline-edit-pen:hover { opacity: 1; background: var(--hover); color: var(--text); }
+.inline-name-edit {
+  font: inherit; font-weight: 600; padding: 2px 6px; min-width: 0; flex: 1;
+  border: 1px solid var(--dome); border-radius: var(--r-ctl); background: var(--surface);
+}
+/* Assignee cell becomes a borderless click target opening the picker popover. */
+.inline-assignee-trigger {
+  border: none; background: transparent; padding: 2px; margin: -2px; cursor: pointer;
+  border-radius: var(--r-ctl); display: inline-flex; align-items: center;
+}
+.inline-assignee-trigger:hover { background: var(--hover); }
+.inline-pop-backdrop { position: fixed; inset: 0; z-index: 60; }
+.inline-assignee-pop {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 61; width: 300px; max-width: 80vw;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
+  box-shadow: var(--shadow-2); padding: 10px; cursor: default; text-align: left;
+}
 .filters .clear { margin-left: auto; }
 
 /* ---- summary stat strip ---- */

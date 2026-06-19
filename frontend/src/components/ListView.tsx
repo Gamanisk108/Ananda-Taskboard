@@ -1,15 +1,18 @@
 import { Fragment, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { RefreshCw, Archive, SlidersHorizontal } from "lucide-react";
+import { RefreshCw, Archive, SlidersHorizontal, Pencil } from "lucide-react";
 import { dfLocale } from "../dateLocale";
 import { api } from "../api/client";
 import { buildSubLookup, deadlineState, timeRange } from "../lookup";
 import { peopleInMyScope, useUsers, userName } from "../users";
+import { useAdminGroups } from "../groups";
 import { useStatuses, isComplete } from "../statuses";
-import { AvatarStack, StatusPill, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, SearchInput, useIsNarrow, type MultiSelectOption } from "./common";
+import { AvatarStack, StatusPill, StatusPillSelect, Spinner, PriorityIcon, SubtaskDots, DueFlag, MultiSelect, SingleSelect, BottomSheet, ProjPill, SearchInput, useIsNarrow, type MultiSelectOption } from "./common";
+import { AssigneePicker } from "./AssigneePicker";
 import { matchesFilters, type TaskFilters } from "../listFilters";
+import { patchTaskInCaches } from "../cache";
 import { PRIORITY_META, type Me, type Task } from "../types";
 
 function fmtDeadline(d: string): string {
@@ -50,6 +53,46 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
   const filterPeople = useMemo(() => peopleInMyScope(me, users), [me, users]);
   const statuses = useStatuses();
   const statusOrder = useMemo(() => Object.fromEntries(statuses.map((s, i) => [s.key, i])), [statuses]);
+  const adminGroups = useAdminGroups(me);
+  const queryClient = useQueryClient();
+  // Inline row editing (no popup): which row's name is open + its draft value.
+  const [editName, setEditName] = useState<{ id: number; val: string } | null>(null);
+  // Which row's assignee picker is open (one at a time).
+  const [editAssign, setEditAssign] = useState<number | null>(null);
+
+  // A row is inline-editable when the user could edit it in the modal: admins
+  // always, else a member on the task's sub-project. View-only/pending stay static.
+  const canEditTask = (t: Task) => {
+    if (t.approval_state === "pending" && !me.is_admin) return false;
+    return me.is_admin || subs.get(t.subproject)?.level === "member";
+  };
+  // Status can also be changed by a (non-member) assignee — mirrors TaskModal.
+  const canStatus = (t: Task) => canEditTask(t) || me.is_admin || t.assignees.includes(me.id);
+
+  // Optimistic inline mutations — patch the cache NOW (instant), reconcile via the
+  // ["tasks"] invalidate the queryFn triggers; roll back on failure.
+  async function inlineStatus(t: Task, s: string) {
+    if (s === t.status) return;
+    patchTaskInCaches(queryClient, t.id, { status: s });
+    try { await api.post(`/api/tasks/${t.id}/status`, { status: s }); }
+    catch { patchTaskInCaches(queryClient, t.id, { status: t.status }); }
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+  }
+  async function inlineRename(t: Task, raw: string) {
+    const title = raw.trim();
+    setEditName(null);
+    if (!title || title === t.title) return;
+    patchTaskInCaches(queryClient, t.id, { title });
+    try { const u = (await api.patch(`/api/tasks/${t.id}`, { title })) as Task; patchTaskInCaches(queryClient, t.id, u); }
+    catch { patchTaskInCaches(queryClient, t.id, { title: t.title }); }
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+  }
+  async function inlineAssignees(t: Task, assignees: number[], assigneeGroups: number[]) {
+    patchTaskInCaches(queryClient, t.id, { assignees, assignee_groups: assigneeGroups });
+    try { const u = (await api.patch(`/api/tasks/${t.id}`, { assignees, assignee_groups: assigneeGroups })) as Task; patchTaskInCaches(queryClient, t.id, u); }
+    catch { patchTaskInCaches(queryClient, t.id, { assignees: t.assignees, assignee_groups: t.assignee_groups }); }
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+  }
 
   // Tab scope + the assignee/group filter are applied server-side (group needs
   // membership expansion the client can't see); the rest is filtered client-side.
@@ -294,7 +337,27 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
                   <td className="c-task">
                     <div className="task-cell">
                       <span title={PRIORITY_META[t.priority].label} data-testid="task-priority"><PriorityIcon level={t.priority} /></span>
-                      <span className="task-name">{t.title}</span>
+                      {editName?.id === t.id ? (
+                        <input className="inline-name-edit" autoFocus value={editName.val} data-testid="inline-name-input"
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setEditName({ id: t.id, val: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") { e.preventDefault(); inlineRename(t, editName.val); }
+                            else if (e.key === "Escape") { e.preventDefault(); setEditName(null); }
+                          }}
+                          onBlur={() => inlineRename(t, editName.val)} />
+                      ) : (
+                        <>
+                          <span className="task-name">{t.title}</span>
+                          {canEditTask(t) && (
+                            <button type="button" className="inline-edit-pen" data-testid="inline-name-edit"
+                              aria-label={tr("list.renameTask", "Rename")} title={tr("list.renameTask", "Rename")}
+                              onClick={(e) => { e.stopPropagation(); setEditName({ id: t.id, val: t.title }); }}>
+                              <Pencil size={13} />
+                            </button>
+                          )}
+                        </>
+                      )}
                       {ds === "overdue" && <DueFlag kind="overdue" title={tr("list.missedDeadline")} />}
                       {ds === "soon" && <DueFlag kind="soon" title={tr("list.dueSoon")} />}
                       {Object.keys(t.subtask_counts ?? {}).length > 0 && (
@@ -304,8 +367,33 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
                   </td>
                   <td>{info && <ProjPill name={info.projectName} color={info.projectColor} />}</td>
                   <td>{info && <ProjPill name={info.name} color={info.color} />}</td>
-                  <td><div className="who"><AvatarStack ids={t.assignees} users={users} /></div></td>
-                  <td>{pending ? <span className="pill pill-pending">{tr("task.pendingApproval")}</span> : <StatusPill status={t.status} editable />}</td>
+                  <td>
+                    <div className="who inline-assignee-cell" style={{ position: "relative" }}>
+                      {canEditTask(t) ? (
+                        <button type="button" className="inline-assignee-trigger" data-testid="inline-assignee"
+                          aria-label={tr("list.editAssignees", "Edit assignees")}
+                          onClick={(e) => { e.stopPropagation(); setEditAssign(editAssign === t.id ? null : t.id); }}>
+                          <AvatarStack ids={t.assignees} users={users} />
+                        </button>
+                      ) : <AvatarStack ids={t.assignees} users={users} />}
+                      {editAssign === t.id && (
+                        <>
+                          <div className="inline-pop-backdrop" onClick={(e) => { e.stopPropagation(); setEditAssign(null); }} />
+                          <div className="inline-assignee-pop" onClick={(e) => e.stopPropagation()}>
+                            <AssigneePicker users={users} groups={adminGroups} subproject={t.subproject} isAdmin={me.is_admin} startEditing
+                              assignees={t.assignees} setAssignees={(ids) => inlineAssignees(t, ids, t.assignee_groups)}
+                              assigneeGroups={t.assignee_groups} setAssigneeGroups={(gids) => inlineAssignees(t, t.assignees, gids)} />
+                            <div style={{ textAlign: "right", marginTop: 6 }}>
+                              <button type="button" className="btn-secondary" onClick={() => setEditAssign(null)}>{tr("common.done", "Done")}</button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td>{pending ? <span className="pill pill-pending">{tr("task.pendingApproval")}</span>
+                    : canStatus(t) ? <span onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex" }}><StatusPillSelect value={t.status} statuses={statuses} onChange={(s) => inlineStatus(t, s)} /></span>
+                    : <StatusPill status={t.status} editable={false} />}</td>
                   <td>
                     {t.deadline ? (
                       <span className={`cell-date ${dcls}`}>{fmtDeadline(t.deadline)}{tm && <span className="tm">{tm}</span>}</span>
