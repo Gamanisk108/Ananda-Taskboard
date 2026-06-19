@@ -1,21 +1,29 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Upload, CircleCheck } from "lucide-react";
+import { Upload, CircleCheck, CornerDownRight, ShieldCheck } from "lucide-react";
 import { api, ApiError } from "../api/client";
-import { Modal, SingleSelect } from "./common";
+import { Modal, SingleSelect, MultiSelect } from "./common";
 
 type Fmt = "csv" | "tsv" | "json" | "xlsx";
-type Decision = "overwrite" | "create" | "skip";
+// "overwrite"/"create"/"skip" for a 1:1 row; {ids} = the chosen tasks for an
+// ambiguous (same-name) row — update/attach to exactly those.
+type Decision = "overwrite" | "create" | "skip" | { ids: number[] };
 
+interface Candidate { id: number; title: string; project: string; subproject: string; }
 interface PreviewRow {
   row: number;
-  action: "create" | "update" | "error";
+  action: "create" | "update" | "subtask" | "ambiguous" | "error";
+  is_subtask: boolean;
+  subtask: string;
   match_id: number | null;
+  candidates: Candidate[];
+  parent_pending: boolean;
   title: string;
   project: string;
   subproject: string;
   will_create_project: boolean;
   will_create_subproject: boolean;
+  update_fields: string[];
   errors: string[];
   warnings: string[];
 }
@@ -23,7 +31,7 @@ interface Preview {
   rows: PreviewRow[];
   new_projects: string[];
   new_subprojects: string[];
-  summary: { create?: number; update?: number; error?: number };
+  summary: { create?: number; update?: number; subtask?: number; ambiguous?: number; error?: number };
   total: number;
 }
 
@@ -63,7 +71,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
-  const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: number } | null>(null);
+  const [result, setResult] = useState<{ created: number; updated: number; subtasks: number; skipped: number; errors: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -115,11 +123,34 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
     });
   }
 
+  // Ambiguous (same-name) row: the user ticks which existing tasks to hit (or
+  // "create new"); the MultiSelect value is encoded into the row's decision.
+  function setAmbiguous(row: PreviewRow, values: string[]) {
+    setDecisions((cur) => {
+      const next = { ...cur };
+      if (values.includes("new")) next[String(row.row)] = "create";
+      else if (values.length) next[String(row.row)] = { ids: values.map(Number) };
+      else delete next[String(row.row)];   // nothing picked → skipped at commit
+      return next;
+    });
+  }
+  const ambiguousValue = (row: PreviewRow): string[] => {
+    const d = decisions[String(row.row)];
+    if (d === "create") return ["new"];
+    if (d && typeof d === "object") return d.ids.map(String);
+    return [];
+  };
+
   const counts = preview?.summary ?? {};
-  const committable = (counts.create ?? 0) + (counts.update ?? 0) > 0;
+  // Committable when ≥1 row would do something; errors + unresolved ambiguous
+  // rows are simply skipped server-side.
+  const committable = !!preview && preview.rows.some((r) =>
+    r.action !== "error" && (r.action !== "ambiguous" || decisions[String(r.row)] !== undefined));
 
   const badge = (a: string) =>
     a === "update" ? { bg: "var(--primary-weak)", c: "var(--accent)", t: t("import.badgeUpdate") }
+    : a === "subtask" ? { bg: "#7a5aa61a", c: "#7a5aa6", t: t("import.badgeSubtask", "Subtask") }
+    : a === "ambiguous" ? { bg: "#b7791f1a", c: "var(--warn)", t: t("import.badgeChoose", "Choose") }
     : a === "error" ? { bg: "#b4452f1a", c: "var(--danger)", t: t("import.badgeError") }
     : { bg: "#3f7d541a", c: "var(--success)", t: t("import.optCreate") };
 
@@ -133,12 +164,15 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
                 {t("import.intro")}
               </p>
+              <p className="muted" style={{ marginTop: -4, fontSize: 12.5 }}>
+                {t("import.subtaskHelp", "To add subtasks, include a “Subtask” column: a row with it filled becomes a subtask of the task it names (Assignees, Status, Priority… apply to the subtask). Tasks match by ID or by name; blank cells on an update are left unchanged.")}
+              </p>
 
               <div className="row2">
                 <div className="field">
                   <label>{t("import.pasteLabel")}</label>
                   <textarea data-testid="import-paste" rows={6} value={fmt === "xlsx" ? "" : content}
-                    placeholder={"ID\tProject\tSub-project\tTitle\n\tKaruna Devi\tMarketing\tNew task"}
+                    placeholder={"Title\tProject\tSub-project\tSubtask\tAssignees\nLaunch newsletter\tKaruna Devi\tMarketing\t\t\nLaunch newsletter\t\t\tDraft copy\tBryan"}
                     disabled={fmt === "xlsx"}
                     onChange={(e) => { const v = e.target.value; setContent(v); setFileName(""); setPreview(null); setResult(null); setFmt(detectFmt(v)); }}
                     style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
@@ -179,8 +213,10 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                 <div style={{ borderTop: "1px solid var(--border)", marginTop: 6, paddingTop: 12 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
                     <strong>{t("import.rows", { n: preview.total })}</strong>
-                    <span className="pill" style={{ background: "#3f7d541a", color: "var(--success)" }}>{t("import.nCreate", { n: counts.create ?? 0 })}</span>
-                    <span className="pill" style={{ background: "var(--primary-weak)", color: "var(--accent)" }}>{t("import.nUpdate", { n: counts.update ?? 0 })}</span>
+                    {(counts.create ?? 0) > 0 && <span className="pill" style={{ background: "#3f7d541a", color: "var(--success)" }}>{t("import.nCreate", { n: counts.create ?? 0 })}</span>}
+                    {(counts.update ?? 0) > 0 && <span className="pill" style={{ background: "var(--primary-weak)", color: "var(--accent)" }}>{t("import.nUpdate", { n: counts.update ?? 0 })}</span>}
+                    {(counts.subtask ?? 0) > 0 && <span className="pill" style={{ background: "#7a5aa61a", color: "#7a5aa6" }}>{t("import.nSubtask", "{{n}} subtasks", { n: counts.subtask ?? 0 })}</span>}
+                    {(counts.ambiguous ?? 0) > 0 && <span className="pill" style={{ background: "#b7791f1a", color: "var(--warn)" }}>{t("import.nChoose", "{{n}} need a choice", { n: counts.ambiguous ?? 0 })}</span>}
                     {(counts.error ?? 0) > 0 && <span className="pill" style={{ background: "#b4452f1a", color: "var(--danger)" }}>{t("import.nError", { n: counts.error })}</span>}
                   </div>
                   {(preview.new_projects.length > 0 || preview.new_subprojects.length > 0) && (
@@ -188,11 +224,10 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                       {t("import.willCreate", { list: [...preview.new_projects.map((p) => `${p}`), ...preview.new_subprojects.map((s) => `↳ ${s}`)].join(" · ") })}
                     </div>
                   )}
-                  {(counts.update ?? 0) > 0 && (
-                    <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
-                      {t("import.overwriteWarn")}
-                    </div>
-                  )}
+                  <div className="muted" style={{ fontSize: 12, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                    <ShieldCheck size={14} aria-hidden style={{ flex: "none", color: "var(--success)" }} />
+                    {t("import.safeNote", "Updates only change columns you filled in — blank cells are left as-is. A restore point is saved before importing, so you can undo it from Restore points.")}
+                  </div>
                   <div style={{ maxHeight: 260, overflow: "auto", border: "1px solid var(--border)", borderRadius: "var(--r-ctl)" }}>
                     <table className="tbl" style={{ border: "none" }} data-testid="import-preview">
                       <thead><tr><th>#</th><th>{t("import.colAction")}</th><th>{t("list.colTask")}</th><th>{t("approvals.where")}</th><th>{t("import.colDecision")}</th></tr></thead>
@@ -205,14 +240,37 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                               <td><span className="pill" style={{ background: b.bg, color: b.c }}>{b.t}</span></td>
                               <td>
                                 {r.title || <span className="muted">—</span>}
+                                {r.is_subtask && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                                    <CornerDownRight size={12} aria-hidden style={{ color: "var(--muted)", flex: "none" }} />
+                                    <span>{r.subtask}</span>
+                                  </div>
+                                )}
+                                {r.action === "ambiguous" && (
+                                  <div className="muted" style={{ fontSize: 11 }}>{t("import.nMatches", "{{n}} tasks share this name", { n: r.candidates.length })}</div>
+                                )}
                                 {r.errors.map((x, i) => <div key={i} style={{ color: "var(--danger)", fontSize: 11 }}>{x}</div>)}
                                 {r.warnings.map((x, i) => <div key={i} className="muted" style={{ fontSize: 11 }}>{x}</div>)}
                               </td>
                               <td style={{ fontSize: 12 }} className="muted">{r.project} / {r.subproject}</td>
                               <td>
                                 {r.action === "error" ? <span className="muted" style={{ fontSize: 12 }}>{t("import.skipped")}</span>
-                                  : r.action === "update" ? (
-                                    <SingleSelect width={150} value={decisions[String(r.row)] ?? "overwrite"}
+                                  : r.action === "ambiguous" ? (
+                                    <MultiSelect width={190} placeholder={t("import.choosePh", "Choose task(s)…")}
+                                      selected={ambiguousValue(r)} onChange={(v) => setAmbiguous(r, v)}
+                                      options={[
+                                        ...r.candidates.map((c) => ({ value: String(c.id), label: `${c.project} / ${c.subproject} #${c.id}` })),
+                                        ...(r.is_subtask ? [] : [{ value: "new", label: t("import.optCreateNew", "Create new") }]),
+                                      ]} />
+                                  ) : r.action === "subtask" ? (
+                                    <SingleSelect width={150} value={decisions[String(r.row)] === "skip" ? "skip" : "add"}
+                                      onChange={(v) => setDecision(r, v === "skip" ? "skip" : "")}
+                                      options={[
+                                        { value: "add", label: t("import.optAddSubtask", "Add subtask") },
+                                        { value: "skip", label: t("import.optSkip") },
+                                      ]} />
+                                  ) : r.action === "update" ? (
+                                    <SingleSelect width={150} value={typeof decisions[String(r.row)] === "string" ? decisions[String(r.row)] as string : "overwrite"}
                                       onChange={(v) => setDecision(r, v as Decision)}
                                       options={[
                                         { value: "overwrite", label: t("import.optOverwrite") },
@@ -220,7 +278,7 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
                                         { value: "skip", label: t("import.optSkip") },
                                       ]} />
                                   ) : (
-                                    <SingleSelect width={150} value={decisions[String(r.row)] ?? "create"}
+                                    <SingleSelect width={150} value={typeof decisions[String(r.row)] === "string" ? decisions[String(r.row)] as string : "create"}
                                       onChange={(v) => setDecision(r, v as Decision)}
                                       options={[
                                         { value: "create", label: t("import.optCreate") },
@@ -255,8 +313,9 @@ export function ImportDialog({ onImported }: { onImported: () => void }) {
           {result && (
             <div data-testid="import-result">
               <div className="empty" style={{ background: "#3f7d541a", color: "var(--text)" }}>
-                <CircleCheck size={16} aria-hidden style={{ verticalAlign: "-3px", marginRight: 6 }} />{t("import.imported", {
-                  created: result.created, updated: result.updated,
+                <CircleCheck size={16} aria-hidden style={{ verticalAlign: "-3px", marginRight: 6 }} />{t("import.importedFull",
+                  "Imported — {{created}} created, {{updated}} updated, {{subtasks}} subtasks added{{skipped}}{{errored}}.", {
+                  created: result.created, updated: result.updated, subtasks: result.subtasks ?? 0,
                   skipped: result.skipped ? t("import.resSkipped", { n: result.skipped }) : "",
                   errored: result.errors ? t("import.resErrored", { n: result.errors }) : "",
                 })}

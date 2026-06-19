@@ -1,43 +1,60 @@
 """Task import: parse CSV / TSV / XLSX / JSON, preview (dry-run), then commit.
 
-Round-trips the export format. Matching is by the `id` column: a row whose id
-matches an existing task is an UPDATE (overwrite); rows without a known id are
-CREATEs. Missing projects/sub-projects are auto-created. Assignees are matched to
-existing users by email then name (never created). Admin-only (enforced at the
-view) — so no per-task visibility checks are needed here.
+Two row kinds, told apart by the optional **Subtask** column:
+  - Subtask cell BLANK  → a TASK row.
+  - Subtask cell FILLED → a SUBTASK row: it adds the named subtask to the task in
+    that same row (matched by ID or Title). Because a subtask is a mini-task, every
+    other column (Assignees, Status, Priority, Deadline, …) applies to the SUBTASK.
 
-Two phases share `_resolve_row` (pure, no writes): `preview` serializes the
-resolutions; `commit` re-parses the same content and applies them under a
-transaction, honouring per-row decisions (overwrite / create / skip).
+Matching (tasks and a subtask's parent alike):
+  - by the `id` column when present and valid;
+  - otherwise by Title — 0 matches = create (tasks only), 1 = that task, N =
+    "ambiguous": the preview lists the candidates and the user picks which to
+    update / attach to (one / several / all) or create new.
+  A subtask whose parent is a NEW task created by an earlier row in the same sheet
+  attaches to it (rows are processed top-to-bottom).
+
+Updates are PARTIAL and safe: only columns that carry a value overwrite; a blank
+or absent column leaves the existing field untouched, so a sparse sheet never
+wipes assignees / deadline / status. Creates fill blanks with defaults. Subtasks
+are added-only and de-duped by title (re-importing never doubles them).
+
+Everything is scoped to the importing admin's organization. A restore-point
+checkpoint is saved before any committing import (see views) so a bad import is
+one click to undo.
 """
 
 import csv
 import io
 import json
+import re
 from datetime import datetime
 
 from django.db import transaction
 
 from accounts.models import User
 from projects.models import Project, SubProject
-from tasks.models import Status, Task
+from tasks.models import Status, Subtask, Task
 
 from .export import COLUMNS
 
 MAX_ROWS = 5000
 # columns we don't import (server-controlled or too complex to round-trip safely)
 SKIP_COLUMNS = {"approval", "recurrence"}
+# extra headers the importer understands that aren't export COLUMNS
+_EXTRA_HEADERS = {"subtask": "subtask", "sub-task": "subtask",
+                  "subtask title": "subtask", "sub-task title": "subtask"}
 
 
 # ── header mapping ──────────────────────────────────────────────────────────
 
 def _col_key_for(header):
-    """Map an incoming header (label OR key, any case) to a COLUMNS key."""
+    """Map an incoming header (label OR key, any case) to a column key."""
     h = (header or "").strip().lower()
     for key, (label, _) in COLUMNS.items():
         if h == key or h == label.lower():
             return key
-    return None
+    return _EXTRA_HEADERS.get(h)
 
 
 # ── parsing ─────────────────────────────────────────────────────────────────
@@ -107,9 +124,6 @@ def _parse_json(text):
 # ── value coercion ──────────────────────────────────────────────────────────
 
 def _parse_date(s):
-    s = (s or "").strip()
-    if not s:
-        return None
     for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y/%m/%d"):
         try:
             return datetime.strptime(s, fmt).date()
@@ -119,9 +133,6 @@ def _parse_date(s):
 
 
 def _parse_time(s):
-    s = (s or "").strip()
-    if not s:
-        return None
     for fmt in ("%H:%M", "%H:%M:%S", "%I:%M %p"):
         try:
             return datetime.strptime(s, fmt).time()
@@ -134,14 +145,16 @@ _PRIORITY_LABELS = {"lowest": 1, "low": 2, "medium": 3, "high": 4, "highest": 5}
 
 
 def _parse_priority(s):
-    s = (s or "").strip().lower()
-    if not s:
-        return 3
+    s = s.lower()
     if s.isdigit() and 1 <= int(s) <= 5:
         return int(s)
     if s in _PRIORITY_LABELS:
         return _PRIORITY_LABELS[s]
     raise ValueError(f"bad priority '{s}'")
+
+
+def _parse_links(s):
+    return [p for p in (s or "").replace(",", " ").split() if p]
 
 
 def _status_maps():
@@ -157,123 +170,188 @@ def _status_maps():
     return by, initial
 
 
-def _user_maps():
+def _user_maps(org):
     by_email, by_name = {}, {}
-    for u in User.objects.filter(is_active=True):
+    qs = User.objects.filter(is_active=True)
+    if org is not None:
+        qs = qs.filter(memberships__organization=org, memberships__is_active=True).distinct()
+    for u in qs:
         by_email[u.email.lower()] = u.id
         if u.name:
             by_name.setdefault(u.name.lower(), u.id)
     return by_email, by_name
 
 
-def _parse_links(s):
-    return [p for p in (s or "").replace(",", " ").split() if p]
-
-
 # ── resolution (pure: no DB writes) ───────────────────────────────────────────
 
 class Ctx:
-    """Caches the lookups the resolver needs, built once per preview/commit."""
+    """Lookups the resolver needs, built once per preview/commit. Scoped to `org`
+    so name/project matching never crosses the tenant line."""
 
-    def __init__(self):
-        self.projects = {p.name.lower(): p for p in Project.objects.all()}
-        self.subs = {}
-        for sp in SubProject.objects.select_related("project").all():
-            self.subs[(sp.project.name.lower(), sp.name.lower())] = sp
+    def __init__(self, org=None):
+        self.org = org
+        proj_qs = Project.objects.all()
+        sub_qs = SubProject.objects.select_related("project").all()
+        task_qs = Task.objects.filter(archived_at__isnull=True).select_related("subproject__project")
+        if org is not None:
+            proj_qs = proj_qs.filter(organization=org)
+            sub_qs = sub_qs.filter(project__organization=org)
+            task_qs = task_qs.filter(subproject__project__organization=org)
+
+        self.projects = {p.name.lower(): p for p in proj_qs}
+        self.subs = {(sp.project.name.lower(), sp.name.lower()): sp for sp in sub_qs}
+        self.task_ids = set()
+        self.tasks_by_title = {}
+        for tk in task_qs:
+            self.task_ids.add(tk.id)
+            self.tasks_by_title.setdefault(tk.title.lower(), []).append(
+                {"id": tk.id, "title": tk.title,
+                 "project": tk.subproject.project.name, "subproject": tk.subproject.name}
+            )
         self.status_map, self.initial_status = _status_maps()
-        self.email_map, self.name_map = _user_maps()
+        self.email_map, self.name_map = _user_maps(org)
 
 
-def _resolve_row(row, ctx):
-    """Compute a row's resolution. Returns a dict with action/errors/warnings and
-    the parsed field values (no DB writes)."""
-    r = {"errors": [], "warnings": [], "fields": {}, "assignee_ids": [],
+def _provided_fields(row, r, ctx):
+    """Scalar fields parsed from the row — only columns that carry a value land
+    here; blanks/absent are omitted so an update leaves them untouched. Shared by
+    task rows and subtask rows (a subtask has the same fields)."""
+    provided = {}
+
+    def take(key, parser):
+        raw = (row.get(key) or "").strip()
+        if raw == "":
+            return
+        try:
+            provided[key] = parser(raw)
+        except ValueError as e:
+            r["errors"].append(str(e))
+
+    take("details", lambda s: s)
+    take("requirements", lambda s: s)
+    take("links", _parse_links)
+    take("deadline", _parse_date)
+    take("priority", _parse_priority)
+
+    raw_status = (row.get("status") or "").strip()
+    if raw_status:
+        key = ctx.status_map.get(raw_status.lower())
+        if key:
+            provided["status"] = key
+        else:
+            r["warnings"].append(f"unknown status '{raw_status}' — left unchanged")
+
+    st_raw = (row.get("start_time") or "").strip()
+    et_raw = (row.get("end_time") or "").strip()
+    if st_raw or et_raw:
+        if not (st_raw and et_raw):
+            r["errors"].append("set both start and end time, or neither")
+        else:
+            try:
+                st, et = _parse_time(st_raw), _parse_time(et_raw)
+                if et <= st:
+                    r["errors"].append("end time must be after start time")
+                else:
+                    provided["start_time"], provided["end_time"] = st, et
+            except ValueError as e:
+                r["errors"].append(str(e))
+    return provided
+
+
+def _match_parent(row, ctx, pending_titles):
+    """Resolve a row to an existing task: (match_id, candidates, parent_pending).
+    match_id = a single existing task; candidates = >1 same-named tasks (ambiguous);
+    parent_pending = the title belongs to a NEW task an earlier row will create."""
+    title = (row.get("title") or "").strip()
+    raw_id = (row.get("id") or "").strip()
+    warnings = []
+    if raw_id:
+        if raw_id.isdigit() and int(raw_id) in ctx.task_ids:
+            return int(raw_id), [], False, warnings
+        if raw_id.isdigit():
+            warnings.append(f"ID {raw_id} not found — matching by name instead")
+        else:
+            warnings.append(f"ignoring non-numeric ID '{raw_id}'")
+    if title:
+        cands = ctx.tasks_by_title.get(title.lower(), [])
+        if len(cands) == 1:
+            return cands[0]["id"], [], False, warnings
+        if len(cands) > 1:
+            return None, cands, False, warnings
+        if title.lower() in pending_titles:
+            return None, [], True, warnings
+    return None, [], False, warnings
+
+
+def _resolve_row(row, ctx, pending_titles):
+    """Compute a row's resolution (no DB writes)."""
+    r = {"errors": [], "warnings": [], "provided": {}, "assignee_ids": None,
+         "match_id": None, "candidates": [], "parent_pending": False,
+         "is_subtask": False, "subtask": "",
          "will_create_project": False, "will_create_subproject": False}
 
     title = (row.get("title") or "").strip()
-    if not title:
-        r["errors"].append("Title is required")
     r["title"] = title
-
     project_name = (row.get("project") or "").strip()
-    sub_name = (row.get("subproject") or "").strip() or "General"
-    r["project"], r["subproject"] = project_name, sub_name
-    if not project_name:
-        r["errors"].append("Project is required")
+    sub_raw = (row.get("subproject") or "").strip()
+    r["project"], r["subproject"] = project_name, (sub_raw or "General")
+    subtask_title = (row.get("subtask") or "").strip()
+    r["is_subtask"] = bool(subtask_title)
+    r["subtask"] = subtask_title
+
+    match_id, candidates, parent_pending, warnings = _match_parent(row, ctx, pending_titles)
+    r["match_id"], r["candidates"], r["parent_pending"] = match_id, candidates, parent_pending
+    r["warnings"].extend(warnings)
+
+    if r["is_subtask"]:
+        # A subtask needs an existing/pending parent — it never creates a task.
+        if not (match_id or candidates or parent_pending):
+            who = f"'{title}'" if title else "(no Title/ID given)"
+            r["errors"].append(f"no task {who} found to add subtask '{subtask_title}' to")
+        r["action"] = "ambiguous" if candidates else "subtask"
     else:
-        if project_name.lower() not in ctx.projects:
-            r["will_create_project"] = True
-            r["will_create_subproject"] = sub_name.lower() != "general"
-        elif (project_name.lower(), sub_name.lower()) not in ctx.subs:
-            r["will_create_subproject"] = True
+        r["action"] = "ambiguous" if candidates else ("update" if match_id else "create")
+        if r["action"] == "create":
+            if not title:
+                r["errors"].append("Title is required")
+            if not project_name:
+                r["errors"].append("Project is required")
+            else:
+                sub_name = sub_raw or "General"
+                if project_name.lower() not in ctx.projects:
+                    r["will_create_project"] = True
+                    r["will_create_subproject"] = sub_name.lower() != "general"
+                elif (project_name.lower(), sub_name.lower()) not in ctx.subs:
+                    r["will_create_subproject"] = True
 
-    # id matching → action
-    raw_id = (row.get("id") or "").strip()
-    r["match_id"] = None
-    if raw_id:
-        if raw_id.isdigit() and Task.objects.filter(pk=int(raw_id)).exists():
-            r["match_id"] = int(raw_id)
-        elif raw_id.isdigit():
-            r["warnings"].append(f"ID {raw_id} not found — will create new")
-        else:
-            r["warnings"].append(f"ignoring non-numeric ID '{raw_id}'")
-    r["action"] = "update" if r["match_id"] else "create"
+    r["provided"] = _provided_fields(row, r, ctx)
 
-    # scalar fields
-    fields = r["fields"]
-    fields["details"] = (row.get("details") or "").strip()
-    fields["requirements"] = (row.get("requirements") or "").strip()
-    fields["links"] = _parse_links(row.get("links"))
-    try:
-        fields["deadline"] = _parse_date(row.get("deadline"))
-    except ValueError as e:
-        r["errors"].append(str(e))
-    try:
-        st = _parse_time(row.get("start_time"))
-        et = _parse_time(row.get("end_time"))
-        if bool(st) != bool(et):
-            r["errors"].append("set both start and end time, or neither")
-        elif st and et and et <= st:
-            r["errors"].append("end time must be after start time")
-        fields["start_time"], fields["end_time"] = st, et
-    except ValueError as e:
-        r["errors"].append(str(e))
-    try:
-        fields["priority"] = _parse_priority(row.get("priority"))
-    except ValueError as e:
-        r["errors"].append(str(e))
-
-    raw_status = (row.get("status") or "").strip().lower()
-    if raw_status and raw_status in ctx.status_map:
-        fields["status"] = ctx.status_map[raw_status]
-    elif raw_status:
-        r["warnings"].append(f"unknown status '{row.get('status')}' — using default")
-        fields["status"] = ctx.initial_status
-    else:
-        fields["status"] = ctx.initial_status
-
-    # assignees: match by email then name; collect unmatched
-    raw_assignees = (row.get("assignees") or "").replace(";", ",")
-    for part in [p.strip() for p in raw_assignees.split(",") if p.strip()]:
-        uid = ctx.email_map.get(part.lower()) or ctx.name_map.get(part.lower())
-        if uid:
-            r["assignee_ids"].append(uid)
-        else:
-            r["warnings"].append(f"no user matched '{part}' — left unassigned")
-
+    raw_assignees = (row.get("assignees") or "").strip()
+    if raw_assignees:
+        ids = []
+        for part in [p.strip() for p in raw_assignees.replace(";", ",").split(",") if p.strip()]:
+            uid = ctx.email_map.get(part.lower()) or ctx.name_map.get(part.lower())
+            if uid:
+                ids.append(uid)
+            else:
+                r["warnings"].append(f"no user matched '{part}' — skipped")
+        r["assignee_ids"] = ids
     return r
 
 
 # ── preview & commit ───────────────────────────────────────────────────────
 
-def preview(rows):
+def preview(rows, org=None):
     if len(rows) > MAX_ROWS:
         raise ValueError(f"Too many rows ({len(rows)}); max {MAX_ROWS}.")
-    ctx = Ctx()
+    ctx = Ctx(org)
+    pending = set()   # titles of CREATE task rows seen so far (subtasks may attach)
     out, new_projects, new_subs = [], set(), set()
-    counts = {"create": 0, "update": 0, "error": 0}
+    counts = {"create": 0, "update": 0, "subtask": 0, "ambiguous": 0, "error": 0}
     for i, row in enumerate(rows):
-        res = _resolve_row(row, ctx)
+        res = _resolve_row(row, ctx, pending)
+        if not res["is_subtask"] and res["action"] == "create" and res["title"] and not res["errors"]:
+            pending.add(res["title"].lower())
         if res["will_create_project"]:
             new_projects.add(res["project"])
         if res["will_create_subproject"]:
@@ -281,10 +359,13 @@ def preview(rows):
         action = "error" if res["errors"] else res["action"]
         counts[action] = counts.get(action, 0) + 1
         out.append({
-            "row": i, "action": action, "match_id": res["match_id"], "title": res["title"],
+            "row": i, "action": action, "is_subtask": res["is_subtask"], "subtask": res["subtask"],
+            "match_id": res["match_id"], "candidates": res["candidates"],
+            "parent_pending": res["parent_pending"], "title": res["title"],
             "project": res["project"], "subproject": res["subproject"],
             "will_create_project": res["will_create_project"],
             "will_create_subproject": res["will_create_subproject"],
+            "update_fields": sorted(res["provided"].keys()) + (["assignees"] if res["assignee_ids"] is not None else []),
             "errors": res["errors"], "warnings": res["warnings"],
         })
     return {
@@ -296,21 +377,64 @@ def preview(rows):
     }
 
 
+def _apply_task_update(task, res):
+    """Apply a row's partial fields + assignees to an existing task. A non-blank
+    Title renames the task (for a name-matched row it just equals the current one)."""
+    changed = []
+    if res["title"] and res["title"] != task.title:
+        task.title = res["title"]
+        changed.append("title")
+    for k, v in res["provided"].items():
+        setattr(task, k, v)
+        changed.append(k)
+    if changed:
+        task.save(update_fields=changed)
+    if res["assignee_ids"] is not None:
+        task.assignees.set(res["assignee_ids"])
+
+
+def _add_subtask(task, res):
+    """Add one subtask (deduped by title) to `task`, with the row's fields. Returns
+    1 if created, 0 if a same-titled subtask already existed."""
+    title = res["subtask"]
+    if any(s.title.lower() == title.lower() for s in task.subtasks.all()):
+        return 0
+    f = res["provided"]
+    st = Subtask(
+        task=task, title=title,
+        status=f.get("status", "todo"), priority=f.get("priority", 3),
+        details=f.get("details", ""), requirements=f.get("requirements", ""),
+        links=f.get("links", []), deadline=f.get("deadline"),
+        start_time=f.get("start_time"), end_time=f.get("end_time"),
+    )
+    st.save()
+    if res["assignee_ids"]:
+        st.assignees.set(res["assignee_ids"])
+    return 1
+
+
 @transaction.atomic
-def commit(user, rows, decisions):
-    """Apply the import. `decisions` maps str(row_index) -> overwrite|create|skip;
-    a missing entry follows the row's natural action. Rows with errors are skipped."""
+def commit(user, rows, decisions, org=None):
+    """Apply the import. `decisions` maps str(row_index) -> a decision:
+      "skip"               — do nothing for this row
+      "create"             — force-create a new task (even if it matched a name)
+      "overwrite"          — update the matched task (the default 1:1 match)
+      {"ids": [int, ...]}  — target exactly these tasks (an ambiguous row's pick)
+    A missing entry follows the row's natural action; an ambiguous row with no
+    decision is skipped (the user must choose). Rows with errors are skipped."""
     if len(rows) > MAX_ROWS:
         raise ValueError(f"Too many rows ({len(rows)}); max {MAX_ROWS}.")
-    ctx = Ctx()
-    proj_cache = dict(ctx.projects)   # name.lower() -> Project (live, grows as we create)
+    ctx = Ctx(org)
+    proj_cache = dict(ctx.projects)
     sub_cache = dict(ctx.subs)
-    result = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
+    created_titles = {}   # title.lower -> [Task] created earlier in this run
+    pending = set()
+    result = {"created": 0, "updated": 0, "subtasks": 0, "skipped": 0, "errors": 0}
 
     def get_project(name):
         p = proj_cache.get(name.lower())
         if p is None:
-            p = Project.objects.create(name=name)  # color + default 'General' auto-created
+            p = Project.objects.create(name=name, **({"organization": org} if org is not None else {}))
             proj_cache[name.lower()] = p
             for sp in p.subprojects.all():
                 sub_cache[(name.lower(), sp.name.lower())] = sp
@@ -324,8 +448,12 @@ def commit(user, rows, decisions):
             sub_cache[key] = sp
         return sp
 
+    valid_ids = set(ctx.task_ids)
+
     for i, row in enumerate(rows):
-        res = _resolve_row(row, ctx)
+        # pending grows as we go (like preview) so a subtask only attaches to a NEW
+        # task whose row came ABOVE it; created_titles holds the real saved tasks.
+        res = _resolve_row(row, ctx, pending)
         decision = decisions.get(str(i))
         if res["errors"]:
             result["errors"] += 1
@@ -334,27 +462,54 @@ def commit(user, rows, decisions):
             result["skipped"] += 1
             continue
 
-        sub = get_sub(res["project"], res["subproject"])
-        f = res["fields"]
-        as_update = res["action"] == "update" and decision != "create"
+        # which existing task ids does this row target (vs. create-new)?
+        target_ids = None
+        if decision == "create" and not res["is_subtask"]:
+            target_ids = []
+        elif isinstance(decision, dict) and isinstance(decision.get("ids"), list):
+            target_ids = [int(x) for x in decision["ids"] if int(x) in valid_ids]
+        elif res["match_id"]:
+            target_ids = [res["match_id"]]
+        elif res["candidates"]:                 # ambiguous, no pick → leave untouched
+            result["skipped"] += 1
+            continue
+        elif res["parent_pending"]:             # subtask attaching to a new task above
+            target_ids = "pending"
 
-        if as_update:
-            task = Task.objects.filter(pk=res["match_id"]).first()
-            if task is None:  # vanished between preview and commit
-                as_update = False
-        if as_update:
-            task.subproject = sub
-            task.title = res["title"]
-            for k, v in f.items():
-                setattr(task, k, v)
+        if res["is_subtask"]:
+            parents = (created_titles.get(res["title"].lower(), []) if target_ids == "pending"
+                       else [Task.objects.filter(pk=t).first() for t in (target_ids or [])])
+            added = False
+            for task in parents:
+                if task is not None:
+                    result["subtasks"] += _add_subtask(task, res)
+                    added = True
+            if not added:
+                result["skipped"] += 1
+            continue
+
+        if target_ids:   # update existing task(s)
+            for tid in target_ids:
+                task = Task.objects.filter(pk=tid).first()
+                if task is not None:
+                    _apply_task_update(task, res)
+                    result["updated"] += 1
+        else:            # create a new task
+            sub = get_sub(res["project"], res["subproject"] or "General")
+            f = res["provided"]
+            task = Task(
+                subproject=sub, title=res["title"], created_by=user,
+                approval_state=Task.Approval.APPROVED,
+                priority=f.get("priority", 3), status=f.get("status", ctx.initial_status),
+                details=f.get("details", ""), requirements=f.get("requirements", ""),
+                links=f.get("links", []), deadline=f.get("deadline"),
+                start_time=f.get("start_time"), end_time=f.get("end_time"),
+            )
             task.save()
-            task.assignees.set(res["assignee_ids"])
-            result["updated"] += 1
-        else:
-            task = Task(subproject=sub, title=res["title"], created_by=user,
-                        approval_state=Task.Approval.APPROVED, **f)
-            task.save()
-            task.assignees.set(res["assignee_ids"])
+            if res["assignee_ids"]:
+                task.assignees.set(res["assignee_ids"])
+            created_titles.setdefault(task.title.lower(), []).append(task)
+            pending.add(task.title.lower())   # later subtask rows can attach to it
             result["created"] += 1
 
     return result

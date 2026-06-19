@@ -167,6 +167,93 @@ def test_status_matched_by_label(admin, karuna):
     assert Task.objects.get(title="X").status == st.key
 
 
+# ── safe partial updates ─────────────────────────────────────────────────────
+
+def test_update_blank_columns_leave_existing_untouched(admin, member, karuna):
+    """The headline safety guarantee: a sparse update sheet never wipes fields."""
+    import datetime
+    t = Task.objects.create(subproject=karuna["marketing"], title="Keep", priority=5,
+                            details="keep details", deadline=datetime.date(2026, 8, 1))
+    t.assignees.add(member)
+    # sheet carries only ID + a new Details; everything else blank
+    rows = import_data.parse("csv", f"ID,Title,Details,Priority,Assignees,Deadline\n{t.id},,fresh,,,\n")
+    res = import_data.commit(admin, rows, {})
+    assert res["updated"] == 1
+    t.refresh_from_db()
+    assert t.details == "fresh"                       # provided → changed
+    assert t.title == "Keep"                          # blank → unchanged
+    assert t.priority == 5                            # blank → unchanged
+    assert t.deadline == datetime.date(2026, 8, 1)    # blank → NOT cleared
+    assert list(t.assignees.values_list("id", flat=True)) == [member.id]  # blank → NOT wiped
+
+
+def test_update_by_name_when_no_id(admin, karuna):
+    t = Task.objects.create(subproject=karuna["marketing"], title="By Name", priority=3)
+    rows = import_data.parse("csv", "Title,Priority\nBy Name,High\n")
+    res = import_data.commit(admin, rows, {})
+    assert res["updated"] == 1 and res["created"] == 0
+    t.refresh_from_db()
+    assert t.priority == 4
+
+
+def test_name_ambiguous_preview_then_pick(admin, karuna):
+    a = Task.objects.create(subproject=karuna["marketing"], title="Dup")
+    b = Task.objects.create(subproject=karuna["general"], title="Dup")
+    rows = import_data.parse("csv", "Title,Priority\nDup,High\n")
+    pv = import_data.preview(rows)
+    assert pv["rows"][0]["action"] == "ambiguous"
+    assert {c["id"] for c in pv["rows"][0]["candidates"]} == {a.id, b.id}
+    # no decision → nothing touched
+    assert import_data.commit(admin, rows, {})["skipped"] == 1
+    # pick both → both updated
+    res = import_data.commit(admin, rows, {"0": {"ids": [a.id, b.id]}})
+    assert res["updated"] == 2
+    a.refresh_from_db(); b.refresh_from_db()
+    assert a.priority == 4 and b.priority == 4
+
+
+# ── subtask rows ─────────────────────────────────────────────────────────────
+
+def test_subtask_row_adds_with_assignee_and_dedups(admin, member, karuna):
+    t = Task.objects.create(subproject=karuna["marketing"], title="Parent")
+    rows = import_data.parse("csv",
+        "Title,Subtask,Assignees\nParent,Step one,m@example.com\nParent,Step one,\n")  # 2nd = dup
+    res = import_data.commit(admin, rows, {})
+    assert res["subtasks"] == 1 and res["updated"] == 0 and res["created"] == 0
+    st = t.subtasks.get()
+    assert st.title == "Step one"
+    assert list(st.assignees.values_list("id", flat=True)) == [member.id]
+
+
+def test_subtask_attaches_to_new_task_created_above(admin, karuna):
+    rows = import_data.parse("csv",
+        "Project,Sub-project,Title,Subtask\n"
+        "Karuna Devi,Marketing,Brand New,\n"        # task row (creates it)
+        "Karuna Devi,,Brand New,First step\n")       # subtask row (attaches to it)
+    res = import_data.commit(admin, rows, {})
+    assert res["created"] == 1 and res["subtasks"] == 1
+    assert Task.objects.get(title="Brand New").subtasks.get().title == "First step"
+
+
+def test_subtask_without_parent_is_error(admin, karuna):
+    rows = import_data.parse("csv", "Title,Subtask\nGhost Task,Some step\n")
+    pv = import_data.preview(rows)
+    assert pv["rows"][0]["action"] == "error"
+    assert any("no task" in e for e in pv["rows"][0]["errors"])
+
+
+# ── pre-import checkpoint ────────────────────────────────────────────────────
+
+def test_commit_saves_restore_point(admin, karuna):
+    from tasks.models import RestorePoint
+    before = RestorePoint.objects.count()
+    body = {"fmt": "csv", "content": "Project,Sub-project,Title\nKaruna Devi,Marketing,Z\n", "action": "commit"}
+    res = login(admin).post("/api/import", body, format="json")
+    assert res.status_code == 200
+    assert RestorePoint.objects.filter(label__startswith="Before import").exists()
+    assert RestorePoint.objects.count() == before + 1
+
+
 # ── export round-trip + API ──────────────────────────────────────────────────
 
 def test_export_includes_id_and_json_format(admin, karuna):

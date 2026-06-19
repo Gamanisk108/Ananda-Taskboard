@@ -43,12 +43,19 @@ class ImportView(APIView):
         except Exception as e:  # malformed input → clean 400
             return Response({"detail": f"Could not parse the {fmt or 'file'}: {e}"}, status=400)
 
+        org = getattr(request, "org", None)
         try:
             if action == "commit":
                 decisions = request.data.get("decisions") or {}
                 if isinstance(decisions, str):
                     decisions = json.loads(decisions or "{}")
-                return Response(import_data.commit(request.user, rows, decisions))
-            return Response(import_data.preview(rows))
+                # Safety net: snapshot the whole board before changing anything, so a
+                # bad import is one click to undo from Restore points.
+                if rows:
+                    from django.utils import timezone
+                    from restore_service import save_point
+                    save_point(f"Before import — {timezone.now().strftime('%Y-%m-%d %H:%M')}", auto=True)
+                return Response(import_data.commit(request.user, rows, decisions, org))
+            return Response(import_data.preview(rows, org))
         except ValueError as e:
             return Response({"detail": str(e)}, status=400)
