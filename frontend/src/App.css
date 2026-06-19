@@ -127,7 +127,11 @@
 .tbl tr.overdue td { color: var(--danger); }
 .tbl tr.overdue .deadline { font-weight: 600; }
 .tbl tr.due-soon { --row: var(--soon-bg); }
-.tbl tr.overdue:hover, .tbl tr.due-soon:hover { filter: brightness(.98); }
+/* Dim overdue/due-soon rows on hover via a darker background, NOT `filter`:
+   `filter` creates a stacking context on the <tr>, which traps an open inline
+   popover (assignee / status dropdown) — a descendant of the row — BENEATH the
+   rows below it, so the dropdown renders "underneath" other list items. */
+.tbl tr.overdue:hover, .tbl tr.due-soon:hover { --row: color-mix(in srgb, var(--hover) 96%, #000); }
 .od { color: var(--danger); font-weight: 700; cursor: help; }
 .od-soon { color: var(--warn); font-weight: 700; cursor: help; }
 
