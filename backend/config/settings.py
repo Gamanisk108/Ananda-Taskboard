@@ -260,6 +260,12 @@ GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", "")
 # back to our page. Django 4+ defaults COOP to "same-origin", which severs that
 # channel and leaves the popup hanging white. Allow popups while keeping COOP.
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
+# Render terminates TLS and forwards over http with X-Forwarded-Proto: https.
+# Trust that header so request.is_secure()/build_absolute_uri() produce https
+# URLs — required for share-card og:image (unfurlers reject http images) and
+# correct for any absolute URL (e.g. reset/verify email links). No SSL-redirect
+# is configured, so there's no loop risk.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", "")
 AI_MODEL = env("AI_MODEL", "claude-haiku-4-5-20251001")
 AI_MAX_TASKS = int(env("AI_MAX_TASKS", "25"))            # cap per generation
