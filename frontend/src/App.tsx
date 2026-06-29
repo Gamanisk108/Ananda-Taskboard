@@ -136,7 +136,14 @@ export default function App() {
   // First-login welcome shows once ever (localStorage "at-onboarded"); "Show welcome
   // again" in Help re-arms it. What's-New dot compares the latest help version against
   // the last version the user opened Help at ("at-help-seen").
-  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("at-onboarded"));
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (localStorage.getItem("at-onboarded")) return false;
+    // A deep-link arrival (a shared /s/<token> link opens the app at ?task / ?project
+    // / ?sub) must not be hijacked by first-run onboarding: the welcome modal racing
+    // with the async deep-link task-open left the task closed. Skip welcome this time.
+    const q = new URLSearchParams(window.location.search);
+    return !(q.get("task") || q.get("project") || q.get("sub"));
+  });
   // A first-ever browser starts "caught up": What's New then only surfaces features
   // added AFTER this first load (not every existing feature). Initializing to the
   // latest version also avoids a dot-flash before the persist effect below runs.

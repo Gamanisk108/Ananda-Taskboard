@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 from . import brand
 
@@ -135,9 +135,15 @@ def render(spec: CardSpec) -> bytes:
     # Surface panel.
     panel = [MARGIN, MARGIN, W - MARGIN, H - MARGIN]
     _rounded(d, panel, radius=28, fill=brand.SURFACE, outline=brand.BORDER, width=2)
-    # Left accent rail.
-    _rounded(d, [MARGIN + 1, MARGIN + 1, MARGIN + 1 + RAIL_W, H - MARGIN - 1],
-             radius=RAIL_W // 2, fill=accent)
+    # Accent left edge — CLIPPED to the card's rounded rectangle so it reads as
+    # the card's own colored left edge (sharing the top-left/bottom-left corners,
+    # straight inner edge), not a separate pill floating beside the card.
+    card_mask = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(card_mask).rounded_rectangle(panel, radius=28, fill=255)
+    strip_mask = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(strip_mask).rectangle([MARGIN, MARGIN, MARGIN + RAIL_W, H - MARGIN], fill=255)
+    strip_mask = ImageChops.multiply(strip_mask, card_mask)
+    img.paste(Image.new("RGB", (W, H), accent), (0, 0), strip_mask)
 
     left = MARGIN + RAIL_W + PAD_X
     right = W - MARGIN - PAD_X
