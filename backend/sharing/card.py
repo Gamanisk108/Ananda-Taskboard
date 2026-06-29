@@ -37,6 +37,11 @@ FONTS = Path(__file__).resolve().parent / "fonts"
 _INSTRUMENT = str(FONTS / "InstrumentSans-VF.ttf")
 _MONO = str(FONTS / "RedHatMono-VF.ttf")
 
+# Bump whenever the card RENDERING changes (layout, the integrated accent edge,
+# fonts, colors…) even if the task DATA is identical — the ETag folds this in so
+# every browser/CDN cache invalidates on a render change, not just a data change.
+RENDER_VERSION = 2
+
 W, H = 1200, 630
 MARGIN = 48
 PAD_X = 72          # inner content padding from the panel edge

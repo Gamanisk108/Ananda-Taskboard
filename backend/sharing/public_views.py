@@ -61,8 +61,9 @@ _CARD_CACHE_MAX = 256
 def _etag_for(token: str, spec) -> str:
     import hashlib
 
-    payload = repr((spec.kind, spec.title, spec.breadcrumb, spec.description,
-                    spec.priority, spec.status, tuple(spec.assignees), spec.accent))
+    payload = repr((cardmod.RENDER_VERSION, spec.kind, spec.title, spec.breadcrumb,
+                    spec.description, spec.priority, spec.status, tuple(spec.assignees),
+                    spec.accent))
     digest = hashlib.sha1(payload.encode("utf-8")).hexdigest()[:16]
     return f'W/"{token}.{digest}"'
 
@@ -164,5 +165,7 @@ def share_card(request, token):
     png = _render_for_etag(etag, spec)
     resp = HttpResponse(png, content_type="image/png")
     resp["ETag"] = etag
-    resp["Cache-Control"] = "public, max-age=300"
+    # Short max-age + ETag: caches revalidate quickly (cheap 304s) so an edit or a
+    # render-version bump surfaces fast, rather than serving a stale card for ages.
+    resp["Cache-Control"] = "public, max-age=60, must-revalidate"
     return resp
