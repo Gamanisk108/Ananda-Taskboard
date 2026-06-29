@@ -1,0 +1,41 @@
+"""Brand tokens for the share card, mirrored 1:1 from the frontend so the unfurl
+preview matches the live app exactly:
+  - status colors  -> frontend/src/statuses.ts (fallback palette)
+  - priority meta  -> frontend/src/types.ts PRIORITY_META
+  - surfaces       -> frontend/src/index.css (:root light theme)
+Keep these in sync if the design system moves (DESIGN-DECISIONS-LOG is the tie-breaker).
+"""
+
+# Light "cream" surface — the card is a raster image, so it uses ONE theme.
+BG = (246, 239, 222)        # --bg  #f6efde
+SURFACE = (255, 253, 248)   # --surface #fffdf8
+BORDER = (228, 216, 187)    # --border #e4d8bb
+INK = (35, 38, 43)          # --text #23262b
+MUTED = (90, 97, 114)       # --muted #5a6172
+FAINT = (138, 130, 112)     # --faint #8a8270
+NAVY = (30, 58, 110)        # primary #1e3a6e
+GOLD = (201, 162, 75)       # --gold #c9a24b
+WHITE = (255, 255, 255)
+
+# Status key -> (label, hex color). Matches statuses.ts fallback palette.
+STATUS = {
+    "todo": ("To Do", "#6b7280"),
+    "in_progress": ("In Progress", "#2c64a8"),
+    "delayed": ("Delayed", "#bb3b28"),
+    "review": ("Review", "#7a5aa6"),
+    "done": ("Done", "#3f7d54"),
+}
+
+# Priority level (1-5) -> (label, hex color). Matches PRIORITY_META.
+PRIORITY = {
+    1: ("Lowest", "#64748b"),
+    2: ("Low", "#3b82a8"),
+    3: ("Medium", "#b7791f"),
+    4: ("High", "#c2762a"),
+    5: ("Highest", "#b4452f"),
+}
+
+
+def hex_to_rgb(h: str) -> tuple[int, int, int]:
+    h = h.lstrip("#")
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]

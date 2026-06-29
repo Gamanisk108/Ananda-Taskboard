@@ -971,5 +971,25 @@
     "nameOrg": "Name your organization",
     "orgPh": "e.g. Ananda Portland",
     "createOrg": "Create organization"
+  },
+  "share": {
+    "title": "Share {{kind}}",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "linkLabel": "Share link",
+    "shareVia": "Share via…",
+    "includeDescription": "Include description",
+    "hint": "Anyone with the link sees a preview card. They'll need to sign in to open the full {{kind}}.",
+    "loading": "Creating link…",
+    "error": "Couldn't create a share link.",
+    "retry": "Try again",
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke link",
+    "kind": {
+      "project": "project",
+      "subproject": "sub-project",
+      "task": "task",
+      "subtask": "sub-task"
+    }
   }
 }

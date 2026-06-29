@@ -1,0 +1,214 @@
+"""Render a 1200×630 share-preview PNG for any shareable object.
+
+Pillow + bundled variable TTFs (Instrument Sans + Red Hat Mono) — chosen over
+SVG→PNG or headless-Chrome because FreeType reads the bundled fonts directly,
+so output is byte-deterministic on Render with zero system-font dependency and
+no browser memory cost. 1200×630 is the og:image `summary_large_image` standard.
+"""
+
+from __future__ import annotations
+
+import io
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+from . import brand
+
+
+@dataclass
+class CardSpec:
+    """Everything the card image + OG meta need, uniform across all four entity
+    types. Built by describe.py from a model instance; the renderer is ORM-free."""
+
+    kind: str                       # "Task" | "Sub-task" | "Project" | "Sub-project"
+    title: str
+    breadcrumb: str = ""            # "Project ▸ Sub-Project"
+    description: str = ""           # raw; the caller decides whether to show it
+    priority: int | None = None     # 1-5 for tasks/subtasks, else None
+    status: str | None = None       # Status.key for tasks/subtasks, else None
+    assignees: list[str] = field(default_factory=list)
+    accent: str = "#1e3a6e"         # left rail color (project/sub-project color, else navy)
+    deep_link: str = "/"            # in-app path using the existing ?task/?project/?sub scheme
+
+FONTS = Path(__file__).resolve().parent / "fonts"
+_INSTRUMENT = str(FONTS / "InstrumentSans-VF.ttf")
+_MONO = str(FONTS / "RedHatMono-VF.ttf")
+
+W, H = 1200, 630
+MARGIN = 48
+PAD_X = 72          # inner content padding from the panel edge
+RAIL_W = 14         # left accent rail width
+
+
+@lru_cache(maxsize=64)
+def _font(family: str, size: int, weight: int) -> ImageFont.FreeTypeFont:
+    """A sized, weighted font. Variable-axis order differs per family:
+    Instrument Sans = [Width, Weight]; Red Hat Mono = [Weight]."""
+    path = _INSTRUMENT if family == "ui" else _MONO
+    f = ImageFont.truetype(path, size)
+    try:
+        f.set_variation_by_axes([100, weight] if family == "ui" else [weight])
+    except Exception:  # pragma: no cover - non-variable fallback
+        pass
+    return f
+
+
+def _truncate(draw, text: str, font, max_w: int) -> str:
+    """Single line, ellipsized to fit max_w."""
+    text = " ".join((text or "").split())
+    if not text or draw.textlength(text, font=font) <= max_w:
+        return text
+    ell = "…"
+    while text and draw.textlength(text + ell, font=font) > max_w:
+        text = text[:-1]
+    return text.rstrip() + ell
+
+
+def _wrap(draw, text: str, font, max_w: int, max_lines: int) -> list[str]:
+    """Word-wrap into at most max_lines, ellipsizing the last if it overflows."""
+    text = " ".join((text or "").split())
+    if not text:
+        return []
+    words = text.split(" ")
+    lines: list[str] = []
+    cur = ""
+    for w in words:
+        trial = f"{cur} {w}".strip()
+        if draw.textlength(trial, font=font) <= max_w:
+            cur = trial
+        else:
+            if cur:
+                lines.append(cur)
+            cur = w
+            if len(lines) == max_lines:
+                break
+    if cur and len(lines) < max_lines:
+        lines.append(cur)
+    if len(lines) == max_lines:
+        # If content remains, ellipsize the final line.
+        consumed = " ".join(lines)
+        if len(consumed) < len(text):
+            lines[-1] = _truncate(draw, lines[-1] + " …more", font, max_w)
+    # Safety net: a single unbreakable word longer than max_w would otherwise
+    # draw off-canvas — char-truncate any line that still overflows.
+    return [_truncate(draw, ln, font, max_w) for ln in lines]
+
+
+def _rounded(draw, box, radius, **kw):
+    draw.rounded_rectangle(box, radius=radius, **kw)
+
+
+def _chip(draw, x, y, label, color_hex, font) -> int:
+    """A pill: soft tinted bg + colored dot + label. Returns its right edge x."""
+    rgb = brand.hex_to_rgb(color_hex)
+    th = 52
+    dot_r = 7
+    text_w = draw.textlength(label, font=font)
+    pad = 22
+    w = int(pad + dot_r * 2 + 12 + text_w + pad)
+    # 14% tint background of the accent color over the surface.
+    bg = tuple(round(s * 0.86 + c * 0.14) for s, c in zip(brand.SURFACE, rgb))
+    _rounded(draw, [x, y, x + w, y + th], radius=th // 2, fill=bg,
+             outline=tuple(round(s * 0.7 + c * 0.3) for s, c in zip(brand.SURFACE, rgb)), width=1)
+    cy = y + th // 2
+    draw.ellipse([x + pad, cy - dot_r, x + pad + dot_r * 2, cy + dot_r], fill=rgb)
+    draw.text((x + pad + dot_r * 2 + 12, cy), label, font=font, fill=rgb, anchor="lm")
+    return x + w
+
+
+def _initials(name: str) -> str:
+    parts = [p for p in name.strip().split() if p]
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[1][0]).upper()
+    return (name.strip()[:2] or "?").upper()
+
+
+def render(spec: CardSpec) -> bytes:
+    """Render `spec` to PNG bytes."""
+    img = Image.new("RGB", (W, H), brand.BG)
+    d = ImageDraw.Draw(img)
+    accent = brand.hex_to_rgb(spec.accent)
+
+    # Surface panel.
+    panel = [MARGIN, MARGIN, W - MARGIN, H - MARGIN]
+    _rounded(d, panel, radius=28, fill=brand.SURFACE, outline=brand.BORDER, width=2)
+    # Left accent rail.
+    _rounded(d, [MARGIN + 1, MARGIN + 1, MARGIN + 1 + RAIL_W, H - MARGIN - 1],
+             radius=RAIL_W // 2, fill=accent)
+
+    left = MARGIN + RAIL_W + PAD_X
+    right = W - MARGIN - PAD_X
+    content_w = right - left
+    y = MARGIN + 56
+
+    # Kind eyebrow (mono, uppercase) + brand mark on the right.
+    eyebrow = _font("mono", 26, 600)
+    d.text((left, y), spec.kind.upper(), font=eyebrow, fill=accent, anchor="lm")
+    brand_f = _font("ui", 26, 600)
+    d.text((right, y), "Ananda Taskboard", font=brand_f, fill=brand.FAINT, anchor="rm")
+    y += 44
+
+    # Breadcrumb.
+    if spec.breadcrumb:
+        crumb_f = _font("ui", 26, 500)
+        d.text((left, y), _truncate(d, spec.breadcrumb, crumb_f, content_w),
+               font=crumb_f, fill=brand.MUTED, anchor="lm")
+        y += 50
+    else:
+        y += 8
+
+    # Title (up to 2 lines).
+    title_f = _font("ui", 60, 700)
+    title_lines = _wrap(d, spec.title or "Untitled", title_f, content_w, 2)
+    for line in title_lines:
+        d.text((left, y), line, font=title_f, fill=brand.INK, anchor="lm")
+        y += 74
+    y += 18
+
+    # Chips: priority + status (tasks/sub-tasks only).
+    chip_f = _font("ui", 26, 600)
+    chip_x = left
+    drew_chip = False
+    if spec.priority in brand.PRIORITY:
+        plabel, pcolor = brand.PRIORITY[spec.priority]
+        chip_x = _chip(d, chip_x, y, f"{plabel} priority", pcolor, chip_f) + 16
+        drew_chip = True
+    if spec.status in brand.STATUS:
+        slabel, scolor = brand.STATUS[spec.status]
+        chip_x = _chip(d, chip_x, y, slabel, scolor, chip_f) + 16
+        drew_chip = True
+    if drew_chip:
+        y += 78
+
+    # Description (optional, up to 2 lines).
+    if spec.description:
+        desc_f = _font("ui", 28, 400)
+        for line in _wrap(d, spec.description, desc_f, content_w, 2):
+            d.text((left, y), line, font=desc_f, fill=brand.MUTED, anchor="lm")
+            y += 42
+
+    # Footer: assignees (bottom-left).
+    foot_y = H - MARGIN - 56
+    if spec.assignees:
+        ax = left
+        av_f = _font("ui", 22, 600)
+        shown = spec.assignees[:3]
+        for i, name in enumerate(shown):
+            cx = ax + i * 44
+            r = 22
+            d.ellipse([cx, foot_y - r, cx + r * 2, foot_y + r], fill=accent,
+                      outline=brand.SURFACE, width=3)
+            d.text((cx + r, foot_y), _initials(name), font=av_f, fill=brand.WHITE, anchor="mm")
+        label_x = ax + (len(shown) - 1) * 44 + 56
+        extra = len(spec.assignees) - len(shown)
+        names = ", ".join(shown) + (f" +{extra}" if extra > 0 else "")
+        name_f = _font("ui", 26, 500)
+        d.text((label_x, foot_y), _truncate(d, names, name_f, right - label_x),
+               font=name_f, fill=brand.MUTED, anchor="lm")
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()

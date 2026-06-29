@@ -971,5 +971,25 @@
     "nameOrg": "Benenne deine Organisation",
     "orgPh": "z. B. Ananda Portland",
     "createOrg": "Organisation erstellen"
+  },
+  "share": {
+    "title": "{{kind}} teilen",
+    "copy": "Link kopieren",
+    "copied": "Kopiert",
+    "linkLabel": "Freigabelink",
+    "shareVia": "Teilen über…",
+    "includeDescription": "Beschreibung einschließen",
+    "hint": "Jeder mit dem Link sieht eine Vorschaukarte. Zum Öffnen der vollständigen {{kind}} ist eine Anmeldung nötig.",
+    "loading": "Link wird erstellt…",
+    "error": "Freigabelink konnte nicht erstellt werden.",
+    "retry": "Erneut versuchen",
+    "revoke": "Widerrufen",
+    "revokeConfirm": "Link widerrufen",
+    "kind": {
+      "project": "Projekt",
+      "subproject": "Teilprojekt",
+      "task": "Aufgabe",
+      "subtask": "Teilaufgabe"
+    }
   }
 }

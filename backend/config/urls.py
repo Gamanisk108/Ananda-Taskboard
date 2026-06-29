@@ -14,6 +14,7 @@ from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
 from restore_service import RestorePointViewSet
+from sharing.public_views import share_card, share_landing
 from trashbin import TrashActionView, TrashView
 
 FRONTEND_DIST = settings.BASE_DIR.parent / "frontend" / "dist"
@@ -58,9 +59,14 @@ urlpatterns = [
     path("api/", include("feedback.urls")),
     path("api/", include("attachments.urls")),
     path("api/", include("ai.urls")),
+    path("api/", include("sharing.urls")),
+    # Public share-card unfurl routes — OUTSIDE /api/ and the SPA catch-all so
+    # chat bots can fetch them unauthenticated.
+    path("s/<str:token>", share_landing, name="share-landing"),
+    path("s/<str:token>/card.png", share_card, name="share-card"),
     path("api/trash", TrashView.as_view(), name="trash"),
     path("api/trash/action", TrashActionView.as_view(), name="trash-action"),
     path("api/", include(_restore_router.urls)),  # restore points (admin)
-    # SPA catch-all (must be last; excludes api/ and admin/).
-    re_path(r"^(?!api/|admin/)(?P<path>.*)$", spa, name="spa"),
+    # SPA catch-all (must be last; excludes api/, admin/, and the s/ share routes).
+    re_path(r"^(?!api/|admin/|s/)(?P<path>.*)$", spa, name="spa"),
 ]

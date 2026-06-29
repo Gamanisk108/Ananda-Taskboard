@@ -1,1 +1,0 @@
-async function e(e,t=`Ananda Taskboard`){let n=new URL(e,window.location.origin).toString();if(navigator.share)try{return await navigator.share({title:t,url:n}),`Shared`}catch{}try{return await navigator.clipboard.writeText(n),`Link copied!`}catch{return n}}export{e as shareUrl};

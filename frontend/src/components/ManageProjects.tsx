@@ -8,6 +8,7 @@ import { Modal, Spinner, ColorPicker } from "./common";
 import { useConfirm } from "./confirm";
 import { DeleteWithMove } from "./DeleteWithMove";
 import { EmojiPicker } from "./EmojiPicker";
+import { ShareButton } from "./ShareButton";
 
 /** "Jun 5, 2026" from an ISO timestamp, or null when missing/unparseable. */
 function fmtCreated(d?: string): string | null {
@@ -208,7 +209,10 @@ function ProjectEditor({
           <ColorPicker value={p.color} onChange={(v) => setP({ ...p, color: v })} title={t("mp.colorTitle", "Project color")} />
           <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
           <button className="btn-ghost mp-doneall" title={t("mp.doneTitle")} onClick={() => onMarkDone("project", project.id, p.name)}>{t("mp.doneAll")}</button>
-          <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
+          <span className="mp-rowactions">
+            <ShareButton type="project" id={project.id} variant="icon" className="btn-ghost icon-only" />
+            <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDeleteProject(project)}><X size={16} /></button>
+          </span>
           {!expanded && p.subprojects.length > 0
             ? <span className="muted mp-subcount">{t("mp.nSubs", "{{n}} sub-projects", { n: p.subprojects.length })}</span>
             : <span aria-hidden />}
@@ -271,9 +275,10 @@ function SubEditor({ sub, onSave, onDelete, onMarkDone }: { sub: Sub; onSave: (s
       <ColorPicker value={s.color} onChange={(v) => setS({ ...s, color: v })} title={t("mp.subColorTitle", "Sub-project color")} />
       <input value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} disabled={s.is_default && s.name === "General"} />
       <button className="btn-ghost icon-only mp-doneall" title={t("mp.doneTitle")} onClick={() => onMarkDone("subproject", sub.id, sub.name)}><Check size={16} /></button>
-      {!s.is_default
-        ? <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>
-        : <span aria-hidden />}
+      <span className="mp-rowactions">
+        <ShareButton type="subproject" id={sub.id} variant="icon" className="btn-ghost icon-only" />
+        {!s.is_default && <button className="btn-ghost icon-only" style={{ color: "var(--danger)" }} title={t("common.delete", "Delete")} onClick={() => onDelete(sub)}><X size={16} /></button>}
+      </span>
       <label className="muted mp-trusted" style={{ display: "flex", gap: 5, alignItems: "center", whiteSpace: "nowrap", margin: 0 }}
         title={t("mp.trustedTitle")}>
         <input type="checkbox" style={{ width: "auto" }} checked={s.members_post_without_approval}

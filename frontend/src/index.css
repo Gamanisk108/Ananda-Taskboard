@@ -207,3 +207,42 @@ html[data-theme="dark"] select optgroup { background-color: var(--surface); colo
 
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease both; }
+
+/* ── Share popover (ShareButton) ─────────────────────────────────────────── */
+.sharepop {
+  width: 332px; max-width: calc(100vw - 24px);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,.18);
+  padding: 14px; color: var(--text);
+}
+.sharepop-head { font-size: 14.5px; margin-bottom: 12px; }
+.sharepop-state { display: flex; align-items: center; gap: 10px; color: var(--muted);
+  padding: 8px 2px; font-size: 13.5px; }
+.sharepop-err { color: var(--danger); margin: 0 0 10px; font-size: 13.5px; }
+.sharepop-spin, .sharepop-copy + .sharepop-spin {
+  width: 16px; height: 16px; border-radius: 50%; flex: none;
+  border: 2px solid var(--border-strong); border-top-color: var(--primary);
+  animation: sharepop-spin .7s linear infinite;
+}
+@keyframes sharepop-spin { to { transform: rotate(360deg); } }
+.sharepop-linkrow { display: flex; gap: 8px; align-items: stretch; }
+.sharepop-link {
+  flex: 1; min-width: 0; font-size: 12.5px; padding: 9px 10px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-2); color: var(--text);
+}
+.sharepop-copy { flex: none; width: 40px; padding: 0; display: inline-flex;
+  align-items: center; justify-content: center; }
+.sharepop-native { width: 100%; justify-content: center; margin-top: 8px; }
+.sharepop-switch { display: flex; align-items: center; gap: 9px; margin-top: 12px;
+  font-size: 13.5px; cursor: pointer; user-select: none; }
+.sharepop-switch input { width: 16px; height: 16px; accent-color: var(--primary);
+  flex: none; cursor: pointer; }
+.sharepop-hint { margin: 9px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.sharepop-foot { display: flex; gap: 8px; align-items: center; margin-top: 12px;
+  padding-top: 11px; border-top: 1px solid var(--border); }
+.sharepop-revoke { color: var(--danger); }
+.sharepop-revoke:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+/* One grid cell holding the row's Share + Delete icons (keeps the mp-rows
+   column count unchanged so project/sub rows stay aligned). */
+.mp-rowactions { display: inline-flex; gap: 2px; align-items: center; }

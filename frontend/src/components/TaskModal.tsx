@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Eye, Archive, Share2, Pencil, ArrowLeft, ChevronRight } from "lucide-react";
+import { Eye, Archive, Pencil, ArrowLeft, ChevronRight } from "lucide-react";
+import { ShareButton } from "./ShareButton";
 import { format } from "date-fns";
 import { dfLocale } from "../dateLocale";
 import { api, ApiError } from "../api/client";
@@ -165,13 +166,11 @@ function RecurrenceFields(p: RecurrenceFieldsProps) {
 
 // Cancel / Delete / Save row, plus the share-link button when editing. For a
 // read-only (view-only) task it collapses to a single Close button — no Save/Delete.
-function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel, onClose, del, hideShare }: {
+function ModalFooter({ editing, task, busy, readOnly, onClose, del, hideShare }: {
   editing: boolean;
   task: Task | null;
   busy: boolean;
   readOnly: boolean;
-  shareLabel: string;
-  setShareLabel: Dispatch<SetStateAction<string>>;
   onClose: () => void;
   del: () => void;
   /** D49 (phones): Share lives in the fs-head icon — keep it out of the footer. */
@@ -186,13 +185,7 @@ function ModalFooter({ editing, task, busy, readOnly, shareLabel, setShareLabel,
       {/* D5: destructive Delete sits far-LEFT in red; Share beside it; Cancel/Save right. */}
       <div style={{ display: "flex", gap: 8, marginRight: "auto" }}>
         {editing && <button type="button" className="btn-danger" onClick={del}>{t("common.delete")}</button>}
-        {editing && !hideShare && (
-          <button type="button" className="btn-secondary"
-            onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <Share2 size={14} /> {shareLabel || t("task.share")}
-          </button>
-        )}
+        {editing && !hideShare && <ShareButton type="task" id={task!.id} />}
       </div>
       <button type="button" className="btn-secondary" onClick={onClose}>{t("common.cancel")}</button>
       {/* submits the modal body's <form id="task-form"> even though the footer is rendered
@@ -353,7 +346,6 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
   const groups = useAdminGroups(me);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [shareLabel, setShareLabel] = useState("");
   // When set, the modal body slides to this subtask's editor in place of the task
   // form (one window, breadcrumb back — never a stacked modal). Capped at one level:
   // subtasks have no subtasks, so the breadcrumb is only ever two deep.
@@ -488,10 +480,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           <span className="sep"><ChevronRight size={14} /></span>
           <span className="cur" title={openSub.title}>{openSub.title} <span className="id-pill">#{task!.id}.{openSubIndex}</span></span>
         </span>
-        <button type="button" className="btn-secondary head-share" style={{ flex: "none" }}
-          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}&subtask=${openSub.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
-          <Share2 size={14} /> {shareLabel || t("task.share")}
-        </button>
+        <ShareButton type="subtask" id={openSub.id} className="head-share" />
       </>
     );
     return (
@@ -515,11 +504,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
       /* D49: on phones Share is a ghost icon at the right end of the fs-head
          (echoes D12's subtask-breadcrumb Share); the footer drops it. */
       headerAction={editing && !readOnly ? (
-        <button type="button" className="ic fs-share" aria-label={shareLabel || t("task.share")}
-          title={shareLabel || t("task.share")}
-          onClick={async () => { const { shareUrl } = await import("../share"); setShareLabel(await shareUrl(`/?task=${task!.id}`)); setTimeout(() => setShareLabel(""), 2500); }}>
-          <Share2 />
-        </button>
+        <ShareButton type="task" id={task!.id} variant="icon" className="ic fs-share" />
       ) : undefined}
       title={/* DN10: the header IS the inline-editable task title + pen + #id chip. */
         <span className="task-title-head">
@@ -532,7 +517,7 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
           {!readOnly && <Pencil size={14} className="task-title-pen" aria-hidden />}
           {editing && <span className="task-id-chip">#{task!.id}</span>}
         </span>}
-      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} shareLabel={shareLabel} setShareLabel={setShareLabel} onClose={guardedClose} del={del} hideShare={narrow} />}>
+      footer={<ModalFooter editing={editing} task={task} busy={busy} readOnly={readOnly} onClose={guardedClose} del={del} hideShare={narrow} />}>
       <form id="task-form" onSubmit={save}>
         {editing && task!.created_at && (
           <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", margin: "-6px 0 8px" }}>

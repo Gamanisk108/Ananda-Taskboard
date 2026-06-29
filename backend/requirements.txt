@@ -21,6 +21,8 @@ gunicorn>=22.0
 whitenoise>=6.6
 # Postgres driver (production, when DATABASE_URL is set; SQLite locally)
 psycopg[binary]>=3.1
+# share-preview card rendering (server-side PNG via Pillow + bundled fonts)
+Pillow>=11.0
 # dev / test
 pytest>=8.0
 pytest-django>=4.8

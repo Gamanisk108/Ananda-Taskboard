@@ -971,5 +971,25 @@
     "nameOrg": "Dai un nome alla tua organizzazione",
     "orgPh": "es. Ananda Portland",
     "createOrg": "Crea organizzazione"
+  },
+  "share": {
+    "title": "Condividi {{kind}}",
+    "copy": "Copia link",
+    "copied": "Copiato",
+    "linkLabel": "Link di condivisione",
+    "shareVia": "Condividi tramite…",
+    "includeDescription": "Includi descrizione",
+    "hint": "Chiunque abbia il link vede una scheda di anteprima. Dovrà accedere per aprire {{kind}} completo.",
+    "loading": "Creazione del link…",
+    "error": "Impossibile creare il link.",
+    "retry": "Riprova",
+    "revoke": "Revoca",
+    "revokeConfirm": "Revoca link",
+    "kind": {
+      "project": "progetto",
+      "subproject": "sotto-progetto",
+      "task": "attività",
+      "subtask": "sotto-attività"
+    }
   }
 }
