@@ -36,6 +36,10 @@ export default defineConfig({
       workbox: {
         // App shell offline; API calls are network-first (never cache task data stale).
         navigateFallback: '/index.html',
+        // …but NOT the server-rendered share-card routes — they must reach Django
+        // so a logged-in PWA user opening a /s/<token> link gets the real unfurl
+        // landing, not the cached SPA shell. (Bots have no SW and are unaffected.)
+        navigateFallbackDenylist: [/^\/s\//],
         importScripts: ['push-sw.js'], // custom push + notificationclick handlers
         runtimeCaching: [
           {
