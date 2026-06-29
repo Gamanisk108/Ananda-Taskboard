@@ -2,6 +2,8 @@
 description toggle, revoke (410), permission + tenant gates, soft-delete, ETag."""
 
 import pytest
+from django.core.cache import cache
+from django.test import override_settings
 from rest_framework.test import APIClient
 
 from accounts.models import Membership, Organization, User
@@ -203,6 +205,20 @@ def test_non_creator_member_cannot_revoke(admin, org, task):
 
 
 # ── soft-delete ────────────────────────────────────────────────────────────────
+
+@override_settings(SHARE_CARD_RATE_LIMIT=3)
+def test_public_routes_are_rate_limited(admin, org, task):
+    cache.clear()
+    token = make_link(login(admin), org, "task", task.id).data["token"]
+    ip = {"HTTP_X_FORWARDED_FOR": "203.0.113.7"}
+    anon = APIClient()
+    codes = [anon.get(f"/s/{token}/card.png", **ip).status_code for _ in range(5)]
+    assert codes[:3] == [200, 200, 200]  # within the window
+    assert 429 in codes[3:]              # then throttled
+    # A different IP is unaffected (per-IP bucket).
+    assert anon.get(f"/s/{token}/card.png", HTTP_X_FORWARDED_FOR="198.51.100.9").status_code == 200
+    cache.clear()
+
 
 def test_soft_deleted_target_is_410(admin, org, task):
     token = make_link(login(admin), org, "task", task.id).data["token"]

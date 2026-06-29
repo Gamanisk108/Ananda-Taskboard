@@ -33,6 +33,7 @@ export function ShareButton({
   className?: string;
 }) {
   const { t } = useTranslation();
+  const kind = t(KIND_KEY[type]);
   const [open, setOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open, onOpenChange: setOpen, placement: "bottom-end",
@@ -64,6 +65,7 @@ export function ShareButton({
           <FloatingFocusManager context={context} modal={false}>
             {/* eslint-disable-next-line react-hooks/refs -- Floating UI callback-ref setter, not a React .current ref */}
             <div ref={refs.setFloating} {...getFloatingProps()} className="sharepop"
+              aria-label={t("share.title", "Share {{kind}}", { kind })}
               style={{ ...floatingStyles, zIndex: 300 }} onClick={(e) => e.stopPropagation()}>
               <SharePanel type={type} id={id} onClose={() => setOpen(false)} />
             </div>
@@ -111,7 +113,7 @@ function SharePanel({ type, id, onClose }: { type: ShareType; id: number; onClos
   }
 
   return (
-    <div role="document" aria-label={t("share.title", "Share {{kind}}", { kind })}>
+    <div>
       <div className="sharepop-head">
         <strong>{t("share.title", "Share {{kind}}", { kind })}</strong>
       </div>

@@ -8,12 +8,47 @@
 Both expose ONLY card metadata. Revoked / missing / deleted -> 410 Gone.
 """
 
+from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseGone
 from django.shortcuts import render
 
 from . import card as cardmod
 from .describe import describe, is_live
 from .models import ShareLink
+
+# Per-IP soft throttle on the unauthenticated routes (the card is re-rendered on
+# a cache-miss, so an open loop shouldn't be free). Uses Django's cache framework
+# — per-process with the default LocMemCache, automatically global if a shared
+# cache (e.g. Redis) is configured later. Overridable in settings for tests.
+_RL_WINDOW = 60  # seconds
+_RL_DEFAULT_MAX = 240  # requests / window / IP (override via settings.SHARE_CARD_RATE_LIMIT)
+
+
+def _client_ip(request) -> str:
+    # Behind Render's proxy the real client is the first X-Forwarded-For hop;
+    # REMOTE_ADDR alone would be the proxy (one bucket for everyone).
+    xff = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "") or "unknown"
+
+
+def _rate_limited(request) -> bool:
+    limit = getattr(settings, "SHARE_CARD_RATE_LIMIT", _RL_DEFAULT_MAX)
+    key = f"sharecard:rl:{_client_ip(request)}"
+    cache.get_or_set(key, 0, _RL_WINDOW)  # seed with the window TTL
+    try:
+        return cache.incr(key) > limit
+    except ValueError:  # key expired between get_or_set and incr
+        cache.set(key, 1, _RL_WINDOW)
+        return False
+
+
+def _too_many() -> HttpResponse:
+    resp = HttpResponse("Too many requests.", status=429)
+    resp["Retry-After"] = str(_RL_WINDOW)
+    return resp
 
 
 # Per-process memo of rendered PNGs keyed by ETag (token + updated_at + desc
@@ -82,6 +117,8 @@ def _og_description(spec) -> str:
 
 
 def share_landing(request, token):
+    if _rate_limited(request):
+        return _too_many()
     found = _lookup(token)
     if found is None:
         return render(request, "sharing/gone.html", status=410)
@@ -99,6 +136,8 @@ def share_landing(request, token):
 
 
 def share_card(request, token):
+    if _rate_limited(request):
+        return _too_many()
     found = _lookup(token)
     if found is None:
         return HttpResponseGone("This share link is no longer available.")

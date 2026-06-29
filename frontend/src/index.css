@@ -227,17 +227,22 @@ html[data-theme="dark"] select optgroup { background-color: var(--surface); colo
 @keyframes sharepop-spin { to { transform: rotate(360deg); } }
 .sharepop-linkrow { display: flex; gap: 8px; align-items: stretch; }
 .sharepop-link {
-  flex: 1; min-width: 0; font-size: 12.5px; padding: 9px 10px;
+  flex: 1; min-width: 0; min-height: 44px; font-size: 12.5px; padding: 9px 10px;
   border: 1px solid var(--border); border-radius: 9px;
   background: var(--surface-2); color: var(--text);
 }
-.sharepop-copy { flex: none; width: 40px; padding: 0; display: inline-flex;
+.sharepop-link:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary);
+}
+/* ≥44px touch target (design constitution / WCAG) */
+.sharepop-copy { flex: none; width: 44px; min-height: 44px; padding: 0; display: inline-flex;
   align-items: center; justify-content: center; }
 .sharepop-native { width: 100%; justify-content: center; margin-top: 8px; }
 .sharepop-switch { display: flex; align-items: center; gap: 9px; margin-top: 12px;
   font-size: 13.5px; cursor: pointer; user-select: none; }
-.sharepop-switch input { width: 16px; height: 16px; accent-color: var(--primary);
+.sharepop-switch input { width: 18px; height: 18px; accent-color: var(--primary);
   flex: none; cursor: pointer; }
+.sharepop-switch input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .sharepop-hint { margin: 9px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .sharepop-foot { display: flex; gap: 8px; align-items: center; margin-top: 12px;
   padding-top: 11px; border-top: 1px solid var(--border); }
