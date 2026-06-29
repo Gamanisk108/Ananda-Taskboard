@@ -10,6 +10,7 @@ being the link's creator or an org admin.
 """
 
 from django.apps import apps
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -24,13 +25,17 @@ def _org(request):
     return getattr(request, "org", None)
 
 
-def _resolve_object(type_: str, obj_id):
+def _resolve_object(type_: str, obj_id, org):
     spec = SHAREABLE.get(type_)
     if spec is None:
         raise ValidationError({"type": f"Not shareable: {type_!r}."})
     model = apps.get_model(*spec)
-    obj = model.objects.filter(pk=obj_id).first()  # live-only (default manager)
-    if obj is None:
+    try:
+        obj = model.objects.filter(pk=obj_id).first()  # live-only (default manager)
+    except (TypeError, ValueError, DjangoValidationError):
+        raise ValidationError({"id": "Invalid id."})
+    # Uniform 404 for missing OR wrong-tenant — no cross-org existence oracle.
+    if obj is None or org_of(obj) != org:
         raise NotFound("Item not found.")
     return obj
 
@@ -67,10 +72,10 @@ class ShareCreateView(APIView):
         if not type_ or obj_id in (None, ""):
             raise ValidationError({"detail": "type and id are required."})
 
-        obj = _resolve_object(type_, obj_id)
-        # Tenant + visibility gate: object must belong to the active org AND be
-        # visible to the requester (never trust the client).
-        if org_of(obj) != org or not can_view(request.user, obj, org):
+        obj = _resolve_object(type_, obj_id, org)
+        # Visibility gate (tenant already enforced in _resolve_object): the
+        # requester must actually be able to see the item.
+        if not can_view(request.user, obj, org):
             raise PermissionDenied("You don't have access to this item.")
 
         link, _created = ShareLink.objects.get_or_create_for(obj, user=request.user, org=org)
@@ -94,7 +99,12 @@ class ShareDetailView(APIView):
     def patch(self, request, token):
         link = self._get_manageable(request, token)
         if "include_description" in request.data:
-            link.include_description = bool(request.data["include_description"])
+            value = request.data["include_description"]
+            # Require a real boolean — bool("false") is True, so a stringified
+            # payload must not silently leave the description exposed.
+            if not isinstance(value, bool):
+                raise ValidationError({"include_description": "Must be a boolean."})
+            link.include_description = value
             link.save(update_fields=["include_description"])
         return Response(_serialize(link, request))
 

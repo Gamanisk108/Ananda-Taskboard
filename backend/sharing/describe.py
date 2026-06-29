@@ -18,10 +18,9 @@ ARROW = " › "  # U+203A - matches the app ChevronRight breadcrumb separator
 
 def _display_name(user) -> str:
     name = (getattr(user, "name", "") or "").strip()
-    if name:
-        return name
-    email = getattr(user, "email", "") or ""
-    return email.split("@")[0] or "Someone"
+    # On a PUBLIC card we never fall back to the email local-part — that would
+    # leak a personal identifier to anyone with the link.
+    return name or "Someone"
 
 
 def _assignee_names(obj) -> list[str]:
@@ -53,7 +52,8 @@ def is_live(obj) -> bool:
         return not _dead(obj) and not _dead(obj.subproject) and not _dead(obj.subproject.project)
     if isinstance(obj, Subtask):
         t = obj.task
-        return not _dead(t) and not _dead(t.subproject) and not _dead(t.subproject.project)
+        return (not _dead(obj) and not _dead(t) and not _dead(t.subproject)
+                and not _dead(t.subproject.project))
     if isinstance(obj, SubProject):
         return not _dead(obj) and not _dead(obj.project)
     if isinstance(obj, Project):
@@ -114,10 +114,3 @@ def describe(obj) -> CardSpec:
             deep_link=f"/?project={obj.id}",
         )
     raise TypeError(f"Not shareable: {obj!r}")
-
-
-def updated_marker(obj) -> str:
-    """A short string that changes when the object changes — drives the card ETag
-    so chat platforms re-fetch a fresh image after an edit, but cache otherwise."""
-    ts = getattr(obj, "updated_at", None) or getattr(obj, "created_at", None)
-    return str(ts.timestamp()) if ts else "0"

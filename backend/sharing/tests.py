@@ -220,6 +220,46 @@ def test_public_routes_are_rate_limited(admin, org, task):
     cache.clear()
 
 
+def test_mint_invalid_id_is_400(admin, org):
+    res = login(admin).post("/api/share", {"type": "task", "id": "not-an-int"},
+                            format="json", HTTP_X_ORG_ID=str(org.id))
+    assert res.status_code == 400
+
+
+def test_mint_other_orgs_object_is_404_not_oracle(db, org, task):
+    # Intruder acting in their OWN org tries to mint a link for a victim-org task
+    # -> uniform 404 (not 403), so the response can't confirm the object exists.
+    other = Organization.objects.create(name="Ananda Assisi", country="Italy", is_active=True)
+    intruder = User.objects.create_user(email="i@example.com", name="Iva", password="pw-strong-123")
+    Membership.objects.create(user=intruder, organization=other, role="admin")
+    res = login(intruder).post("/api/share", {"type": "task", "id": task.id},
+                               format="json", HTTP_X_ORG_ID=str(other.id))
+    assert res.status_code == 404
+
+
+def test_patch_non_boolean_description_is_400(admin, org, task):
+    api = login(admin)
+    token = make_link(api, org, "task", task.id).data["token"]
+    res = api.patch(f"/api/share/{token}", {"include_description": "false"},
+                    format="json", HTTP_X_ORG_ID=str(org.id))
+    assert res.status_code == 400  # bool("false") would be True -> must reject
+
+
+def test_card_survives_malformed_accent_color(admin, org, subproject, task):
+    # A stray non-hex color must fall back, never 500 the public card.
+    subproject.color = "not-a-hex"
+    subproject.save(update_fields=["color"])
+    token = make_link(login(admin), org, "task", task.id).data["token"]
+    assert APIClient().get(f"/s/{token}/card.png").status_code == 200
+
+
+def test_unnamed_assignee_shows_someone_not_email(admin, org, task):
+    from sharing.describe import describe
+    nameless = User.objects.create_user(email="secret.person@example.com", name="", password="pw-strong-123")
+    task.assignees.set([nameless])
+    assert describe(task).assignees == ["Someone"]  # never the email local-part
+
+
 def test_soft_deleted_target_is_410(admin, org, task):
     token = make_link(login(admin), org, "task", task.id).data["token"]
     task.delete()  # soft delete

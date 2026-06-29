@@ -37,5 +37,12 @@ PRIORITY = {
 
 
 def hex_to_rgb(h: str) -> tuple[int, int, int]:
-    h = h.lstrip("#")
-    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
+    """Parse a #rrggbb string to RGB. A malformed/empty value (a stray DB color)
+    falls back to NAVY rather than 500-ing the public card path."""
+    h = (h or "").strip().lstrip("#")
+    if len(h) != 6:
+        return NAVY
+    try:
+        return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+    except ValueError:
+        return NAVY

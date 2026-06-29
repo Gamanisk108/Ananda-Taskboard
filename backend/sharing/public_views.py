@@ -58,6 +58,15 @@ _CARD_CACHE: dict[str, bytes] = {}
 _CARD_CACHE_MAX = 256
 
 
+def _etag_for(token: str, spec) -> str:
+    import hashlib
+
+    payload = repr((spec.kind, spec.title, spec.breadcrumb, spec.description,
+                    spec.priority, spec.status, tuple(spec.assignees), spec.accent))
+    digest = hashlib.sha1(payload.encode("utf-8")).hexdigest()[:16]
+    return f'W/"{token}.{digest}"'
+
+
 def _render_for_etag(etag: str, spec) -> bytes:
     png = _CARD_CACHE.get(etag)
     if png is None:
@@ -142,16 +151,17 @@ def share_card(request, token):
     if found is None:
         return HttpResponseGone("This share link is no longer available.")
     link, target = found
-    # ETag changes when the target changes -> bots re-fetch a fresh image on edit,
-    # cache otherwise. Include the desc toggle so flipping it busts the image too.
-    from .describe import updated_marker
-
-    etag = f'W/"{token}.{updated_marker(target)}.{int(link.include_description)}"'
+    # ETag is a hash of the FULL rendered spec (title, breadcrumb=parent names,
+    # status, priority, assignee names, accent, description-after-toggle) so ANY
+    # visible change — including a parent rename/recolor or an assignee rename —
+    # busts the bot's cache, while an unchanged card stays cached.
+    spec = _spec_for(link, target)
+    etag = _etag_for(token, spec)
     if request.headers.get("If-None-Match") == etag:
         resp = HttpResponse(status=304)
         resp["ETag"] = etag
         return resp
-    png = _render_for_etag(etag, _spec_for(link, target))
+    png = _render_for_etag(etag, spec)
     resp = HttpResponse(png, content_type="image/png")
     resp["ETag"] = etag
     resp["Cache-Control"] = "public, max-age=300"
