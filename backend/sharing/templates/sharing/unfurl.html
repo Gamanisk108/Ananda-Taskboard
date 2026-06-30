@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- The /s/<token> URL is a bearer secret — never send it as a Referer anywhere. -->
+  <meta name="referrer" content="no-referrer" />
   <title>{{ title }} · Ananda Taskboard</title>
   <meta name="description" content="{{ description }}" />
 
@@ -126,7 +128,9 @@
 
       {% if d.links %}
       <div class="label">Links</div>
-      <div class="links">{% for l in d.links %}<a href="{{ l }}" rel="noopener nofollow ugc" target="_blank">{{ l }}</a>{% endfor %}</div>
+      {# noreferrer + no-referrer policy so the /s/<token> URL (a bearer secret)
+         is never sent in the Referer header to an external link's destination. #}
+      <div class="links">{% for l in d.links %}<a href="{{ l }}" rel="noopener noreferrer nofollow ugc" referrerpolicy="no-referrer" target="_blank">{{ l }}</a>{% endfor %}</div>
       {% endif %}
 
       {% if d.subtasks %}

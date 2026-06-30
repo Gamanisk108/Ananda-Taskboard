@@ -298,10 +298,14 @@ def test_card_survives_malformed_accent_color(admin, org, subproject, task):
 
 
 def test_unnamed_assignee_shows_someone_not_email(admin, org, task):
-    from sharing.describe import describe
+    # Assert on the RENDERED public page, not just describe() — a regression in
+    # detail()/the template could still leak the email on /s/<token>.
     nameless = User.objects.create_user(email="secret.person@example.com", name="", password="pw-strong-123")
     task.assignees.set([nameless])
-    assert describe(task).assignees == ["Someone"]  # never the email local-part
+    token = make_link(login(admin), org, "task", task.id).data["token"]
+    html = APIClient().get(f"/s/{token}").content.decode()
+    assert "Someone" in html
+    assert "secret.person" not in html and "example.com" not in html
 
 
 def test_soft_deleted_target_is_410(admin, org, task):

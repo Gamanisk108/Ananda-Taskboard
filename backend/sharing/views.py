@@ -17,8 +17,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .describe import can_view, describe, org_of
+from .describe import can_view, describe
 from .models import SHAREABLE, ShareLink
+
+# ORM path from each shareable model to its owning Organization — used to SCOPE
+# the lookup query by tenant so a cross-org row is never even materialized.
+_ORG_PATH = {
+    "task": "subproject__project__organization",
+    "subtask": "task__subproject__project__organization",
+    "subproject": "project__organization",
+    "project": "organization",
+}
 
 
 def _org(request):
@@ -31,11 +40,12 @@ def _resolve_object(type_: str, obj_id, org):
         raise ValidationError({"type": f"Not shareable: {type_!r}."})
     model = apps.get_model(*spec)
     try:
-        obj = model.objects.filter(pk=obj_id).first()  # live-only (default manager)
+        # Tenant-scoped query (live-only default manager): a wrong-org or missing
+        # id both resolve to None -> uniform 404, no cross-org row ever loaded.
+        obj = model.objects.filter(pk=obj_id, **{_ORG_PATH[type_]: org}).first()
     except (TypeError, ValueError, DjangoValidationError):
         raise ValidationError({"id": "Invalid id."})
-    # Uniform 404 for missing OR wrong-tenant — no cross-org existence oracle.
-    if obj is None or org_of(obj) != org:
+    if obj is None:
         raise NotFound("Item not found.")
     return obj
 
