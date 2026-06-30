@@ -139,8 +139,14 @@ def _priority_meta(level):
     from . import brand
     if level in brand.PRIORITY:
         label, color = brand.PRIORITY[level]
-        return {"label": label, "color": color}
+        return {"label": label, "color": color, "chevron": brand.PRIORITY_CHEVRON.get(level, [])}
     return None
+
+
+def _avatar_color(user_id: int) -> str:
+    # Matches the app's avatarColor(id): golden-angle hue spread -> distinct,
+    # stable per-person colors (never all the same).
+    return f"hsl({round((user_id * 137.508) % 360)} 52% 42%)"
 
 
 def _fmt_date(d):
@@ -152,7 +158,11 @@ def _fmt_time(tm):
 
 
 def _assignee_chips(obj):
-    return [{"name": n, "initials": _initials(n)} for n in _assignee_names(obj)]
+    chips = []
+    for u in obj.assignees.all():
+        name = _display_name(u)
+        chips.append({"name": name, "initials": _initials(name), "color": _avatar_color(u.id)})
+    return chips
 
 
 def _subtask_rows(task):

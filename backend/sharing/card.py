@@ -40,7 +40,7 @@ _MONO = str(FONTS / "RedHatMono-VF.ttf")
 # Bump whenever the card RENDERING changes (layout, the integrated accent edge,
 # fonts, colors…) even if the task DATA is identical — the ETag folds this in so
 # every browser/CDN cache invalidates on a render change, not just a data change.
-RENDER_VERSION = 2
+RENDER_VERSION = 3
 
 W, H = 1200, 630
 MARGIN = 48
@@ -106,21 +106,33 @@ def _rounded(draw, box, radius, **kw):
     draw.rounded_rectangle(box, radius=radius, **kw)
 
 
-def _chip(draw, x, y, label, color_hex, font) -> int:
-    """A pill: soft tinted bg + colored dot + label. Returns its right edge x."""
+def _draw_chevron(draw, x0, y0, size, polylines, rgb):
+    """Draw the app's PriorityIcon chevron (14×14 viewBox points) scaled to `size`."""
+    sc = size / 14.0
+    for pl in polylines:
+        pts = [(x0 + float(a) * sc, y0 + float(b) * sc)
+               for a, b in (p.split(",") for p in pl.split())]
+        draw.line(pts, fill=rgb, width=max(2, round(size / 6)), joint="curve")
+
+
+def _chip(draw, x, y, label, color_hex, font, chevron=None) -> int:
+    """A pill: soft tinted bg + a colored dot (or a priority chevron) + label.
+    Returns its right edge x."""
     rgb = brand.hex_to_rgb(color_hex)
     th = 52
-    dot_r = 7
+    icon_w = 22 if chevron else 14   # chevron box vs dot diameter
     text_w = draw.textlength(label, font=font)
     pad = 22
-    w = int(pad + dot_r * 2 + 12 + text_w + pad)
-    # 14% tint background of the accent color over the surface.
-    bg = tuple(round(s * 0.86 + c * 0.14) for s, c in zip(brand.SURFACE, rgb))
+    w = int(pad + icon_w + 12 + text_w + pad)
+    bg = tuple(round(s * 0.86 + c * 0.14) for s, c in zip(brand.SURFACE, rgb))  # 14% tint
     _rounded(draw, [x, y, x + w, y + th], radius=th // 2, fill=bg,
              outline=tuple(round(s * 0.7 + c * 0.3) for s, c in zip(brand.SURFACE, rgb)), width=1)
     cy = y + th // 2
-    draw.ellipse([x + pad, cy - dot_r, x + pad + dot_r * 2, cy + dot_r], fill=rgb)
-    draw.text((x + pad + dot_r * 2 + 12, cy), label, font=font, fill=rgb, anchor="lm")
+    if chevron:
+        _draw_chevron(draw, x + pad, cy - icon_w / 2, icon_w, chevron, rgb)
+    else:
+        draw.ellipse([x + pad, cy - 7, x + pad + 14, cy + 7], fill=rgb)
+    draw.text((x + pad + icon_w + 12, cy), label, font=font, fill=rgb, anchor="lm")
     return x + w
 
 
@@ -129,6 +141,15 @@ def _initials(name: str) -> str:
     if len(parts) >= 2:
         return (parts[0][0] + parts[1][0]).upper()
     return (name.strip()[:2] or "?").upper()
+
+
+def _name_color(name: str) -> tuple[int, int, int]:
+    """Stable, distinct per-person avatar color (golden-angle hue, mid tone) so
+    assignees never all render the same. Name-hashed since the card has no user id."""
+    import colorsys
+    hue = (sum((i + 1) * ord(c) for i, c in enumerate(name)) % 360) / 360.0
+    r, g, b = colorsys.hls_to_rgb(hue, 0.42, 0.52)
+    return (round(r * 255), round(g * 255), round(b * 255))
 
 
 def render(spec: CardSpec) -> bytes:
@@ -185,7 +206,8 @@ def render(spec: CardSpec) -> bytes:
     drew_chip = False
     if spec.priority in brand.PRIORITY:
         plabel, pcolor = brand.PRIORITY[spec.priority]
-        chip_x = _chip(d, chip_x, y, f"{plabel} priority", pcolor, chip_f) + 16
+        chevron = brand.PRIORITY_CHEVRON.get(spec.priority)
+        chip_x = _chip(d, chip_x, y, f"{plabel} priority", pcolor, chip_f, chevron=chevron) + 16
         drew_chip = True
     if spec.status in brand.STATUS:
         slabel, scolor = brand.STATUS[spec.status]
@@ -210,7 +232,7 @@ def render(spec: CardSpec) -> bytes:
         for i, name in enumerate(shown):
             cx = ax + i * 44
             r = 22
-            d.ellipse([cx, foot_y - r, cx + r * 2, foot_y + r], fill=accent,
+            d.ellipse([cx, foot_y - r, cx + r * 2, foot_y + r], fill=_name_color(name),
                       outline=brand.SURFACE, width=3)
             d.text((cx + r, foot_y), _initials(name), font=av_f, fill=brand.WHITE, anchor="mm")
         label_x = ax + (len(shown) - 1) * 44 + 56

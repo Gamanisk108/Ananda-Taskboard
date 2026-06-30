@@ -35,6 +35,16 @@ PRIORITY = {
     5: ("Highest", "#b4452f"),
 }
 
+# Priority chevron polylines (14×14 viewBox) — mirror the app's PriorityIcon:
+# double-up=Highest, up=High, equals=Medium, down=Low, double-down=Lowest.
+PRIORITY_CHEVRON = {
+    5: ["2,11 7,6 12,11", "2,7 7,2 12,7"],
+    4: ["2,9 7,4 12,9"],
+    3: ["3,5 11,5", "3,9 11,9"],
+    2: ["2,5 7,10 12,5"],
+    1: ["2,3 7,8 12,3", "2,7 7,12 12,7"],
+}
+
 
 def hex_to_rgb(h: str) -> tuple[int, int, int]:
     """Parse a #rrggbb string to RGB. A malformed/empty value (a stray DB color)

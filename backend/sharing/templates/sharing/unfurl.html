@@ -66,11 +66,14 @@
       padding:5px 12px; border-radius:999px; border:1px solid transparent;
     }
     .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+    .pchev { flex:none; display:block; }
     .people { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:16px 0 0; }
     .person { display:inline-flex; align-items:center; gap:7px; background:var(--surface-2);
       border:1px solid var(--border); border-radius:999px; padding:3px 11px 3px 3px; font-size:13.5px; }
     .ava { width:24px; height:24px; border-radius:50%; background:var(--navy); color:#fff;
-      font-size:11px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+      font-size:11px; font-weight:600; display:inline-flex; align-items:center; justify-content:center;
+      flex:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.06); }
+    .ava.sm { width:21px; height:21px; font-size:9.5px; }
     .label { font-size:11.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
       color:var(--faint); margin:22px 0 6px; }
     .body { white-space:pre-wrap; word-wrap:break-word; color:var(--ink); font-size:15px; }
@@ -81,10 +84,12 @@
     .links a:hover { text-decoration:underline; }
     .subs { list-style:none; padding:0; margin:6px 0 0; display:grid; gap:8px; }
     .sub { display:flex; align-items:center; gap:10px; background:var(--surface-2);
-      border:1px solid var(--border); border-radius:11px; padding:9px 12px; }
-    .sub .st { width:9px; height:9px; border-radius:50%; flex:none; }
+      border:1px solid var(--border); border-radius:11px; padding:8px 12px; }
+    .ststat { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+      padding:3px 9px; border-radius:999px; flex:none; }
+    .ststat .d { width:7px; height:7px; border-radius:50%; flex:none; }
     .sub .ttl { flex:1; min-width:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .sub .pr { font-size:12px; color:var(--muted); font-weight:600; flex:none; }
+    .subava { display:inline-flex; gap:3px; flex:none; }
     hr { border:0; border-top:1px solid var(--border); margin:22px 0; }
     .cta { text-align:center; margin-top:22px; }
     .btn { display:inline-block; background:var(--navy); color:#fff; text-decoration:none;
@@ -103,14 +108,14 @@
 
       {% if d.priority or d.status %}
       <div class="chips">
-        {% if d.priority %}<span class="chip" style="color:{{ d.priority.color }};background:{{ d.priority.color }}1f"><span class="dot" style="background:{{ d.priority.color }}"></span>{{ d.priority.label }} priority</span>{% endif %}
+        {% if d.priority %}<span class="chip" style="color:{{ d.priority.color }};background:{{ d.priority.color }}1f"><svg class="pchev" viewBox="0 0 14 14" width="15" height="15" aria-hidden="true">{% for pts in d.priority.chevron %}<polyline points="{{ pts }}" fill="none" stroke="{{ d.priority.color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>{% endfor %}</svg>{{ d.priority.label }} priority</span>{% endif %}
         {% if d.status %}<span class="chip" style="color:{{ d.status.color }};background:{{ d.status.color }}1f"><span class="dot" style="background:{{ d.status.color }}"></span>{{ d.status.label }}</span>{% endif %}
       </div>
       {% endif %}
 
       {% if d.assignees %}
       <div class="people">
-        {% for a in d.assignees %}<span class="person"><span class="ava">{{ a.initials }}</span>{{ a.name }}</span>{% endfor %}
+        {% for a in d.assignees %}<span class="person"><span class="ava" style="background:{{ a.color }}">{{ a.initials }}</span>{{ a.name }}</span>{% endfor %}
       </div>
       {% endif %}
 
@@ -128,8 +133,8 @@
 
       {% if d.links %}
       <div class="label">Links</div>
-      {# noreferrer + no-referrer policy so the /s/<token> URL (a bearer secret)
-         is never sent in the Referer header to an external link's destination. #}
+      {% comment %}rel=noreferrer + referrerpolicy keep the /s/<token> URL (a bearer
+      secret) out of the Referer header sent to an external link's destination.{% endcomment %}
       <div class="links">{% for l in d.links %}<a href="{{ l }}" rel="noopener noreferrer nofollow ugc" referrerpolicy="no-referrer" target="_blank">{{ l }}</a>{% endfor %}</div>
       {% endif %}
 
@@ -138,9 +143,10 @@
       <ul class="subs">
         {% for s in d.subtasks %}
         <li class="sub">
-          <span class="st" style="background:{% if s.status %}{{ s.status.color }}{% else %}#6b7280{% endif %}"></span>
+          {% if s.priority %}<svg class="pchev" viewBox="0 0 14 14" width="16" height="16" role="img" aria-label="{{ s.priority.label }} priority"><title>{{ s.priority.label }} priority</title>{% for pts in s.priority.chevron %}<polyline points="{{ pts }}" fill="none" stroke="{{ s.priority.color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>{% endfor %}</svg>{% endif %}
           <span class="ttl">{{ s.title }}</span>
-          {% if s.priority %}<span class="pr">{{ s.priority.label }}</span>{% endif %}
+          {% if s.assignees %}<span class="subava">{% for a in s.assignees %}<span class="ava sm" style="background:{{ a.color }}" title="{{ a.name }}">{{ a.initials }}</span>{% endfor %}</span>{% endif %}
+          {% if s.status %}<span class="ststat" style="color:{{ s.status.color }};background:{{ s.status.color }}1f"><span class="d" style="background:{{ s.status.color }}"></span>{{ s.status.label }}</span>{% endif %}
         </li>
         {% endfor %}
       </ul>
