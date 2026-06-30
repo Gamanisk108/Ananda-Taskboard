@@ -24,31 +24,131 @@
   <meta name="twitter:image" content="{{ image_url }}" />
 
   <style>
-    :root { --bg:#f6efde; --surface:#fffdf8; --border:#e4d8bb; --ink:#23262b;
-            --muted:#5a6172; --navy:#1e3a6e; }
+    :root {
+      --bg:#f6efde; --surface:#fffdf8; --surface-2:#faf5e8; --border:#e4d8bb;
+      --ink:#23262b; --muted:#5a6172; --faint:#8a8270; --navy:#1e3a6e; --gold:#c9a24b;
+    }
     * { box-sizing: border-box; }
-    body { margin:0; min-height:100vh; display:flex; align-items:center;
-           justify-content:center; background:var(--bg); color:var(--ink);
-           font-family:"Instrument Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-           padding:24px; }
-    .wrap { width:100%; max-width:680px; text-align:center; }
-    .card-img { width:100%; height:auto; border-radius:18px;
-                box-shadow:0 8px 30px rgba(0,0,0,.12); border:1px solid var(--border);
-                display:block; }
-    .cta { margin-top:24px; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+      font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      line-height:1.5; padding:28px 16px 56px;
+    }
+    .wrap { width:100%; max-width:680px; margin:0 auto; }
+    /* Card with an INTEGRATED left accent edge (constitution Rule #15): the strip
+       is clipped to the card's rounded shape by overflow:hidden, never a floating
+       pill beside it. */
+    .card {
+      position:relative; background:var(--surface); border:1px solid var(--border);
+      border-radius:18px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.10);
+      padding:26px 26px 26px 38px;
+    }
+    .card::before {
+      content:""; position:absolute; left:0; top:0; bottom:0; width:8px;
+      background:var(--accent,#1e3a6e);
+    }
+    .eyebrow {
+      font-family:"Red Hat Mono",ui-monospace,monospace; font-size:12px; font-weight:600;
+      letter-spacing:.08em; text-transform:uppercase; color:var(--accent,#1e3a6e);
+    }
+    .crumb { color:var(--muted); font-size:14px; margin:6px 0 2px; }
+    h1 { font-size:26px; font-weight:700; letter-spacing:-.01em; margin:4px 0 0; line-height:1.2; }
+    .idchip {
+      font-family:"Red Hat Mono",ui-monospace,monospace; font-size:13px; color:var(--faint);
+      font-weight:500; margin-left:6px;
+    }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0; }
+    .chip {
+      display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600;
+      padding:5px 12px; border-radius:999px; border:1px solid transparent;
+    }
+    .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+    .people { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:16px 0 0; }
+    .person { display:inline-flex; align-items:center; gap:7px; background:var(--surface-2);
+      border:1px solid var(--border); border-radius:999px; padding:3px 11px 3px 3px; font-size:13.5px; }
+    .ava { width:24px; height:24px; border-radius:50%; background:var(--navy); color:#fff;
+      font-size:11px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+    .label { font-size:11.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+      color:var(--faint); margin:22px 0 6px; }
+    .body { white-space:pre-wrap; word-wrap:break-word; color:var(--ink); font-size:15px; }
+    .meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px 22px; margin:18px 0 0; }
+    .meta-grid .k { font-size:11.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--faint); }
+    .meta-grid .v { font-size:14.5px; margin-top:2px; }
+    .links a { display:block; color:var(--navy); font-size:14.5px; text-decoration:none; word-break:break-all; margin:3px 0; }
+    .links a:hover { text-decoration:underline; }
+    .subs { list-style:none; padding:0; margin:6px 0 0; display:grid; gap:8px; }
+    .sub { display:flex; align-items:center; gap:10px; background:var(--surface-2);
+      border:1px solid var(--border); border-radius:11px; padding:9px 12px; }
+    .sub .st { width:9px; height:9px; border-radius:50%; flex:none; }
+    .sub .ttl { flex:1; min-width:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .sub .pr { font-size:12px; color:var(--muted); font-weight:600; flex:none; }
+    hr { border:0; border-top:1px solid var(--border); margin:22px 0; }
+    .cta { text-align:center; margin-top:22px; }
     .btn { display:inline-block; background:var(--navy); color:#fff; text-decoration:none;
-           font-weight:600; font-size:16px; padding:13px 26px; border-radius:12px; }
+      font-weight:600; font-size:15px; padding:12px 24px; border-radius:12px; }
     .btn:hover { filter:brightness(1.08); }
-    .note { margin-top:12px; color:var(--muted); font-size:13.5px; }
+    .note { margin-top:10px; color:var(--muted); font-size:13px; }
+    .foot { text-align:center; color:var(--faint); font-size:12.5px; margin-top:26px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <img class="card-img" src="{{ image_url }}" alt="{{ spec.kind }}: {{ title }}" />
-    <div class="cta">
-      <a class="btn" href="{{ deep_link }}">Open in Ananda Taskboard</a>
-      <p class="note">You'll need to sign in to view the full {{ spec.kind|lower }}.</p>
-    </div>
+    <article class="card" style="--accent: {{ d.accent }}">
+      <div class="eyebrow">{{ d.kind }}</div>
+      {% if d.breadcrumb %}<div class="crumb">{{ d.breadcrumb }}</div>{% endif %}
+      <h1>{{ d.title }}{% if d.kind == "Task" %}<span class="idchip">#{{ d.object_id }}</span>{% endif %}</h1>
+
+      {% if d.priority or d.status %}
+      <div class="chips">
+        {% if d.priority %}<span class="chip" style="color:{{ d.priority.color }};background:{{ d.priority.color }}1f"><span class="dot" style="background:{{ d.priority.color }}"></span>{{ d.priority.label }} priority</span>{% endif %}
+        {% if d.status %}<span class="chip" style="color:{{ d.status.color }};background:{{ d.status.color }}1f"><span class="dot" style="background:{{ d.status.color }}"></span>{{ d.status.label }}</span>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if d.assignees %}
+      <div class="people">
+        {% for a in d.assignees %}<span class="person"><span class="ava">{{ a.initials }}</span>{{ a.name }}</span>{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if d.deadline or d.start_date or d.start_time or d.end_time %}
+      <div class="meta-grid">
+        {% if d.start_date %}<div><div class="k">Start</div><div class="v">{{ d.start_date }}</div></div>{% endif %}
+        {% if d.deadline %}<div><div class="k">Deadline</div><div class="v">{{ d.deadline }}</div></div>{% endif %}
+        {% if d.start_time %}<div><div class="k">Start time</div><div class="v">{{ d.start_time }}</div></div>{% endif %}
+        {% if d.end_time %}<div><div class="k">End time</div><div class="v">{{ d.end_time }}</div></div>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if d.description %}<div class="label">Details</div><div class="body">{{ d.description }}</div>{% endif %}
+      {% if d.requirements %}<div class="label">Requirements</div><div class="body">{{ d.requirements }}</div>{% endif %}
+
+      {% if d.links %}
+      <div class="label">Links</div>
+      <div class="links">{% for l in d.links %}<a href="{{ l }}" rel="noopener nofollow ugc" target="_blank">{{ l }}</a>{% endfor %}</div>
+      {% endif %}
+
+      {% if d.subtasks %}
+      <div class="label">Subtasks ({{ d.subtasks|length }})</div>
+      <ul class="subs">
+        {% for s in d.subtasks %}
+        <li class="sub">
+          <span class="st" style="background:{% if s.status %}{{ s.status.color }}{% else %}#6b7280{% endif %}"></span>
+          <span class="ttl">{{ s.title }}</span>
+          {% if s.priority %}<span class="pr">{{ s.priority.label }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <hr />
+      <div class="cta">
+        <a class="btn" href="{{ deep_link }}">Open in Ananda Taskboard</a>
+        <p class="note">Members can sign in to edit. This is a read-only view.</p>
+      </div>
+    </article>
+    <div class="foot">Shared from Ananda Taskboard</div>
   </div>
 </body>
 </html>

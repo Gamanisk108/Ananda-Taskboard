@@ -14,6 +14,7 @@ from django.http import HttpResponse, HttpResponseGone
 from django.shortcuts import render
 
 from . import card as cardmod
+from . import describe as describe_mod
 from .describe import describe, is_live
 from .models import ShareLink
 
@@ -134,8 +135,10 @@ def share_landing(request, token):
         return render(request, "sharing/gone.html", status=410)
     link, target = found
     spec = _spec_for(link, target)
+    detail = describe_mod.detail(target, include_description=link.include_description)
     ctx = {
         "spec": spec,
+        "d": detail,
         "title": spec.title,
         "description": _og_description(spec),
         "image_url": request.build_absolute_uri(f"/s/{token}/card.png"),

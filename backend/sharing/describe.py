@@ -114,3 +114,97 @@ def describe(obj) -> CardSpec:
             deep_link=f"/?project={obj.id}",
         )
     raise TypeError(f"Not shareable: {obj!r}")
+
+
+# ── full read-only DETAIL (the public /s/<token> page, not the card image) ──────
+# Shows the task's text plainly so anyone with the link can READ it without an
+# account. NO comments/attachments (Gordon 2026-06-29 — those stay members-only).
+
+def _initials(name: str) -> str:
+    parts = [p for p in name.strip().split() if p]
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[1][0]).upper()
+    return (name.strip()[:2] or "?").upper()
+
+
+def _status_meta(key):
+    from . import brand
+    if key in brand.STATUS:
+        label, color = brand.STATUS[key]
+        return {"label": label, "color": color}
+    return None
+
+
+def _priority_meta(level):
+    from . import brand
+    if level in brand.PRIORITY:
+        label, color = brand.PRIORITY[level]
+        return {"label": label, "color": color}
+    return None
+
+
+def _fmt_date(d):
+    return f"{d:%b} {d.day}, {d.year}" if d else None  # cross-platform (no %-d)
+
+
+def _fmt_time(tm):
+    return tm.strftime("%I:%M %p").lstrip("0") if tm else None
+
+
+def _assignee_chips(obj):
+    return [{"name": n, "initials": _initials(n)} for n in _assignee_names(obj)]
+
+
+def _subtask_rows(task):
+    rows = []
+    for s in task.subtasks.all().order_by("order", "id"):
+        rows.append({
+            "title": s.title,
+            "status": _status_meta(s.status),
+            "priority": _priority_meta(s.priority),
+            "assignees": _assignee_chips(s),
+        })
+    return rows
+
+
+def detail(obj, *, include_description: bool = True) -> dict:
+    """A template-ready context for the full read-only page. `include_description`
+    (the per-link toggle) gates the free-text body (description + requirements);
+    structured fields always show."""
+    spec = describe(obj)
+    d = {
+        "kind": spec.kind,
+        "title": spec.title,
+        "breadcrumb": spec.breadcrumb,
+        "accent": spec.accent,
+        "deep_link": spec.deep_link,
+        "status": _status_meta(spec.status),
+        "priority": _priority_meta(spec.priority),
+        "assignees": [],
+        "description": "",
+        "requirements": "",
+        "deadline": None, "start_date": None, "start_time": None, "end_time": None,
+        "links": [],
+        "subtasks": [],
+        "object_id": obj.id,
+    }
+    if isinstance(obj, (Task, Subtask)):
+        d["assignees"] = _assignee_chips(obj)
+        if include_description:
+            d["description"] = obj.details
+            d["requirements"] = obj.requirements
+        d["deadline"] = _fmt_date(obj.deadline)
+        d["start_date"] = _fmt_date(obj.timeline_start)
+        d["start_time"] = _fmt_time(obj.start_time)
+        d["end_time"] = _fmt_time(obj.end_time)
+        # Only http(s) links — a public page must never render a javascript: href.
+        d["links"] = [
+            u.strip() for u in (obj.links or [])
+            if isinstance(u, str) and u.strip().lower().startswith(("http://", "https://"))
+        ]
+    if isinstance(obj, Task):
+        d["object_id"] = obj.id
+        d["subtasks"] = _subtask_rows(obj)
+    if isinstance(obj, (Project, SubProject)) and include_description:
+        d["description"] = obj.description
+    return d

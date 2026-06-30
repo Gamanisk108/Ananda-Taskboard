@@ -109,6 +109,50 @@ def test_landing_carries_og_tags(admin, org, task):
     assert f"/?task={task.id}" in html  # deep link present
 
 
+@pytest.fixture
+def rich_task(subproject, admin):
+    import datetime
+    t = Task.objects.create(
+        subproject=subproject, title="Consolidate media", details="Scatter across drives.",
+        requirements="Keep originals.", priority=3, status="todo",
+        deadline=datetime.date(2026, 7, 15), timeline_start=datetime.date(2026, 6, 19),
+        links=["https://drive.example/x", "javascript:alert(1)", "https://ananda.org"],
+    )
+    t.assignees.add(admin)
+    Subtask.objects.create(task=t, title="Audit folders", status="done", priority=2, order=0)
+    Subtask.objects.create(task=t, title="Define structure", status="in_progress", priority=4, order=1)
+    return t
+
+
+def test_landing_is_full_readonly_view(admin, org, rich_task):
+    token = make_link(login(admin), org, "task", rich_task.id).data["token"]
+    html = APIClient().get(f"/s/{token}").content.decode()
+    # Full task content is shown as text…
+    assert "Scatter across drives." in html          # description
+    assert "Keep originals." in html                 # requirements
+    assert "Audit folders" in html and "Define structure" in html  # subtasks
+    assert "Jul 15, 2026" in html                    # deadline
+    assert "https://drive.example/x" in html         # http link rendered
+    # …with NO editable fields and NO comments/attachments.
+    assert "<input" not in html and "<textarea" not in html and "<select" not in html
+    assert "comment" not in html.lower() and "attachment" not in html.lower()
+
+
+def test_landing_filters_non_http_links(admin, org, rich_task):
+    token = make_link(login(admin), org, "task", rich_task.id).data["token"]
+    html = APIClient().get(f"/s/{token}").content.decode()
+    assert "javascript:alert" not in html  # only http(s) hrefs on a public page
+
+
+def test_description_toggle_hides_body_keeps_structure(admin, org, rich_task):
+    api = login(admin)
+    token = make_link(api, org, "task", rich_task.id).data["token"]
+    api.patch(f"/api/share/{token}", {"include_description": False}, format="json", HTTP_X_ORG_ID=str(org.id))
+    html = APIClient().get(f"/s/{token}").content.decode()
+    assert "Scatter across drives." not in html and "Keep originals." not in html  # body hidden
+    assert "Audit folders" in html  # structured subtasks still shown
+
+
 def test_card_png_renders(admin, org, task):
     api = login(admin)
     token = make_link(api, org, "task", task.id).data["token"]
