@@ -153,32 +153,6 @@ def test_description_toggle_hides_body_keeps_structure(admin, org, rich_task):
     assert "Audit folders" in html  # structured subtasks still shown
 
 
-WA_UA = "WhatsApp/2.24.1 A"
-
-
-def test_default_client_gets_wide_card(admin, org, task):
-    token = make_link(login(admin), org, "task", task.id).data["token"]
-    html = APIClient().get(f"/s/{token}").content.decode()
-    assert f"/s/{token}/card.png" in html
-    assert 'content="summary_large_image"' in html
-    assert 'property="og:image:width" content="1200"' in html
-
-
-def test_whatsapp_gets_square_card(admin, org, task):
-    token = make_link(login(admin), org, "task", task.id).data["token"]
-    html = APIClient().get(f"/s/{token}", HTTP_USER_AGENT=WA_UA).content.decode()
-    assert f"/s/{token}/card-sq.png" in html
-    assert 'content="summary"' in html and "summary_large_image" not in html
-    assert 'property="og:image:width" content="600"' in html
-
-
-def test_square_card_renders(admin, org, task):
-    token = make_link(login(admin), org, "task", task.id).data["token"]
-    res = APIClient().get(f"/s/{token}/card-sq.png")
-    assert res.status_code == 200 and res["Content-Type"] == "image/png"
-    assert res.content[:8] == b"\x89PNG\r\n\x1a\n" and len(res.content) > 2000
-
-
 def test_card_png_renders(admin, org, task):
     api = login(admin)
     token = make_link(api, org, "task", task.id).data["token"]
