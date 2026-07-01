@@ -40,7 +40,7 @@ _MONO = str(FONTS / "RedHatMono-VF.ttf")
 # Bump whenever the card RENDERING changes (layout, the integrated accent edge,
 # fonts, colors…) even if the task DATA is identical — the ETag folds this in so
 # every browser/CDN cache invalidates on a render change, not just a data change.
-RENDER_VERSION = 5
+RENDER_VERSION = 4
 
 W, H = 1200, 630
 MARGIN = 48
@@ -184,21 +184,18 @@ def render(spec: CardSpec) -> bytes:
     y = MARGIN + 56
 
     # Kind eyebrow (mono, uppercase) + brand mark on the right.
-    # NOTE: sizes/weights here are tuned for LEGIBILITY WHEN DOWNSCALED — chat
-    # clients (Slack ~360px) shrink this 1200px card ~3×, and thin/small text
-    # blurs. Secondary text is heavier + larger than the in-app equivalents.
-    eyebrow = _font("mono", 28, 700)
+    eyebrow = _font("mono", 26, 600)
     d.text((left, y), spec.kind.upper(), font=eyebrow, fill=accent, anchor="lm")
-    brand_f = _font("ui", 28, 600)
-    d.text((right, y), "Ananda Taskboard", font=brand_f, fill=brand.MUTED, anchor="rm")
-    y += 46
+    brand_f = _font("ui", 26, 600)
+    d.text((right, y), "Ananda Taskboard", font=brand_f, fill=brand.FAINT, anchor="rm")
+    y += 44
 
     # Breadcrumb.
     if spec.breadcrumb:
-        crumb_f = _font("ui", 30, 600)
+        crumb_f = _font("ui", 26, 500)
         d.text((left, y), _truncate(d, spec.breadcrumb, crumb_f, content_w),
                font=crumb_f, fill=brand.MUTED, anchor="lm")
-        y += 52
+        y += 50
     else:
         y += 8
 
@@ -211,7 +208,7 @@ def render(spec: CardSpec) -> bytes:
     y += 18
 
     # Chips: priority + status (tasks/sub-tasks only).
-    chip_f = _font("ui", 29, 700)
+    chip_f = _font("ui", 26, 600)
     chip_x = left
     drew_chip = False
     if spec.priority in brand.PRIORITY:
@@ -226,13 +223,12 @@ def render(spec: CardSpec) -> bytes:
     if drew_chip:
         y += 78
 
-    # Description (optional, up to 2 lines). Weight 500 + darker than --muted so
-    # it stays crisp and readable after the chat client downscales the card.
+    # Description (optional, up to 2 lines).
     if spec.description:
-        desc_f = _font("ui", 31, 500)
+        desc_f = _font("ui", 28, 400)
         for line in _wrap(d, spec.description, desc_f, content_w, 2):
-            d.text((left, y), line, font=desc_f, fill=(58, 64, 78), anchor="lm")
-            y += 46
+            d.text((left, y), line, font=desc_f, fill=brand.MUTED, anchor="lm")
+            y += 42
 
     # Footer: assignees (bottom-left).
     foot_y = H - MARGIN - 56
@@ -249,9 +245,9 @@ def render(spec: CardSpec) -> bytes:
         label_x = ax + (len(shown) - 1) * 44 + 56
         extra = len(spec.assignees) - len(shown)
         names = ", ".join(shown) + (f" +{extra}" if extra > 0 else "")
-        name_f = _font("ui", 29, 600)
+        name_f = _font("ui", 26, 500)
         d.text((label_x, foot_y), _truncate(d, names, name_f, right - label_x),
-               font=name_f, fill=(58, 64, 78), anchor="lm")
+               font=name_f, fill=brand.MUTED, anchor="lm")
 
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
