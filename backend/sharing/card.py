@@ -40,7 +40,7 @@ _MONO = str(FONTS / "RedHatMono-VF.ttf")
 # Bump whenever the card RENDERING changes (layout, the integrated accent edge,
 # fonts, colors…) even if the task DATA is identical — the ETag folds this in so
 # every browser/CDN cache invalidates on a render change, not just a data change.
-RENDER_VERSION = 3
+RENDER_VERSION = 4
 
 W, H = 1200, 630
 MARGIN = 48
@@ -107,12 +107,19 @@ def _rounded(draw, box, radius, **kw):
 
 
 def _draw_chevron(draw, x0, y0, size, polylines, rgb):
-    """Draw the app's PriorityIcon chevron (14×14 viewBox points) scaled to `size`."""
+    """Draw the app's PriorityIcon chevron (14×14 viewBox points) scaled to `size`,
+    with ROUNDED caps + joints (Pillow's joint='curve' only kicks in for width>4,
+    so round them explicitly with a dot at each vertex — matches the app's
+    stroke-linecap/linejoin='round')."""
     sc = size / 14.0
+    w = max(2, round(size / 7))
+    r = w / 2
     for pl in polylines:
         pts = [(x0 + float(a) * sc, y0 + float(b) * sc)
                for a, b in (p.split(",") for p in pl.split())]
-        draw.line(pts, fill=rgb, width=max(2, round(size / 6)), joint="curve")
+        draw.line(pts, fill=rgb, width=w)
+        for px, py in pts:
+            draw.ellipse([px - r, py - r, px + r, py + r], fill=rgb)
 
 
 def _chip(draw, x, y, label, color_hex, font, chevron=None) -> int:
