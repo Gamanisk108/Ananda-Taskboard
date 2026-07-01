@@ -256,3 +256,55 @@ def render(spec: CardSpec) -> bytes:
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
     return buf.getvalue()
+
+
+SQ = 600
+
+
+def render_square(spec: CardSpec) -> bytes:
+    """A 600×600 SQUARE variant for WhatsApp, whose link preview crops any
+    og:image into a tiny square box — the wide card would render as an illegible
+    cropped sliver. This is a clean, intentional badge instead: the project-accent
+    rounded square with the task's priority chevron (or its initial) in white, and
+    the kind + status beneath it."""
+    img = Image.new("RGB", (SQ, SQ), brand.BG)
+    d = ImageDraw.Draw(img)
+    accent = brand.hex_to_rgb(spec.accent)
+
+    m = 30
+    panel = [m, m, SQ - m, SQ - m]
+    _rounded(d, panel, radius=70, fill=accent)
+
+    cx = SQ // 2
+    # Kind eyebrow near the top.
+    eb = _font("mono", 34, 700)
+    d.text((cx, m + 66), spec.kind.upper(), font=eb, fill=brand.WHITE, anchor="mm")
+
+    # Center glyph: priority chevron (tasks) or the title's initial (projects).
+    gy = SQ // 2 + 6
+    chev = brand.PRIORITY_CHEVRON.get(spec.priority) if spec.priority in brand.PRIORITY else None
+    if chev:
+        size = 300
+        _draw_chevron(d, cx - size / 2, gy - size / 2, size, chev, brand.WHITE)
+    else:
+        letter = (spec.title.strip()[:1] or "•").upper()
+        d.text((cx, gy), letter, font=_font("ui", 320, 700), fill=brand.WHITE, anchor="mm")
+
+    # Status pill near the bottom (white pill, status-colored text + dot).
+    if spec.status in brand.STATUS:
+        slabel, scolor = brand.STATUS[spec.status]
+        srgb = brand.hex_to_rgb(scolor)
+        pf = _font("ui", 34, 700)
+        tw = d.textlength(slabel, font=pf)
+        pill_w = int(28 + 16 + 12 + tw + 28)
+        ph = 60
+        px = cx - pill_w // 2
+        py = SQ - m - 44 - ph
+        _rounded(d, [px, py, px + pill_w, py + ph], radius=ph // 2, fill=brand.WHITE)
+        pcy = py + ph // 2
+        d.ellipse([px + 28, pcy - 8, px + 28 + 16, pcy + 8], fill=srgb)
+        d.text((px + 28 + 16 + 12, pcy), slabel, font=pf, fill=srgb, anchor="lm")
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()

@@ -69,14 +69,20 @@ def _etag_for(token: str, spec) -> str:
     return f'W/"{token}.{digest}"'
 
 
-def _render_for_etag(etag: str, spec) -> bytes:
+def _render_for_etag(etag: str, render_fn) -> bytes:
     png = _CARD_CACHE.get(etag)
     if png is None:
-        png = cardmod.render(spec)
+        png = render_fn()
         if len(_CARD_CACHE) >= _CARD_CACHE_MAX:
             _CARD_CACHE.clear()
         _CARD_CACHE[etag] = png
     return png
+
+
+def _is_whatsapp(request) -> bool:
+    # WhatsApp generates link previews client-side with a "WhatsApp/…" UA and
+    # crops any og:image into a small SQUARE box — so we feed it a square variant.
+    return "whatsapp" in request.META.get("HTTP_USER_AGENT", "").lower()
 
 
 def _lookup(token: str):
@@ -136,12 +142,19 @@ def share_landing(request, token):
     link, target = found
     spec = _spec_for(link, target)
     detail = describe_mod.detail(target, include_description=link.include_description)
+    # WhatsApp gets a SQUARE og:image (its preview box is square); everyone else
+    # gets the wide summary_large_image card.
+    wa = _is_whatsapp(request)
+    img_path, img_wh = ("card-sq.png", 600) if wa else ("card.png", None)
     ctx = {
         "spec": spec,
         "d": detail,
         "title": spec.title,
         "description": _og_description(spec),
-        "image_url": request.build_absolute_uri(f"/s/{token}/card.png"),
+        "image_url": request.build_absolute_uri(f"/s/{token}/{img_path}"),
+        "image_w": img_wh or 1200,
+        "image_h": img_wh or 630,
+        "twitter_card": "summary" if wa else "summary_large_image",
         "page_url": request.build_absolute_uri(f"/s/{token}"),
         "deep_link": request.build_absolute_uri(spec.deep_link),
     }
@@ -165,10 +178,31 @@ def share_card(request, token):
         resp = HttpResponse(status=304)
         resp["ETag"] = etag
         return resp
-    png = _render_for_etag(etag, spec)
+    png = _render_for_etag(etag, lambda: cardmod.render(spec))
     resp = HttpResponse(png, content_type="image/png")
     resp["ETag"] = etag
     # Short max-age + ETag: caches revalidate quickly (cheap 304s) so an edit or a
     # render-version bump surfaces fast, rather than serving a stale card for ages.
+    resp["Cache-Control"] = "public, max-age=60, must-revalidate"
+    return resp
+
+
+def share_card_square(request, token):
+    """600×600 square variant (WhatsApp). Same lookup/etag/throttle as card.png."""
+    if _rate_limited(request):
+        return _too_many()
+    found = _lookup(token)
+    if found is None:
+        return HttpResponseGone("This share link is no longer available.")
+    link, target = found
+    spec = _spec_for(link, target)
+    etag = _etag_for(token + ".sq", spec)
+    if request.headers.get("If-None-Match") == etag:
+        resp = HttpResponse(status=304)
+        resp["ETag"] = etag
+        return resp
+    png = _render_for_etag(etag, lambda: cardmod.render_square(spec))
+    resp = HttpResponse(png, content_type="image/png")
+    resp["ETag"] = etag
     resp["Cache-Control"] = "public, max-age=60, must-revalidate"
     return resp
