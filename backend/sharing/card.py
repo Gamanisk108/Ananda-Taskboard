@@ -40,7 +40,7 @@ _MONO = str(FONTS / "RedHatMono-VF.ttf")
 # Bump whenever the card RENDERING changes (layout, the integrated accent edge,
 # fonts, colors…) even if the task DATA is identical — the ETag folds this in so
 # every browser/CDN cache invalidates on a render change, not just a data change.
-RENDER_VERSION = 4
+RENDER_VERSION = 6
 
 W, H = 1200, 630
 MARGIN = 48
