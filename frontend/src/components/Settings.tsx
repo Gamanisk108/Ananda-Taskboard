@@ -9,7 +9,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X, Calendar, Cake, CalendarRange, Repeat, Settings as SettingsIcon,
-  UserRound, Bell, ListChecks, Heart, ArrowLeft, Lock, Check, GripVertical, Info, Trash2, LogOut,
+  UserRound, Bell, ListChecks, Heart, ArrowLeft, Lock, Check, GripVertical, Info, Trash2, LogOut, KeyRound,
 } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../state/auth";
@@ -18,10 +18,11 @@ import { Modal, SingleSelect, ColorPicker } from "./common";
 import { useConfirm } from "./confirm";
 import { HelpUsPane, ReportProblemDialog, SuggestFeatureDialog, SpreadWordDialog, type HelpUsFlow } from "./HelpUs";
 import { ImproveTranslations } from "./ImproveTranslations";
+import { ApiKeysPane } from "./ApiKeys";
 import { helpUsUnseen, markHelpUsSeen } from "../helpUsSeen";
 import type { Me } from "../types";
 
-type SectionKey = "account" | "notifications" | "statuses" | "calendar" | "helpus";
+type SectionKey = "account" | "notifications" | "statuses" | "calendar" | "helpus" | "apikeys";
 
 export function Settings({ me, language, onLanguage, theme, onTheme, dailyPushEnabled, onToggleDailyPush, onClose }: {
   me: Me;
@@ -60,6 +61,7 @@ export function Settings({ me, language, onLanguage, theme, onTheme, dailyPushEn
     { key: "notifications", icon: <Bell size={16} />, label: t("settings.navNotifications") },
     { key: "statuses", icon: <ListChecks size={16} />, label: t("settings.navStatuses"), adminOnly: true },
     { key: "calendar", icon: <Calendar size={16} />, label: t("settings.navEvents") },
+    { key: "apikeys", icon: <KeyRound size={16} />, label: t("settings.navApiKeys"), adminOnly: true },
     { key: "helpus", icon: <Heart size={16} />, label: t("settings.navHelpUs"), dot: helpDot },
   ];
   const visible = sections.filter((s) => !s.adminOnly || me.is_admin);
@@ -85,6 +87,7 @@ export function Settings({ me, language, onLanguage, theme, onTheme, dailyPushEn
           )}
           {active === "statuses" && me.is_admin && <StatusManager />}
           {active === "calendar" && <EventsHolidaysPane isAdmin={me.is_admin} />}
+          {active === "apikeys" && me.is_admin && <ApiKeysPane />}
           {active === "helpus" && <HelpUsPane onOpen={setFlow} />}
         </div>
       </div>

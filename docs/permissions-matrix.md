@@ -38,3 +38,13 @@ which case Member-created/edited tasks go live immediately.
 Every rule above is enforced **server-side** on the API, independent of UI. A
 direct API call for a hidden sub-project returns **403**, not data. A Viewer
 cannot create/approve/change-status via the API even if a button is exposed.
+
+## API keys (programmatic access)
+An **API key** authenticates a request as the **admin who created it**, bound to
+that admin's organization. It inherits exactly that user's access — every rule
+in the matrix above applies unchanged; a key can never see or do more than its
+creator. Two scopes narrow it further: `read` (GET/HEAD/OPTIONS only) and
+`read_write` (full, within the creator's rights). Only Admins/Owners may create
+or revoke keys, and **key management itself is not reachable via a key** (JWT
+session only) — a leaked key can't escalate into more keys. See
+`docs/api-reference.md` → *API keys*.

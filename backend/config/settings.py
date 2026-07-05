@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "attachments",
     "ai",
     "sharing",
+    "apikeys",
 ]
 
 MIDDLEWARE = [
@@ -171,10 +172,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # --- DRF + JWT --------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        # API keys first: returns None when no key is present, so JWT still runs
+        # for the SPA. When a key IS present it governs the request (org + scope).
+        "apikeys.authentication.ApiKeyAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
+        # Secondary read/write gate for API keys (primary gate is in the
+        # authentication class); a no-op for normal JWT/session requests.
+        "apikeys.permissions.ApiKeyScopePermission",
     ),
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",

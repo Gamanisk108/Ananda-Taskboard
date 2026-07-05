@@ -60,6 +60,7 @@ urlpatterns = [
     path("api/", include("attachments.urls")),
     path("api/", include("ai.urls")),
     path("api/", include("sharing.urls")),
+    path("api/", include("apikeys.urls")),
     # Public share-card unfurl routes — OUTSIDE /api/ and the SPA catch-all so
     # chat bots can fetch them unauthenticated.
     path("s/<str:token>", share_landing, name="share-landing"),

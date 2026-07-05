@@ -12,6 +12,34 @@
 - `POST /api/auth/refresh` — `{refresh}` → `{access}`
 - `GET  /api/me` — current user + visible project/sub-project tree + tab flags
 
+## API keys — programmatic access for AIs / scripts
+Give an external agent (Claude, an MCP server, a cron script) access to ONE
+organization without an interactive login.
+
+**Using a key** (no `X-Org-Id` needed — the key carries its org):
+```
+GET https://ananda-taskboard.onrender.com/api/tasks
+Authorization: Bearer atb_<your-key>
+```
+Also accepted: `Authorization: Api-Key atb_…` or `X-Api-Key: atb_…`.
+
+- A key **acts as the admin who created it** and can never exceed that user's
+  visibility/edit rights. Org is bound to the key — an `X-Org-Id` header is
+  ignored, so a key can't be pointed at another org.
+- **Scopes:** `read` (only GET/HEAD/OPTIONS — any write → 403) and `read_write`
+  (full access within the creator's rights). Read-only enforced at the auth
+  layer, so it holds on every endpoint.
+- Invalid / revoked / expired key → 401.
+
+**Managing keys** (admin only, and JWT-only — a key cannot mint or revoke keys):
+- `GET /api/apikeys` — list this org's keys (metadata only; never the secret):
+  `{id, name, scope, prefix, masked_key, created_by_name, created_at,
+  last_used_at, expires_at, revoked_at, status}`.
+- `POST /api/apikeys` — `{name, scope:'read'|'read_write', expires_at?}` →
+  201 with the same fields **plus `key`** (the full secret, shown **once**).
+- `DELETE /api/apikeys/{id}` — soft-revoke (kept for audit; auth rejects it
+  immediately).
+
 ## Users & Groups
 - `GET /api/users` — active users + accessible sub-project ids (any auth user;
   powers assignee picker). `POST` (admin) creates a member `{name,email,password,

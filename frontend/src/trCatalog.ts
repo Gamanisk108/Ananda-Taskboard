@@ -38,7 +38,7 @@ export const TR_CATEGORIES: { key: string; namespaces: string[] }[] = [
   { key: "tasks", namespaces: ["common", "task", "list", "tm", "subtask", "cs", "bulk", "day", "attach", "ai"] },
   { key: "cal", namespaces: ["cal", "holidays"] },
   { key: "status", namespaces: ["view", "kanban", "approvals", "theme", "wfa", "summary"] },
-  { key: "team", namespaces: ["ta", "ap", "invite", "accept", "org"] },
+  { key: "team", namespaces: ["ta", "ap", "invite", "accept", "org", "apiKeys"] },
   { key: "proj", namespaces: ["mp", "del", "trash", "restore", "history"] },
   { key: "io", namespaces: ["import", "export", "expcol", "copy", "share"] },
   { key: "nav", namespaces: ["nav", "menu", "settings", "modals", "tabs", "empty"] },

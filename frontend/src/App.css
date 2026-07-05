@@ -1418,6 +1418,24 @@ html[data-theme="dark"] .set-pane .pill.adminonly { color: var(--azure); }
 .set-pane .hset-on { flex: none; color: var(--done); margin-top: 2px; display: grid; place-items: center; }
 .set-pane .hset-on svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
+/* API Keys pane (admin) — header, status badges (tinted .pill, mirrors
+   .status-pill's color-mix model), reveal-once secret box, usage snippet. */
+.set-pane .ak-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: var(--gap-form); }
+.set-pane .ak-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; max-width: 46ch; }
+.set-pane .ak-tbl td, .set-pane .ak-tbl th { white-space: nowrap; }
+.set-pane .ak-row-muted { opacity: .55; }
+.set-pane .ak-badge-active { background: color-mix(in srgb, var(--done) 16%, transparent); color: var(--done); }
+.set-pane .ak-badge-revoked { background: var(--surface-sunk); color: var(--muted); }
+.set-pane .ak-badge-expired { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.set-pane .ak-reveal { background: color-mix(in srgb, var(--dome) 6%, var(--surface)); border: 1px solid color-mix(in srgb, var(--dome) 35%, var(--border)); border-radius: var(--r-card); padding: 14px; margin-bottom: 14px; }
+.set-pane .ak-reveal-t { font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
+.set-pane .ak-reveal-row { display: flex; gap: 8px; }
+.set-pane .ak-reveal-input { flex: 1; min-width: 0; }
+.set-pane .ak-reveal-warn { font-size: 12px; color: var(--warn); margin: 8px 0 0; }
+.set-pane .ak-usage { margin-top: 12px; }
+.set-pane .ak-usage-t { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+.set-pane .ak-usage-pre { background: var(--surface-sunk); border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 9px 11px; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; margin: 0; }
+
 /* Contributor — all-done prayer-hands artwork (D43) + saved row lock-in (D48) */
 .tr-done .hh-img { display: block; width: 54px; height: auto; margin: 0 auto 14px; }
 html[data-theme="dark"] .tr-done .hh-img { filter: invert(1); }
