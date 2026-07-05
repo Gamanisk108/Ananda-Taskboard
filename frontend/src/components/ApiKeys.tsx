@@ -182,7 +182,7 @@ function CreateForm({ busy, error, onCancel, onSubmit }: {
 }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
-  const [scope, setScope] = useState<Scope>("read_write"); // default per spec
+  const [scope, setScope] = useState<Scope>("read"); // least-privilege default (Gordon, 2026-07-05)
 
   function submit() {
     const v = name.trim();
