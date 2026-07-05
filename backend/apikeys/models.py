@@ -54,7 +54,9 @@ class ApiKey(models.Model):
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="api_keys"
     )
     name = models.CharField(max_length=120)
-    scope = models.CharField(max_length=12, choices=Scope.choices, default=Scope.READ_WRITE)
+    # Fail safe: if a caller ever omits scope, mint the least-privileged key.
+    # The UI always sends an explicit scope; this default is a safety net.
+    scope = models.CharField(max_length=12, choices=Scope.choices, default=Scope.READ)
     # First DISPLAY_PREFIX_LEN chars of the key — shown in the UI so an admin can
     # tell keys apart. Indexed only for display lookups; auth matches hashed_key.
     prefix = models.CharField(max_length=DISPLAY_PREFIX_LEN, db_index=True)
@@ -79,11 +81,14 @@ class ApiKey(models.Model):
         """Mint a new key. Returns (instance, raw_secret). The raw secret is the
         ONLY time the full key exists in plaintext — hand it to the caller once
         and never persist it."""
+        name = name.strip()
+        if not name:
+            raise ValueError("API key name must not be empty.")
         raw = KEY_PREFIX + secrets.token_urlsafe(32)
         key = cls.objects.create(
             organization=organization,
             created_by=created_by,
-            name=name.strip(),
+            name=name,
             scope=scope,
             prefix=raw[:DISPLAY_PREFIX_LEN],
             hashed_key=hash_key(raw),

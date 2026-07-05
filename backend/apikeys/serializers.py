@@ -32,9 +32,10 @@ class ApiKeyCreateSerializer(serializers.Serializer):
     levels; write-only is deliberately not offered (see build doc)."""
 
     name = serializers.CharField(max_length=120)
+    # Least-privilege default if omitted; the UI always sends an explicit scope.
     scope = serializers.ChoiceField(
         choices=[ApiKey.Scope.READ, ApiKey.Scope.READ_WRITE],
-        default=ApiKey.Scope.READ_WRITE,
+        default=ApiKey.Scope.READ,
     )
     expires_at = serializers.DateTimeField(required=False, allow_null=True)
 

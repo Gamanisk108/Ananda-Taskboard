@@ -74,6 +74,25 @@ def test_generate_returns_prefixed_raw_and_stores_only_a_hash(worlds):
     assert key.status == "active"
 
 
+def test_generate_rejects_empty_name(worlds):
+    A, _ = worlds
+    with pytest.raises(ValueError):
+        ApiKey.generate(organization=A["org"], created_by=A["admin"], name="   ",
+                        scope=ApiKey.Scope.READ)
+
+
+def test_scope_defaults_to_least_privilege(worlds):
+    """Model + create-serializer default to read-only when scope is omitted."""
+    A, _ = worlds
+    field_default = ApiKey._meta.get_field("scope").default
+    assert field_default == ApiKey.Scope.READ
+    # Endpoint: omitting scope yields a read-only key, not read_write.
+    api = jwt_client(A["admin"])
+    r = api.post("/api/apikeys", {"name": "no-scope"}, format="json",
+                 HTTP_X_ORG_ID=str(A["org"].id))
+    assert r.status_code == 201 and r.data["scope"] == "read"
+
+
 def test_status_reflects_revoke_and_expiry(worlds):
     A, _ = worlds
     key, _ = ApiKey.generate(organization=A["org"], created_by=A["admin"], name="k",

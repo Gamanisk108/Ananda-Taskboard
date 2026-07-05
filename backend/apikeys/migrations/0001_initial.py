@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=120)),
-                ('scope', models.CharField(choices=[('read', 'Read only'), ('read_write', 'Read & write')], default='read_write', max_length=12)),
+                ('scope', models.CharField(choices=[('read', 'Read only'), ('read_write', 'Read & write')], default='read', max_length=12)),
                 ('prefix', models.CharField(db_index=True, max_length=12)),
                 ('hashed_key', models.CharField(editable=False, max_length=64, unique=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
