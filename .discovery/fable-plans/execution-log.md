@@ -237,3 +237,154 @@ touched; also left untracked `design/Claude Design/Ananda Taskboard.zip` and
   Consider raising toward 6–12 months only after a week of confirmed clean
   HTTPS operation on the live domain — track this as a deliberate follow-up,
   not automatic.
+
+## 2026-07-08 — Plan 05: eslint-zero-baseline — PARTIAL
+
+**Status:** PARTIAL (13 of 23 pre-existing errors fixed + CI lint gate now
+live on real errors; the remaining 10 are a single behavior-adjacent rule
+deliberately deferred per the plan's own abort condition, not silently
+dropped).
+
+**Measurement (step 1):** `cd frontend && npx eslint src --format stylish` —
+true baseline was 23 errors + 8 warnings (31 total; drifted from the
+documented "~26" since 2026-06-10, and dominated by newer
+`eslint-plugin-react-hooks@7.1.1` rules — `set-state-in-effect`,
+`static-components`, `immutability`, `refs` — that didn't exist when that
+baseline note was written).
+
+**Fixed (13 errors, mechanical/behavior-preserving):**
+- `frontend/src/components/Approvals.tsx`,
+  `frontend/src/components/DeleteWithMove.tsx` —
+  `@typescript-eslint/no-unused-expressions`: `n.has(id) ? n.delete(id) :
+  n.add(id)` → `if (n.has(id)) n.delete(id); else n.add(id);` (2 errors).
+- `frontend/src/components/common.tsx`, `frontend/src/components/confirm.tsx`,
+  `frontend/src/state/auth.tsx` — `react-refresh/only-export-components`:
+  documented inline disables on the file's co-located hook export
+  (`useIsNarrow`, `useConfirm`, `useAuth`) — dev-experience-only rule (Fast
+  Refresh), zero runtime effect; matches the file's own existing precedent
+  (a Floating-UI ref disable already lived in `common.tsx`) (3 errors).
+- `frontend/src/components/common.tsx` — `react-hooks/immutability`: replaced
+  the mutable `let lastSection` variable (mutated inside `.map()`) in both
+  `MultiSelect` and `SingleSelect` with an index-based lookup
+  (`options[i - 1]?.section`) — identical header-insertion behavior, no
+  mutable outer variable (2 errors).
+- `frontend/src/components/TaskModal.tsx` — `react-hooks/refs`: replaced the
+  "set-once ref read during render" dirty-check pattern
+  (`useRef` + `if (...current === null) current = x`) with a lazy `useState`
+  initializer (`useState(() => formSnapshot)`) — runs once, never
+  re-renders, behaviorally identical; confirmed no other code resets the
+  ref (1 error).
+- `frontend/src/components/ListView.tsx` — `react-hooks/static-components`:
+  hoisted the `Th` sortable-column-header component out of `ListView`'s
+  render body to module scope, passing `sortKey`/`sortDir`/`onSort` as props
+  instead of closing over locals (5 errors, all one root cause).
+- `frontend/src/components/TeamAdmin.tsx` — removed a stray, misplaced
+  `/* eslint-disable-next-line */` comment that was flagged as an unused
+  directive (1 warning, not part of the 23 but cleaned up in the same pass).
+
+**Deliberately deferred (10 errors, all `react-hooks/set-state-in-effect`):**
+`App.tsx` (1), `Approvals.tsx` (1), `BulkMigrate.tsx` (1), `History.tsx` (1),
+`ManageProjects.tsx` (2), `TeamAdmin.tsx` (4) — every instance is the
+codebase's standard "fetch data on mount" / "sync local state from a prop"
+pattern (setState from inside a `.then()`/async callback or directly
+syncing a prop into local state for optimistic-update purposes), not an
+actual bug. A correct fix per the rule means restructuring each effect
+(the plan's own abort condition names the likely vehicle: "the TanStack-Query
+read migration"), which is behavior-adjacent and needs live per-surface
+verification — explicitly out of scope for this run (no live deploy /
+live smoke tests allowed). This matches the plan's §Risks abort condition
+almost exactly (it named "20+ exhaustive-deps in the data-loading core of
+App.tsx" as the trigger scenario; the actual dominant risky category turned
+out to be `set-state-in-effect` instead, same shape of risk).
+
+**Ratchet decision:** rather than leave the CI lint gate permanently off (the
+original problem this plan exists to fix) or scatter 10 individual
+`eslint-disable` comments (against the plan's own centralization principle),
+downgraded `react-hooks/set-state-in-effect` from `error` to `warn`
+centrally in `frontend/eslint.config.js`, with an inline comment explaining
+why, the 6 affected files, and pointing back to this log entry. `npm run
+lint` (`eslint .`, no `--max-warnings` flag) now exits 0 — CI enforces real
+errors (0 today) while the 17 remaining warnings (10 downgraded
+`set-state-in-effect` + 7 pre-existing `react-hooks/exhaustive-deps`) stay
+visible but non-blocking. Did NOT add `--max-warnings 0` to the `lint`
+script, since that would immediately re-block CI on the same deferred
+warnings.
+
+**CI (step 3, code portion only):** added a "Lint (errors only)" step
+(`npm run lint`) and a "Type-check" step (`npx tsc --noEmit`) to
+`.github/workflows/dist-freshness.yml` (already triggers on every
+`frontend/**` push/PR — no new workflow file needed). `npx tsc --noEmit` was
+already clean (free rider, plan step 5) — added to the same CI step as
+written, no follow-up needed.
+
+**Doc update (step 4):** `CLAUDE.md` line 70 ("ESLint baseline: ~26
+pre-existing errors...") replaced with the new-reality note (0 errors,
+CI-enforced, ~17 tracked warnings, pointer to this log entry). Staged via a
+hand-built patch (`git apply --cached`) covering ONLY this hunk — `CLAUDE.md`
+already carried an unrelated, uncommitted "Shared Quotes Reference" section
+from a parallel session (git status showed ` M CLAUDE.md` before this run
+touched it at all); that section was left untouched and unstaged per this
+run's rule against staging another session's edits.
+
+**Test evidence:**
+1. `cd frontend && npx eslint src --format stylish` → `0 errors, 17 warnings`
+   (down from 23 errors, 8 warnings — warning count net +9 because the 10
+   downgraded `set-state-in-effect` errors became warnings, minus the 1
+   stray unused-disable warning removed).
+2. `cd frontend && npm run lint` → `EXIT:0`.
+3. `cd frontend && npx tsc --noEmit` → no output, `EXIT:0`.
+4. `cd frontend && npm run build` → succeeded (`tsc -b && vite build`),
+   fresh `dist/` with new content-hashed filenames (pre-existing
+   `INEFFECTIVE_DYNAMIC_IMPORT` / chunk-size warnings only, unrelated to this
+   plan).
+5. `cd frontend && npx vitest run` → `5 test files, 83 tests, all passed`.
+
+**Deviations from plan:**
+- Did not reach the plan's literal "zero errors AND zero warnings" bar
+  (Verification §1) — reached zero errors, partial warnings, exactly per the
+  plan's own §Risks abort-condition fallback ("ship the partial reduction +
+  ratchet at the new lower number... flag the remainder as a deliberate
+  refactor task").
+- Verification §4 (live/Playwright per-surface smoke test of touched hooks
+  code) not run — none of the 13 fixed errors touch effect timing/dependency
+  arrays (all render-body/structural fixes), so the plan's own stated risk
+  trigger for that step didn't apply; the one category that WOULD need it
+  (`set-state-in-effect`) was deferred rather than fixed, consistent with
+  this run's no-live-testing constraint.
+- Verification §5 (push a deliberate lint error on a branch, confirm CI goes
+  red) not run — this run does not push; see 🟪 below.
+
+**Commit:** `0a6a6b5` — "05-eslint-zero-baseline: retire the ~26-error
+exemption, gate real errors in CI" (`.github/workflows/dist-freshness.yml`,
+`frontend/eslint.config.js`, `frontend/dist/**` (rebuilt), 7
+`frontend/src/**` files, and the isolated `CLAUDE.md` hunk only; left
+`.discovery/api-keys-build.md` and the rest of `CLAUDE.md`'s "Shared Quotes
+Reference" section untouched/unstaged — pre-existing uncommitted changes
+from a parallel session; also left untracked `design/Claude Design/Ananda
+Taskboard.zip` and `graphify-out/` alone).
+
+**Purple-marker items for Gordon:**
+- 🟪 Push this commit (`git push origin main`) — triggers both the Render
+  deploy (dist changed) and the first live run of the new CI lint/type-check
+  steps on `dist-freshness.yml`.
+- 🟪 Verify the new CI steps actually pass on GitHub Actions after the push
+  (plan's Verification §5 spirit) — if `npm run lint` or `tsc --noEmit`
+  somehow behaves differently in the Actions Ubuntu runner than locally,
+  the workflow will go red and needs a look before it's trusted as a gate.
+- 🟪 Post-deploy, confirm the live app's affected surfaces still work as
+  before (none of the 13 fixed errors should change behavior, but they do
+  touch rendered UI: `ListView`'s sortable column headers, `MultiSelect`/
+  `SingleSelect` section headers wherever used, `TaskModal`'s
+  unsaved-changes-on-close prompt, `Approvals`/`DeleteWithMove` checkbox
+  toggling) — a quick click-through covers all of it.
+- 🟦 Follow-up refactor task (not started): the 10 deferred
+  `react-hooks/set-state-in-effect` sites are strong candidates for the
+  already-planned TanStack Query read migration (`C:\AI\CLAUDE.md`
+  "Lint/format references") — that migration would likely resolve most/all
+  of them as a side effect while also modernizing the data-fetching pattern.
+  Until then they're tracked as warnings, not silently ignored.
+- 🟦 The 7 remaining `react-hooks/exhaustive-deps` warnings (5 in `App.tsx`,
+  2 in `TeamAdmin.tsx`) were also left untouched — same behavior-adjacent
+  reasoning (adding the named missing deps, e.g. `'me'` in `App.tsx`, risks
+  extra effect reruns in the app's data-loading core) — candidate for the
+  same follow-up pass, not urgent since they're warnings only.
