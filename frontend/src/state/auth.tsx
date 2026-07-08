@@ -62,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-located with AuthProvider (shares Ctx); splitting is a pure-organization change out of scope here, no runtime effect.
 export function useAuth() {
   const v = useContext(Ctx);
   if (!v) throw new Error("useAuth outside provider");

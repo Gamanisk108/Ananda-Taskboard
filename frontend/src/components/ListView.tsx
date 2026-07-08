@@ -99,6 +99,20 @@ interface Props {
 
 type SortKey = "title" | "project" | "subproject" | "status" | "deadline" | "time" | "priority" | "assignee" | "created";
 
+// Hoisted to module scope (was defined inside ListView's render) so it isn't
+// re-created every render, per react-hooks/static-components. Sort state is
+// passed in as props instead of closing over the parent's locals.
+function Th({ k, children, sortKey, sortDir, onSort }: {
+  k: SortKey; children: React.ReactNode; sortKey: SortKey; sortDir: 1 | -1; onSort: (key: SortKey) => void;
+}) {
+  return (
+    <th className="sortable" onClick={() => onSort(k)}>
+      {children}
+      {sortKey === k && <span className="sort-arrow">{sortDir === 1 ? "▲" : "▼"}</span>}
+    </th>
+  );
+}
+
 export function ListView({ projectId, subprojectId, onEdit, me, showArchived = false }: Props) {
   const { t: tr } = useTranslation();  // aliased: `t` is used below for the task row
   const [q, setQ] = useState("");
@@ -256,11 +270,6 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
     byStatus[t.status] = (byStatus[t.status] ?? 0) + 1;
   }
 
-  const arrow = (key: SortKey) => (sortKey === key ? <span className="sort-arrow">{sortDir === 1 ? "▲" : "▼"}</span> : null);
-  const Th = ({ k, children }: { k: SortKey; children: React.ReactNode }) => (
-    <th className="sortable" onClick={() => clickSort(k)}>{children}{arrow(k)}</th>
-  );
-
   // The seven filter controls, shared by the desktop bar and the mobile sheet
   // (rendered bare inline on desktop, label-stacked inside the sheet on phones).
   const filterControls: { label: string; node: React.ReactNode }[] = [
@@ -369,12 +378,12 @@ export function ListView({ projectId, subprojectId, onEdit, me, showArchived = f
         <table className="tbl">
           <thead>
             <tr>
-              <Th k="title">{tr("list.colTask")}</Th>
-              <Th k="project">{tr("list.colProject")}</Th>
-              <Th k="subproject">{tr("list.colSubproject")}</Th>
+              <Th k="title" sortKey={sortKey} sortDir={sortDir} onSort={clickSort}>{tr("list.colTask")}</Th>
+              <Th k="project" sortKey={sortKey} sortDir={sortDir} onSort={clickSort}>{tr("list.colProject")}</Th>
+              <Th k="subproject" sortKey={sortKey} sortDir={sortDir} onSort={clickSort}>{tr("list.colSubproject")}</Th>
               <th>{tr("list.colAssignees")}</th>
-              <Th k="status">{tr("list.colStatus")}</Th>
-              <Th k="deadline">{tr("list.colDeadline")}</Th>
+              <Th k="status" sortKey={sortKey} sortDir={sortDir} onSort={clickSort}>{tr("list.colStatus")}</Th>
+              <Th k="deadline" sortKey={sortKey} sortDir={sortDir} onSort={clickSort}>{tr("list.colDeadline")}</Th>
               <th>{tr("list.colRecurs")}</th>
             </tr>
           </thead>

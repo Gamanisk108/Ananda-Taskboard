@@ -154,9 +154,6 @@ export function MultiSelect({
     onChange(selectedSet.has(v) ? selected.filter((x) => x !== v) : [...selected, v]);
   }
 
-  // Preserve option order while inserting a header whenever the section changes.
-  let lastSection: string | undefined;
-
   return (
     <div className={`ms${chosen.length ? " on" : ""}`} ref={ref} data-testid={testId} style={width ? { width } : undefined}>
       <button type="button" className="ms-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} title={label}>
@@ -166,9 +163,11 @@ export function MultiSelect({
       {open && (
         <div className="ms-pop" role="listbox">
           {options.length === 0 && <div className="ms-empty">—</div>}
-          {options.map((o) => {
-            const header = o.section && o.section !== lastSection ? o.section : null;
-            lastSection = o.section;
+          {options.map((o, i) => {
+            // Insert a header whenever the section changes from the previous
+            // option in display order (index-based lookup — no mutable outer
+            // variable, per react-hooks/immutability).
+            const header = o.section && o.section !== options[i - 1]?.section ? o.section : null;
             return (
               <div key={o.value}>
                 {header && <div className="ms-section">{header}</div>}
@@ -226,7 +225,6 @@ export function SingleSelect({
   ]);
 
   const chosen = options.find((o) => o.value === value);
-  let lastSection: string | undefined;
   // A falsy value (e.g. a filter's "Any" default) still shows its label but is
   // not styled active — mirrors MultiSelect's unfiltered look in the filter bar.
   return (
@@ -246,9 +244,8 @@ export function SingleSelect({
           <div ref={refs.setFloating} {...getFloatingProps()} className="ms-pop ss-float" role="listbox"
             style={{ ...floatingStyles, zIndex: 200 }}>
             {options.length === 0 && <div className="ms-empty">—</div>}
-            {options.map((o) => {
-              const header = o.section && o.section !== lastSection ? o.section : null;
-              lastSection = o.section;
+            {options.map((o, i) => {
+              const header = o.section && o.section !== options[i - 1]?.section ? o.section : null;
               return (
                 <div key={o.value}>
                   {header && <div className="ms-section">{header}</div>}
@@ -412,6 +409,7 @@ export function StatusPillSelect({
 
 /** True when the viewport is at/below `max` px (phone). Drives the responsive
  *  card layouts that replace dense desktop tables on mobile. */
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-located with this file's components; splitting into its own module is a pure-organization change out of scope here, no runtime effect.
 export function useIsNarrow(max = 700) {
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia(`(max-width: ${max}px)`).matches);
   useEffect(() => {

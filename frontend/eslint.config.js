@@ -74,6 +74,19 @@ export default defineConfig([
         { selector: 'JSXOpeningElement[name.name="select"]', message: 'No native <select> — use SingleSelect / MultiSelect from components/common (design D2: custom popover + caret).' },
         { selector: 'JSXAttribute[name.name="type"][value.value="color"]', message: 'No native <input type="color"> — use the circular ColorPicker from components/common (hard rule: swatch pickers are circles + a recommended palette).' },
       ],
+      // Fable-plan-05 (2026-07-08): react-hooks 7's set-state-in-effect rule flags
+      // every standard "fetch on mount" / "sync local state from a prop" effect in
+      // the codebase (10 sites: App, Approvals, BulkMigrate, History, ManageProjects,
+      // TeamAdmin) as an ERROR. All 10 are the idiomatic React data-fetching pattern
+      // (setState from a .then()/async callback), not real bugs — but a correct fix
+      // per-rule means restructuring each effect (best vehicle: the TanStack Query
+      // read migration already planned, per C:\AI\CLAUDE.md "Lint/format
+      // references"), which is behavior-adjacent and needs live per-surface
+      // verification this plan's execution window didn't have. Downgraded to `warn`
+      // (tracked, not silenced) so the CI lint gate can go live on real errors now
+      // instead of staying permanently off; see .discovery/fable-plans/
+      // execution-log.md Plan 05 for the full rationale and the deferred file list.
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
 ])

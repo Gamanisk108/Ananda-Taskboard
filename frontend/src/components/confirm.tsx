@@ -77,6 +77,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-located with ConfirmProvider (shares ConfirmContext); splitting is a pure-organization change out of scope here, no runtime effect.
 export function useConfirm(): ConfirmFn {
   const ctx = useContext(ConfirmContext);
   if (!ctx) throw new Error("useConfirm must be used within <ConfirmProvider>");

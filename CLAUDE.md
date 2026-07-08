@@ -67,7 +67,12 @@ one (see memory `ananda_taskboard_deploy_verify`).
 - **Zombie servers:** before any QA, loop-kill ALL listeners on :8000 and
   :5173–5175 — stale `runserver`s serve old code (caused a phantom 405).
 - i18n: every new key goes in ALL 13 locales (a parity test enforces).
-- ESLint baseline: ~26 pre-existing errors — don't chase them in unrelated work.
+- ESLint is at 0 errors and CI-enforced (`.github/workflows/dist-freshness.yml`
+  "Lint (errors only)" step) — keep it there. ~17 warnings remain tracked but
+  not yet gated (`react-hooks/exhaustive-deps` + the centrally-downgraded
+  `react-hooks/set-state-in-effect`, see `eslint.config.js` comment) —
+  don't chase those in unrelated work; see `.discovery/fable-plans/
+  execution-log.md` Plan 05 for the full list and rationale.
 - CodeRabbit: `.coderabbit.yaml` committed; ≤3 reviews/hr, offer at real
   checkpoints (cr-nudge hook reminds).
 - QA standard: the full **permutation matrix** from

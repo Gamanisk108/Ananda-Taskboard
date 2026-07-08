@@ -33,7 +33,7 @@ export function Approvals({
 
   function toggle(id: number) {
     const n = new Set(sel);
-    n.has(id) ? n.delete(id) : n.add(id);
+    if (n.has(id)) n.delete(id); else n.add(id);
     setSel(n);
   }
 

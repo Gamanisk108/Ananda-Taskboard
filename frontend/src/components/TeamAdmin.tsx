@@ -57,7 +57,7 @@ export function TeamAdmin({ onClose, onChanged }: { onClose: () => void; onChang
     queryClient.invalidateQueries({ queryKey: ["groups"] });
     if (signal) onChanged();
   }
-  useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { loadAll(); }, []);
 
   const labels: Record<Tab, string> = {
     members: tr("tabs.members"), groups: tr("tabs.groups"), access: tr("tabs.access"),

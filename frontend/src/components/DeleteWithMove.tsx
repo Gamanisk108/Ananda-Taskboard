@@ -49,7 +49,7 @@ export function DeleteWithMove({ kind, id, name, projects, onClose, onDone }: Pr
 
   function toggle(tid: number) {
     const n = new Set(keep);
-    n.has(tid) ? n.delete(tid) : n.add(tid);
+    if (n.has(tid)) n.delete(tid); else n.add(tid);
     setKeep(n);
   }
 

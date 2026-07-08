@@ -37,6 +37,19 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      # Fable-plan-05 (2026-07-08): errors-only lint gate. 0 errors as of this
+      # commit; ~17 warnings tracked but not yet gated (react-hooks/exhaustive-deps
+      # + the downgraded react-hooks/set-state-in-effect — see eslint.config.js
+      # comment + .discovery/fable-plans/execution-log.md Plan 05).
+      - name: Lint (errors only)
+        working-directory: frontend
+        run: npm run lint
+
+      # Fable-plan-05 free rider: already clean as of this commit.
+      - name: Type-check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
       - name: Fresh build (scratch dir, doesn't touch committed dist)
         working-directory: frontend
         run: npx vite build --outDir dist-fresh

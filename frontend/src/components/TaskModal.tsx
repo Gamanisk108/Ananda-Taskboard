@@ -397,9 +397,11 @@ export function TaskModal({ task, me, defaultSubproject, defaultProject, onClose
     recurrence: rec.build(),
     ...(editing ? {} : { curStatus }),
   });
-  const initialSnapshot = useRef<string | null>(null);
-  if (initialSnapshot.current === null) initialSnapshot.current = formSnapshot;
-  const dirty = !readOnly && initialSnapshot.current !== formSnapshot;
+  // Lazy initializer runs once on mount only (never re-invoked, and never
+  // triggers a re-render since we never call the setter) — equivalent to the
+  // former "set-once ref" but readable during render, per react-hooks/refs.
+  const [initialSnapshot] = useState(() => formSnapshot);
+  const dirty = !readOnly && initialSnapshot !== formSnapshot;
 
   async function guardedClose() {
     if (busy || submitting.current) return;   // never abandon a save in flight
