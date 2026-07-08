@@ -53,6 +53,8 @@ class EmailTokenObtainSerializer(TokenObtainPairSerializer):
 
 class LoginView(TokenObtainPairView):
     serializer_class = EmailTokenObtainSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
 
 
 class MeView(APIView):
@@ -585,7 +587,7 @@ class SignupView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "password_reset"
+    throttle_scope = "signup"
 
     def post(self, request):
         ser = SignupSerializer(data=request.data)
@@ -900,6 +902,8 @@ class VerifyEmailView(APIView):
 
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "verify_email"
 
     def post(self, request):
         user = _user_from_uid(request.data.get("uid") or "", active_only=False)

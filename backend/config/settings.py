@@ -187,8 +187,23 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ),
     # Per-view ScopedRateThrottle scopes (only applied where set on the view).
+    # Rates are per-IP (DRF AnonRateThrottle keying) and env-overridable so
+    # Gordon can bump them from the Render dashboard without a deploy if the
+    # team ever trips one in normal use.
+    # NOTE: no CACHES setting is defined, so this runs on Django's default
+    # LocMemCache, which is per-process — with 2 gunicorn workers the
+    # effective limit is ~2x the configured rate, and it resets on every
+    # deploy. That's fine for this threat model (credential-stuffing /
+    # spam-signup deterrence, not a hard security boundary) — do NOT add
+    # Redis just for this.
     "DEFAULT_THROTTLE_RATES": {
         "password_reset": env("PASSWORD_RESET_RATE", "10/hour"),
+        # 30/min (not the stricter 10/min) because parallel-qa.cjs can run up
+        # to 20 concurrent headless browsers that each log in once — a burst
+        # that would otherwise trip a tighter limit during normal QA runs.
+        "login": env("LOGIN_RATE", "30/min"),
+        "signup": env("SIGNUP_RATE", "20/hour"),
+        "verify_email": env("VERIFY_EMAIL_RATE", "30/hour"),
     },
 }
 
