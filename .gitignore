@@ -41,3 +41,6 @@ vapid_*.json
 /qa-*.png
 # Sentry DSN is a publishable client key - this one .env file IS committed
 !frontend/.env.production
+
+# QA video recordings (QA_RECORD=1) — regenerable, never committed
+frontend/qa/videos/

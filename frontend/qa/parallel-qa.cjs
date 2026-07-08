@@ -17,8 +17,15 @@
 //
 // Run:  node frontend/qa/parallel-qa.cjs            (runs the built-in smoke set)
 //       QA_CONCURRENCY=8 node frontend/qa/parallel-qa.cjs
+//       QA_RECORD=1 node frontend/qa/parallel-qa.cjs   (record a .webm per task)
+//
+// Video QA (universal rule, Gordon 2026-07-07): QA_RECORD=1 records each task's
+// session to qa/videos/<task>/ — then Claude watches the recording via the /watch
+// skill (balanced mode) to catch motion bugs screenshots can't: jank, flicker,
+// mid-transition layout shift. See C:\AI\deep-dives\qa-testing-playbook.md §8.
 
 const { chromium } = require("playwright");
+const path = require("path");
 
 const BASE = process.env.QA_BASE || "https://ananda-taskboard.onrender.com";
 const HARD_MAX = 20;          // Gordon's absolute ceiling — do not raise in code.
@@ -47,9 +54,11 @@ async function login(page, { email = "admin@ananda.test", password = "taskboard1
 /**
  * Run `tasks` (each {name, run(browser)->boolean|{pass,detail}}) with a bounded
  * pool. Each task gets its OWN browser; at most `concurrency` run at once.
- * Returns [{name, pass, detail, error}].
+ * `recordVideo: true` (or env QA_RECORD=1) records every page of every task to
+ * `qa/videos/<task-name>/*.webm` (context-level; tasks are unchanged — the shim
+ * only intercepts newPage). Returns [{name, pass, detail, error, videoDir?}].
  */
-async function runParallel(tasks, { concurrency = DEFAULT_CONCURRENCY } = {}) {
+async function runParallel(tasks, { concurrency = DEFAULT_CONCURRENCY, recordVideo = process.env.QA_RECORD === "1" } = {}) {
   const limit = clampConcurrency(concurrency);
   const results = new Array(tasks.length);
   let next = 0;
@@ -59,13 +68,22 @@ async function runParallel(tasks, { concurrency = DEFAULT_CONCURRENCY } = {}) {
       if (i >= tasks.length) return;
       const t = tasks[i];
       const browser = await chromium.launch();
+      let ctx = null;
+      let videoDir;
+      let handle = browser;
       try {
-        const r = await t.run(browser);
+        if (recordVideo) {
+          videoDir = path.join(__dirname, "videos", t.name.replace(/[^a-z0-9-]+/gi, "-").toLowerCase());
+          ctx = await browser.newContext({ recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } });
+          handle = { newPage: () => ctx.newPage() }; // tasks only ever call newPage
+        }
+        const r = await t.run(handle);
         const pass = typeof r === "object" ? !!r.pass : !!r;
-        results[i] = { name: t.name, pass, detail: typeof r === "object" ? r.detail : undefined };
+        results[i] = { name: t.name, pass, detail: typeof r === "object" ? r.detail : undefined, videoDir };
       } catch (e) {
-        results[i] = { name: t.name, pass: false, error: e.message };
+        results[i] = { name: t.name, pass: false, error: e.message, videoDir };
       } finally {
+        if (ctx) await ctx.close().catch(() => {}); // flushes the .webm to disk
         await browser.close().catch(() => {});
       }
     }
@@ -76,7 +94,7 @@ async function runParallel(tasks, { concurrency = DEFAULT_CONCURRENCY } = {}) {
 
 function printResults(results) {
   for (const r of results) {
-    console.log(`${r.pass ? "PASS" : "FAIL"}  ${r.name}${r.detail ? "  — " + r.detail : ""}${r.error ? "  ERROR: " + r.error : ""}`);
+    console.log(`${r.pass ? "PASS" : "FAIL"}  ${r.name}${r.detail ? "  — " + r.detail : ""}${r.error ? "  ERROR: " + r.error : ""}${r.videoDir ? "  🎥 " + r.videoDir : ""}`);
   }
   const failed = results.filter((r) => !r.pass).length;
   console.log(`\n${results.length - failed}/${results.length} passed.`);
