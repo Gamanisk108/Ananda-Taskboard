@@ -139,3 +139,101 @@ session, not touched).
 - 🟦 Consider giving `GoogleAuthView` its own throttle scope too (currently
   shares `"password_reset"`'s 10/hour budget, which is unrelated to its
   actual abuse profile) — out of this plan's scope, flagging for later.
+
+## 2026-07-08 — Plan 04: production-guardrails — DONE
+
+**Status:** DONE (code portions only — infra/deploy steps deferred to Gordon
+per this run's rules: no Render API calls, no push, no live smoke tests).
+
+**What changed:**
+- `backend/config/settings.py` — added a Render-only guardrail block at the
+  end of the file: `IS_RENDER = bool(env("RENDER"))`; if `IS_RENDER`, raises
+  `RuntimeError` at import time when `DEBUG` is True or `SECRET_KEY` still
+  starts with `"django-insecure-"` (crash-on-boot, Render keeps the prior
+  deploy live on a failed boot). Same `IS_RENDER` gate also sets
+  `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT = True`,
+  and `SECURE_HSTS_SECONDS = 60*60*24*7` (1 week; `INCLUDE_SUBDOMAINS` and
+  `PRELOAD` left `False` per the plan's abort condition — never set those on
+  a shared onrender.com host).
+- `render.yaml` — removed `python backend/manage.py seed_demo` from the
+  unconditional `buildCommand`. Checked `seed_demo.py` first: it's
+  idempotent-ish by an explicit guard (`if Project.objects.exists(): skip`),
+  so it was not actively duplicating data on every deploy, but a
+  data-touching command still doesn't belong in an unconditional build step
+  per the plan's rationale. Reseeding now requires a manual Render Shell run
+  (`python backend/manage.py seed_demo`). Added a comment noting
+  `backend/Procfile`'s `release: migrate` phase is legacy/local-only —
+  render.yaml's buildCommand (which still runs `migrate --noinput` at build
+  time) governs on Render, not the Procfile.
+- Searched `docs/decision-log.md` + `.discovery/` for a deliberate "demo
+  resets every deploy" decision (per the plan's abort condition) — found
+  none, so removed rather than env-flagging.
+- `python manage.py check --deploy` run under Render-like env
+  (`DJANGO_DEBUG=false RENDER=true` + a realistic 50-char random
+  `DJANGO_SECRET_KEY`) — only 2 warnings remain, both the plan's own
+  deliberately-deferred ones: `security.W005`
+  (`SECURE_HSTS_INCLUDE_SUBDOMAINS`) and `security.W021`
+  (`SECURE_HSTS_PRELOAD`). No action needed; matches plan step 4's
+  "fix/annotate" — these are annotated (comment in settings.py), not fixed.
+
+**Test evidence:**
+1. `cd backend && DJANGO_DEBUG=true RENDER=true ./venv/Scripts/python.exe
+   manage.py check` → raised `RuntimeError: Refusing to start: DEBUG=True on
+   Render.` at import time, as required.
+2. `cd backend && ./venv/Scripts/python.exe manage.py check` (no `RENDER`)
+   → `System check identified no issues (0 silenced).` — local dev boot
+   unaffected.
+3. `cd backend && DJANGO_DEBUG=false RENDER=true
+   DJANGO_SECRET_KEY=<50-char random> ./venv/Scripts/python.exe manage.py
+   check --deploy` → 2 warnings (W005, W021 — both intentionally deferred
+   per plan), no others.
+4. Full suite: `cd backend && ./venv/Scripts/python.exe -m pytest -q` → 9
+   lines of dots to `[100%]`, `EXIT:0`, zero failures (no test sets `RENDER`,
+   so zero impact, as the plan predicted).
+
+**Deviations from plan:** none in the code changes. Plan's optional
+verification-step 3 (live curl checks for HSTS header / https redirect /
+admin login) and step 4 (confirm demo data intact after next routine deploy)
+were NOT run — this session is explicitly code+tests+local-commit only, no
+Render API calls, no push, no live checks (see 🟪 below).
+
+**Commit:** `d8a8635` — "04-production-guardrails: fail-fast config, HTTPS
+hardening, seed_demo out of deploy path" (`backend/config/settings.py`,
+`render.yaml` only; left `.discovery/api-keys-build.md`, `CLAUDE.md`
+unstaged — pre-existing uncommitted changes from a parallel session, not
+touched; also left untracked `design/Claude Design/Ananda Taskboard.zip` and
+`graphify-out/` alone).
+
+**Purple-marker items for Gordon:**
+- 🟪 Push this commit (`git push origin main`) to trigger the Render deploy
+  — this session does not push.
+- 🟪 Post-deploy, run the plan's live verification (plan §Verification
+  steps 1 and 3):
+  `curl -sI https://ananda-taskboard.onrender.com/api/health` — confirm
+  header `Strict-Transport-Security: max-age=604800` is present;
+  `curl -sI http://ananda-taskboard.onrender.com/` — confirm 301/308 redirect
+  to https; log in on the live app (JWT) AND log in to
+  `https://ananda-taskboard.onrender.com/admin/` (session cookie now Secure)
+  to confirm both still work; confirm `/api/health` still 200 with database
+  `"postgresql"`.
+- 🟪 Watch for a failed-boot scenario after this deploy: if the Render
+  service fails to come up, check the deploy log for
+  `RuntimeError: Refusing to start: DEBUG=True on Render.` or
+  `RuntimeError: Refusing to start: dev SECRET_KEY on Render.` — this means
+  `DJANGO_DEBUG` or `DJANGO_SECRET_KEY` got unset/reset on the live service
+  (dashboard slip, blueprint re-apply); the previous deploy stays live while
+  you fix the env var. (render.yaml already sets both correctly, so this is
+  a defense against future drift, not an expected failure.)
+- 🟪 Next routine deploy after this one: confirm demo org/data (login
+  `admin@ananda.test` / `taskboard123`) is still intact now that
+  `seed_demo` no longer runs on every build (plan §Verification step 4). If
+  the demo data ever needs a manual reseed, run
+  `python backend/manage.py seed_demo` via Render Shell.
+- 🟪 If a redirect loop appears post-deploy from `SECURE_SSL_REDIRECT`
+  (unexpected — the proxy header is already trusted — but the plan names it
+  as a risk): rollback path is flipping `SECURE_SSL_REDIRECT = False` via a
+  quick follow-up commit.
+- 🟦 HSTS is currently 1 week by design (plan's semi-one-way-door caution).
+  Consider raising toward 6–12 months only after a week of confirmed clean
+  HTTPS operation on the live domain — track this as a deliberate follow-up,
+  not automatic.
