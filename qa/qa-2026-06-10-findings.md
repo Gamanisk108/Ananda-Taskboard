@@ -64,3 +64,6 @@ Triage: 🔴 bug/broken · 🟠 visual · 🟡 polish · ❓ needs-decision.
 - [x] Export dialog, Copy summary (pill gap confirmed), Unscheduled (🔴 UNS-1), Team tabs (TEAM-1..3)
 - [x] Mobile 390 baseline: List tcards ✓, drawer (admin-nav only), Team overflow finding
 - [ ] DEFERRED to Phase-5 re-verify: History, Restore points, Bulk migrate, Import, Help center, Platform stats, Signup/Forgot/Reset screens, Task-statuses pane, 834 width, broader dark sweep, geometry sweeps (run with visual suite locally)
+
+## Video-QA finding (2026-07-07, first QA_RECORD run)
+- 🟡 **Modal opens over still-loading board** — New Task modal renders while the board behind still shows "Loading…" (recorded: qa run "modals centered"; caught by watching the .webm, invisible to the screenshot assert). Decide: acceptable instant-open UX, or gate modal triggers on board-ready? Low severity, real jank signal.
