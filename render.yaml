@@ -11,11 +11,13 @@ services:
     runtime: python
     plan: free
     rootDir: .
+    # NOTE: backend/Procfile's `release: migrate` phase is legacy/local-only —
+    # this blueprint's buildCommand/startCommand governs on Render, not the
+    # Procfile. migrate is intentionally run here at build time instead.
     buildCommand: >
       pip install -r backend/requirements.txt &&
       python backend/manage.py collectstatic --noinput &&
-      python backend/manage.py migrate --noinput &&
-      python backend/manage.py seed_demo
+      python backend/manage.py migrate --noinput
     # 2 workers x 4 threads: serves the burst of parallel /api calls each view
     # fires without queueing behind a single worker. Threads are cheap here
     # because requests are I/O-bound (waiting on Neon). If the free tier's 512MB

@@ -293,3 +293,27 @@ AI_MODEL = env("AI_MODEL", "claude-haiku-4-5-20251001")
 AI_MAX_TASKS = int(env("AI_MAX_TASKS", "25"))            # cap per generation
 AI_MAX_FILE_MB = int(env("AI_MAX_FILE_MB", "10"))        # per-file upload guard
 AI_MAX_FILES = int(env("AI_MAX_FILES", "8"))             # files per generation
+
+# --- Production guardrails (Render only) -------------------------------------
+# Render sets RENDER=true on every service (web, cron, shell) — a reliable
+# signal that we're running on the actual production host, independent of
+# DEBUG/DJANGO_ENV. Used to fail fast on insecure config and to gate
+# HTTPS-only hardening that would be annoying for local "prod-ish" testing.
+IS_RENDER = bool(env("RENDER"))
+if IS_RENDER:
+    if DEBUG:
+        raise RuntimeError("Refusing to start: DEBUG=True on Render.")
+    if SECRET_KEY.startswith("django-insecure-"):
+        raise RuntimeError("Refusing to start: dev SECRET_KEY on Render.")
+
+    # HTTPS hardening. Gated on IS_RENDER (not `not DEBUG`) so a local
+    # DJANGO_DEBUG=false run for testing doesn't also flip these on.
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True  # proxy header already trusted above (:290)
+    # Start LOW (1 week) deliberately — HSTS is browser-cached and hard to
+    # undo. Raise toward 6-12 months only after a week of clean operation.
+    # NEVER set include-subdomains/preload on a shared onrender.com host.
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
