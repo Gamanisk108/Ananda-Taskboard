@@ -1,0 +1,61 @@
+name: Frontend dist freshness
+
+# Machine-enforces THE deploy gotcha (Ananda Taskboard/CLAUDE.md): Render serves
+# the COMMITTED frontend/dist (Python-only build, no Node step) — if src changes
+# without a fresh `npm run build` + committed dist, the deploy silently ships
+# stale UI. This workflow rebuilds into a scratch dir and fails loudly if the
+# committed dist's hashed asset filenames don't match a fresh build's.
+#
+# Comparison is filename-SET based, not byte-exact: vite-plugin-pwa's precache
+# manifest can vary by exact Node/npm patchlevel even for identical source, but
+# content-hashed asset filenames (assets/index-<hash>.js) always change when src
+# changes and stay stable when it doesn't — that's the actual invariant we need.
+#
+# Node version pinned to 20 to match the repo's existing CI (fallow.yml) — no
+# .nvmrc/engines field exists to pin to instead.
+
+on:
+  push:
+    branches: [main]
+    paths: ["frontend/**"]
+  pull_request:
+    paths: ["frontend/**"]
+
+jobs:
+  dist-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Fresh build (scratch dir, doesn't touch committed dist)
+        working-directory: frontend
+        run: npx vite build --outDir dist-fresh
+
+      - name: Frontend tests
+        working-directory: frontend
+        run: npx vitest run
+
+      - name: Compare hashed asset filename sets
+        working-directory: frontend
+        run: |
+          if [ ! -d dist/assets ]; then
+            echo "::error::frontend/dist/assets is missing — is frontend/dist committed?"
+            exit 1
+          fi
+          ls dist/assets | sort > /tmp/committed.txt
+          ls dist-fresh/assets | sort > /tmp/fresh.txt
+          if ! diff -u /tmp/committed.txt /tmp/fresh.txt; then
+            echo "::error::committed frontend/dist is STALE — its hashed asset filenames don't match a fresh build. Fix: cd frontend && npm run build && git add dist && git commit && git push"
+            exit 1
+          fi
+          echo "frontend/dist is fresh."

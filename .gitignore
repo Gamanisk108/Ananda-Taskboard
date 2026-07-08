@@ -44,3 +44,6 @@ vapid_*.json
 
 # QA video recordings (QA_RECORD=1) — regenerable, never committed
 frontend/qa/videos/
+
+# local scratch build used to test the dist-freshness CI gate
+frontend/dist-fresh/
