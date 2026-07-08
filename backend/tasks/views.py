@@ -46,7 +46,7 @@ def _notify_admins_moved(task, new_status, mover):
     try:
         from accounts.models import Membership
         from notifications.models import PushSubscription
-        from notifications.push import send_web_push
+        from notifications.push import send_web_push_async
 
         payload = {
             "title": "Task moved",
@@ -58,7 +58,7 @@ def _notify_admins_moved(task, new_status, mover):
             role=Membership.Role.ADMIN, is_active=True,
         ).values_list("user_id", flat=True)
         for sub in PushSubscription.objects.filter(user_id__in=admin_ids):
-            send_web_push(sub, payload)
+            send_web_push_async(sub, payload)
     except Exception:
         pass
 
@@ -67,7 +67,7 @@ def _notify_mentioned(task, author, user_ids):
     """Push to users @-mentioned in a comment (best-effort, never raises)."""
     try:
         from notifications.models import PushSubscription
-        from notifications.push import send_web_push
+        from notifications.push import send_web_push_async
 
         targets = [uid for uid in user_ids if uid != author.id]
         if not targets:
@@ -77,7 +77,7 @@ def _notify_mentioned(task, author, user_ids):
             "body": f"{author.name or author.email} mentioned you on “{task.title}”",
         }
         for sub in PushSubscription.objects.filter(user_id__in=targets):
-            send_web_push(sub, payload)
+            send_web_push_async(sub, payload)
     except Exception:
         pass
 
@@ -89,7 +89,7 @@ def _notify_assigned(task, actor, new_user_ids):
     try:
         from accounts.models import User
         from notifications.models import PushSubscription
-        from notifications.push import send_web_push
+        from notifications.push import send_web_push_async
 
         targets = list(
             User.objects.filter(id__in=new_user_ids, assignment_changes=True)
@@ -103,7 +103,7 @@ def _notify_assigned(task, actor, new_user_ids):
             "body": f"{actor.name or actor.email} assigned you “{task.title}”",
         }
         for sub in PushSubscription.objects.filter(user_id__in=targets):
-            send_web_push(sub, payload)
+            send_web_push_async(sub, payload)
     except Exception:
         pass
 

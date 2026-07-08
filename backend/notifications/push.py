@@ -3,10 +3,15 @@
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from django.conf import settings
 
 logger = logging.getLogger("taskboard.push")
+
+# No Celery/Redis on the free tier — a module-level pool is the correct
+# weight for fire-and-forget best-effort pushes off the request thread.
+_push_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="webpush")
 
 
 def send_web_push(subscription, payload: dict) -> bool:
@@ -23,6 +28,7 @@ def send_web_push(subscription, payload: dict) -> bool:
             data=json.dumps(payload),
             vapid_private_key=settings.VAPID_PRIVATE_KEY,
             vapid_claims={"sub": settings.VAPID_CLAIM_EMAIL},
+            timeout=10,
         )
         return True
     except WebPushException as exc:  # type: ignore[name-defined]
@@ -34,3 +40,20 @@ def send_web_push(subscription, payload: dict) -> bool:
     except Exception:
         logger.exception("unexpected push error")
         return False
+
+
+def _run(subscription, payload: dict) -> None:
+    """Pool-thread entrypoint: send, then close this thread's DB connection
+    (Django opens one per thread; a pool thread that never closes it leaks)."""
+    try:
+        send_web_push(subscription, payload)
+    finally:
+        from django.db import connection
+
+        connection.close()
+
+
+def send_web_push_async(subscription, payload: dict) -> None:
+    """Fire-and-forget: queue one push onto the shared pool so the caller (a
+    request-handling thread) never blocks on the outbound HTTPS call."""
+    _push_pool.submit(_run, subscription, payload)

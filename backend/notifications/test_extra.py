@@ -74,8 +74,11 @@ def test_deadline_reminder_respects_optout(member, sp, monkeypatch):
 # ---- assignment-change pings -----------------------------------------------
 
 def _capture_push(monkeypatch):
+    # Dispatch is async (ThreadPoolExecutor) since 01-async-web-push; patch the
+    # dispatcher itself so assertions right after the request aren't racing a
+    # pool thread.
     sent = []
-    monkeypatch.setattr("notifications.push.send_web_push", lambda sub, payload: sent.append(payload) or True)
+    monkeypatch.setattr("notifications.push.send_web_push_async", lambda sub, payload: sent.append(payload))
     return sent
 
 
@@ -102,3 +105,34 @@ def test_no_assignment_push_when_opted_out(admin, member, sp, monkeypatch):
     c.post("/api/tasks", {"subproject": sp.id, "title": "Quiet task",
                           "assignees": [member.id]}, format="json", **h)
     assert sent == []
+
+
+def test_mention_push_dispatch_is_non_blocking(admin, member, sp, monkeypatch):
+    """01-async-web-push: a slow push service must not hold the request thread —
+    the comment-create response must return long before a slow send finishes."""
+    import time
+
+    from tasks.models import Task
+
+    AccessGrant.objects.create(user=member, subproject=sp, level="member")
+    task = Task.objects.create(subproject=sp, title="Mention me")
+    PushSubscription.objects.create(user=member, endpoint="https://p/e3", p256dh="k", auth="a")
+
+    def slow_send(sub, payload):
+        time.sleep(0.5)
+        return True
+
+    monkeypatch.setattr("notifications.push.send_web_push", slow_send)
+
+    c = APIClient(); c.force_authenticate(user=admin)
+    h = {"HTTP_X_ORG_ID": str(sp.project.organization_id)}
+    start = time.monotonic()
+    r = c.post(
+        f"/api/tasks/{task.id}/comments",
+        {"text": "hi @member", "mentions": [member.id]},
+        format="json",
+        **h,
+    )
+    elapsed = time.monotonic() - start
+    assert r.status_code == 201, r.content
+    assert elapsed < 0.5, f"comment POST took {elapsed:.2f}s — push dispatch is blocking the request"
