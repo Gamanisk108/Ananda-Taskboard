@@ -299,7 +299,7 @@ AI_MAX_FILES = int(env("AI_MAX_FILES", "8"))             # files per generation
 # signal that we're running on the actual production host, independent of
 # DEBUG/DJANGO_ENV. Used to fail fast on insecure config and to gate
 # HTTPS-only hardening that would be annoying for local "prod-ish" testing.
-IS_RENDER = bool(env("RENDER"))
+IS_RENDER = env_bool("RENDER", False)
 if IS_RENDER:
     if DEBUG:
         raise RuntimeError("Refusing to start: DEBUG=True on Render.")
