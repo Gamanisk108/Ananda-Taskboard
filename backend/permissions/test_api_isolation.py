@@ -142,3 +142,23 @@ def test_org_member_task_list_is_scoped(worlds):
     tasks = {t["id"] for t in api.get("/api/tasks", HTTP_X_ORG_ID=str(A["org"].id)).data}
     assert A["approved_task"] in tasks
     assert not (tasks & B["task_ids"])
+
+
+def test_member_cannot_read_foreign_org_users(worlds):
+    """IDOR regression: UsersView.get resolved `request.org` straight off the
+    client-supplied X-Org-Id header (OrgContextMiddleware does NOT verify
+    membership) and queried that org's Memberships with no _in_org check — so
+    any authenticated user could spoof a foreign org's id and read its full
+    roster (name/email/role/tier). Both an ordinary member and an admin of org A
+    must get nothing back when they point the header at org B."""
+    A, B = worlds
+    spoofed = {"HTTP_X_ORG_ID": str(B["org"].id)}
+
+    r = _client(A["member"]).get("/api/users", **spoofed)
+    assert r.status_code == 200
+    assert r.data == [], f"member of org A read org B's users via spoofed X-Org-Id: {r.data}"
+
+    r = _client(A["admin"]).get("/api/users", **spoofed)
+    assert r.status_code == 200
+    got = {row["id"] for row in r.data}
+    assert not (got & B["user_ids"]), f"admin of org A LEAKED org B's users: {got & B['user_ids']}"

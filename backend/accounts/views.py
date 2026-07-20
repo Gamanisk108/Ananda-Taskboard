@@ -214,15 +214,27 @@ class UsersView(APIView):
         return [IsAdmin()] if self.request.method == "POST" else [IsAuthenticated()]
 
     def get(self, request):
-        from permissions.engine import visible_subproject_ids
+        from permissions.engine import _in_org, visible_subproject_ids
 
         org = getattr(request, "org", None)
         if org is not None:
+            # Isolation gate: a non-member of the active org — including a platform
+            # superuser — sees nothing, exactly like everywhere else in the engine.
+            # Without this, a spoofed X-Org-Id header for an org you don't belong to
+            # would leak that org's full roster (name/email/role/tier).
+            if not _in_org(request.user, org):
+                return Response([])
             members = {m.user_id: m for m in Membership.objects.filter(organization=org)}
             users = User.objects.filter(id__in=members.keys(), is_active=True)
-        else:
+        elif request.user.is_superuser:
+            # No org context at all (legacy/no header): the platform owner still
+            # gets the pre-tenancy global view. An ordinary member gets nothing —
+            # it must never fall back to "every active user on the platform".
             members = {}
             users = User.objects.filter(is_active=True)
+        else:
+            members = {}
+            users = User.objects.none()
         out = []
         for u in users:
             m = members.get(u.id)

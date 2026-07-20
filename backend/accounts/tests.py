@@ -160,6 +160,26 @@ def test_users_requires_auth(api):
     assert api.get("/api/users").status_code == 401
 
 
+def test_users_endpoint_without_org_context_denies_ordinary_member(api, member):
+    # With no X-Org-Id header (org=None), an ordinary authenticated user must NOT
+    # fall back to "every active user on the platform" — only the platform
+    # superuser retains that pre-tenancy legacy view (see the branch below).
+    auth(api, member)
+    res = api.get("/api/users")
+    assert res.status_code == 200
+    assert res.data == []
+
+
+def test_users_endpoint_without_org_context_still_works_for_superuser(api, admin, member):
+    # Preserves the pre-tenancy legacy behavior this test suite already relies on
+    # (test_users_endpoint_lists_active_users_with_access) for the platform owner.
+    auth(api, admin)
+    res = api.get("/api/users")
+    assert res.status_code == 200
+    emails = {u["email"] for u in res.data}
+    assert {"a@example.com", "m@example.com"} <= emails
+
+
 # --- member management (admin) ---------------------------------------------
 
 def test_admin_creates_member_who_can_login(api, admin):
