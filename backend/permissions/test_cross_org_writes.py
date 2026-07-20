@@ -253,3 +253,28 @@ def test_groupchat_summary_does_not_leak_other_org(worlds):
     assert res.status_code == 200
     assert A["tag"] in res.data["text"], f"vacuous test — org A's own task never showed up: {res.data['text']}"
     assert B["tag"] not in res.data["text"]
+
+
+# --- deep-audit residual: org=None bypass via deprecated global role ----------
+
+
+@pytest.mark.django_db
+def test_is_org_admin_no_org_requires_superuser_not_global_role():
+    """A Team-promoted admin (global User.role==ADMIN) must NOT get admin
+    authority in the no-X-Org-Id-header (org=None) context — otherwise they
+    could omit the header to make request.org=None and defeat every org-scope
+    write guard (which all no-op when org is None). Only a real platform
+    superuser acts org-lessly. (WEAK-verdict residual fix, 2026-07-19.)"""
+    from permissions.engine import is_org_admin
+
+    promoted = User.objects.create_user(email="promoted@x.com", name="Promoted", password=PW)
+    promoted.role = User.Role.ADMIN  # what the Team UI writes onto the global row
+    promoted.save(update_fields=["role"])
+    assert promoted.is_admin is True  # the deprecated global property is True...
+    assert is_org_admin(promoted, None) is False  # ...but that no longer grants org-less admin
+
+    superuser = User.objects.create_superuser(email="root@x.com", name="Root", password=PW)
+    assert is_org_admin(superuser, None) is True  # a real platform superuser still may
+
+    anon_member = User.objects.create_user(email="plain@x.com", name="Plain", password=PW)
+    assert is_org_admin(anon_member, None) is False

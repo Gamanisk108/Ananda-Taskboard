@@ -53,11 +53,18 @@ from .models import LEVEL_MEMBER, LEVEL_RANK, LEVEL_VIEWER, AccessGrant, Exclusi
 def is_org_admin(user, org=None):
     """Admin authority for this context. With an org → an active admin Membership
     in it (platform superuser status grants NO org admin power on its own). Without
-    an org (legacy) → the deprecated global User.role admin flag."""
+    an org (no X-Org-Id header) → ONLY a real Django platform superuser.
+
+    The no-org branch must NOT honor the deprecated global User.role flag: a
+    Team-promoted org admin (role=ADMIN, is_admin property True, but not a
+    superuser) could otherwise omit the header to get request.org=None and, via
+    that, defeat every org-scope write guard (they all no-op when org is None).
+    The real SPA always sends X-Org-Id; only platform superusers act org-less.
+    (deep-audit residual, 2026-07-19; mirrors the UsersView.get org=None fix.)"""
     if not (user and getattr(user, "is_authenticated", False)):
         return False
     if org is None:
-        return getattr(user, "is_admin", False)
+        return bool(getattr(user, "is_superuser", False))
     from accounts.models import Membership
     # Owner has full admin authority (plus removal protections enforced elsewhere).
     return Membership.objects.filter(
