@@ -312,6 +312,15 @@ class UserDetailView(APIView):
             return Response(status=404)
         org = getattr(request, "org", None)
         target_m = Membership.objects.filter(user=user, organization=org).first() if org is not None else None
+        # Isolation gate: with an active org, the target MUST actually be a member
+        # of it — otherwise a spoofed X-Org-Id let any org admin edit (including
+        # reset the password of) ANY user account on the platform by guessing a
+        # sequential id, since target_m was only ever used below for the
+        # owner-role check, never as a membership requirement (2026-07-19
+        # security fix, critical). Legacy/no-org-header mode (org is None) is
+        # unaffected — that's the pre-tenancy fallback, not a bypass.
+        if org is not None and target_m is None:
+            return Response(status=404)
         # The owner is protected: nobody but the owner themselves may change the
         # owner's role/active/password. (Ownership only moves via transfer.)
         if target_m and target_m.role == Membership.Role.OWNER and user.id != request.user.id:
@@ -342,11 +351,11 @@ class UserDetailView(APIView):
         from permissions.models import audit
         who = user.name or user.email
         if "role" in request.data:
-            audit(request.user, "user.role", f"Set {who} role = {user.role}")
+            audit(request.user, "user.role", f"Set {who} role = {user.role}", organization=org)
         if "tier" in request.data:
-            audit(request.user, "user.tier", f"Set {who} tier = {user.tier.name if user.tier else 'none'}")
+            audit(request.user, "user.tier", f"Set {who} tier = {user.tier.name if user.tier else 'none'}", organization=org)
         if "is_active" in request.data:
-            audit(request.user, "user.active", f"{'Enabled' if user.is_active else 'Disabled'} {who}")
+            audit(request.user, "user.active", f"{'Enabled' if user.is_active else 'Disabled'} {who}", organization=org)
         return Response(UserSerializer(user).data)
 
     def delete(self, request, pk):
@@ -371,7 +380,7 @@ class UserDetailView(APIView):
         who = user.name or user.email
         from permissions.models import audit
         _detach_user_from_org(user, org)
-        audit(request.user, "user.remove", f"Removed {who} from the team")
+        audit(request.user, "user.remove", f"Removed {who} from the team", organization=org)
         return Response(status=204)
 
 
@@ -409,7 +418,7 @@ class TransferOwnershipView(APIView):
             new.is_active = True
             new.save(update_fields=["role", "is_active"])
         who = target.name or target.email
-        audit(request.user, "user.ownership", f"Transferred ownership to {who}")
+        audit(request.user, "user.ownership", f"Transferred ownership to {who}", organization=org)
         return Response({"detail": f"{who} is now the owner."})
 
 
@@ -447,7 +456,7 @@ class LeaveOrgView(APIView):
                               "Promote another admin (Team → Members) before leaving.",
                 })
         _detach_user_from_org(user, org)
-        audit(user, "user.leave", f"Left {org.name}")
+        audit(user, "user.leave", f"Left {org.name}", organization=org)
         return Response({"detail": "You've left the organization."})
 
 
@@ -482,17 +491,18 @@ class TierViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         from permissions.models import audit
-        tier = serializer.save(organization=getattr(self.request, "org", None))
-        audit(self.request.user, "tier.create", f"Created tier '{tier.name}'")
+        org = getattr(self.request, "org", None)
+        tier = serializer.save(organization=org)
+        audit(self.request.user, "tier.create", f"Created tier '{tier.name}'", organization=org)
 
     def perform_update(self, serializer):
         from permissions.models import audit
         tier = serializer.save()
-        audit(self.request.user, "tier.update", f"Updated tier '{tier.name}'")
+        audit(self.request.user, "tier.update", f"Updated tier '{tier.name}'", organization=getattr(self.request, "org", None))
 
     def perform_destroy(self, instance):
         from permissions.models import audit
-        audit(self.request.user, "tier.delete", f"Deleted tier '{instance.name}'")
+        audit(self.request.user, "tier.delete", f"Deleted tier '{instance.name}'", organization=getattr(self.request, "org", None))
         instance.delete()
 
 

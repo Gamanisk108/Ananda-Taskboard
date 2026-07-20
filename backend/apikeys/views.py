@@ -50,7 +50,7 @@ class ApiKeyViewSet(viewsets.ModelViewSet):
             scope=ser.validated_data["scope"],
             expires_at=ser.validated_data.get("expires_at"),
         )
-        audit(request.user, "apikey.create", f"Created API key '{key.name}' ({key.scope})")
+        audit(request.user, "apikey.create", f"Created API key '{key.name}' ({key.scope})", organization=org)
         data = ApiKeySerializer(key).data
         # The full secret is returned exactly once, here, and never again.
         data["key"] = raw
@@ -59,5 +59,5 @@ class ApiKeyViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         key = self.get_object()  # get_queryset already scopes to this org
         key.revoke()
-        audit(request.user, "apikey.revoke", f"Revoked API key '{key.name}'")
+        audit(request.user, "apikey.revoke", f"Revoked API key '{key.name}'", organization=_org(request))
         return Response(status=204)

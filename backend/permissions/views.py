@@ -10,7 +10,11 @@ from .serializers import AccessGrantSerializer, ExclusionSerializer
 
 class AccessGrantViewSet(viewsets.ModelViewSet):
     """Admin-only management of access grants (the visibility gate), scoped to
-    the active org via the grant's target sub-project/project."""
+    the active org via the grant's target sub-project/project. The serializer's
+    validate() (permissions/serializers.py) rejects a create/update whose
+    user/group/tier/subproject/project doesn't belong to the active org — reads
+    were already scoped here, but nothing stopped the WRITE from targeting
+    another tenant (2026-07-19 security fix, critical)."""
 
     queryset = AccessGrant.objects.select_related(
         "user", "group", "tier", "subproject", "project"
@@ -25,17 +29,24 @@ class AccessGrantViewSet(viewsets.ModelViewSet):
             qs = qs.filter(Q(subproject__project__organization=org) | Q(project__organization=org))
         return qs
 
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["org"] = getattr(self.request, "org", None)
+        return ctx
+
     def perform_create(self, serializer):
         grant = serializer.save()
-        audit(self.request.user, "grant.create", f"Granted {grant}")
+        audit(self.request.user, "grant.create", f"Granted {grant}", organization=getattr(self.request, "org", None))
 
     def perform_destroy(self, instance):
-        audit(self.request.user, "grant.delete", f"Revoked {instance}")
+        audit(self.request.user, "grant.delete", f"Revoked {instance}", organization=getattr(self.request, "org", None))
         instance.delete()
 
 
 class ExclusionViewSet(viewsets.ModelViewSet):
-    """Admin-only management of exclusions (deny rules that subtract visibility)."""
+    """Admin-only management of exclusions (deny rules that subtract visibility).
+    See AccessGrantViewSet's docstring — same cross-org write guard applies via
+    the serializer's validate()."""
 
     queryset = Exclusion.objects.select_related(
         "user", "group", "tier",
@@ -62,22 +73,35 @@ class ExclusionViewSet(viewsets.ModelViewSet):
             ).distinct()
         return qs
 
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["org"] = getattr(self.request, "org", None)
+        return ctx
+
     def perform_create(self, serializer):
         exc = serializer.save()
-        audit(self.request.user, "exclusion.create", f"Added exclusion {exc}")
+        audit(self.request.user, "exclusion.create", f"Added exclusion {exc}", organization=getattr(self.request, "org", None))
 
     def perform_destroy(self, instance):
-        audit(self.request.user, "exclusion.delete", f"Removed exclusion {instance}")
+        audit(self.request.user, "exclusion.delete", f"Removed exclusion {instance}", organization=getattr(self.request, "org", None))
         instance.delete()
 
 
 class AuditLogView(APIView):
-    """Admin-only: the most recent permission/visibility changes."""
+    """Admin-only: the most recent permission/visibility changes, scoped to the
+    active org. (2026-07-19 security fix: this used to return every
+    organization's entries — names/emails/security actions — to any org's
+    local admin, since the query had no org filter at all.)"""
 
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        rows = AuditLog.objects.select_related("actor")[:200]
+        org = getattr(request, "org", None)
+        qs = AuditLog.objects.select_related("actor")
+        # org is None only in legacy/no-header mode (pre-tenancy fallback); a
+        # real request always carries X-Org-Id, so this scopes every live call.
+        qs = qs.filter(organization=org) if org is not None else qs
+        rows = qs[:200]
         return Response([
             {
                 "id": r.id,

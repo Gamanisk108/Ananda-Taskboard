@@ -209,7 +209,15 @@ def test_admin_can_promote_member(api, admin, member):
     res = api.patch(f"/api/users/{member.id}", {"role": "admin"}, format="json")
     assert res.status_code == 200
     member.refresh_from_db()
-    assert member.is_admin and member.is_staff
+    # 2026-07-19 security fix: the deprecated global `role` field still moves
+    # (legacy/no-org-header fallback + display), but is_staff/is_superuser —
+    # the REAL Django platform-superuser flags — must never be derived from
+    # it. Promoting a team member to org-admin used to also grant them real
+    # platform-wide power (see permissions/test_cross_org_writes.py for the
+    # dedicated regression test).
+    assert member.is_admin
+    assert member.is_staff is False
+    assert member.is_superuser is False
 
 
 def test_admin_cannot_demote_self(api, admin):

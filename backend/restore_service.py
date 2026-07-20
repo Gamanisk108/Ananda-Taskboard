@@ -22,7 +22,7 @@ from rest_framework.response import Response
 from rest_framework import serializers as drf
 
 from accounts.models import Group, Tier
-from permissions.drf import IsAdmin
+from permissions.drf import IsSuperUser
 from permissions.models import AccessGrant, Exclusion
 from projects.models import Project, SubProject
 from tasks.models import CalendarEvent, Comment, RecurrenceRule, RestorePoint, Task, TaskOccurrence
@@ -130,9 +130,20 @@ class RestorePointSerializer(drf.ModelSerializer):
 
 
 class RestorePointViewSet(viewsets.ModelViewSet):
+    """⚠️ SECURITY: restore points have ZERO organization scoping — `_all_objs`,
+    `board_stats`, and every delete in `_restore_data` operate on ALL tenants'
+    data platform-wide (RestorePoint has no `organization` FK). Restore is a
+    hard delete-and-replace of EVERY org's board. Locked to the platform
+    superuser only (2026-07-19 deep security audit finding #1, critical) as
+    the immediate safe closure — this is a deliberate feature regression for
+    ordinary org admins (was `IsAdmin`) pending the real fix: add an
+    `organization` FK to RestorePoint + a migration, and scope `_all_objs`/
+    `board_stats`/`_restore_data`'s deletes to one org. DO NOT widen this back
+    to IsAdmin without that migration landing first."""
+
     queryset = RestorePoint.objects.all()
     serializer_class = RestorePointSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsSuperUser]
     http_method_names = ["get", "post", "delete"]
 
     def perform_create(self, serializer):

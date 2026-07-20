@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
+from permissions.org_scope import require_groups_in_org, require_users_in_org
+
 from .models import CalendarEvent, Comment, PersonalHoliday, RecurrenceRule, Status, Subtask, Task
+
+
+def _request_org(context):
+    request = context.get("request")
+    return getattr(request, "org", None) if request is not None else None
 
 
 class WeekdaysField(serializers.Field):
@@ -44,6 +51,18 @@ class SubtaskSerializer(serializers.ModelSerializer):
     def validate_links(self, value):
         if not isinstance(value, list) or not all(isinstance(u, str) for u in value):
             raise serializers.ValidationError("links must be a list of URL strings.")
+        return value
+
+    def validate_assignees(self, value):
+        # `assignees` is an unrestricted PrimaryKeyRelatedField(queryset=User.
+        # objects.all()) by default — without this, a subtask could "assign"
+        # (and push-notify) a user in a completely different organization
+        # (2026-07-19 security fix, high).
+        require_users_in_org(_request_org(self.context), value, label="assignee")
+        return value
+
+    def validate_assignee_groups(self, value):
+        require_groups_in_org(_request_org(self.context), value, label="assignee group")
         return value
 
     def validate(self, attrs):
@@ -92,6 +111,18 @@ class TaskSerializer(serializers.ModelSerializer):
     def validate_links(self, value):
         if not isinstance(value, list) or not all(isinstance(u, str) for u in value):
             raise serializers.ValidationError("links must be a list of URL strings.")
+        return value
+
+    def validate_assignees(self, value):
+        # `assignees` is an unrestricted PrimaryKeyRelatedField(queryset=User.
+        # objects.all()) by default — without this, a task could "assign" (and
+        # push-notify, embedding its real title) a user in a completely
+        # different organization (2026-07-19 security fix, high).
+        require_users_in_org(_request_org(self.context), value, label="assignee")
+        return value
+
+    def validate_assignee_groups(self, value):
+        require_groups_in_org(_request_org(self.context), value, label="assignee group")
         return value
 
     def validate(self, attrs):

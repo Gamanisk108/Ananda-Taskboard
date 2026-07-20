@@ -89,7 +89,7 @@ class GenerateTasksView(APIView):
         gen.num_files = len(files)
         gen.save(update_fields=["num_tasks", "num_files"])
         from permissions.models import audit
-        audit(user, "ai.generate", f"Generated {len(result['tasks'])} task(s) via AI")
+        audit(user, "ai.generate", f"Generated {len(result['tasks'])} task(s) via AI", organization=org)
         result["remaining"] = remaining_today(user, org)
         # The candidate list lets the review UI relabel/re-point a routed row.
         result["existing_tasks"] = existing_tasks

@@ -85,14 +85,23 @@ def _notify_mentioned(task, author, user_ids):
 def _notify_assigned(task, actor, new_user_ids):
     """Push to users newly assigned to a task who opted into assignment-change
     notifications (best-effort, never raises). The actor isn't pinged for their
-    own action."""
+    own action. Defensively scoped to the task's own org (TaskSerializer/
+    SubtaskSerializer already reject an out-of-org assignee at write time —
+    this is belt-and-suspenders so a push can never embed the task's real
+    title for someone outside its organization)."""
     try:
-        from accounts.models import User
+        from accounts.models import Membership, User
         from notifications.models import PushSubscription
         from notifications.push import send_web_push_async
 
+        org_id = task.subproject.project.organization_id
+        in_org_ids = set(
+            Membership.objects.filter(
+                user_id__in=new_user_ids, organization_id=org_id, is_active=True
+            ).values_list("user_id", flat=True)
+        )
         targets = list(
-            User.objects.filter(id__in=new_user_ids, assignment_changes=True)
+            User.objects.filter(id__in=in_org_ids, assignment_changes=True)
             .exclude(id=actor.id)
             .values_list("id", flat=True)
         )
@@ -298,14 +307,23 @@ class TaskViewSet(ModelViewSet):
 
     @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
     def approve(self, request, pk=None):
-        return self._set_approval(pk, Task.Approval.APPROVED, emit.TASK_APPROVED)
+        # self.get_object() applies get_queryset()'s visible_tasks_q(user, org)
+        # filter (404 if not visible) — without it, IsAdmin only proved the
+        # caller admins SOME org, not that this task's org is theirs, letting
+        # any org admin approve/reject any other org's task by id (2026-07-19
+        # security fix, critical).
+        task = self.get_object()
+        return self._set_approval(task.pk, Task.Approval.APPROVED, emit.TASK_APPROVED)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
     def reject(self, request, pk=None):
-        return self._set_approval(pk, Task.Approval.REJECTED, emit.TASK_REJECTED)
+        task = self.get_object()
+        return self._set_approval(task.pk, Task.Approval.REJECTED, emit.TASK_REJECTED)
 
     def _set_approval(self, pk, target, event):
-        """Idempotent, race-safe approve/reject (resolves double-approve to one)."""
+        """Idempotent, race-safe approve/reject (resolves double-approve to one).
+        Visibility/org scoping is already enforced by the caller via
+        self.get_object() before this is invoked."""
         with transaction.atomic():
             task = Task.objects.select_for_update().filter(pk=pk).first()
             if task is None:

@@ -16,6 +16,7 @@ from rest_framework.views import APIView
 from permissions.drf import IsAdmin
 from permissions.engine import can_act_as_member, is_org_admin, visible_tasks_q
 from permissions.models import audit
+from permissions.org_scope import require_org, require_users_in_org, subproject_org_id
 from projects.models import SubProject
 
 from .models import Status, Task
@@ -61,6 +62,11 @@ class BulkTasksView(APIView):
                 sp = SubProject.objects.filter(pk=value).first()
                 if not sp:
                     raise ValidationError({"value": "Sub-project not found."})
+                # Only the SOURCE tasks (`qs`) were org-scoped above; the
+                # destination sub-project wasn't checked at all, letting an
+                # admin transplant their own org's task into another tenant's
+                # sub-project tree (2026-07-19 security fix, high).
+                require_org(org, sp, subproject_org_id, "sub-project")
                 n = qs.update(subproject=sp, updated_at=now)
                 summary = f"moved {n} task(s) → {sp.project.name} / {sp.name}"
             elif action == "status":
@@ -73,6 +79,9 @@ class BulkTasksView(APIView):
                 summary = f"set deadline on {n} task(s) → {value or 'none'}"
             elif action == "assign":
                 user_ids = value or []
+                if user_ids:
+                    from accounts.models import User
+                    require_users_in_org(org, User.objects.filter(id__in=user_ids), label="assignee")
                 tasks = list(qs)
                 for t in tasks:
                     t.assignees.set(user_ids)
@@ -83,7 +92,7 @@ class BulkTasksView(APIView):
                 summary = f"archived {n} task(s)"
             else:
                 raise ValidationError({"action": "Unknown bulk action."})
-        audit(request.user, f"bulk.{action}", f"Bulk: {summary}")
+        audit(request.user, f"bulk.{action}", f"Bulk: {summary}", organization=org)
         return Response({"updated": n, "skipped": skipped})
 
 
@@ -104,5 +113,5 @@ class MarkDoneView(APIView):
         # Org-scoped: only tasks the admin can see in their active org.
         qs = Task.objects.filter(archived_at__isnull=True, **flt).filter(visible_tasks_q(request.user, org))
         n = qs.update(status=done, archived_at=now, updated_at=now)
-        audit(request.user, "bulk.markDone", f"Marked {kind} #{pk} Done + archived {n} task(s)")
+        audit(request.user, "bulk.markDone", f"Marked {kind} #{pk} Done + archived {n} task(s)", organization=org)
         return Response({"updated": n})

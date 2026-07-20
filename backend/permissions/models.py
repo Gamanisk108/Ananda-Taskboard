@@ -119,9 +119,17 @@ class Exclusion(models.Model):
 
 class AuditLog(models.Model):
     """Append-only trail of permission/visibility changes (grants, exclusions,
-    tiers, role/tier assignments) — who did what, when. Read-only via the API."""
+    tiers, role/tier assignments) — who did what, when. Read-only via the API.
+
+    `organization` is nullable for backward compat with rows written before
+    2026-07-19 (and any legacy/no-org-header call site) — AuditLogView filters
+    strictly by it once set, so an unscoped historical row simply won't show up
+    in any org's log rather than leaking across tenants."""
 
     actor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name="audit_actions")
+    organization = models.ForeignKey(
+        "accounts.Organization", null=True, blank=True, on_delete=models.CASCADE, related_name="audit_log"
+    )
     action = models.CharField(max_length=40)   # e.g. "grant.create", "tier.delete", "user.role"
     summary = models.CharField(max_length=300)  # human-readable description
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -133,10 +141,14 @@ class AuditLog(models.Model):
         return f"{self.created_at:%Y-%m-%d %H:%M} {self.action}: {self.summary}"
 
 
-def audit(actor, action, summary):
-    """Record one audit entry (best-effort; never breaks the triggering action)."""
+def audit(actor, action, summary, organization=None):
+    """Record one audit entry (best-effort; never breaks the triggering action).
+    Pass `organization` (the active org, e.g. `request.org`) whenever it's
+    available — GET /api/audit filters strictly by it (2026-07-19 security fix:
+    the endpoint used to return every organization's entries to any org's
+    local admin, since AuditLog had no org field at all)."""
     try:
         AuditLog.objects.create(actor=actor if getattr(actor, "is_authenticated", False) else None,
-                                action=action, summary=summary[:300])
+                                organization=organization, action=action, summary=summary[:300])
     except Exception:
         pass

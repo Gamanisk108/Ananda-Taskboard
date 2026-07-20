@@ -1,6 +1,15 @@
 from rest_framework import serializers
 
 from .models import AccessGrant, Exclusion
+from .org_scope import (
+    group_org_id,
+    project_org_id,
+    require_org,
+    require_users_in_org,
+    subproject_org_id,
+    task_org_id,
+    tier_org_id,
+)
 
 
 def _exactly_one(*values):
@@ -24,6 +33,18 @@ class AccessGrantSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Set exactly one of subproject or project (whole-project grant)."
             )
+        # Cross-org write guard (2026-07-19 security fix, critical): every one
+        # of these fields is an unrestricted PrimaryKeyRelatedField, so without
+        # this any org admin could mint a grant targeting another org's
+        # sub-project/project/tier/group/user. self.context["org"] is set by
+        # AccessGrantViewSet.get_serializer_context().
+        org = self.context.get("org")
+        require_org(org, cur("subproject"), subproject_org_id, "sub-project")
+        require_org(org, cur("project"), project_org_id, "project")
+        require_org(org, cur("tier"), tier_org_id, "tier")
+        require_org(org, cur("group"), group_org_id, "group")
+        if cur("user"):
+            require_users_in_org(org, [cur("user")])
         return attrs
 
 
@@ -50,4 +71,17 @@ class ExclusionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Set exactly one excluded target: user, group, project, sub-project, or task."
             )
+        # Cross-org write guard (2026-07-19 security fix, critical) — same class
+        # of bug as AccessGrantSerializer above, for both the subject and the
+        # excluded-target fields.
+        org = self.context.get("org")
+        require_org(org, cur("tier"), tier_org_id, "tier")
+        require_org(org, cur("group"), group_org_id, "group")
+        require_org(org, cur("excluded_project"), project_org_id, "project")
+        require_org(org, cur("excluded_subproject"), subproject_org_id, "sub-project")
+        require_org(org, cur("excluded_group"), group_org_id, "group")
+        require_org(org, cur("excluded_task"), task_org_id, "task")
+        for field in ("user", "excluded_user"):
+            if cur(field):
+                require_users_in_org(org, [cur(field)])
         return attrs

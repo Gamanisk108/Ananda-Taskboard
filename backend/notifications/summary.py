@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Group, User
-from permissions.engine import visible_tasks_q
+from permissions.engine import is_org_admin, visible_tasks_q
 from tasks.models import Task
 from tasks.recurrence import occurrence_dates
 
@@ -51,7 +51,7 @@ def _first_name(user):
     return (user.name or user.email).strip().split()[0] if (user.name or user.email).strip() else user.email
 
 
-def build_summary_text(user, day, *, project_ids=None, subproject_ids=None, group_ids=None, assignee_ids=None):
+def build_summary_text(user, day, *, org=None, project_ids=None, subproject_ids=None, group_ids=None, assignee_ids=None):
     from tasks.models import complete_status_keys
 
     qs = (
@@ -60,8 +60,16 @@ def build_summary_text(user, day, *, project_ids=None, subproject_ids=None, grou
         .select_related("subproject__project", "recurrence_rule")
         .prefetch_related("assignees", "assignee_groups")
     )
-    if not user.is_admin:
-        qs = qs.filter(visible_tasks_q(user)).distinct()
+    # 2026-07-19 security fix (critical): this used to gate on the DEPRECATED,
+    # org-agnostic `user.is_admin` (True for ANY user admin of ANY org, per the
+    # sibling is_staff/is_superuser bug) and, even for a non-admin, called
+    # visible_tasks_q(user) with no org — which falls back to legacy/global
+    # mode and merges visibility across every org the caller belongs to. Both
+    # leaked every organization's tasks into the daily group-chat summary.
+    if not is_org_admin(user, org):
+        qs = qs.filter(visible_tasks_q(user, org)).distinct()
+    elif org is not None:
+        qs = qs.filter(subproject__project__organization=org)
     if project_ids:
         qs = qs.filter(subproject__project_id__in=project_ids)
     if subproject_ids:
@@ -144,6 +152,7 @@ class GroupChatSummaryView(APIView):
 
         text = build_summary_text(
             request.user, day,
+            org=getattr(request, "org", None),
             project_ids=_ids(request.query_params.get("projects")),
             subproject_ids=_ids(request.query_params.get("subprojects")),
             group_ids=_ids(request.query_params.get("groups")),

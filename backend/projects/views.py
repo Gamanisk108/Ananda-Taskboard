@@ -49,6 +49,11 @@ class SubProjectViewSet(viewsets.ModelViewSet):
             return qs.filter(project__organization=org) if org is not None else qs
         return SubProject.objects.filter(id__in=visible_subproject_ids(user, org))
 
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["org"] = _org(self.request)
+        return ctx
+
     def perform_destroy(self, instance):
         from trashbin import soft_delete_subproject
 

@@ -48,27 +48,28 @@ class UserWriteSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "name", "role", "is_active", "password", "tier", "language"]
 
     def create(self, validated_data):
+        # NEVER derive is_staff/is_superuser here: `role` is the per-org "this
+        # person administers MY org" concept (mirrored onto Membership.role by
+        # the caller), not the real Django platform-superuser flag. Conflating
+        # them let any self-signed-up org owner grant real platform-superuser
+        # access to a co-admin just by adding them (2026-07-19 security fix,
+        # critical). Django admin access is a separate, manually-managed flag.
         password = validated_data.pop("password", None)
         if not password:
             raise serializers.ValidationError({"password": "Password is required for a new member."})
         role = validated_data.get("role", User.Role.MEMBER)
-        is_admin = role == User.Role.ADMIN
         return User.objects.create_user(
             email=validated_data["email"],
             name=validated_data.get("name", ""),
             password=password,
             role=role,
             tier=validated_data.get("tier"),
-            is_staff=is_admin,
-            is_superuser=is_admin,
         )
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
         for k, v in validated_data.items():
             setattr(instance, k, v)
-        if "role" in validated_data:
-            instance.is_staff = instance.is_superuser = (instance.role == User.Role.ADMIN)
         if password:
             instance.set_password(password)
         instance.save()

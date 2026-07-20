@@ -305,6 +305,12 @@ export default function App() {
     { icon: <SettingsIcon size={15} />, label: t("menu.settings"), onClick: () => setShowSettings(true), testId: "open-settings", dot: helpUsUnseen() },
     ...(me.is_admin ? [
       { icon: <HistoryIcon size={15} />, label: t("menu.history"), onClick: () => setShowHistory(true) },
+    ] : []),
+    // Restore points are platform-superuser-only server-side (2026-07-19 security
+    // fix — a per-org admin restoring a snapshot was wiping every OTHER org's
+    // data too, since RestorePoint has no org scoping yet). Hide the button for
+    // ordinary org admins so it doesn't just 403.
+    ...(me.is_superuser ? [
       { icon: <RotateCcw size={15} />, label: t("menu.restorePoints"), onClick: () => setShowRestore(true) },
     ] : []),
     { icon: <ArrowLeftRight size={15} />, label: t("menu.bulkMigrate"), onClick: () => setShowBulk(true) },
